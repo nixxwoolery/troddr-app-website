@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="TRODDR - Jamaica-first travel guide and trip planner. Discover where to eat, stay, and play like a local.">
+    <meta name="keywords" content="Jamaica, travel, Caribbean, local guide, trip planner">
+    <title>TRODDR - Curated Caribbean Travel</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0077CC;
+            --primary-dark: #005A99;
+            --primary-light: #33A3FF;
+            --accent: #F59E0B;
+            --dark: #1A1A1A;
+            --gray: #6B7280;
+            --light-gray: #F3F4F6;
+            --white: #FFFFFF;
+            --green: #10B981;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* Floating background elements */
+        .floating-element {
+            position: absolute;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .floating-element:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            top: 10%;
+            right: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            bottom: 20%;
+            left: 5%;
+            animation-delay: 2s;
+        }
+
+        .floating-element:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            top: 60%;
+            right: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(20px) rotate(240deg); }
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-item {
+            color: var(--gray);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            color: var(--primary);
+        }
+
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-item:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 119, 204, 0.3);
+        }
+
+        .nav-cta:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 119, 204, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            /* background: url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2070') center/cover; */
+            opacity: 0.15;
+            z-index: 1;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-text h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 119, 204, 0.3);
+        }
+
+        .hero-cta:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 119, 204, 0.4);
+        }
+
+        .hero-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-image {
+            width: 400px;
+            height: 500px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 119, 204, 0.3);
+            transition: all 0.5s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800') center/cover;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .hero-image:hover {
+            transform: rotateY(-10deg) rotateX(5deg);
+        }
+
+        .hero-image:hover::before {
+            opacity: 0.5;
+        }
+
+        /* Section Styles */
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--gray);
+            text-align: center;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Solution Section */
+        .solution-section {
+            background: white;
+            position: relative;
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .solution-card {
+            background: var(--light-gray);
+            padding: 2rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .solution-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .solution-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .solution-card:hover {
+            background: white;
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 119, 204, 0.15);
+        }
+
+        .solution-number {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .solution-card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .solution-features {
+            list-style: none;
+        }
+
+        .solution-features li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--gray);
+        }
+
+        .solution-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--green);
+            font-weight: bold;
+        }
+
+        /* Features Section */
+        .features-section {
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            position: relative;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 119, 204, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .feature-card p {
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        /* Destinations Section */
+        .destinations-section {
+            background: white;
+            position: relative;
+        }
+
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .destination-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .destination-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .destination-image {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .destination-content {
+            padding: 1.5rem;
+        }
+
+        .destination-category {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 0.75rem;
+        }
+
+        .destination-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .destination-card p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            position: relative;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .testimonial-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .testimonial-quote {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: var(--gray);
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .testimonial-quote::before {
+            content: '"';
+            font-size: 3rem;
+            color: var(--primary);
+            line-height: 0.1;
+            margin-right: 0.25rem;
+            vertical-align: -0.4rem;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .testimonial-company {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+        }
+
+        .stats-section .section-title {
+            color: white;
+            background: linear-gradient(135deg, var(--primary-light), white);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #E5E7EB;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--light-gray);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark);
+            color: white;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr repeat(4, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-links a {
+            color: #9CA3AF;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-light);
+        }
+
+        .footer-section p {
+            color: #9CA3AF;
+            line-height: 1.6;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #374151;
+            padding-top: 2rem;
+            text-align: center;
+            color: #9CA3AF;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
+            }
+
+            .hero-image {
+                width: 300px;
+                height: 400px;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        /* Scroll animations */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-element"></div>
+    <div class="floating-element"></div>
+    <div class="floating-element"></div>
+
+    <header class="header">
+        <div class="navbar">
+            <div class="logo">troddr</div>
+            <nav class="nav-links">
+                <a href="#features" class="nav-item">Features</a>
+                <a href="#destinations" class="nav-item">Destinations</a>
+                <a href="#testimonials" class="nav-item">Stories</a>
+                <a href="#contact" class="nav-item">Contact</a>
+                <a href="#demo" class="nav-cta">Join Waitlist</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-text">
+                <h1>Experience Jamaica Like a Local</h1>
+                <p class="hero-subtitle">Curated places to eat, stay, and play. Plan your trips and get ready to explore Jamaica like a local. Discover authentic experiences beyond the tourist trail.</p>
+                <!-- <a href="#demo" class="hero-cta" onclick="trackCTA('hero')">
+                    🏝️ Start Your Journey
+                </a> -->
+            </div>
+            <!-- <div class="hero-visual">
+                <div class="hero-image" onclick="animateHeroImage()">
+                    Authentic Jamaica Awaits
+                </div>
+            </div> -->
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section id="solution" class="solution-section">
+        <div class="section-container">
+            <h2 class="section-title">Three Ways to Explore</h2>
+            <p class="section-subtitle">TRODDR combines local expertise with smart planning tools to create your perfect Jamaican adventure.</p>
+            
+            <div class="solution-grid">
+                <div class="solution-card" onclick="cardClick('eat')">
+                    <div class="solution-number">1</div>
+                    <h3>Eat Like a Local</h3>
+                    <ul class="solution-features">
+                        <li>Authentic jerk spots recommended by locals</li>
+                        <li>Hidden food gems off the beaten path</li>
+                        <li>Fine dining experiences with local flair</li>
+                        <li>Street food tours and market discoveries</li>
+                    </ul>
+                </div>
+                
+                <div class="solution-card" onclick="cardClick('stay')">
+                    <div class="solution-number">2</div>
+                    <h3>Stay in Special Places</h3>
+                    <ul class="solution-features">
+                        <li>Boutique hotels with authentic character</li>
+                        <li>Eco-lodges in stunning natural settings</li>
+                        <li>Beachfront villas for ultimate relaxation</li>
+                        <li>Historic properties with cultural significance</li>
+                    </ul>
+                </div>
+                
+                <div class="solution-card" onclick="cardClick('play')">
+                    <div class="solution-number">3</div>
+                    <h3>Play Beyond the Brochure</h3>
+                    <ul class="solution-features">
+                        <li>Blue Mountain adventures and coffee tours</li>
+                        <li>Secret beaches and swimming holes</li>
+                        <li>Cultural experiences and reggae sessions</li>
+                        <li>Personalized activity recommendations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="section-container">
+            <h2 class="section-title scroll-reveal">Everything You Need to Explore</h2>
+            <p class="section-subtitle scroll-reveal">TRODDR's powerful platform makes discovering and planning authentic Jamaican experiences effortless.</p>
+            
+            <div class="features-grid">
+                <div class="feature-card scroll-reveal" onclick="featureClick('curated')">
+                    <span class="feature-icon">✨</span>
+                    <h3>Curated by Locals</h3>
+                    <p>Every recommendation comes from Jamaican locals who know the island inside and out. No tourist traps, just authentic experiences.</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal" onclick="featureClick('planner')">
+                    <span class="feature-icon">📅</span>
+                    <h3>Smart Trip Planner</h3>
+                    <p>Drag-and-drop itinerary builder with route optimization. Find amazing stops along your way and plan your perfect Jamaican adventure.</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal" onclick="featureClick('discovery')">
+                    <span class="feature-icon">🗺️</span>
+                    <h3>Local Discovery</h3>
+                    <p>Discover hidden gems and secret spots that only locals know about. From secluded beaches to underground music sessions.</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal" onclick="featureClick('personalized')">
+                    <span class="feature-icon">🎯</span>
+                    <h3>Personalized Recommendations</h3>
+                    <p>Get suggestions tailored to your interests, whether you're a foodie, adventure seeker, culture enthusiast, or beach lover.</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal" onclick="featureClick('offline')">
+                    <span class="feature-icon">📱</span>
+                    <h3>Works Offline</h3>
+                    <p>Download your plans and access them even without internet. Perfect for exploring remote areas and staying connected to your itinerary.</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal" onclick="featureClick('community')">
+                    <span class="feature-icon">👥</span>
+                    <h3>Traveler Community</h3>
+                    <p>Connect with other travelers and locals. Share experiences, get real-time tips, and discover what's happening around you.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Destinations Section -->
+    <!-- <section id="destinations" class="destinations-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title scroll-reveal">Featured Destinations</h2>
+                <p class="section-subtitle scroll-reveal">Explore Jamaica's most vibrant regions through curated local experiences.</p>
+            </div>
+            
+            <div class="destinations-grid">
+                <div class="destination-card scroll-reveal" onclick="destinationClick('kingston')">
+                    <div class="destination-image" style="background-image: url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800');"></div>
+                    <div class="destination-content">
+                        <span class="destination-category">Culture & Food</span>
+                        <h3 class="destination-title">Kingston</h3>
+                        <p>Jamaica's vibrant capital - home to reggae, incredible food, and rich history</p>
+                    </div>
+                </div>
+                
+                <div class="destination-card scroll-reveal" onclick="destinationClick('negril')">
+                    <div class="destination-image" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800');"></div>
+                    <div class="destination-content">
+                        <span class="destination-category">Beach & Sunset</span>
+                        <h3 class="destination-title">Negril</h3>
+                        <p>Famous Seven Mile Beach and world-class sunsets at Rick's Cafe</p>
+                    </div>
+                </div>
+                
+                <div class="destination-card scroll-reveal" onclick="destinationClick('portland')">
+                    <div class="destination-image" style="background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=800');"></div>
+                    <div class="destination-content">
+                        <span class="destination-category">Nature & Adventure</span>
+                        <h3 class="destination-title">Portland</h3>
+                        <p>Blue Mountains, coffee tours, and lush rainforest adventures</p>
+                    </div>
+                </div>
+                
+                <div class="destination-card scroll-reveal" onclick="destinationClick('montego-bay')">
+                    <div class="destination-image" style="background-image: url('https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?q=80&w=800');"></div>
+                    <div class="destination-content">
+                        <span class="destination-category">Beach & Entertainment</span>
+                        <h3 class="destination-title">Montego Bay</h3>
+                        <p>Hip Strip nightlife, Doctor's Cave Beach, and amazing jerk spots</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Testimonials Section -->
+    <!-- <section id="testimonials" class="testimonials">
+        <div class="section-container">
+            <h2 class="section-title scroll-reveal">Stories from Fellow Travelers</h2>
+            <p class="section-subtitle scroll-reveal">See how TRODDR has transformed the way people experience Jamaica.</p>
+            
+            <div class="testimonials-grid">
+                <div class="testimonial-card scroll-reveal">
+                    <p class="testimonial-quote">TRODDR took us to places we never would have found on our own. The jerk chicken spot in Portland was absolutely incredible - locals were surprised we knew about it!</p>
+                    <div class="testimonial-author">Sarah & Mike Chen</div>
+                    <div class="testimonial-company">Food Lovers from Toronto</div>
+                </div>
+                
+                <div class="testimonial-card scroll-reveal">
+                    <p class="testimonial-quote">As a solo female traveler, I felt safe and confident exploring Jamaica with TRODDR's recommendations. The local insights made all the difference.</p>
+                    <div class="testimonial-author">Elena Rodriguez</div>
+                    <div class="testimonial-company">Digital Nomad</div>
+                </div>
+                
+                <div class="testimonial-card scroll-reveal">
+                    <p class="testimonial-quote">The itinerary planner saved us so much time! Instead of driving all over the island randomly, we had a perfect route that showed us the best of Jamaica efficiently.</p>
+                    <div class="testimonial-author">James & Lisa Williams</div>
+                    <div class="testimonial-company">Adventure Seekers from London</div>
+                </div>
+                
+                <div class="testimonial-card scroll-reveal">
+                    <p class="testimonial-quote">I'm Jamaican and even I discovered new places through TRODDR! It's amazing how the platform connects you with hidden gems across the island.</p>
+                    <div class="testimonial-author">Marcus Thompson</div>
+                    <div class="testimonial-company">Local Explorer from Kingston</div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Stats Section -->
+    <!-- <section class="stats-section">
+        <div class="section-container">
+            <h2 class="section-title scroll-reveal">Join Thousands Exploring Authentic Jamaica</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-item scroll-reveal">
+                    <div class="stat-number" data-target="500">0</div>
+                    <div class="stat-label">Curated Spots</div>
+                </div>
+                <div class="stat-item scroll-reveal">
+                    <div class="stat-number" data-target="10000">0</div>
+                    <div class="stat-label">Happy Travelers</div>
+                </div>
+                <div class="stat-item scroll-reveal">
+                    <div class="stat-number" data-target="100">0</div>
+                    <div class="stat-label">Local Experts</div>
+                </div>
+                <div class="stat-item scroll-reveal">
+                    <div class="stat-number" data-target="98">0</div>
+                    <div class="stat-label">% Satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- CTA Section -->
+    <section id="demo" class="cta-section">
+        <div class="section-container">
+            <h2>Ready to Explore the Real Jamaica?</h2>
+            <p>Join our waitlist and be among the first to experience Jamaica like never before. Get early access to curated local recommendations and smart trip planning tools.</p>
+            <div class="cta-buttons">
+                <a href="#" class="btn-primary" onclick="showWaitlistForm()">Join Waitlist</a>
+                <a href="#" class="btn-secondary" onclick="downloadApp()">Download App</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="section-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>TRODDR</h3>
+                    <p>Your ultimate Jamaica travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+                    <div style="margin-top: 1rem;">
+                        <span style="font-size: 1.5rem; margin-right: 1rem;">🏝️</span>
+                        <span style="font-size: 1.5rem; margin-right: 1rem;">📱</span>
+                        <span style="font-size: 1.5rem;">🌟</span>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Discover</h3>
+                    <div class="footer-links">
+                        <a href="#">Eat</a>
+                        <a href="#">Stay</a>
+                        <a href="#">Play</a>
+                        <a href="#">Hidden Gems</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Destinations</h3>
+                    <div class="footer-links">
+                        <a href="#">Kingston</a>
+                        <a href="#">Negril</a>
+                        <a href="#">Montego Bay</a>
+                        <a href="#">Portland</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Plan</h3>
+                    <div class="footer-links">
+                        <a href="#">Trip Planner</a>
+                        <a href="#">Itineraries</a>
+                        <a href="#">Route Optimizer</a>
+                        <a href="#">Travel Guides</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Support</h3>
+                    <div class="footer-links">
+                        <a href="#">Help Center</a>
+                        <a href="#">Contact Us</a>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                    </div>
+                </div>
+				<div class="footer-section">
+                    <h3>Contact</h3>
+                    <div class="footer-links">
+                        <a href="#">Email: hello@troddr.com</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Scroll reveal animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    
+                    // Animate counters
+                    if (entry.target.querySelector('.stat-number')) {
+                        animateCounters(entry.target);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Animate stat counters
+        function animateCounters(container) {
+            const counters = container.querySelectorAll('.stat-number');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                let current = 0;
+                const increment = target / 50;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = target + (target === 98 ? '%' : '+');
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = Math.floor(current) + (target === 98 ? '%' : '+');
+                    }
+                }, 30);
+            });
+        }
+
+        // Hero image animation
+        function animateHeroImage() {
+            const heroImage = document.querySelector('.hero-image');
+            heroImage.style.transform = 'rotateY(-15deg) rotateX(10deg) scale(1.05)';
+            heroImage.style.boxShadow = '0 30px 80px rgba(0, 119, 204, 0.4)';
+            
+            setTimeout(() => {
+                heroImage.style.transform = 'rotateY(0deg) rotateX(0deg) scale(1)';
+                heroImage.style.boxShadow = '0 20px 60px rgba(0, 119, 204, 0.3)';
+            }, 500);
+        }
+
+        // Interactive card clicks
+        function cardClick(type) {
+            const messages = {
+                eat: "🍽️ Discover authentic jerk spots, hidden food gems, and local culinary experiences!",
+                stay: "🏨 Find boutique hotels, eco-lodges, and unique accommodations with character!",
+                play: "🎉 Explore Blue Mountains, secret beaches, and cultural adventures off the beaten path!"
+            };
+            showNotification(messages[type]);
+        }
+
+        function featureClick(feature) {
+            const messages = {
+                curated: "✨ Every spot is handpicked by local Jamaican experts who know the island's best-kept secrets!",
+                planner: "📅 Create perfect itineraries with our smart planning tools and route optimization!",
+                discovery: "🗺️ Find hidden waterfalls, secret beaches, and local hangouts that aren't in guidebooks!",
+                personalized: "🎯 Get recommendations tailored to your interests and travel style!",
+                offline: "📱 Your plans work anywhere on the island, even without internet connection!",
+                community: "👥 Connect with other travelers and locals for real-time tips and recommendations!"
+            };
+            showNotification(messages[feature]);
+        }
+
+        function destinationClick(destination) {
+            const messages = {
+                kingston: "🏛️ Explore Jamaica's cultural heart - from reggae museums to the best jerk chicken spots!",
+                negril: "🌅 Famous for Seven Mile Beach and incredible sunsets at Rick's Cafe!",
+                portland: "🏔️ Home to Blue Mountain Coffee and breathtaking rainforest adventures!",
+                'montego-bay': "🏖️ Hip Strip nightlife, pristine beaches, and world-famous jerk cuisine!"
+            };
+            showNotification(messages[destination]);
+        }
+
+        // Notification system
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                left: 50%;
+                transform: translateX(-50%) translateY(-20px);
+                background: linear-gradient(135deg, var(--primary), var(--primary-light));
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 50px;
+                box-shadow: 0 15px 40px rgba(0, 119, 204, 0.4);
+                z-index: 10000;
+                font-weight: 600;
+                max-width: 90%;
+                text-align: center;
+                opacity: 0;
+                transition: all 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(-50%) translateY(0)';
+            }, 100);
+            
+            // Animate out
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3500);
+        }
+
+        // CTA tracking
+        function trackCTA(source) {
+            console.log(`CTA clicked from: ${source}`);
+            showNotification("🎉 Thanks for your interest! Redirecting to waitlist...");
+        }
+
+        // Waitlist form
+        function showWaitlistForm() {
+            showNotification("📧 Waitlist form coming soon! We'll notify you when TRODDR launches.");
+        }
+
+        // App download
+        function downloadApp() {
+            showNotification("📱 TRODDR app launching soon! Join the waitlist for early access.");
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = 'none';
+            }
+        });
+
+        // Parallax effect
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallaxElements = document.querySelectorAll('.floating-element');
+            
+            parallaxElements.forEach((element, index) => {
+                const speed = 0.5 + (index * 0.1);
+                element.style.transform = `translateY(${scrolled * speed}px) rotate(${scrolled * 0.1}deg)`;
+            });
+        });
+
+        // Loading animation for page
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Easter egg
+        let clickCount = 0;
+        document.querySelector('.logo').addEventListener('click', (e) => {
+            e.preventDefault();
+            clickCount++;
+            
+            if (clickCount === 5) {
+                showNotification("🏝️ You found a secret! TRODDR is expanding to all Caribbean islands soon!");
+                clickCount = 0;
+                
+                // Add special effect
+                document.querySelectorAll('.floating-element').forEach(el => {
+                    el.style.animation = 'float 1s ease-in-out infinite';
+                });
+            }
+        });
+
+        // Console message
+        console.log('🏝️ Welcome to TRODDR! Built with ❤️ in Jamaica. Ready to explore like a local?');
+        
+        // Performance optimization
+        if ('IntersectionObserver' in window) {
+            const lazyImages = document.querySelectorAll('img[data-src]');
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+
+            lazyImages.forEach(img => imageObserver.observe(img));
+        }
+    </script>
+</body>
+</html>
