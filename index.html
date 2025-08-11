@@ -160,7 +160,7 @@
 
         /* Hero Section */
         .hero {
-            min-height: 100vh;
+            min-height: 85vh;
             display: flex;
             align-items: center;
             position: relative;
@@ -274,6 +274,96 @@
 
         .hero-image:hover::before {
             opacity: 0.5;
+        }
+
+        .hero-buttons { display: flex; justify-content: left; gap: 1rem; }
+
+        /* About TRODDR Section */
+        .about-app { background: #fff; }
+        .about-app .section-title { text-align: left; margin-left: 0; }
+        .about-grid { 
+            display: grid; 
+            grid-template-columns: 1.2fr 1fr; 
+            gap: 2.5rem; 
+            align-items: center; 
+            margin-top: 2rem; 
+        }
+        .about-copy { max-width: 720px; }
+        .about-copy p { color: var(--gray); font-size: 1.05rem; margin-bottom: 1rem; }
+        .about-points { list-style: none; margin-top: 1rem; }
+        .about-points li { 
+            display: flex; 
+            align-items: flex-start; 
+            gap: .75rem; 
+            margin-bottom: .75rem; 
+            color: var(--dark);
+        }
+        .about-points li .dot { 
+            width: 28px; height: 28px; 
+            border-radius: 999px; 
+            background: linear-gradient(135deg, var(--primary), var(--primary-light)); 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 700; 
+            color: #fff; 
+            flex: 0 0 28px;
+        }
+        .about-media {
+            border-radius: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            box-shadow: 0 20px 50px rgba(0,119,204,.25);
+            min-height: 360px;
+            position: relative;
+            overflow: hidden;
+        }
+        .about-media::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1200') center/cover no-repeat;
+            opacity: .25;
+        }
+        .about-media .mock {
+            position: absolute; inset: 24px; 
+            border-radius: 20px; 
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255,255,255,0.25);
+            display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600;
+        }
+        @media (max-width: 980px) {
+            .about-app .section-title { text-align: center; }
+            .about-grid { grid-template-columns: 1fr; }
+            .about-copy { max-width: 100%; }
+        }
+
+        /* Founder / Story Section */
+        #founder.story-section {
+            background: white;
+        }
+
+        #founder .section-container {
+            display: flex;              /* Arrange elements in a row */
+            justify-content: flex-end;  /* Push everything to the right */
+            flex-direction: column;     /* Keep title above content */
+            align-items: flex-end;      /* Align both title & text to right side */
+        }
+
+        #founder .section-title {
+            text-align: left; /* Keeps heading text itself left-aligned */
+            width: 600px;     /* Matches story-content width */
+        }
+
+        #founder .story-content {
+            max-width: 600px;
+            margin: 0;
+            text-align: left;
+        }
+
+        #founder .story-content p {
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+            color: var(--gray);
         }
 
         /* Section Styles */
@@ -592,6 +682,28 @@
             color: #E5E7EB;
         }
 
+        /* Ticker / Rolling CTA Section */
+        .ticker-section { background: var(--primary); color: white; overflow: hidden; }
+        .ticker-row { position: relative; border-top: 1px solid rgba(255,255,255,0.08); }
+        .ticker-inner { display: flex; gap: 2rem; padding: 0.35rem 0; }
+        .ticker-track { display: flex; gap: 2rem; white-space: nowrap; will-change: transform; animation: marquee 28s linear infinite; }
+        .ticker-row:hover .ticker-track { animation-play-state: paused; }
+        /* Download Ticker Variant */
+        .ticker-section.ticker-download { background: var(--primary); }
+        .ticker-section.ticker-download .ticker-inner { padding: 1.1rem 0; }
+        .ticker-section.ticker-download .ticker-track { gap: 8rem; }
+        .ticker-section.ticker-download .ticker-item { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.3px; }
+        .store-badge { display: inline-block; padding: 0.35rem 0.8rem; border-radius: 999px; background: white; color: var(--dark); font-weight: 700; font-size: 0.9rem; text-decoration: none; }
+        .social-link { color: white; text-decoration: none; font-weight: 600; opacity: 0.95; }
+        .social-link:hover { opacity: 1; text-decoration: underline; }
+        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        /* Ensure the track is long enough by duplicating content */
+        .ticker-dup { margin-left: 2rem; }
+        @media (max-width: 768px) {
+            .ticker-inner { padding: 0.75rem 0; }
+            .store-badge { font-size: 0.85rem; }
+        }
+
         /* CTA Section */
         .cta-section {
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
@@ -650,6 +762,98 @@
             background: white;
             color: var(--primary);
             transform: translateY(-3px);
+        }
+
+        .waitlist-section {
+        background: linear-gradient(135deg, var(--primary), #0077cc);
+        padding: 4rem 1rem;
+        text-align: center;
+        color: white;
+        }
+
+        .waitlist-container {
+        max-width: 700px;
+        margin: 0 auto;
+        }
+
+        .waitlist-container h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        }
+
+        .waitlist-container p {
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+        }
+
+        #waitlist-form {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        }
+
+        #waitlist-form input {
+        flex: 1 1 200px;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        }
+
+        #waitlist-form button {
+        background: white;
+        color: var(--primary);
+        font-weight: bold;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 50px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        #waitlist-form button:hover {
+        transform: scale(1.05);
+        background: #f8f8f8;
+        }
+
+        /* Contact */
+        .contact-section { background: #fff; }
+        .contact-form { max-width: 720px; margin: 0 auto; }
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .contact-field { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+        .contact-field label { font-weight: 600; color: var(--dark); }
+        .contact-field input,
+        .contact-field textarea {
+        padding: .9rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: var(--light-gray);
+        font-size: 1rem;
+        outline: none;
+        transition: border .2s ease, background .2s ease, box-shadow .2s ease;
+        }
+        .contact-field input:focus,
+        .contact-field textarea:focus {
+        background: #fff;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(0,119,204,.12);
+        }
+        .contact-submit {
+        background: var(--primary);
+        color: #fff;
+        border: 0;
+        border-radius: 999px;
+        padding: .9rem 1.6rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0,119,204,.25);
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+        .contact-submit:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,119,204,.35); }
+
+        @media (max-width: 768px) {
+        .contact-grid { grid-template-columns: 1fr; }
         }
 
         /* Footer */
@@ -757,9 +961,9 @@
         <div class="navbar">
             <div class="logo">troddr</div>
             <nav class="nav-links">
+                <a href="#founder" class="nav-item">About</a>
                 <a href="#features" class="nav-item">Features</a>
-                <a href="#destinations" class="nav-item">Destinations</a>
-                <a href="#testimonials" class="nav-item">Stories</a>
+                <!-- <a href="#testimonials" class="nav-item">Stories</a> -->
                 <a href="#contact" class="nav-item">Contact</a>
                 <a href="#demo" class="nav-cta">Join Waitlist</a>
             </nav>
@@ -772,15 +976,114 @@
             <div class="hero-text">
                 <h1>Experience Jamaica Like a Local</h1>
                 <p class="hero-subtitle">Curated places to eat, stay, and play. Plan your trips and get ready to explore Jamaica like a local. Discover authentic experiences beyond the tourist trail.</p>
-                <!-- <a href="#demo" class="hero-cta" onclick="trackCTA('hero')">
-                    🏝️ Start Your Journey
-                </a> -->
+                <div class="hero-buttons">
+                    <a href="#waitlist-form" class="hero-cta">Be the First to Explore the App</a>
+                </div>
             </div>
             <!-- <div class="hero-visual">
                 <div class="hero-image" onclick="animateHeroImage()">
                     Authentic Jamaica Awaits
                 </div>
             </div> -->
+        </div>
+    </section>
+
+    <section class="ticker-section" aria-label="Stay connected and download">
+        <!-- Row 1: Download TRODDR -->
+        <div class="ticker-row">
+            <div class="section-container">
+                <div class="ticker-inner">
+                    <div class="ticker-track">
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <!-- duplicate for smooth loop -->
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <span class="ticker-item">Join the Waitlist</span>
+                        <!-- <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span> -->
+                        <!-- duplicate for smooth loop -->
+                        <!-- <span class="ticker-dup ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span>
+                        <span class="ticker-item">Download TRODDR</span> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+
+    <!-- Story / Founder Section -->
+    <section id="founder" class="story-section">
+        <div class="section-container">
+            <h2 class="section-title">A Message from Our Founder</h2>
+            <div class="story-content">
+                <p>TRODDR started long before it had a name. Back when I was the go-to friend to call for anyone visiting Negril.</p>
+                <p>If you asked where to go for a quick lunch, I’d send you straight to Corner Bar for stewed conch and fried chicken. For breakfast? Kuyaba, and don’t even think about skipping the freshly squeezed orange juice. If you went back for dinner it was the Lobster Casino and creamy seafood pasta, no question. And of course, I’d make sure you knew about the escovitch fish at Pushcart, big enough to feed two (but you’ll want it all to yourself).</p>
+                <p>It was never about ticking off tourist checklists. It has always been about those experiences that make a trip unforgettable. The kind of spots you only find out about from someone who’s already been there, loved it, and can’t wait to share it. Places you’ll still be talking about long after you’re home.</p>
+                <p>That’s why I created TRODDR, to make sure you get those recommendations too. Like you’re exploring with a friend showing you around, not following a guidebook.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About TRODDR Section -->
+    <section id="about-troddr" class="about-app">
+        <div class="section-container">
+            <h2 class="section-title">About TRODDR</h2>
+            <div class="about-grid">
+                <div class="about-copy">
+                    <p>TRODDR is your insider guide to the Caribbean, starting in Jamaica. We connect you with the kind of places locals love and seasoned travelers can’t stop talking about, from family-run eateries and hidden beaches to unforgettable cultural experiences.</p>
+                    <p>Our platform makes trip planning effortless. With TRODDR you can:</p>
+                    <ul class="about-points">
+                        <li><span class="dot">✓</span><span><strong>Discover</strong> curated recommendations for where to eat, stay, and play.</span></li>
+                        <li><span class="dot">✓</span><span><strong>Plan</strong> your trip with personalized itineraries and interactive maps.</span></li>
+                        <li><span class="dot">✓</span><span><strong>Explore</strong> confidently with trusted, first-hand tips, no guesswork.</span></li>
+                    </ul>
+                    <p>Whether you’re chasing the perfect plate of seafood, a boutique stay, or an off-the-beaten-path adventure, TRODDR puts it all at your fingertips.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="waitlist" class="waitlist-section">
+        <div class="waitlist-container">
+          <h2>Be the First to Explore the TRODDR app</h2>
+          <p>Get insider travel recommendations before anyone else.</p>
+          <form id="waitlist-form">
+            <input type="text" placeholder="Your name" name="name" required>
+            <input type="email" placeholder="Your email" name="email" required>
+            <button type="submit">Join Waitlist</button>
+          </form>
         </div>
     </section>
 
@@ -795,10 +1098,10 @@
                     <div class="solution-number">1</div>
                     <h3>Eat Like a Local</h3>
                     <ul class="solution-features">
-                        <li>Authentic jerk spots recommended by locals</li>
+                        <li>Authentic food spots</li>
                         <li>Hidden food gems off the beaten path</li>
                         <li>Fine dining experiences with local flair</li>
-                        <li>Street food tours and market discoveries</li>
+                        <li>Street food discoveries</li>
                     </ul>
                 </div>
                 
@@ -806,7 +1109,7 @@
                     <div class="solution-number">2</div>
                     <h3>Stay in Special Places</h3>
                     <ul class="solution-features">
-                        <li>Boutique hotels with authentic character</li>
+                        <li>Beautiful boutique hotels</li>
                         <li>Eco-lodges in stunning natural settings</li>
                         <li>Beachfront villas for ultimate relaxation</li>
                         <li>Historic properties with cultural significance</li>
@@ -817,10 +1120,10 @@
                     <div class="solution-number">3</div>
                     <h3>Play Beyond the Brochure</h3>
                     <ul class="solution-features">
-                        <li>Blue Mountain adventures and coffee tours</li>
-                        <li>Secret beaches and swimming holes</li>
-                        <li>Cultural experiences and reggae sessions</li>
-                        <li>Personalized activity recommendations</li>
+                        <li>Blue Mountain hikes and coffee tours</li>
+                        <li>White sand beaches and swimming holes</li>
+                        <li>Waterfalls, rafting, and river limes</li>
+                        <li>ATV rides through jungle trails</li>
                     </ul>
                 </div>
             </div>
@@ -836,28 +1139,28 @@
             <div class="features-grid">
                 <div class="feature-card scroll-reveal" onclick="featureClick('curated')">
                     <span class="feature-icon">✨</span>
-                    <h3>Curated by Locals</h3>
-                    <p>Every recommendation comes from Jamaican locals who know the island inside and out. No tourist traps, just authentic experiences.</p>
+                    <h3>Locally Curated</h3>
+                    <p>Handpicked by Jamaicans who live it, love it, and know where the real magic happens.</p>
                 </div>
                 
                 <div class="feature-card scroll-reveal" onclick="featureClick('planner')">
                     <span class="feature-icon">📅</span>
-                    <h3>Smart Trip Planner</h3>
-                    <p>Drag-and-drop itinerary builder with route optimization. Find amazing stops along your way and plan your perfect Jamaican adventure.</p>
+                    <h3>Plan Your Way</h3>
+                    <p>Curate your trip with our trip planner. Add epic stops and create an itinerary that’s all yours.</p>
                 </div>
                 
                 <div class="feature-card scroll-reveal" onclick="featureClick('discovery')">
                     <span class="feature-icon">🗺️</span>
-                    <h3>Local Discovery</h3>
-                    <p>Discover hidden gems and secret spots that only locals know about. From secluded beaches to underground music sessions.</p>
+                    <h3>Find the Hidden</h3>
+                    <p>Uncover tucked-away beaches, off-menu eats, and underground vibes you won’t find on any travel app.</p>
                 </div>
                 
-                <div class="feature-card scroll-reveal" onclick="featureClick('personalized')">
+                <!-- <div class="feature-card scroll-reveal" onclick="featureClick('personalized')">
                     <span class="feature-icon">🎯</span>
-                    <h3>Personalized Recommendations</h3>
-                    <p>Get suggestions tailored to your interests, whether you're a foodie, adventure seeker, culture enthusiast, or beach lover.</p>
-                </div>
-                
+                    <h3>For You, Not the Masses</h3>
+                    <p>Recommendations that match your vibe—whether that’s chasing waterfalls, island-hopping, or devouring every patty in sight.</p>
+                </div> -->
+<!--                 
                 <div class="feature-card scroll-reveal" onclick="featureClick('offline')">
                     <span class="feature-icon">📱</span>
                     <h3>Works Offline</h3>
@@ -868,7 +1171,7 @@
                     <span class="feature-icon">👥</span>
                     <h3>Traveler Community</h3>
                     <p>Connect with other travelers and locals. Share experiences, get real-time tips, and discover what's happening around you.</p>
-                </div>
+                </div> -->
             </div>
         </div>
     </section>
@@ -984,11 +1287,85 @@
     <!-- CTA Section -->
     <section id="demo" class="cta-section">
         <div class="section-container">
-            <h2>Ready to Explore the Real Jamaica?</h2>
-            <p>Join our waitlist and be among the first to experience Jamaica like never before. Get early access to curated local recommendations and smart trip planning tools.</p>
+            <h2>Ready to Explore Jamaica Like a Local?</h2>
+            <p>Skip the guesswork. Join the waitlist for handpicked local gems and planning that takes minutes.</p>
             <div class="cta-buttons">
-                <a href="#" class="btn-primary" onclick="showWaitlistForm()">Join Waitlist</a>
+                <!-- <a href="#" class="btn-primary" onclick="showWaitlistForm()">Join Waitlist</a> -->
+                <a href="#waitlist-form" class="btn-primary">Join Waitlist</a>
                 <a href="#" class="btn-secondary" onclick="downloadApp()">Download App</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="section-container">
+        <h2 class="section-title">Get in Touch</h2>
+        <p class="section-subtitle">Questions, partnerships, press, or just want to say hi?<br> We’d love to hear from you.</p>
+    
+        <form id="contact-form" class="contact-form" novalidate>
+            <div class="contact-grid">
+            <div class="contact-field">
+                <label for="contact-name">Name</label>
+                <input id="contact-name" name="name" type="text" placeholder="Your name" required />
+            </div>
+            <div class="contact-field">
+                <label for="contact-email">Email</label>
+                <input id="contact-email" name="email" type="email" placeholder="you@example.com" required />
+            </div>
+            </div>
+    
+            <div class="contact-field">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" name="message" rows="5" placeholder="How can we help?" required></textarea>
+            </div>
+    
+            <button type="submit" class="contact-submit">Send Message</button>
+        </form>
+        </div>
+    </section>
+    
+     <!-- Rolling CTAs -->
+     <section class="ticker-section" aria-label="Stay connected and download">
+        <!-- Row 2: Let's get social -->
+        <div class="ticker-row">
+            <div class="section-container">
+                <div class="ticker-inner">
+                    <div class="ticker-track">
+                        <span class="ticker-item">📣 Let’s get social</span>
+                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item">Instagram</span>
+                        <span class="ticker-sep">•</span>
+                        <!-- duplicate for smooth loop -->
+                        <span class="ticker-item">📣 Let’s get social</span>
+                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item">Instagram</span>
+                        <span class="ticker-sep">•</span>
+                        <!-- <span class="ticker-item">TikTok</span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item">Twitter/X</span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item">Tag your finds #troddr</span> -->
+                        <span class="ticker-dup ticker-item">📣 Let’s get social</span>
+                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item">Instagram</span>
+                        <span class="ticker-sep">•</span>
+                        <!-- duplicate for smooth loop -->
+                        <span class="ticker-dup ticker-item">📣 Let’s get social</span>
+                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item">Instagram</span>
+                        <span class="ticker-sep">•</span>
+                        <!-- <span class="ticker-item">TikTok</span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item">Twitter/X</span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item">Tag your finds #troddr</span> -->
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -1000,11 +1377,6 @@
                 <div class="footer-section">
                     <h3>TRODDR</h3>
                     <p>Your ultimate Jamaica travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
-                    <div style="margin-top: 1rem;">
-                        <span style="font-size: 1.5rem; margin-right: 1rem;">🏝️</span>
-                        <span style="font-size: 1.5rem; margin-right: 1rem;">📱</span>
-                        <span style="font-size: 1.5rem;">🌟</span>
-                    </div>
                 </div>
                 <div class="footer-section">
                     <h3>Discover</h3>
@@ -1012,7 +1384,14 @@
                         <a href="#">Eat</a>
                         <a href="#">Stay</a>
                         <a href="#">Play</a>
-                        <a href="#">Hidden Gems</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Plan</h3>
+                    <div class="footer-links">
+                        <a href="#">Trip Planner</a>
+                        <a href="#">Itineraries</a>
+                        <a href="#">Travel Guides</a>
                     </div>
                 </div>
                 <div class="footer-section">
@@ -1025,19 +1404,10 @@
                     </div>
                 </div>
                 <div class="footer-section">
-                    <h3>Plan</h3>
-                    <div class="footer-links">
-                        <a href="#">Trip Planner</a>
-                        <a href="#">Itineraries</a>
-                        <a href="#">Route Optimizer</a>
-                        <a href="#">Travel Guides</a>
-                    </div>
-                </div>
-                <div class="footer-section">
                     <h3>Support</h3>
                     <div class="footer-links">
                         <a href="#">Help Center</a>
-                        <a href="#">Contact Us</a>
+                        <a href="#contact">Contact Us</a>
                         <a href="#">Privacy Policy</a>
                         <a href="#">Terms of Service</a>
                     </div>
@@ -1050,7 +1420,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
+                <p>© 2025 TRODDR. Made with ❤️ . Explore authentic experiences across the Caribbean.</p>
             </div>
         </div>
     </footer>
@@ -1263,6 +1633,41 @@
                 });
             }
         });
+
+        // Contact form submission
+        const contactForm = document.getElementById('contact-form');
+        if (contactForm) {
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('contact-name').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+            const message = document.getElementById('contact-message').value.trim();
+
+            if (!name || !email || !message) {
+            showNotification("⚠️ Please fill out your name, email, and message.");
+            return;
+            }
+            // TODO: replace with your real submission (email/API). For now, just confirm:
+            showNotification("✅ Message sent! We'll get back to you soon.");
+            contactForm.reset();
+        });
+        }
+
+        // Waitlist form submission
+        const waitlistForm = document.getElementById('waitlist-form');
+        if (waitlistForm) {
+            waitlistForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('name').value.trim();
+                const email = document.getElementById('email').value.trim();
+                if (name && email) {
+                    showNotification(`🎉 Thanks ${name}! You've been added to the waitlist.`);
+                    waitlistForm.reset();
+                } else {
+                    showNotification("⚠️ Please enter your name and a valid email.");
+                }
+            });
+        }
 
         // Console message
         console.log('🏝️ Welcome to TRODDR! Built with ❤️ in Jamaica. Ready to explore like a local?');
