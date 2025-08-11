@@ -1362,113 +1362,23 @@ function initKeyboardNavigation() {
     });
 }
 
-/**
- * Responsive navigation for mobile
- */
-function initMobileNavigation() {
-    const header = document.querySelector('.header');
-    const navbar = document.querySelector('.navbar');
-    
-    // Create mobile menu button if needed
-    if (window.innerWidth <= 768) {
-        let mobileMenuBtn = navbar.querySelector('.mobile-menu-btn');
-        if (!mobileMenuBtn) {
-            mobileMenuBtn = document.createElement('button');
-            mobileMenuBtn.className = 'mobile-menu-btn';
-            mobileMenuBtn.innerHTML = '☰';
-            mobileMenuBtn.setAttribute('aria-label', 'Toggle menu');
-            
-            const navLinks = navbar.querySelector('.nav-links');
-            navbar.insertBefore(mobileMenuBtn, navLinks);
-            
-            mobileMenuBtn.addEventListener('click', function() {
-                navLinks.classList.toggle('mobile-open');
-                this.classList.toggle('active');
-            });
-        }
-    }
-    
-    // Header scroll effect
-    let lastScrollY = window.scrollY;
-    window.addEventListener('scroll', () => {
-        const currentScrollY = window.scrollY;
-        
-        if (currentScrollY > 100) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
-        
-        // Hide header on scroll down, show on scroll up
-        if (currentScrollY > lastScrollY && currentScrollY > 200) {
-            header.classList.add('hidden');
-        } else {
-            header.classList.remove('hidden');
-        }
-        
-        lastScrollY = currentScrollY;
-    });
-}
-
-/**
- * Initialize all features
- */
-document.addEventListener('DOMContentLoaded', function() {
-    initScrollAnimations();
-    initWaitlistForm();
-    initContactForm();
-    initSmoothScrolling();
-    initCardInteractions();
-    initCounterAnimations();
-    initFormValidation();
-    initKeyboardNavigation();
-    initMobileNavigation();
-    trackPageAnalytics();
-});
-
-/**
- * Export functions for external use
- */
-window.TroddrHomepage = {
-    trackEvent,
-    showNotification,
-    hideFormMessages,
-    validateField
-};
-
-/**
- * TRODDR Mobile Navigation and Responsive Features
- * Add this to your main.js file or create a separate mobile.js file
- */
-
+// Mobile Navigation and Responsive Features
 document.addEventListener('DOMContentLoaded', function() {
     initMobileNavigation();
     initResponsiveFeatures();
     initTouchGestures();
     initViewportOptimization();
+    initWaitlistForm();
+    initContactForm();
+    initSmoothScrolling();
 });
 
-/**
- * Initialize mobile navigation
- */
 function initMobileNavigation() {
     const navbar = document.querySelector('.navbar');
     const navLinks = document.querySelector('.nav-links');
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     
-    if (!navbar || !navLinks) return;
-    
-    // Create mobile menu button if it doesn't exist
-    let mobileMenuBtn = navbar.querySelector('.mobile-menu-btn');
-    if (!mobileMenuBtn) {
-        mobileMenuBtn = document.createElement('button');
-        mobileMenuBtn.className = 'mobile-menu-btn';
-        mobileMenuBtn.innerHTML = '☰';
-        mobileMenuBtn.setAttribute('aria-label', 'Toggle navigation menu');
-        mobileMenuBtn.setAttribute('aria-expanded', 'false');
-        
-        // Insert before nav-links
-        navbar.insertBefore(mobileMenuBtn, navLinks);
-    }
+    if (!navbar || !navLinks || !mobileMenuBtn) return;
     
     // Toggle menu functionality
     mobileMenuBtn.addEventListener('click', function() {
@@ -1537,9 +1447,6 @@ function initMobileNavigation() {
     });
 }
 
-/**
- * Initialize responsive features
- */
 function initResponsiveFeatures() {
     // Header scroll behavior
     const header = document.querySelector('.header');
@@ -1576,45 +1483,10 @@ function initResponsiveFeatures() {
     }
     
     window.addEventListener('scroll', requestTick);
-    
-    // Responsive image loading
-    initResponsiveImages();
-    
-    // Responsive form optimization
-    initMobileFormFeatures();
 }
 
-/**
- * Initialize touch gestures for mobile
- */
 function initTouchGestures() {
-    // Swipe to close mobile menu
-    const navLinks = document.querySelector('.nav-links');
-    if (!navLinks) return;
-    
-    let startY = 0;
-    let startX = 0;
-    
-    navLinks.addEventListener('touchstart', function(e) {
-        startY = e.touches[0].clientY;
-        startX = e.touches[0].clientX;
-    }, { passive: true });
-    
-    navLinks.addEventListener('touchmove', function(e) {
-        if (!navLinks.classList.contains('mobile-open')) return;
-        
-        const currentY = e.touches[0].clientY;
-        const currentX = e.touches[0].clientX;
-        const diffY = startY - currentY;
-        const diffX = startX - currentX;
-        
-        // Swipe up to close menu
-        if (diffY > 50 && Math.abs(diffX) < 100) {
-            closeMobileMenu();
-        }
-    }, { passive: true });
-    
-    // Add swipe indicators for cards
+    // Add touch feedback for cards
     const cards = document.querySelectorAll('.solution-card, .feature-card');
     cards.forEach(card => {
         card.addEventListener('touchstart', function() {
@@ -1627,10 +1499,17 @@ function initTouchGestures() {
     });
 }
 
-/**
- * Optimize viewport and performance for mobile
- */
 function initViewportOptimization() {
+    // Set CSS custom property for viewport height (for mobile browsers)
+    function setVH() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+    
     // Prevent zoom on input focus (iOS)
     const inputs = document.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
@@ -1656,86 +1535,278 @@ function initViewportOptimization() {
             }
         });
     });
-    
-    // Lazy loading for images and heavy content
-    if ('IntersectionObserver' in window) {
-        const lazyElements = document.querySelectorAll('[data-lazy]');
-        const lazyObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const element = entry.target;
-                    const src = element.dataset.lazy;
-                    
-                    if (element.tagName === 'IMG') {
-                        element.src = src;
-                    } else {
-                        element.style.backgroundImage = `url(${src})`;
-                    }
-                    
-                    element.removeAttribute('data-lazy');
-                    lazyObserver.unobserve(element);
-                }
-            });
-        });
-        
-        lazyElements.forEach(el => lazyObserver.observe(el));
-    }
 }
 
-/**
- * Initialize responsive images
- */
-function initResponsiveImages() {
-    // Add srcset support for high-DPI displays
-    const images = document.querySelectorAll('img[data-srcset]');
-    images.forEach(img => {
-        if (window.devicePixelRatio > 1) {
-            const highResSrc = img.dataset.srcset;
-            if (highResSrc) {
-                img.src = highResSrc;
-            }
+function initWaitlistForm() {
+    const waitlistForm = document.getElementById('waitlist-form');
+    if (!waitlistForm) return;
+
+    waitlistForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            source: 'homepage_waitlist'
+        };
+
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Joining...';
+        submitBtn.disabled = true;
+
+        try {
+            // Simulate API call (replace with actual endpoint)
+            await submitWaitlistData(data);
+            
+            // Show success state
+            submitBtn.textContent = 'Joined! ✓';
+            submitBtn.style.background = 'var(--green)';
+            
+            // Reset form
+            this.reset();
+            
+            // Show success message
+            showNotification('Welcome to the TRODDR family! We\'ll keep you updated on our launch.', 'success');
+            
+        } catch (error) {
+            console.error('Waitlist signup error:', error);
+            submitBtn.textContent = 'Try Again';
+            showNotification('Something went wrong. Please try again.', 'error');
+        } finally {
+            // Reset button after delay
+            setTimeout(() => {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                submitBtn.style.background = '';
+            }, 3000);
         }
     });
 }
 
-/**
- * Mobile form features
- */
-function initMobileFormFeatures() {
-    // Auto-resize textareas
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-    });
-    
-    // Improve form validation UX on mobile
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        const inputs = form.querySelectorAll('input, textarea');
+function initContactForm() {
+    const contactForm = document.getElementById('contact-form');
+    if (!contactForm) return;
+
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        inputs.forEach(input => {
-            // Show validation on blur instead of input for better mobile UX
-            input.addEventListener('blur', function() {
-                if (this.checkValidity()) {
-                    this.classList.remove('invalid');
-                    this.classList.add('valid');
-                } else {
-                    this.classList.remove('valid');
-                    this.classList.add('invalid');
-                }
-            });
+        // Validate form
+        if (!validateContactForm(this)) {
+            return;
+        }
+
+        const formData = new FormData(this);
+        const data = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            message: formData.get('message'),
+            source: 'homepage_contact'
+        };
+
+        // Show loading state
+        const submitBtn = this.querySelector('.contact-submit');
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+
+        try {
+            // Simulate API call (replace with actual endpoint)
+            await submitContactData(data);
+            
+            showFormMessage('contact-success');
+            this.reset();
+            
+        } catch (error) {
+            console.error('Contact form error:', error);
+            showFormMessage('contact-error');
+        } finally {
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+        }
+    });
+
+    // Add real-time validation
+    const inputs = contactForm.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', () => validateField(input));
+    });
+}
+
+function initSmoothScrolling() {
+    const anchorLinks = document.querySelectorAll('a[href^="#"]');
+    
+    anchorLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            
+            if (href === '#') return;
+            
+            const targetElement = document.querySelector(href);
+            if (targetElement) {
+                e.preventDefault();
+                
+                const headerOffset = 100;
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
         });
     });
 }
 
-/**
- * Enhanced notification system for mobile
- */
-function showMobileNotification(message, type = 'info', duration = 4000) {
-    // Remove existing notifications
+// Form validation functions
+function validateContactForm(form) {
+    const requiredFields = form.querySelectorAll('[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!validateField(field)) {
+            isValid = false;
+        }
+    });
+    
+    return isValid;
+}
+
+function validateField(field) {
+    const value = field.value.trim();
+    const fieldType = field.type;
+    const fieldName = field.name;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    // Required field validation
+    if (field.hasAttribute('required') && !value) {
+        showFieldError(field, 'This field is required');
+        return false;
+    }
+    
+    // Email validation
+    if (fieldType === 'email' && value && !emailRegex.test(value)) {
+        showFieldError(field, 'Please enter a valid email address');
+        return false;
+    }
+    
+    // Name validation
+    if (fieldName === 'name' && value) {
+        const nameRegex = /^[a-zA-Z\s'-]+$/;
+        if (!nameRegex.test(value)) {
+            showFieldError(field, 'Please enter a valid name');
+            return false;
+        }
+    }
+    
+    // Message minimum length
+    if (fieldName === 'message' && value && value.length < 10) {
+        showFieldError(field, 'Please provide a more detailed message');
+        return false;
+    }
+    
+    clearFieldError(field);
+    return true;
+}
+
+function showFieldError(field, message) {
+    field.style.borderColor = '#ef4444';
+    field.style.background = '#fef2f2';
+    
+    let errorElement = field.parentNode.querySelector('.field-error');
+    if (!errorElement) {
+        errorElement = document.createElement('span');
+        errorElement.className = 'field-error';
+        errorElement.style.cssText = `
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: block;
+            font-weight: 500;
+        `;
+        field.parentNode.appendChild(errorElement);
+    }
+    errorElement.textContent = message;
+}
+
+function clearFieldError(field) {
+    field.style.borderColor = '';
+    field.style.background = '';
+    
+    const errorElement = field.parentNode.querySelector('.field-error');
+    if (errorElement) {
+        errorElement.remove();
+    }
+}
+
+// API simulation functions
+async function submitWaitlistData(data) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (Math.random() > 0.1) {
+                resolve(data);
+            } else {
+                reject(new Error('Submission failed'));
+            }
+        }, 1500);
+    });
+}
+
+async function submitContactData(data) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (Math.random() > 0.1) {
+                resolve(data);
+            } else {
+                reject(new Error('Submission failed'));
+            }
+        }, 2000);
+    });
+}
+
+function showFormMessage(messageId) {
+    hideFormMessages();
+    
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        messageElement.style.display = 'block';
+        
+        setTimeout(() => {
+            hideFormMessages();
+        }, 5000);
+        
+        setTimeout(() => {
+            document.addEventListener('click', handleMessageOutsideClick);
+        }, 100);
+    }
+}
+
+function hideFormMessages() {
+    const messages = document.querySelectorAll('.form-message');
+    messages.forEach(msg => {
+        msg.style.display = 'none';
+    });
+    document.removeEventListener('click', handleMessageOutsideClick);
+}
+
+function handleMessageOutsideClick(e) {
+    const messages = document.querySelectorAll('.form-message');
+    let clickedInside = false;
+    
+    messages.forEach(msg => {
+        if (msg.contains(e.target)) {
+            clickedInside = true;
+        }
+    });
+    
+    if (!clickedInside) {
+        hideFormMessages();
+    }
+}
+
+function showNotification(message, type = 'info') {
     const existingNotifications = document.querySelectorAll('.notification');
     existingNotifications.forEach(notification => notification.remove());
     
@@ -1758,12 +1829,10 @@ function showMobileNotification(message, type = 'info', duration = 4000) {
     
     document.body.appendChild(notification);
     
-    // Animate in
     setTimeout(() => {
         notification.classList.add('show');
     }, 10);
     
-    // Auto-remove
     setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => {
@@ -1771,9 +1840,8 @@ function showMobileNotification(message, type = 'info', duration = 4000) {
                 notification.parentNode.removeChild(notification);
             }
         }, 300);
-    }, duration);
+    }, 4000);
     
-    // Allow tap to dismiss
     notification.addEventListener('click', () => {
         notification.classList.remove('show');
         setTimeout(() => {
@@ -1784,32 +1852,12 @@ function showMobileNotification(message, type = 'info', duration = 4000) {
     });
 }
 
-/**
- * Orientation change handler
- */
-function handleOrientationChange() {
-    // Close mobile menu on orientation change
-    const navLinks = document.querySelector('.nav-links');
-    if (navLinks && navLinks.classList.contains('mobile-open')) {
-        navLinks.classList.remove('mobile-open');
-        document.body.style.overflow = '';
+// Performance monitoring
+window.addEventListener('load', function() {
+    if ('performance' in window) {
+        const perfData = performance.getEntriesByType('navigation')[0];
+        if (perfData && perfData.loadEventEnd > 0) {
+            console.log('Page load time:', perfData.loadEventEnd - perfData.fetchStart, 'ms');
+        }
     }
-    
-    // Recalculate viewport height for better mobile experience
-    const vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-}
-
-window.addEventListener('orientationchange', handleOrientationChange);
-window.addEventListener('resize', handleOrientationChange);
-
-// Initial viewport height calculation
-handleOrientationChange();
-
-/**
- * Export functions for external use
- */
-window.TroddrMobile = {
-    showMobileNotification,
-    handleOrientationChange
-};
+});

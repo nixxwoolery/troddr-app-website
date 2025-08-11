@@ -23,7 +23,6 @@
 
     <!-- Preload critical resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="css/style.css" as="style">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="images/troddr_logo.png">
@@ -34,6 +33,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N0L5H68MFR"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-N0L5H68MFR');
+    </script>
+
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
@@ -60,21 +69,25 @@
 <body>
     <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    
-    <!-- Background decoration -->
-    <div class="floating-element" aria-hidden="true"></div>
-    <div class="floating-element" aria-hidden="true"></div>
-    <div class="floating-element" aria-hidden="true"></div>
 
     <header class="header" role="banner">
         <div class="navbar">
             <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
-            <nav class="nav-links" role="navigation" aria-label="Main navigation">
+            <!-- <button class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false">
+                ☰
+            </button> -->
+            <button class="mobile-menu-btn"
+                    aria-controls="primary-navigation"
+                    aria-expanded="false"
+                    aria-label="Open menu">
+                    <span aria-hidden="true">☰</span>
+            </button>
+            <div class="nav-links" id="primary-navigation" role="navigation">
                 <a href="about.html" class="nav-item">About</a>
                 <a href="#features" class="nav-item">Features</a>
                 <a href="contact.html" class="nav-item">Contact</a>
                 <a href="#waitlist-form" class="nav-cta">Join Waitlist</a>
-            </nav>
+            </div>
         </div>
     </header>
 
@@ -203,8 +216,7 @@
                 <p class="section-subtitle">TRODDR combines local expertise with smart planning tools to create your perfect Jamaican adventure.</p>
                 
                 <div class="solution-grid" role="list">
-                    <article class="solution-card" role="listitem" tabindex="0" 
-                             onclick="cardClick('eat')" onkeydown="handleCardKeydown(event, 'eat')">
+                    <article class="solution-card" role="listitem" tabindex="0">
                         <div class="solution-number" aria-hidden="true">1</div>
                         <h3>Eat Like a Local</h3>
                         <ul class="solution-features" role="list">
@@ -215,8 +227,7 @@
                         </ul>
                     </article>
                     
-                    <article class="solution-card" role="listitem" tabindex="0" 
-                             onclick="cardClick('stay')" onkeydown="handleCardKeydown(event, 'stay')">
+                    <article class="solution-card" role="listitem" tabindex="0">
                         <div class="solution-number" aria-hidden="true">2</div>
                         <h3>Stay in Special Places</h3>
                         <ul class="solution-features" role="list">
@@ -227,14 +238,13 @@
                         </ul>
                     </article>
                     
-                    <article class="solution-card" role="listitem" tabindex="0" 
-                             onclick="cardClick('play')" onkeydown="handleCardKeydown(event, 'play')">
+                    <article class="solution-card" role="listitem" tabindex="0">
                         <div class="solution-number" aria-hidden="true">3</div>
                         <h3>Play Beyond the Brochure</h3>
                         <ul class="solution-features" role="list">
                             <li>Blue Mountain hikes and coffee tours</li>
                             <li>White sand beaches and swimming holes</li>
-                            <li>Waterfalls, rafting, and river limes</li>
+                            <li>Waterfalls, rafting, and river lymes</li>
                             <li>ATV rides through jungle trails</li>
                         </ul>
                     </article>
@@ -245,26 +255,23 @@
         <!-- Features Section -->
         <section id="features" class="features-section" aria-labelledby="features-title">
             <div class="section-container">
-                <h2 id="features-title" class="section-title scroll-reveal">Everything You Need to Explore</h2>
-                <p class="section-subtitle scroll-reveal">TRODDR's powerful platform makes discovering and planning authentic Jamaican experiences effortless.</p>
+                <h2 id="features-title" class="section-title">Everything You Need to Explore</h2>
+                <p class="section-subtitle">TRODDR's powerful platform makes discovering and planning authentic Jamaican experiences effortless.</p>
                 
                 <div class="features-grid" role="list">
-                    <article class="feature-card scroll-reveal" role="listitem" tabindex="0" 
-                             onclick="featureClick('curated')" onkeydown="handleCardKeydown(event, 'curated')">
+                    <article class="feature-card" role="listitem" tabindex="0">
                         <span class="feature-icon" aria-hidden="true">✨</span>
                         <h3>Locally Curated</h3>
                         <p>Handpicked by Jamaicans who live it, love it, and know where the real magic happens.</p>
                     </article>
                     
-                    <article class="feature-card scroll-reveal" role="listitem" tabindex="0" 
-                             onclick="featureClick('planner')" onkeydown="handleCardKeydown(event, 'planner')">
+                    <article class="feature-card" role="listitem" tabindex="0">
                         <span class="feature-icon" aria-hidden="true">📅</span>
                         <h3>Plan Your Way</h3>
                         <p>Curate your trip with our trip planner. Add epic stops and create an itinerary that's all yours.</p>
                     </article>
                     
-                    <article class="feature-card scroll-reveal" role="listitem" tabindex="0" 
-                             onclick="featureClick('discovery')" onkeydown="handleCardKeydown(event, 'discovery')">
+                    <article class="feature-card" role="listitem" tabindex="0">
                         <span class="feature-icon" aria-hidden="true">🗺️</span>
                         <h3>Find the Hidden</h3>
                         <p>Uncover tucked-away beaches, off-menu eats, and underground vibes you won't find on any travel app.</p>
@@ -320,7 +327,6 @@
             
                     <button type="submit" class="contact-submit">
                         <span class="btn-text">Send Message</span>
-                        <!-- <span class="btn-loading" aria-hidden="true">Sending...</span> -->
                     </button>
                 </form>
             </div>
@@ -436,20 +442,41 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/main.js" defer></script>
-    
-    <!-- Performance monitoring (optional) -->
     <script>
-        // Simple performance monitoring
-        window.addEventListener('load', function() {
-            if ('performance' in window) {
-                const perfData = performance.getEntriesByType('navigation')[0];
-                if (perfData && perfData.loadEventEnd > 0) {
-                    console.log('Page load time:', perfData.loadEventEnd - perfData.fetchStart, 'ms');
-                }
+        (function(){
+          const menuBtn = document.querySelector('.mobile-menu-btn');
+          const navLinks = document.querySelector('.nav-links');
+      
+          if (!menuBtn || !navLinks) return;
+      
+          // Toggle menu open/close
+          menuBtn.addEventListener('click', function(){
+            const isOpen = navLinks.classList.toggle('mobile-open');
+            this.classList.toggle('active', isOpen);
+            this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            document.body.classList.toggle('menu-open', isOpen);
+          });
+      
+          // Close menu when a nav link is clicked
+          navLinks.addEventListener('click', function(e){
+            const link = e.target.closest('a');
+            if (!link) return;
+            navLinks.classList.remove('mobile-open');
+            menuBtn.classList.remove('active');
+            menuBtn.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('menu-open');
+          });
+      
+          // Close on Escape key
+          document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape') {
+              navLinks.classList.remove('mobile-open');
+              menuBtn.classList.remove('active');
+              menuBtn.setAttribute('aria-expanded', 'false');
+              document.body.classList.remove('menu-open');
             }
-        });
-    </script>
+          });
+        })();
+      </script>
 </body>
 </html>
