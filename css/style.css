@@ -2355,13 +2355,14 @@ body {
     }
     
     .nav-links {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: #fff !important; /* force opaque */
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
         flex-direction: column;
         padding: 6rem 2rem 2rem;
         gap: 2rem;
@@ -2370,16 +2371,24 @@ body {
         opacity: 0;
         visibility: hidden;
         transition: all 0.3s ease;
-        z-index: 1000;
-    }
-    
-    .nav-links.mobile-open {
+        z-index: 2001 !important; /* above .header (1000) */
+      }
+      
+      .nav-links.mobile-open {
         transform: translateX(0);
         opacity: 1;
         visibility: visible;
-        background-color: #fff !important;
+        background: #fff !important;
         color: #0077cc;
-    }
+        display: flex !important;
+      }
+      
+      /* Ensure header effects don't show through when menu is open */
+      body.menu-open .header {
+        background: #fff !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+      }
     
     .nav-item {
         font-size: 1.2rem;
@@ -2452,6 +2461,7 @@ body {
     .story-section .section-title {
         width: 100%;
         text-align: center;
+        padding: 0 1rem;
     }
     
     .story-content {
@@ -2911,17 +2921,41 @@ textarea:focus {
     body.menu-open { overflow: hidden; }
 
     /* Mobile baseline: hidden by default */
-@media (max-width: 768px) {
-    .nav-links {
-      display: none;
-      background-color: #fff !important;
-      color: #0077cc;
+    @media (max-width: 768px) {
+        .nav-links {
+        display: none;
+        background: #fff !important;
+        color: #0077cc;
+        position: fixed !important;
+          top: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          left: 0 !important;
+          z-index: 2000 !important;
+        }
+        .nav-links.mobile-open {
+        display:flex ;
+        background: #fff !important;
+        color: #0077cc;
+        }
+        /* optional: lock scroll when open */
+        body.menu-open { overflow: hidden; }
     }
-    .nav-links.mobile-open {
-      display:flex ;
-      background-color: #fff !important;
-    color: #0077cc;
+
+    /* Center the hero CTA reliably */
+    .hero-buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;           /* span full row so flex centering works */
     }
-    /* optional: lock scroll when open */
-    body.menu-open { overflow: hidden; }
-  }
+    
+    .hero-cta {
+        margin: 0 auto;        /* cancel any stray left/right offsets */
+    }
+    
+    /* Extra certainty on small screens */
+    @media (max-width: 768px) {
+        .hero-buttons { justify-content: center !important; }
+        .hero-cta { margin-left: auto !important; margin-right: auto !important; }
+    }
