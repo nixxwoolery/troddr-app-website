@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRODDR • Itinerary</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --primary: #0077cc;
+      --primary-dark:#005da1;
+      --primary-light:#3aa0ff;
+      --dark:#0f172a;
+      --gray:#6b7280;
+      --light:#f8fafc;
+      --card:#ffffff;
+      --green:#10b981;
+      --amber:#f59e0b;
+      --rose:#ef4444;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:var(--dark)}
+
+    /* Header */
+    .itinerary-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #eef2f7}
+    .itinerary-header .bar{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px}
+    .logo{font-weight:800;letter-spacing:.5px}
+    .logo a{color:var(--dark);text-decoration:none}
+    .trip-meta{display:flex;flex-wrap:wrap;gap:12px;margin-left:auto;align-items:center}
+    .meta-pill{background:var(--light);border:1px solid #eef2f7;border-radius:999px;padding:6px 12px;font-size:.9rem;color:#334155}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:var(--dark);padding:.6rem 1rem;font-weight:600;text-decoration:none;cursor:pointer}
+    .btn-primary{background:var(--primary);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(0,119,204,.25)}
+    .btn-primary:hover{background:var(--primary-dark)}
+
+    /* Hero summary */
+    .trip-hero{max-width:1200px;margin:0 auto;padding:22px 20px 10px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+    .trip-title{font-size:1.6rem;margin:0}
+    .trip-sub{color:var(--gray);margin:.25rem 0 0}
+
+    /* Tabs for days */
+    .day-tabs{position:sticky;top:60px;z-index:40;background:#fff;border-bottom:1px solid #eef2f7}
+    .day-track{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;gap:8px;overflow:auto}
+    .day-pill{padding:8px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#0f172a;font-weight:600;white-space:nowrap;cursor:pointer}
+    .day-pill.active,.day-pill:hover{background:var(--primary);color:#fff;border-color:transparent}
+
+    /* Layout */
+    .page{max-width:1200px;margin:0 auto;padding:18px 20px 40px;display:grid;grid-template-columns: 1fr;gap:18px}
+
+    /* Day section */
+    .day-section{scroll-margin-top:120px}
+    .day-header{display:flex;align-items:baseline;gap:10px;margin:18px 0 10px}
+    .day-title{font-size:1.25rem;margin:0}
+    .day-date{color:var(--gray)}
+
+    /* Stop cards */
+    .stops{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+    .stop-card{background:var(--card);border:1px solid #eef2f7;border-radius:14px;overflow:hidden;box-shadow:0 8px 18px rgba(15,23,42,.04)}
+    .stop-cover{height:130px;background:#e2e8f0;background-position:center;background-size:cover}
+    .stop-body{padding:12px 14px}
+    .stop-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .stop-name{margin:0;font-size:1.05rem}
+    .badge{padding:4px 8px;border-radius:999px;font-size:.75rem;font-weight:700}
+    .badge.eat{background:#fff7ed;border:1px solid #fed7aa;color:#c2410c}
+    .badge.play{background:#ecfeff;border:1px solid #a5f3fc;color:#155e75}
+    .badge.stay{background:#f0f9ff;border:1px solid #bae6fd;color:#075985}
+    .stop-meta{display:flex;gap:10px;color:var(--gray);font-size:.9rem;margin:8px 0}
+    .stop-actions{display:flex;gap:8px}
+    .btn-mini{padding:.45rem .7rem;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#0f172a;font-weight:600;text-decoration:none}
+    .btn-mini:hover{border-color:#cbd5e1}
+
+    /* Map placeholder */
+    .map-wrap{border:1px dashed #cbd5e1;border-radius:14px;height:220px;display:flex;align-items:center;justify-content:center;color:#64748b}
+
+    @media (min-width: 1000px){
+      .page{grid-template-columns: 320px 1fr;align-items:start}
+      .sidebar{position:sticky;top:116px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="itinerary-header">
+    <div class="bar">
+      <div class="logo"><a href="/">TRODDR</a></div>
+      <div class="trip-meta">
+        <span class="meta-pill" id="meta-destination">Negril, Jamaica</span>
+        <span class="meta-pill" id="meta-dates">Aug 18–22, 2025 • 4 days</span>
+        <button class="btn" id="btn-copy">Copy Link</button>
+        <a class="btn btn-primary" href="#" id="btn-save">Save to My Trips</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Summary hero -->
+  <section class="trip-hero">
+    <div>
+      <h1 class="trip-title" id="trip-title">Negril Long Weekend</h1>
+      <p class="trip-sub" id="trip-sub">Eat • Stay • Play around West End & Seven Mile Beach</p>
+    </div>
+    <div class="map-wrap">Map preview (pins 1–6)</div>
+  </section>
+
+  <!-- Day tabs -->
+  <nav class="day-tabs">
+    <div class="day-track" id="day-track">
+      <a class="day-pill active" href="#day-1">Day 1</a>
+      <a class="day-pill" href="#day-2">Day 2</a>
+      <a class="day-pill" href="#day-3">Day 3</a>
+      <a class="day-pill" href="#day-4">Day 4</a>
+    </div>
+  </nav>
+
+  <!-- Page layout: sidebar + content -->
+  <main class="page">
+    <aside class="sidebar">
+      <div class="stop-card" style="padding:14px">
+        <h3 style="margin:6px 0 4px">Trip Details</h3>
+        <div class="stop-meta">
+          <span>👤 Created by You</span>
+        </div>
+        <div class="stop-meta"><span>🧭 Mode: Drive</span></div>
+        <div class="stop-meta"><span>📍 Base: West End</span></div>
+      </div>
+      <div style="height:14px"></div>
+      <div class="stop-card" style="padding:14px">
+        <h3 style="margin:6px 0 10px">Quick Actions</h3>
+        <div class="stop-actions">
+          <a class="btn-mini" href="#">Export PDF</a>
+          <a class="btn-mini" href="#">Open in Maps</a>
+        </div>
+      </div>
+    </aside>
+
+    <section>
+      <!-- Day 1 -->
+      <section id="day-1" class="day-section">
+        <div class="day-header">
+          <h2 class="day-title">Day 1</h2>
+          <span class="day-date">Mon • Aug 18</span>
+        </div>
+        <div class="stops">
+          <article class="stop-card">
+            <div class="stop-cover" style="background-image:url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200')"></div>
+            <div class="stop-body">
+              <div class="stop-top">
+                <h3 class="stop-name">Corner Bar</h3>
+                <span class="badge eat">EAT</span>
+              </div>
+              <div class="stop-meta"><span>12:30 PM • Stewed conch & fried chicken</span></div>
+              <div class="stop-actions">
+                <a class="btn-mini" href="#">Get Directions</a>
+                <a class="btn-mini" href="#">Call</a>
+              </div>
+            </div>
+          </article>
+          <article class="stop-card">
+            <div class="stop-cover" style="background-image:url('https://images.unsplash.com/photo-1519821172141-b5d8b6d4f0b4?q=80&w=1200')"></div>
+            <div class="stop-body">
+              <div class="stop-top">
+                <h3 class="stop-name">Pushcart</h3>
+                <span class="badge eat">EAT</span>
+              </div>
+              <div class="stop-meta"><span>7:00 PM • Escovitch fish (feeds two)</span></div>
+              <div class="stop-actions">
+                <a class="btn-mini" href="#">Get Directions</a>
+                <a class="btn-mini" href="#">Website</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Day 2 -->
+      <section id="day-2" class="day-section">
+        <div class="day-header">
+          <h2 class="day-title">Day 2</h2>
+          <span class="day-date">Tue • Aug 19</span>
+        </div>
+        <div class="stops">
+          <article class="stop-card">
+            <div class="stop-cover" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200')"></div>
+            <div class="stop-body">
+              <div class="stop-top">
+                <h3 class="stop-name">Kuyaba</h3>
+                <span class="badge eat">EAT</span>
+              </div>
+              <div class="stop-meta"><span>9:00 AM • Freshly squeezed OJ</span></div>
+              <div class="stop-actions">
+                <a class="btn-mini" href="#">Get Directions</a>
+                <a class="btn-mini" href="#">Menu</a>
+              </div>
+            </div>
+          </article>
+          <article class="stop-card">
+            <div class="stop-cover" style="background-image:url('https://images.unsplash.com/photo-1526481280698-8fcc13fd4ed0?q=80&w=1200')"></div>
+            <div class="stop-body">
+              <div class="stop-top">
+                <h3 class="stop-name">Lobster Casino</h3>
+                <span class="badge eat">EAT</span>
+              </div>
+              <div class="stop-meta"><span>7:30 PM • Creamy seafood pasta</span></div>
+              <div class="stop-actions">
+                <a class="btn-mini" href="#">Get Directions</a>
+                <a class="btn-mini" href="#">Reserve</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Day 3 -->
+      <section id="day-3" class="day-section">
+        <div class="day-header">
+          <h2 class="day-title">Day 3</h2>
+          <span class="day-date">Wed • Aug 20</span>
+        </div>
+        <div class="stops">
+          <article class="stop-card">
+            <div class="stop-cover" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200')"></div>
+            <div class="stop-body">
+              <div class="stop-top">
+                <h3 class="stop-name">ATV Trail Ride</h3>
+                <span class="badge play">PLAY</span>
+              </div>
+              <div class="stop-meta"><span>10:00 AM • Westmoreland backroads</span></div>
+              <div class="stop-actions">
+                <a class="btn-mini" href="#">Get Directions</a>
+                <a class="btn-mini" href="#">Book</a>
+              </div>
+            </div>
+          </article>
+          <article class="stop-card">
+            <div class="stop-cover" style="background-image:url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200')"></div>
+            <div class="stop-body">
+              <div class="stop-top">
+                <h3 class="stop-name">Seven Mile Sunset</h3>
+                <span class="badge play">PLAY</span>
+              </div>
+              <div class="stop-meta"><span>5:45 PM • Beach walk & photos</span></div>
+              <div class="stop-actions">
+                <a class="btn-mini" href="#">Get Directions</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Day 4 -->
+      <section id="day-4" class="day-section">
+        <div class="day-header">
+          <h2 class="day-title">Day 4</h2>
+          <span class="day-date">Thu • Aug 21</span>
+        </div>
+        <div class="stops">
+          <article class="stop-card">
+            <div class="stop-cover" style="background-image:url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1200')"></div>
+            <div class="stop-body">
+              <div class="stop-top">
+                <h3 class="stop-name">Boutique Villa</h3>
+                <span class="badge stay">STAY</span>
+              </div>
+              <div class="stop-meta"><span>Check-out • 11:00 AM</span></div>
+              <div class="stop-actions">
+                <a class="btn-mini" href="#">Directions</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    // Copy link button
+    const copyBtn = document.getElementById('btn-copy');
+    if(copyBtn){
+      copyBtn.addEventListener('click', async () => {
+        try{ await navigator.clipboard.writeText(window.location.href); copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent='Copy Link', 1600);}catch(e){ alert('Copy failed'); }
+      });
+    }
+
+    // Day tab active state on scroll
+    const tabs = Array.from(document.querySelectorAll('.day-pill'));
+    const sections = tabs.map(t => document.querySelector(t.getAttribute('href'))).filter(Boolean);
+    const onScroll = () => {
+      const y = window.scrollY + 140;
+      let activeIndex = 0;
+      sections.forEach((sec,i)=>{ if(sec.offsetTop <= y) activeIndex = i; });
+      tabs.forEach((t,i)=> t.classList.toggle('active', i===activeIndex));
+    };
+    document.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+  </script>
+</body>
+</html>

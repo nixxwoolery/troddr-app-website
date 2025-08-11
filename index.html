@@ -5,952 +5,16 @@
     <meta name="description" content="TRODDR - Jamaica-first travel guide and trip planner. Discover where to eat, stay, and play like a local.">
     <meta name="keywords" content="Jamaica, travel, Caribbean, local guide, trip planner">
     <title>TRODDR - Curated Caribbean Travel</title>
+
+    <!-- Standard favicon -->
+    <link rel="icon" type="image/x-icon" href="images/troddr_logo.png">
+
+    <!-- PNG version -->
+    <link rel="icon" type="image/png" href="images/troddr_logo.png">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #0077CC;
-            --primary-dark: #005A99;
-            --primary-light: #33A3FF;
-            --accent: #F59E0B;
-            --dark: #1A1A1A;
-            --gray: #6B7280;
-            --light-gray: #F3F4F6;
-            --white: #FFFFFF;
-            --green: #10B981;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
-            color: var(--dark);
-            overflow-x: hidden;
-        }
-
-        /* Floating background elements */
-        .floating-element {
-            position: absolute;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            border-radius: 50%;
-            opacity: 0.1;
-            animation: float 6s ease-in-out infinite;
-            z-index: -1;
-        }
-
-        .floating-element:nth-child(1) {
-            width: 200px;
-            height: 200px;
-            top: 10%;
-            right: 10%;
-            animation-delay: 0s;
-        }
-
-        .floating-element:nth-child(2) {
-            width: 150px;
-            height: 150px;
-            bottom: 20%;
-            left: 5%;
-            animation-delay: 2s;
-        }
-
-        .floating-element:nth-child(3) {
-            width: 100px;
-            height: 100px;
-            top: 60%;
-            right: 20%;
-            animation-delay: 4s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-20px) rotate(120deg); }
-            66% { transform: translateY(20px) rotate(240deg); }
-        }
-
-        /* Header */
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .navbar {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-        }
-
-        .nav-item {
-            color: var(--gray);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            position: relative;
-        }
-
-        .nav-item:hover {
-            color: var(--primary);
-        }
-
-        .nav-item::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--primary);
-            transition: width 0.3s ease;
-        }
-
-        .nav-item:hover::after {
-            width: 100%;
-        }
-
-        .nav-cta {
-            background: var(--primary);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 119, 204, 0.3);
-        }
-
-        .nav-cta:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 119, 204, 0.4);
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 85vh;
-            display: flex;
-            align-items: center;
-            position: relative;
-            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 50%;
-            height: 100%;
-            /* background: url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2070') center/cover; */
-            opacity: 0.15;
-            z-index: 1;
-        }
-
-        .hero-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-            position: relative;
-            z-index: 2;
-        }
-
-        .hero-text h1 {
-            font-size: clamp(2.5rem, 5vw, 4rem);
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-subtitle {
-            font-size: 1.25rem;
-            color: var(--gray);
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .hero-cta {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--primary);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0, 119, 204, 0.3);
-        }
-
-        .hero-cta:hover {
-            background: var(--primary-dark);
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(0, 119, 204, 0.4);
-        }
-
-        .hero-visual {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .hero-image {
-            width: 400px;
-            height: 500px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 119, 204, 0.3);
-            transition: all 0.5s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-image::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800') center/cover;
-            opacity: 0.3;
-            transition: opacity 0.3s ease;
-        }
-
-        .hero-image:hover {
-            transform: rotateY(-10deg) rotateX(5deg);
-        }
-
-        .hero-image:hover::before {
-            opacity: 0.5;
-        }
-
-        .hero-buttons { display: flex; justify-content: left; gap: 1rem; }
-
-        /* About TRODDR Section */
-        .about-app { background: #fff; }
-        .about-app .section-title { text-align: left; margin-left: 0; }
-        .about-grid { 
-            display: grid; 
-            grid-template-columns: 1.2fr 1fr; 
-            gap: 2.5rem; 
-            align-items: center; 
-            margin-top: 2rem; 
-        }
-        .about-copy { max-width: 720px; }
-        .about-copy p { color: var(--gray); font-size: 1.05rem; margin-bottom: 1rem; }
-        .about-points { list-style: none; margin-top: 1rem; }
-        .about-points li { 
-            display: flex; 
-            align-items: flex-start; 
-            gap: .75rem; 
-            margin-bottom: .75rem; 
-            color: var(--dark);
-        }
-        .about-points li .dot { 
-            width: 28px; height: 28px; 
-            border-radius: 999px; 
-            background: linear-gradient(135deg, var(--primary), var(--primary-light)); 
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: 700; 
-            color: #fff; 
-            flex: 0 0 28px;
-        }
-        .about-media {
-            border-radius: 24px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            box-shadow: 0 20px 50px rgba(0,119,204,.25);
-            min-height: 360px;
-            position: relative;
-            overflow: hidden;
-        }
-        .about-media::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1200') center/cover no-repeat;
-            opacity: .25;
-        }
-        .about-media .mock {
-            position: absolute; inset: 24px; 
-            border-radius: 20px; 
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(2px);
-            border: 1px solid rgba(255,255,255,0.25);
-            display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600;
-        }
-        @media (max-width: 980px) {
-            .about-app .section-title { text-align: center; }
-            .about-grid { grid-template-columns: 1fr; }
-            .about-copy { max-width: 100%; }
-        }
-
-        /* Founder / Story Section */
-        #founder.story-section {
-            background: white;
-        }
-
-        #founder .section-container {
-            display: flex;              /* Arrange elements in a row */
-            justify-content: flex-end;  /* Push everything to the right */
-            flex-direction: column;     /* Keep title above content */
-            align-items: flex-end;      /* Align both title & text to right side */
-        }
-
-        #founder .section-title {
-            text-align: left; /* Keeps heading text itself left-aligned */
-            width: 600px;     /* Matches story-content width */
-        }
-
-        #founder .story-content {
-            max-width: 600px;
-            margin: 0;
-            text-align: left;
-        }
-
-        #founder .story-content p {
-            margin-bottom: 1rem;
-            font-size: 1.05rem;
-            color: var(--gray);
-        }
-
-        /* Section Styles */
-        .section-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 4rem 2rem;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .section-subtitle {
-            font-size: 1.2rem;
-            color: var(--gray);
-            text-align: center;
-            margin-bottom: 3rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Solution Section */
-        .solution-section {
-            background: white;
-            position: relative;
-        }
-
-        .solution-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .solution-card {
-            background: var(--light-gray);
-            padding: 2rem;
-            border-radius: 20px;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .solution-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-
-        .solution-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .solution-card:hover {
-            background: white;
-            border-color: var(--primary);
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 119, 204, 0.15);
-        }
-
-        .solution-number {
-            width: 50px;
-            height: 50px;
-            background: var(--primary);
-            color: white;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-        }
-
-        .solution-card h3 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--dark);
-        }
-
-        .solution-features {
-            list-style: none;
-        }
-
-        .solution-features li {
-            margin-bottom: 0.75rem;
-            padding-left: 1.5rem;
-            position: relative;
-            color: var(--gray);
-        }
-
-        .solution-features li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: var(--green);
-            font-weight: bold;
-        }
-
-        /* Features Section */
-        .features-section {
-            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-            position: relative;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .feature-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-
-        .feature-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 119, 204, 0.2);
-        }
-
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        .feature-card h3 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--dark);
-        }
-
-        .feature-card p {
-            color: var(--gray);
-            line-height: 1.6;
-        }
-
-        /* Destinations Section */
-        .destinations-section {
-            background: white;
-            position: relative;
-        }
-
-        .destinations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .destination-card {
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .destination-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-        }
-
-        .destination-image {
-            width: 100%;
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-
-        .destination-content {
-            padding: 1.5rem;
-        }
-
-        .destination-category {
-            background: var(--primary);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 0.75rem;
-        }
-
-        .destination-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--dark);
-        }
-
-        .destination-card p {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        /* Testimonials Section */
-        .testimonials {
-            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-            position: relative;
-        }
-
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .testimonial-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .testimonial-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .testimonial-quote {
-            font-style: italic;
-            margin-bottom: 1.5rem;
-            color: var(--gray);
-            line-height: 1.6;
-            font-size: 1.1rem;
-        }
-
-        .testimonial-quote::before {
-            content: '"';
-            font-size: 3rem;
-            color: var(--primary);
-            line-height: 0.1;
-            margin-right: 0.25rem;
-            vertical-align: -0.4rem;
-        }
-
-        .testimonial-author {
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 0.25rem;
-        }
-
-        .testimonial-company {
-            color: var(--primary);
-            font-size: 0.9rem;
-        }
-
-        /* Stats Section */
-        .stats-section {
-            background: var(--dark);
-            color: white;
-            text-align: center;
-        }
-
-        .stats-section .section-title {
-            color: white;
-            background: linear-gradient(135deg, var(--primary-light), white);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--primary-light);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 1.1rem;
-            color: #E5E7EB;
-        }
-
-        /* Ticker / Rolling CTA Section */
-        .ticker-section { background: var(--primary); color: white; overflow: hidden; }
-        .ticker-row { position: relative; border-top: 1px solid rgba(255,255,255,0.08); }
-        .ticker-inner { display: flex; gap: 2rem; padding: 0.35rem 0; }
-        .ticker-track { display: flex; gap: 2rem; white-space: nowrap; will-change: transform; animation: marquee 28s linear infinite; }
-        .ticker-row:hover .ticker-track { animation-play-state: paused; }
-        /* Download Ticker Variant */
-        .ticker-section.ticker-download { background: var(--primary); }
-        .ticker-section.ticker-download .ticker-inner { padding: 1.1rem 0; }
-        .ticker-section.ticker-download .ticker-track { gap: 8rem; }
-        .ticker-section.ticker-download .ticker-item { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.3px; }
-        .store-badge { display: inline-block; padding: 0.35rem 0.8rem; border-radius: 999px; background: white; color: var(--dark); font-weight: 700; font-size: 0.9rem; text-decoration: none; }
-        .social-link { color: white; text-decoration: none; font-weight: 600; opacity: 0.95; }
-        .social-link:hover { opacity: 1; text-decoration: underline; }
-        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        /* Ensure the track is long enough by duplicating content */
-        .ticker-dup { margin-left: 2rem; }
-        @media (max-width: 768px) {
-            .ticker-inner { padding: 0.75rem 0; }
-            .store-badge { font-size: 0.85rem; }
-        }
-
-        /* CTA Section */
-        .cta-section {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            text-align: center;
-        }
-
-        .cta-section h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .cta-section p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-primary, .btn-secondary {
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-primary:hover {
-            background: var(--light-gray);
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.4);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-secondary:hover {
-            background: white;
-            color: var(--primary);
-            transform: translateY(-3px);
-        }
-
-        .waitlist-section {
-        background: linear-gradient(135deg, var(--primary), #0077cc);
-        padding: 4rem 1rem;
-        text-align: center;
-        color: white;
-        }
-
-        .waitlist-container {
-        max-width: 700px;
-        margin: 0 auto;
-        }
-
-        .waitlist-container h2 {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-        }
-
-        .waitlist-container p {
-        margin-bottom: 2rem;
-        font-size: 1.1rem;
-        }
-
-        #waitlist-form {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        }
-
-        #waitlist-form input {
-        flex: 1 1 200px;
-        padding: 0.75rem;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        }
-
-        #waitlist-form button {
-        background: white;
-        color: var(--primary);
-        font-weight: bold;
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 50px;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: transform 0.2s ease, background 0.2s ease;
-        }
-
-        #waitlist-form button:hover {
-        transform: scale(1.05);
-        background: #f8f8f8;
-        }
-
-        /* Contact */
-        .contact-section { background: #fff; }
-        .contact-form { max-width: 720px; margin: 0 auto; }
-        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .contact-field { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
-        .contact-field label { font-weight: 600; color: var(--dark); }
-        .contact-field input,
-        .contact-field textarea {
-        padding: .9rem 1rem;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        background: var(--light-gray);
-        font-size: 1rem;
-        outline: none;
-        transition: border .2s ease, background .2s ease, box-shadow .2s ease;
-        }
-        .contact-field input:focus,
-        .contact-field textarea:focus {
-        background: #fff;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(0,119,204,.12);
-        }
-        .contact-submit {
-        background: var(--primary);
-        color: #fff;
-        border: 0;
-        border-radius: 999px;
-        padding: .9rem 1.6rem;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 10px 30px rgba(0,119,204,.25);
-        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
-        }
-        .contact-submit:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,119,204,.35); }
-
-        @media (max-width: 768px) {
-        .contact-grid { grid-template-columns: 1fr; }
-        }
-
-        /* Footer */
-        .footer {
-            background: var(--dark);
-            color: white;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: 2fr repeat(4, 1fr);
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .footer-section h3 {
-            margin-bottom: 1rem;
-            color: var(--primary-light);
-        }
-
-        .footer-links {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .footer-links a {
-            color: #9CA3AF;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .footer-links a:hover {
-            color: var(--primary-light);
-        }
-
-        .footer-section p {
-            color: #9CA3AF;
-            line-height: 1.6;
-        }
-
-        .footer-bottom {
-            border-top: 1px solid #374151;
-            padding-top: 2rem;
-            text-align: center;
-            color: #9CA3AF;
-        }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .hero-container {
-                grid-template-columns: 1fr;
-                text-align: center;
-                gap: 2rem;
-            }
-
-            .hero-image {
-                width: 300px;
-                height: 400px;
-            }
-
-            .section-title {
-                font-size: 2rem;
-            }
-
-            .footer-content {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-
-            .cta-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .btn-primary, .btn-secondary {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
-
-        /* Scroll animations */
-        .scroll-reveal {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 0.8s ease;
-        }
-
-        .scroll-reveal.revealed {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="floating-element"></div>
@@ -959,12 +23,12 @@
 
     <header class="header">
         <div class="navbar">
-            <div class="logo">troddr</div>
+            <a href="index.html" class="logo">troddr</a>
             <nav class="nav-links">
-                <a href="#founder" class="nav-item">About</a>
+                <a href="about.html" class="nav-item">About</a>
                 <a href="#features" class="nav-item">Features</a>
                 <!-- <a href="#testimonials" class="nav-item">Stories</a> -->
-                <a href="#contact" class="nav-item">Contact</a>
+                <a href="contact.html" class="nav-item">Contact</a>
                 <a href="#demo" class="nav-cta">Join Waitlist</a>
             </nav>
         </div>
@@ -1015,27 +79,6 @@
                         <span class="ticker-item">Join the Waitlist</span>
                         <span class="ticker-item">Join the Waitlist</span>
                         <span class="ticker-item">Join the Waitlist</span>
-                        <!-- <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span> -->
-                        <!-- duplicate for smooth loop -->
-                        <!-- <span class="ticker-dup ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span>
-                        <span class="ticker-item">Download TRODDR</span> -->
                     </div>
                 </div>
             </div>
@@ -1049,9 +92,12 @@
             <h2 class="section-title">A Message from Our Founder</h2>
             <div class="story-content">
                 <p>TRODDR started long before it had a name. Back when I was the go-to friend to call for anyone visiting Negril.</p>
-                <p>If you asked where to go for a quick lunch, I’d send you straight to Corner Bar for stewed conch and fried chicken. For breakfast? Kuyaba, and don’t even think about skipping the freshly squeezed orange juice. If you went back for dinner it was the Lobster Casino and creamy seafood pasta, no question. And of course, I’d make sure you knew about the escovitch fish at Pushcart, big enough to feed two (but you’ll want it all to yourself).</p>
-                <p>It was never about ticking off tourist checklists. It has always been about those experiences that make a trip unforgettable. The kind of spots you only find out about from someone who’s already been there, loved it, and can’t wait to share it. Places you’ll still be talking about long after you’re home.</p>
-                <p>That’s why I created TRODDR, to make sure you get those recommendations too. Like you’re exploring with a friend showing you around, not following a guidebook.</p>
+                <p>If you asked where to go for a quick lunch, I'd send you straight to Corner Bar for stewed conch and fried chicken. For breakfast? Kuyaba, and don't even think about skipping the freshly squeezed orange juice. If you went back for dinner it was the Lobster Casino and creamy seafood pasta, no question. And of course, I'd make sure you knew about the escovitch fish at Pushcart, big enough to feed two (but you'll want it all to yourself).</p>
+                <p>It was never about ticking off tourist checklists. It has always been about those experiences that make a trip unforgettable. The kind of spots you only find out about from someone who's already been there, loved it, and can't wait to share it. Places you'll still be talking about long after you're home.</p>
+                <p>That's why I created TRODDR, to make sure you get those recommendations too. Like you're exploring with a friend showing you around, not following a guidebook.</p>
+                <div class="story-cta">
+                    <a href="about.html" class="story-link">Read Our Full Story</a>
+                </div>
             </div>
         </div>
     </section>
@@ -1062,14 +108,14 @@
             <h2 class="section-title">About TRODDR</h2>
             <div class="about-grid">
                 <div class="about-copy">
-                    <p>TRODDR is your insider guide to the Caribbean, starting in Jamaica. We connect you with the kind of places locals love and seasoned travelers can’t stop talking about, from family-run eateries and hidden beaches to unforgettable cultural experiences.</p>
+                    <p>TRODDR is your insider guide to the Caribbean, starting in Jamaica. We connect you with the kind of places locals love and seasoned travelers can't stop talking about, from family-run eateries and hidden beaches to unforgettable cultural experiences.</p>
                     <p>Our platform makes trip planning effortless. With TRODDR you can:</p>
                     <ul class="about-points">
                         <li><span class="dot">✓</span><span><strong>Discover</strong> curated recommendations for where to eat, stay, and play.</span></li>
                         <li><span class="dot">✓</span><span><strong>Plan</strong> your trip with personalized itineraries and interactive maps.</span></li>
                         <li><span class="dot">✓</span><span><strong>Explore</strong> confidently with trusted, first-hand tips, no guesswork.</span></li>
                     </ul>
-                    <p>Whether you’re chasing the perfect plate of seafood, a boutique stay, or an off-the-beaten-path adventure, TRODDR puts it all at your fingertips.</p>
+                    <p>Whether you're chasing the perfect plate of seafood, a boutique stay, or an off-the-beaten-path adventure, TRODDR puts it all at your fingertips.</p>
                 </div>
             </div>
         </div>
@@ -1146,140 +192,78 @@
                 <div class="feature-card scroll-reveal" onclick="featureClick('planner')">
                     <span class="feature-icon">📅</span>
                     <h3>Plan Your Way</h3>
-                    <p>Curate your trip with our trip planner. Add epic stops and create an itinerary that’s all yours.</p>
+                    <p>Curate your trip with our trip planner. Add epic stops and create an itinerary that's all yours.</p>
                 </div>
                 
                 <div class="feature-card scroll-reveal" onclick="featureClick('discovery')">
                     <span class="feature-icon">🗺️</span>
                     <h3>Find the Hidden</h3>
-                    <p>Uncover tucked-away beaches, off-menu eats, and underground vibes you won’t find on any travel app.</p>
+                    <p>Uncover tucked-away beaches, off-menu eats, and underground vibes you won't find on any travel app.</p>
                 </div>
-                
-                <!-- <div class="feature-card scroll-reveal" onclick="featureClick('personalized')">
-                    <span class="feature-icon">🎯</span>
-                    <h3>For You, Not the Masses</h3>
-                    <p>Recommendations that match your vibe—whether that’s chasing waterfalls, island-hopping, or devouring every patty in sight.</p>
-                </div> -->
-<!--                 
-                <div class="feature-card scroll-reveal" onclick="featureClick('offline')">
-                    <span class="feature-icon">📱</span>
-                    <h3>Works Offline</h3>
-                    <p>Download your plans and access them even without internet. Perfect for exploring remote areas and staying connected to your itinerary.</p>
-                </div>
-                
-                <div class="feature-card scroll-reveal" onclick="featureClick('community')">
-                    <span class="feature-icon">👥</span>
-                    <h3>Traveler Community</h3>
-                    <p>Connect with other travelers and locals. Share experiences, get real-time tips, and discover what's happening around you.</p>
-                </div> -->
             </div>
         </div>
     </section>
 
-    <!-- Destinations Section -->
-    <!-- <section id="destinations" class="destinations-section">
+    <!-- Social Proof Section
+    <section class="social-proof-section">
         <div class="section-container">
-            <div class="section-header">
-                <h2 class="section-title scroll-reveal">Featured Destinations</h2>
-                <p class="section-subtitle scroll-reveal">Explore Jamaica's most vibrant regions through curated local experiences.</p>
-            </div>
-            
-            <div class="destinations-grid">
-                <div class="destination-card scroll-reveal" onclick="destinationClick('kingston')">
-                    <div class="destination-image" style="background-image: url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800');"></div>
-                    <div class="destination-content">
-                        <span class="destination-category">Culture & Food</span>
-                        <h3 class="destination-title">Kingston</h3>
-                        <p>Jamaica's vibrant capital - home to reggae, incredible food, and rich history</p>
-                    </div>
+            <h2 class="section-title">Trusted by Caribbean Enthusiasts</h2>
+            <div class="social-proof-grid">
+                <div class="proof-item">
+                    <div class="proof-icon">🏪</div>
+                    <div class="proof-number">200+</div>
+                    <div class="proof-label">Local Businesses</div>
                 </div>
                 
-                <div class="destination-card scroll-reveal" onclick="destinationClick('negril')">
-                    <div class="destination-image" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800');"></div>
-                    <div class="destination-content">
-                        <span class="destination-category">Beach & Sunset</span>
-                        <h3 class="destination-title">Negril</h3>
-                        <p>Famous Seven Mile Beach and world-class sunsets at Rick's Cafe</p>
-                    </div>
+                <div class="proof-item">
+                    <div class="proof-icon">👥</div>
+                    <div class="proof-number">50+</div>
+                    <div class="proof-label">Local Contributors</div>
                 </div>
                 
-                <div class="destination-card scroll-reveal" onclick="destinationClick('portland')">
-                    <div class="destination-image" style="background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=800');"></div>
-                    <div class="destination-content">
-                        <span class="destination-category">Nature & Adventure</span>
-                        <h3 class="destination-title">Portland</h3>
-                        <p>Blue Mountains, coffee tours, and lush rainforest adventures</p>
-                    </div>
+                <div class="proof-item">
+                    <div class="proof-icon">🗺️</div>
+                    <div class="proof-number">14</div>
+                    <div class="proof-label">Parishes Covered</div>
                 </div>
                 
-                <div class="destination-card scroll-reveal" onclick="destinationClick('montego-bay')">
-                    <div class="destination-image" style="background-image: url('https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?q=80&w=800');"></div>
-                    <div class="destination-content">
-                        <span class="destination-category">Beach & Entertainment</span>
-                        <h3 class="destination-title">Montego Bay</h3>
-                        <p>Hip Strip nightlife, Doctor's Cave Beach, and amazing jerk spots</p>
-                    </div>
+                <div class="proof-item">
+                    <div class="proof-icon">⭐</div>
+                    <div class="proof-number">100%</div>
+                    <div class="proof-label">Authentic Experiences</div>
                 </div>
             </div>
         </div>
     </section> -->
 
-    <!-- Testimonials Section -->
-    <!-- <section id="testimonials" class="testimonials">
+    <!-- App Download Section -->
+    <!-- <section class="app-download-section">
         <div class="section-container">
-            <h2 class="section-title scroll-reveal">Stories from Fellow Travelers</h2>
-            <p class="section-subtitle scroll-reveal">See how TRODDR has transformed the way people experience Jamaica.</p>
+            <h2 class="section-title">Get TRODDR on Your Phone</h2>
+            <p class="section-subtitle">Download the app and start discovering authentic Jamaica experiences wherever you are.</p>
             
-            <div class="testimonials-grid">
-                <div class="testimonial-card scroll-reveal">
-                    <p class="testimonial-quote">TRODDR took us to places we never would have found on our own. The jerk chicken spot in Portland was absolutely incredible - locals were surprised we knew about it!</p>
-                    <div class="testimonial-author">Sarah & Mike Chen</div>
-                    <div class="testimonial-company">Food Lovers from Toronto</div>
-                </div>
+            <div class="download-buttons">
+                <a href="#" class="download-btn app-store" onclick="trackAppStoreClick('ios')">
+                    <img src="images/app-store-badge.png" alt="Download on the App Store" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="download-btn-fallback">
+                        <span class="download-icon">📱</span>
+                        <div class="download-text">
+                            <span class="download-label">Download on the</span>
+                            <span class="download-store">App Store</span>
+                        </div>
+                    </div>
+                </a>
                 
-                <div class="testimonial-card scroll-reveal">
-                    <p class="testimonial-quote">As a solo female traveler, I felt safe and confident exploring Jamaica with TRODDR's recommendations. The local insights made all the difference.</p>
-                    <div class="testimonial-author">Elena Rodriguez</div>
-                    <div class="testimonial-company">Digital Nomad</div>
-                </div>
-                
-                <div class="testimonial-card scroll-reveal">
-                    <p class="testimonial-quote">The itinerary planner saved us so much time! Instead of driving all over the island randomly, we had a perfect route that showed us the best of Jamaica efficiently.</p>
-                    <div class="testimonial-author">James & Lisa Williams</div>
-                    <div class="testimonial-company">Adventure Seekers from London</div>
-                </div>
-                
-                <div class="testimonial-card scroll-reveal">
-                    <p class="testimonial-quote">I'm Jamaican and even I discovered new places through TRODDR! It's amazing how the platform connects you with hidden gems across the island.</p>
-                    <div class="testimonial-author">Marcus Thompson</div>
-                    <div class="testimonial-company">Local Explorer from Kingston</div>
-                </div>
-            </div>
-        </div>
-    </section> -->
-
-    <!-- Stats Section -->
-    <!-- <section class="stats-section">
-        <div class="section-container">
-            <h2 class="section-title scroll-reveal">Join Thousands Exploring Authentic Jamaica</h2>
-            
-            <div class="stats-grid">
-                <div class="stat-item scroll-reveal">
-                    <div class="stat-number" data-target="500">0</div>
-                    <div class="stat-label">Curated Spots</div>
-                </div>
-                <div class="stat-item scroll-reveal">
-                    <div class="stat-number" data-target="10000">0</div>
-                    <div class="stat-label">Happy Travelers</div>
-                </div>
-                <div class="stat-item scroll-reveal">
-                    <div class="stat-number" data-target="100">0</div>
-                    <div class="stat-label">Local Experts</div>
-                </div>
-                <div class="stat-item scroll-reveal">
-                    <div class="stat-number" data-target="98">0</div>
-                    <div class="stat-label">% Satisfaction</div>
-                </div>
+                <a href="#" class="download-btn google-play" onclick="trackAppStoreClick('android')">
+                    <img src="images/google-play-badge.png" alt="Get it on Google Play" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="download-btn-fallback">
+                        <span class="download-icon">🤖</span>
+                        <div class="download-text">
+                            <span class="download-label">Get it on</span>
+                            <span class="download-store">Google Play</span>
+                        </div>
+                    </div>
+                </a>
             </div>
         </div>
     </section> -->
@@ -1290,9 +274,8 @@
             <h2>Ready to Explore Jamaica Like a Local?</h2>
             <p>Skip the guesswork. Join the waitlist for handpicked local gems and planning that takes minutes.</p>
             <div class="cta-buttons">
-                <!-- <a href="#" class="btn-primary" onclick="showWaitlistForm()">Join Waitlist</a> -->
                 <a href="#waitlist-form" class="btn-primary">Join Waitlist</a>
-                <a href="#" class="btn-secondary" onclick="downloadApp()">Download App</a>
+                <a href="contact.html" class="btn-secondary">Get in Touch</a>
             </div>
         </div>
     </section>
@@ -1300,28 +283,32 @@
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
         <div class="section-container">
-        <h2 class="section-title">Get in Touch</h2>
-        <p class="section-subtitle">Questions, partnerships, press, or just want to say hi?<br> We’d love to hear from you.</p>
-    
-        <form id="contact-form" class="contact-form" novalidate>
-            <div class="contact-grid">
-            <div class="contact-field">
-                <label for="contact-name">Name</label>
-                <input id="contact-name" name="name" type="text" placeholder="Your name" required />
-            </div>
-            <div class="contact-field">
-                <label for="contact-email">Email</label>
-                <input id="contact-email" name="email" type="email" placeholder="you@example.com" required />
-            </div>
-            </div>
-    
-            <div class="contact-field">
-            <label for="contact-message">Message</label>
-            <textarea id="contact-message" name="message" rows="5" placeholder="How can we help?" required></textarea>
-            </div>
-    
-            <button type="submit" class="contact-submit">Send Message</button>
-        </form>
+            <h2 class="section-title">Get in Touch</h2>
+            <p class="section-subtitle">Questions, partnerships, press, or just want to say hi?<br> We'd love to hear from you.</p>
+        
+            <form id="contact-form" class="contact-form" novalidate>
+                <div class="contact-grid">
+                    <div class="contact-field">
+                        <label for="contact-name">Name</label>
+                        <input id="contact-name" name="name" type="text" placeholder="Your name" required />
+                    </div>
+                    <div class="contact-field">
+                        <label for="contact-email">Email</label>
+                        <input id="contact-email" name="email" type="email" placeholder="you@example.com" required />
+                    </div>
+                </div>
+        
+                <div class="contact-field">
+                    <label for="contact-message">Message</label>
+                    <textarea id="contact-message" name="message" rows="5" placeholder="How can we help?" required></textarea>
+                </div>
+        
+                <button type="submit" class="contact-submit">Send Message</button>
+            </form>
+            
+            <!-- <div class="contact-alternative">
+                <p>Or <a href="contact.html" class="contact-page-link">visit our full contact page</a> for more ways to reach us</p>
+            </div> -->
         </div>
     </section>
     
@@ -1332,38 +319,28 @@
             <div class="section-container">
                 <div class="ticker-inner">
                     <div class="ticker-track">
-                        <span class="ticker-item">📣 Let’s get social</span>
+                        <span class="ticker-item">📣 Let's get social</span>
                         <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
                         <!-- duplicate for smooth loop -->
-                        <span class="ticker-item">📣 Let’s get social</span>
+                        <span class="ticker-item">📣 Let's get social</span>
                         <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
-                        <!-- <span class="ticker-item">TikTok</span>
-                        <span class="ticker-sep">•</span>
-                        <span class="ticker-item">Twitter/X</span>
-                        <span class="ticker-sep">•</span>
-                        <span class="ticker-item">Tag your finds #troddr</span> -->
-                        <span class="ticker-dup ticker-item">📣 Let’s get social</span>
+                        <span class="ticker-dup ticker-item">📣 Let's get social</span>
                         <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
                         <!-- duplicate for smooth loop -->
-                        <span class="ticker-dup ticker-item">📣 Let’s get social</span>
+                        <span class="ticker-dup ticker-item">📣 Let's get social</span>
                         <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
-                        <!-- <span class="ticker-item">TikTok</span>
-                        <span class="ticker-sep">•</span>
-                        <span class="ticker-item">Twitter/X</span>
-                        <span class="ticker-sep">•</span>
-                        <span class="ticker-item">Tag your finds #troddr</span> -->
                     </div>
                 </div>
             </div>
@@ -1379,11 +356,21 @@
                     <p>Your ultimate Jamaica travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
                 </div>
                 <div class="footer-section">
+                    <h3>Company</h3>
+                    <div class="footer-links">
+                        <a href="about.html">About Us</a>
+                        <a href="#features">Features</a>
+                        <a href="contact.html">Contact</a>
+                        <a href="#demo">Join Waitlist</a>
+                    </div>
+                </div>
+                <div class="footer-section">
                     <h3>Discover</h3>
                     <div class="footer-links">
                         <a href="#">Eat</a>
                         <a href="#">Stay</a>
                         <a href="#">Play</a>
+                        <a href="#">Destinations</a>
                     </div>
                 </div>
                 <div class="footer-section">
@@ -1392,302 +379,48 @@
                         <a href="#">Trip Planner</a>
                         <a href="#">Itineraries</a>
                         <a href="#">Travel Guides</a>
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h3>Destinations</h3>
-                    <div class="footer-links">
-                        <a href="#">Kingston</a>
-                        <a href="#">Negril</a>
-                        <a href="#">Montego Bay</a>
-                        <a href="#">Portland</a>
+                        <a href="#">Local Tips</a>
                     </div>
                 </div>
                 <div class="footer-section">
                     <h3>Support</h3>
                     <div class="footer-links">
                         <a href="#">Help Center</a>
-                        <a href="#contact">Contact Us</a>
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Terms of Service</a>
+                        <a href="contact.html">Contact Us</a>
+                        <a href="privacy.html">Privacy Policy</a>
+                        <a href="terms_and_conditions.html">Terms of Service</a>
                     </div>
                 </div>
-				<div class="footer-section">
+                <div class="footer-section">
                     <h3>Contact</h3>
                     <div class="footer-links">
-                        <a href="#">Email: hello@troddr.com</a>
+                        <a href="mailto:hello@troddr.com">hello@troddr.com</a>
                     </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>© 2025 TRODDR. Made with ❤️ . Explore authentic experiences across the Caribbean.</p>
+                <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
             </div>
         </div>
     </footer>
 
-    <script>
-        // Smooth scrolling for navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
+    <!-- Success/Error Messages for Contact Form -->
+    <div id="contact-success" class="form-message success" style="display: none;">
+        <div class="form-message-content">
+            <span class="form-message-icon">✅</span>
+            <h3>Message Sent!</h3>
+            <p>Thanks for reaching out. We'll get back to you within 24 hours.</p>
+        </div>
+    </div>
 
-        // Scroll reveal animation
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
+    <div id="contact-error" class="form-message error" style="display: none;">
+        <div class="form-message-content">
+            <span class="form-message-icon">❌</span>
+            <h3>Something went wrong</h3>
+            <p>Please try again or email us at hello@troddr.com</p>
+        </div>
+    </div>
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('revealed');
-                    
-                    // Animate counters
-                    if (entry.target.querySelector('.stat-number')) {
-                        animateCounters(entry.target);
-                    }
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.scroll-reveal').forEach(el => {
-            observer.observe(el);
-        });
-
-        // Animate stat counters
-        function animateCounters(container) {
-            const counters = container.querySelectorAll('.stat-number');
-            counters.forEach(counter => {
-                const target = parseInt(counter.getAttribute('data-target'));
-                let current = 0;
-                const increment = target / 50;
-                const timer = setInterval(() => {
-                    current += increment;
-                    if (current >= target) {
-                        counter.textContent = target + (target === 98 ? '%' : '+');
-                        clearInterval(timer);
-                    } else {
-                        counter.textContent = Math.floor(current) + (target === 98 ? '%' : '+');
-                    }
-                }, 30);
-            });
-        }
-
-        // Hero image animation
-        function animateHeroImage() {
-            const heroImage = document.querySelector('.hero-image');
-            heroImage.style.transform = 'rotateY(-15deg) rotateX(10deg) scale(1.05)';
-            heroImage.style.boxShadow = '0 30px 80px rgba(0, 119, 204, 0.4)';
-            
-            setTimeout(() => {
-                heroImage.style.transform = 'rotateY(0deg) rotateX(0deg) scale(1)';
-                heroImage.style.boxShadow = '0 20px 60px rgba(0, 119, 204, 0.3)';
-            }, 500);
-        }
-
-        // Interactive card clicks
-        function cardClick(type) {
-            const messages = {
-                eat: "🍽️ Discover authentic jerk spots, hidden food gems, and local culinary experiences!",
-                stay: "🏨 Find boutique hotels, eco-lodges, and unique accommodations with character!",
-                play: "🎉 Explore Blue Mountains, secret beaches, and cultural adventures off the beaten path!"
-            };
-            showNotification(messages[type]);
-        }
-
-        function featureClick(feature) {
-            const messages = {
-                curated: "✨ Every spot is handpicked by local Jamaican experts who know the island's best-kept secrets!",
-                planner: "📅 Create perfect itineraries with our smart planning tools and route optimization!",
-                discovery: "🗺️ Find hidden waterfalls, secret beaches, and local hangouts that aren't in guidebooks!",
-                personalized: "🎯 Get recommendations tailored to your interests and travel style!",
-                offline: "📱 Your plans work anywhere on the island, even without internet connection!",
-                community: "👥 Connect with other travelers and locals for real-time tips and recommendations!"
-            };
-            showNotification(messages[feature]);
-        }
-
-        function destinationClick(destination) {
-            const messages = {
-                kingston: "🏛️ Explore Jamaica's cultural heart - from reggae museums to the best jerk chicken spots!",
-                negril: "🌅 Famous for Seven Mile Beach and incredible sunsets at Rick's Cafe!",
-                portland: "🏔️ Home to Blue Mountain Coffee and breathtaking rainforest adventures!",
-                'montego-bay': "🏖️ Hip Strip nightlife, pristine beaches, and world-famous jerk cuisine!"
-            };
-            showNotification(messages[destination]);
-        }
-
-        // Notification system
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                left: 50%;
-                transform: translateX(-50%) translateY(-20px);
-                background: linear-gradient(135deg, var(--primary), var(--primary-light));
-                color: white;
-                padding: 1rem 2rem;
-                border-radius: 50px;
-                box-shadow: 0 15px 40px rgba(0, 119, 204, 0.4);
-                z-index: 10000;
-                font-weight: 600;
-                max-width: 90%;
-                text-align: center;
-                opacity: 0;
-                transition: all 0.3s ease;
-            `;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            // Animate in
-            setTimeout(() => {
-                notification.style.opacity = '1';
-                notification.style.transform = 'translateX(-50%) translateY(0)';
-            }, 100);
-            
-            // Animate out
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(-50%) translateY(-20px)';
-                setTimeout(() => {
-                    if (document.body.contains(notification)) {
-                        document.body.removeChild(notification);
-                    }
-                }, 300);
-            }, 3500);
-        }
-
-        // CTA tracking
-        function trackCTA(source) {
-            console.log(`CTA clicked from: ${source}`);
-            showNotification("🎉 Thanks for your interest! Redirecting to waitlist...");
-        }
-
-        // Waitlist form
-        function showWaitlistForm() {
-            showNotification("📧 Waitlist form coming soon! We'll notify you when TRODDR launches.");
-        }
-
-        // App download
-        function downloadApp() {
-            showNotification("📱 TRODDR app launching soon! Join the waitlist for early access.");
-        }
-
-        // Header scroll effect
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('.header');
-            if (window.scrollY > 100) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
-                header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-            } else {
-                header.style.background = 'rgba(255, 255, 255, 0.95)';
-                header.style.boxShadow = 'none';
-            }
-        });
-
-        // Parallax effect
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const parallaxElements = document.querySelectorAll('.floating-element');
-            
-            parallaxElements.forEach((element, index) => {
-                const speed = 0.5 + (index * 0.1);
-                element.style.transform = `translateY(${scrolled * speed}px) rotate(${scrolled * 0.1}deg)`;
-            });
-        });
-
-        // Loading animation for page
-        window.addEventListener('load', () => {
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.5s ease';
-            
-            setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
-        });
-
-        // Easter egg
-        let clickCount = 0;
-        document.querySelector('.logo').addEventListener('click', (e) => {
-            e.preventDefault();
-            clickCount++;
-            
-            if (clickCount === 5) {
-                showNotification("🏝️ You found a secret! TRODDR is expanding to all Caribbean islands soon!");
-                clickCount = 0;
-                
-                // Add special effect
-                document.querySelectorAll('.floating-element').forEach(el => {
-                    el.style.animation = 'float 1s ease-in-out infinite';
-                });
-            }
-        });
-
-        // Contact form submission
-        const contactForm = document.getElementById('contact-form');
-        if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = document.getElementById('contact-name').value.trim();
-            const email = document.getElementById('contact-email').value.trim();
-            const message = document.getElementById('contact-message').value.trim();
-
-            if (!name || !email || !message) {
-            showNotification("⚠️ Please fill out your name, email, and message.");
-            return;
-            }
-            // TODO: replace with your real submission (email/API). For now, just confirm:
-            showNotification("✅ Message sent! We'll get back to you soon.");
-            contactForm.reset();
-        });
-        }
-
-        // Waitlist form submission
-        const waitlistForm = document.getElementById('waitlist-form');
-        if (waitlistForm) {
-            waitlistForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = document.getElementById('name').value.trim();
-                const email = document.getElementById('email').value.trim();
-                if (name && email) {
-                    showNotification(`🎉 Thanks ${name}! You've been added to the waitlist.`);
-                    waitlistForm.reset();
-                } else {
-                    showNotification("⚠️ Please enter your name and a valid email.");
-                }
-            });
-        }
-
-        // Console message
-        console.log('🏝️ Welcome to TRODDR! Built with ❤️ in Jamaica. Ready to explore like a local?');
-        
-        // Performance optimization
-        if ('IntersectionObserver' in window) {
-            const lazyImages = document.querySelectorAll('img[data-src]');
-            const imageObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        img.src = img.dataset.src;
-                        img.classList.remove('lazy');
-                        imageObserver.unobserve(img);
-                    }
-                });
-            });
-
-            lazyImages.forEach(img => imageObserver.observe(img));
-        }
-    </script>
+    <script src="js/main.js" defer></script>
 </body>
 </html>
