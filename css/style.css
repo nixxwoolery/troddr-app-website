@@ -800,6 +800,10 @@ border-radius: 8px;
 font-size: 1rem;
 }
 
+#waitlist-form button .waitlist-cta{
+justify-content: center !important;
+}
+
 #waitlist-form button {
 display: inline-block; margin: 0.75rem auto 0;
 background: white;
