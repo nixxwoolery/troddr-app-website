@@ -2,342 +2,356 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="description" content="TRODDR - Jamaica-first travel guide and trip planner. Discover where to eat, stay, and play like a local.">
-    <meta name="keywords" content="Jamaica, travel, Caribbean, local guide, trip planner">
-    <title>TRODDR - Curated Caribbean Travel</title>
-
-    <!-- Standard favicon -->
-    <link rel="icon" type="image/x-icon" href="images/troddr_logo.png">
-
-    <!-- PNG version -->
-    <link rel="icon" type="image/png" href="images/troddr_logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TRODDR - Jamaica-first travel guide and trip planner. Discover where to eat, stay, and play like a local. Get authentic Caribbean travel experiences.">
+    <meta name="keywords" content="Jamaica travel, Caribbean guide, local experiences, trip planner, authentic travel, Jamaica restaurants, local attractions">
     
-    <!-- Google Fonts -->
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="TRODDR - Experience Jamaica Like a Local">
+    <meta property="og:description" content="Discover authentic Caribbean experiences with local recommendations for where to eat, stay, and play in Jamaica.">
+    <meta property="og:image" content="https://troddr.com/images/og-image.jpg">
+    <meta property="og:url" content="https://troddr.com">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TRODDR - Experience Jamaica Like a Local">
+    <meta name="twitter:description" content="Discover authentic Caribbean experiences with local recommendations for where to eat, stay, and play in Jamaica.">
+    <meta name="twitter:image" content="https://troddr.com/images/twitter-image.jpg">
+    
+    <title>TRODDR - Experience Jamaica Like a Local | Authentic Caribbean Travel</title>
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="css/style.css" as="style">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="images/troddr_logo.png">
+    <link rel="icon" type="image/png" href="images/troddr_logo.png">
+    <link rel="apple-touch-icon" href="images/troddr_logo.png">
+    
+    <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "TRODDR",
+        "description": "Jamaica-first travel guide and trip planner for authentic Caribbean experiences",
+        "url": "https://troddr.com",
+        "applicationCategory": "TravelApplication",
+        "operatingSystem": "iOS, Android, Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "TRODDR Ltd",
+            "url": "https://troddr.com"
+        }
+    }
+    </script>
 </head>
 <body>
-    <div class="floating-element"></div>
-    <div class="floating-element"></div>
-    <div class="floating-element"></div>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Background decoration -->
+    <div class="floating-element" aria-hidden="true"></div>
+    <div class="floating-element" aria-hidden="true"></div>
+    <div class="floating-element" aria-hidden="true"></div>
 
-    <header class="header">
+    <header class="header" role="banner">
         <div class="navbar">
-            <a href="index.html" class="logo">troddr</a>
-            <nav class="nav-links">
+            <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
+            <nav class="nav-links" role="navigation" aria-label="Main navigation">
                 <a href="about.html" class="nav-item">About</a>
                 <a href="#features" class="nav-item">Features</a>
-                <!-- <a href="#testimonials" class="nav-item">Stories</a> -->
                 <a href="contact.html" class="nav-item">Contact</a>
-                <a href="#demo" class="nav-cta">Join Waitlist</a>
+                <a href="#waitlist-form" class="nav-cta">Join Waitlist</a>
             </nav>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-container">
-            <div class="hero-text">
-                <h1>Experience Jamaica Like a Local</h1>
-                <p class="hero-subtitle">Curated places to eat, stay, and play. Plan your trips and get ready to explore Jamaica like a local. Discover authentic experiences beyond the tourist trail.</p>
-                <div class="hero-buttons">
-                    <a href="#waitlist-form" class="hero-cta">Be the First to Explore the App</a>
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-container">
+                <div class="hero-text">
+                    <h1 id="hero-title">Experience Jamaica Like a Local</h1>
+                    <p class="hero-subtitle">Curated places to eat, stay, and play. Plan your trips and get ready to explore Jamaica like a local. Discover authentic experiences beyond the tourist trail.</p>
+                    <div class="hero-buttons">
+                        <a href="#waitlist-form" class="hero-cta" aria-describedby="hero-subtitle">
+                            Be the First to Explore the App
+                        </a>
+                    </div>
                 </div>
             </div>
-            <!-- <div class="hero-visual">
-                <div class="hero-image" onclick="animateHeroImage()">
-                    Authentic Jamaica Awaits
-                </div>
-            </div> -->
-        </div>
-    </section>
+        </section>
 
-    <section class="ticker-section" aria-label="Stay connected and download">
-        <!-- Row 1: Download TRODDR -->
+        <!-- Animated Ticker -->
+        <section class="ticker-section" aria-label="Join our community" role="banner">
+            <div class="ticker-row">
+                <div class="section-container">
+                    <div class="ticker-inner">
+                        <div class="ticker-track" aria-hidden="true">
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <!-- Duplicate for smooth loop -->
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                            <span class="ticker-item">Join the Waitlist</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Founder Story Section -->
+        <section id="founder" class="story-section" aria-labelledby="founder-title">
+            <div class="section-container">
+                <h2 id="founder-title" class="section-title">A Message from Our Founder</h2>
+                <div class="story-content">
+                    <p>TRODDR started long before it had a name. Back when I was the go-to friend to call for anyone visiting Negril.</p>
+                    <p>If you asked where to go for a quick lunch, I'd send you straight to Corner Bar for stewed conch and fried chicken. For breakfast? Kuyaba, and don't even think about skipping the freshly squeezed orange juice. If you went back for dinner it was the Lobster Casino and creamy seafood pasta, no question. And of course, I'd make sure you knew about the escovitch fish at Pushcart, big enough to feed two (but you'll want it all to yourself).</p>
+                    <p>It was never about ticking off tourist checklists. It has always been about those experiences that make a trip unforgettable. The kind of spots you only find out about from someone who's already been there, loved it, and can't wait to share it. Places you'll still be talking about long after you're home.</p>
+                    <p>That's why I created TRODDR, to make sure you get those recommendations too. Like you're exploring with a friend showing you around, not following a guidebook.</p>
+                    <div class="story-cta">
+                        <a href="about.html" class="story-link" aria-label="Read our complete founding story">
+                            Read Our Full Story
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About TRODDR Section -->
+        <section id="about-troddr" class="about-app" aria-labelledby="about-title">
+            <div class="section-container">
+                <h2 id="about-title" class="section-title">About TRODDR</h2>
+                <div class="about-grid">
+                    <div class="about-copy">
+                        <p>TRODDR is your insider guide to the Caribbean, starting in Jamaica. We connect you with the kind of places locals love and seasoned travelers can't stop talking about, from family-run eateries and hidden beaches to unforgettable cultural experiences.</p>
+                        <p>Our platform makes trip planning effortless. With TRODDR you can:</p>
+                        <ul class="about-points" role="list">
+                            <li role="listitem">
+                                <span class="dot" aria-hidden="true">✓</span>
+                                <span><strong>Discover</strong> curated recommendations for where to eat, stay, and play.</span>
+                            </li>
+                            <li role="listitem">
+                                <span class="dot" aria-hidden="true">✓</span>
+                                <span><strong>Plan</strong> your trip with personalized itineraries and interactive maps.</span>
+                            </li>
+                            <li role="listitem">
+                                <span class="dot" aria-hidden="true">✓</span>
+                                <span><strong>Explore</strong> confidently with trusted, first-hand tips, no guesswork.</span>
+                            </li>
+                        </ul>
+                        <p>Whether you're chasing the perfect plate of seafood, a boutique stay, or an off-the-beaten-path adventure, TRODDR puts it all at your fingertips.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Waitlist Section -->
+        <section id="waitlist" class="waitlist-section" aria-labelledby="waitlist-title">
+            <div class="waitlist-container">
+                <h2 id="waitlist-title">Be the First to Explore the TRODDR App</h2>
+                <p>Get insider travel recommendations before anyone else.</p>
+                <form id="waitlist-form" novalidate aria-labelledby="waitlist-title">
+                    <div class="form-group">
+                        <label for="waitlist-name" class="sr-only">Your name</label>
+                        <input type="text" id="waitlist-name" placeholder="Your name" name="name" required 
+                               aria-required="true" autocomplete="given-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="waitlist-email" class="sr-only">Your email</label>
+                        <input type="email" id="waitlist-email" placeholder="Your email" name="email" required 
+                               aria-required="true" autocomplete="email">
+                    </div>
+                    <button type="submit" aria-describedby="waitlist-description">
+                        Join Waitlist
+                    </button>
+                </form>
+                <p id="waitlist-description" class="sr-only">Join our waitlist to be notified when the TRODDR app launches</p>
+            </div>
+        </section>
+
+        <!-- Solution Section -->
+        <section id="solution" class="solution-section" aria-labelledby="solution-title">
+            <div class="section-container">
+                <h2 id="solution-title" class="section-title">Three Ways to Explore</h2>
+                <p class="section-subtitle">TRODDR combines local expertise with smart planning tools to create your perfect Jamaican adventure.</p>
+                
+                <div class="solution-grid" role="list">
+                    <article class="solution-card" role="listitem" tabindex="0" 
+                             onclick="cardClick('eat')" onkeydown="handleCardKeydown(event, 'eat')">
+                        <div class="solution-number" aria-hidden="true">1</div>
+                        <h3>Eat Like a Local</h3>
+                        <ul class="solution-features" role="list">
+                            <li>Authentic food spots</li>
+                            <li>Hidden food gems off the beaten path</li>
+                            <li>Fine dining experiences with local flair</li>
+                            <li>Street food discoveries</li>
+                        </ul>
+                    </article>
+                    
+                    <article class="solution-card" role="listitem" tabindex="0" 
+                             onclick="cardClick('stay')" onkeydown="handleCardKeydown(event, 'stay')">
+                        <div class="solution-number" aria-hidden="true">2</div>
+                        <h3>Stay in Special Places</h3>
+                        <ul class="solution-features" role="list">
+                            <li>Beautiful boutique hotels</li>
+                            <li>Eco-lodges in stunning natural settings</li>
+                            <li>Beachfront villas for ultimate relaxation</li>
+                            <li>Historic properties with cultural significance</li>
+                        </ul>
+                    </article>
+                    
+                    <article class="solution-card" role="listitem" tabindex="0" 
+                             onclick="cardClick('play')" onkeydown="handleCardKeydown(event, 'play')">
+                        <div class="solution-number" aria-hidden="true">3</div>
+                        <h3>Play Beyond the Brochure</h3>
+                        <ul class="solution-features" role="list">
+                            <li>Blue Mountain hikes and coffee tours</li>
+                            <li>White sand beaches and swimming holes</li>
+                            <li>Waterfalls, rafting, and river limes</li>
+                            <li>ATV rides through jungle trails</li>
+                        </ul>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section" aria-labelledby="features-title">
+            <div class="section-container">
+                <h2 id="features-title" class="section-title scroll-reveal">Everything You Need to Explore</h2>
+                <p class="section-subtitle scroll-reveal">TRODDR's powerful platform makes discovering and planning authentic Jamaican experiences effortless.</p>
+                
+                <div class="features-grid" role="list">
+                    <article class="feature-card scroll-reveal" role="listitem" tabindex="0" 
+                             onclick="featureClick('curated')" onkeydown="handleCardKeydown(event, 'curated')">
+                        <span class="feature-icon" aria-hidden="true">✨</span>
+                        <h3>Locally Curated</h3>
+                        <p>Handpicked by Jamaicans who live it, love it, and know where the real magic happens.</p>
+                    </article>
+                    
+                    <article class="feature-card scroll-reveal" role="listitem" tabindex="0" 
+                             onclick="featureClick('planner')" onkeydown="handleCardKeydown(event, 'planner')">
+                        <span class="feature-icon" aria-hidden="true">📅</span>
+                        <h3>Plan Your Way</h3>
+                        <p>Curate your trip with our trip planner. Add epic stops and create an itinerary that's all yours.</p>
+                    </article>
+                    
+                    <article class="feature-card scroll-reveal" role="listitem" tabindex="0" 
+                             onclick="featureClick('discovery')" onkeydown="handleCardKeydown(event, 'discovery')">
+                        <span class="feature-icon" aria-hidden="true">🗺️</span>
+                        <h3>Find the Hidden</h3>
+                        <p>Uncover tucked-away beaches, off-menu eats, and underground vibes you won't find on any travel app.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section id="demo" class="cta-section" aria-labelledby="cta-title">
+            <div class="section-container">
+                <h2 id="cta-title">Ready to Explore Jamaica Like a Local?</h2>
+                <p>Skip the guesswork. Join the waitlist for handpicked local gems and planning that takes minutes.</p>
+                <div class="cta-buttons">
+                    <a href="#waitlist-form" class="btn-primary" aria-describedby="cta-title">
+                        Join Waitlist
+                    </a>
+                    <a href="contact.html" class="btn-secondary">
+                        Get in Touch
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section" aria-labelledby="contact-title">
+            <div class="section-container">
+                <h2 id="contact-title" class="section-title">Get in Touch</h2>
+                <p class="section-subtitle">Questions, partnerships, press, or just want to say hi?<br> We'd love to hear from you.</p>
+            
+                <form id="contact-form" class="contact-form" novalidate aria-labelledby="contact-title">
+                    <div class="contact-grid">
+                        <div class="contact-field">
+                            <label for="contact-name">Name</label>
+                            <input id="contact-name" name="name" type="text" placeholder="Your name" required 
+                                   aria-required="true" autocomplete="name">
+                            <span class="error-message" role="alert" aria-live="polite"></span>
+                        </div>
+                        <div class="contact-field">
+                            <label for="contact-email">Email</label>
+                            <input id="contact-email" name="email" type="email" placeholder="you@example.com" required 
+                                   aria-required="true" autocomplete="email">
+                            <span class="error-message" role="alert" aria-live="polite"></span>
+                        </div>
+                    </div>
+            
+                    <div class="contact-field">
+                        <label for="contact-message">Message</label>
+                        <textarea id="contact-message" name="message" rows="5" placeholder="How can we help?" required 
+                                  aria-required="true"></textarea>
+                        <span class="error-message" role="alert" aria-live="polite"></span>
+                    </div>
+            
+                    <button type="submit" class="contact-submit">
+                        <span class="btn-text">Send Message</span>
+                        <span class="btn-loading" aria-hidden="true">Sending...</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Social Ticker -->
+    <section class="ticker-section" aria-label="Follow us on social media">
         <div class="ticker-row">
             <div class="section-container">
                 <div class="ticker-inner">
-                    <div class="ticker-track">
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <!-- duplicate for smooth loop -->
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                        <span class="ticker-item">Join the Waitlist</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-
-    <!-- Story / Founder Section -->
-    <section id="founder" class="story-section">
-        <div class="section-container">
-            <h2 class="section-title">A Message from Our Founder</h2>
-            <div class="story-content">
-                <p>TRODDR started long before it had a name. Back when I was the go-to friend to call for anyone visiting Negril.</p>
-                <p>If you asked where to go for a quick lunch, I'd send you straight to Corner Bar for stewed conch and fried chicken. For breakfast? Kuyaba, and don't even think about skipping the freshly squeezed orange juice. If you went back for dinner it was the Lobster Casino and creamy seafood pasta, no question. And of course, I'd make sure you knew about the escovitch fish at Pushcart, big enough to feed two (but you'll want it all to yourself).</p>
-                <p>It was never about ticking off tourist checklists. It has always been about those experiences that make a trip unforgettable. The kind of spots you only find out about from someone who's already been there, loved it, and can't wait to share it. Places you'll still be talking about long after you're home.</p>
-                <p>That's why I created TRODDR, to make sure you get those recommendations too. Like you're exploring with a friend showing you around, not following a guidebook.</p>
-                <div class="story-cta">
-                    <a href="about.html" class="story-link">Read Our Full Story</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- About TRODDR Section -->
-    <section id="about-troddr" class="about-app">
-        <div class="section-container">
-            <h2 class="section-title">About TRODDR</h2>
-            <div class="about-grid">
-                <div class="about-copy">
-                    <p>TRODDR is your insider guide to the Caribbean, starting in Jamaica. We connect you with the kind of places locals love and seasoned travelers can't stop talking about, from family-run eateries and hidden beaches to unforgettable cultural experiences.</p>
-                    <p>Our platform makes trip planning effortless. With TRODDR you can:</p>
-                    <ul class="about-points">
-                        <li><span class="dot">✓</span><span><strong>Discover</strong> curated recommendations for where to eat, stay, and play.</span></li>
-                        <li><span class="dot">✓</span><span><strong>Plan</strong> your trip with personalized itineraries and interactive maps.</span></li>
-                        <li><span class="dot">✓</span><span><strong>Explore</strong> confidently with trusted, first-hand tips, no guesswork.</span></li>
-                    </ul>
-                    <p>Whether you're chasing the perfect plate of seafood, a boutique stay, or an off-the-beaten-path adventure, TRODDR puts it all at your fingertips.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="waitlist" class="waitlist-section">
-        <div class="waitlist-container">
-          <h2>Be the First to Explore the TRODDR app</h2>
-          <p>Get insider travel recommendations before anyone else.</p>
-          <form id="waitlist-form">
-            <input type="text" placeholder="Your name" name="name" required>
-            <input type="email" placeholder="Your email" name="email" required>
-            <button type="submit">Join Waitlist</button>
-          </form>
-        </div>
-    </section>
-
-    <!-- Solution Section -->
-    <section id="solution" class="solution-section">
-        <div class="section-container">
-            <h2 class="section-title">Three Ways to Explore</h2>
-            <p class="section-subtitle">TRODDR combines local expertise with smart planning tools to create your perfect Jamaican adventure.</p>
-            
-            <div class="solution-grid">
-                <div class="solution-card" onclick="cardClick('eat')">
-                    <div class="solution-number">1</div>
-                    <h3>Eat Like a Local</h3>
-                    <ul class="solution-features">
-                        <li>Authentic food spots</li>
-                        <li>Hidden food gems off the beaten path</li>
-                        <li>Fine dining experiences with local flair</li>
-                        <li>Street food discoveries</li>
-                    </ul>
-                </div>
-                
-                <div class="solution-card" onclick="cardClick('stay')">
-                    <div class="solution-number">2</div>
-                    <h3>Stay in Special Places</h3>
-                    <ul class="solution-features">
-                        <li>Beautiful boutique hotels</li>
-                        <li>Eco-lodges in stunning natural settings</li>
-                        <li>Beachfront villas for ultimate relaxation</li>
-                        <li>Historic properties with cultural significance</li>
-                    </ul>
-                </div>
-                
-                <div class="solution-card" onclick="cardClick('play')">
-                    <div class="solution-number">3</div>
-                    <h3>Play Beyond the Brochure</h3>
-                    <ul class="solution-features">
-                        <li>Blue Mountain hikes and coffee tours</li>
-                        <li>White sand beaches and swimming holes</li>
-                        <li>Waterfalls, rafting, and river limes</li>
-                        <li>ATV rides through jungle trails</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="features-section">
-        <div class="section-container">
-            <h2 class="section-title scroll-reveal">Everything You Need to Explore</h2>
-            <p class="section-subtitle scroll-reveal">TRODDR's powerful platform makes discovering and planning authentic Jamaican experiences effortless.</p>
-            
-            <div class="features-grid">
-                <div class="feature-card scroll-reveal" onclick="featureClick('curated')">
-                    <span class="feature-icon">✨</span>
-                    <h3>Locally Curated</h3>
-                    <p>Handpicked by Jamaicans who live it, love it, and know where the real magic happens.</p>
-                </div>
-                
-                <div class="feature-card scroll-reveal" onclick="featureClick('planner')">
-                    <span class="feature-icon">📅</span>
-                    <h3>Plan Your Way</h3>
-                    <p>Curate your trip with our trip planner. Add epic stops and create an itinerary that's all yours.</p>
-                </div>
-                
-                <div class="feature-card scroll-reveal" onclick="featureClick('discovery')">
-                    <span class="feature-icon">🗺️</span>
-                    <h3>Find the Hidden</h3>
-                    <p>Uncover tucked-away beaches, off-menu eats, and underground vibes you won't find on any travel app.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Social Proof Section
-    <section class="social-proof-section">
-        <div class="section-container">
-            <h2 class="section-title">Trusted by Caribbean Enthusiasts</h2>
-            <div class="social-proof-grid">
-                <div class="proof-item">
-                    <div class="proof-icon">🏪</div>
-                    <div class="proof-number">200+</div>
-                    <div class="proof-label">Local Businesses</div>
-                </div>
-                
-                <div class="proof-item">
-                    <div class="proof-icon">👥</div>
-                    <div class="proof-number">50+</div>
-                    <div class="proof-label">Local Contributors</div>
-                </div>
-                
-                <div class="proof-item">
-                    <div class="proof-icon">🗺️</div>
-                    <div class="proof-number">14</div>
-                    <div class="proof-label">Parishes Covered</div>
-                </div>
-                
-                <div class="proof-item">
-                    <div class="proof-icon">⭐</div>
-                    <div class="proof-number">100%</div>
-                    <div class="proof-label">Authentic Experiences</div>
-                </div>
-            </div>
-        </div>
-    </section> -->
-
-    <!-- App Download Section -->
-    <!-- <section class="app-download-section">
-        <div class="section-container">
-            <h2 class="section-title">Get TRODDR on Your Phone</h2>
-            <p class="section-subtitle">Download the app and start discovering authentic Jamaica experiences wherever you are.</p>
-            
-            <div class="download-buttons">
-                <a href="#" class="download-btn app-store" onclick="trackAppStoreClick('ios')">
-                    <img src="images/app-store-badge.png" alt="Download on the App Store" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="download-btn-fallback">
-                        <span class="download-icon">📱</span>
-                        <div class="download-text">
-                            <span class="download-label">Download on the</span>
-                            <span class="download-store">App Store</span>
-                        </div>
-                    </div>
-                </a>
-                
-                <a href="#" class="download-btn google-play" onclick="trackAppStoreClick('android')">
-                    <img src="images/google-play-badge.png" alt="Get it on Google Play" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="download-btn-fallback">
-                        <span class="download-icon">🤖</span>
-                        <div class="download-text">
-                            <span class="download-label">Get it on</span>
-                            <span class="download-store">Google Play</span>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </section> -->
-
-    <!-- CTA Section -->
-    <section id="demo" class="cta-section">
-        <div class="section-container">
-            <h2>Ready to Explore Jamaica Like a Local?</h2>
-            <p>Skip the guesswork. Join the waitlist for handpicked local gems and planning that takes minutes.</p>
-            <div class="cta-buttons">
-                <a href="#waitlist-form" class="btn-primary">Join Waitlist</a>
-                <a href="contact.html" class="btn-secondary">Get in Touch</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact-section">
-        <div class="section-container">
-            <h2 class="section-title">Get in Touch</h2>
-            <p class="section-subtitle">Questions, partnerships, press, or just want to say hi?<br> We'd love to hear from you.</p>
-        
-            <form id="contact-form" class="contact-form" novalidate>
-                <div class="contact-grid">
-                    <div class="contact-field">
-                        <label for="contact-name">Name</label>
-                        <input id="contact-name" name="name" type="text" placeholder="Your name" required />
-                    </div>
-                    <div class="contact-field">
-                        <label for="contact-email">Email</label>
-                        <input id="contact-email" name="email" type="email" placeholder="you@example.com" required />
-                    </div>
-                </div>
-        
-                <div class="contact-field">
-                    <label for="contact-message">Message</label>
-                    <textarea id="contact-message" name="message" rows="5" placeholder="How can we help?" required></textarea>
-                </div>
-        
-                <button type="submit" class="contact-submit">Send Message</button>
-            </form>
-            
-            <!-- <div class="contact-alternative">
-                <p>Or <a href="contact.html" class="contact-page-link">visit our full contact page</a> for more ways to reach us</p>
-            </div> -->
-        </div>
-    </section>
-    
-     <!-- Rolling CTAs -->
-     <section class="ticker-section" aria-label="Stay connected and download">
-        <!-- Row 2: Let's get social -->
-        <div class="ticker-row">
-            <div class="section-container">
-                <div class="ticker-inner">
-                    <div class="ticker-track">
+                    <div class="ticker-track" aria-hidden="true">
                         <span class="ticker-item">📣 Let's get social</span>
-                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
+                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Follow TRODDR on Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
-                        <!-- duplicate for smooth loop -->
+                        <!-- Duplicate for smooth loop -->
                         <span class="ticker-item">📣 Let's get social</span>
-                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
+                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Follow TRODDR on Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-dup ticker-item">📣 Let's get social</span>
-                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
+                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Follow TRODDR on Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
-                        <!-- duplicate for smooth loop -->
                         <span class="ticker-dup ticker-item">📣 Let's get social</span>
-                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Instagram">@troddr</a></span>
+                        <span class="ticker-item">Follow <a class="social-link" href="#" title="Follow TRODDR on Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
@@ -348,7 +362,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="section-container">
             <div class="footer-content">
                 <div class="footer-section">
@@ -357,44 +371,46 @@
                 </div>
                 <div class="footer-section">
                     <h3>Company</h3>
-                    <div class="footer-links">
+                    <nav class="footer-links" aria-label="Company links">
                         <a href="about.html">About Us</a>
                         <a href="#features">Features</a>
                         <a href="contact.html">Contact</a>
-                        <a href="#demo">Join Waitlist</a>
-                    </div>
+                        <a href="#waitlist-form">Join Waitlist</a>
+                    </nav>
                 </div>
                 <div class="footer-section">
                     <h3>Discover</h3>
-                    <div class="footer-links">
-                        <a href="#">Eat</a>
-                        <a href="#">Stay</a>
-                        <a href="#">Play</a>
-                        <a href="#">Destinations</a>
-                    </div>
+                    <nav class="footer-links" aria-label="Discovery links">
+                        <a href="#" aria-label="Discover places to eat">Eat</a>
+                        <a href="#" aria-label="Discover places to stay">Stay</a>
+                        <a href="#" aria-label="Discover things to do">Play</a>
+                        <a href="#" aria-label="Explore destinations">Destinations</a>
+                    </nav>
                 </div>
                 <div class="footer-section">
                     <h3>Plan</h3>
-                    <div class="footer-links">
-                        <a href="#">Trip Planner</a>
-                        <a href="#">Itineraries</a>
-                        <a href="#">Travel Guides</a>
-                        <a href="#">Local Tips</a>
-                    </div>
+                    <nav class="footer-links" aria-label="Planning tools">
+                        <a href="#" aria-label="Trip planning tool">Trip Planner</a>
+                        <a href="#" aria-label="Sample itineraries">Itineraries</a>
+                        <a href="#" aria-label="Travel guides">Travel Guides</a>
+                        <a href="#" aria-label="Local travel tips">Local Tips</a>
+                    </nav>
                 </div>
                 <div class="footer-section">
                     <h3>Support</h3>
-                    <div class="footer-links">
-                        <a href="#">Help Center</a>
+                    <nav class="footer-links" aria-label="Support links">
+                        <a href="#" aria-label="Get help and support">Help Center</a>
                         <a href="contact.html">Contact Us</a>
                         <a href="privacy.html">Privacy Policy</a>
                         <a href="terms_and_conditions.html">Terms of Service</a>
-                    </div>
+                    </nav>
                 </div>
                 <div class="footer-section">
                     <h3>Contact</h3>
                     <div class="footer-links">
-                        <a href="mailto:hello@troddr.com">hello@troddr.com</a>
+                        <a href="mailto:hello@troddr.com" aria-label="Email us at hello@troddr.com">
+                            hello@troddr.com
+                        </a>
                     </div>
                 </div>
             </div>
@@ -404,23 +420,37 @@
         </div>
     </footer>
 
-    <!-- Success/Error Messages for Contact Form -->
-    <div id="contact-success" class="form-message success" style="display: none;">
+    <!-- Form Messages -->
+    <div id="contact-success" class="form-message success" style="display: none;" role="alert" aria-live="polite">
         <div class="form-message-content">
-            <span class="form-message-icon">✅</span>
+            <span class="form-message-icon" aria-hidden="true">✅</span>
             <h3>Message Sent!</h3>
             <p>Thanks for reaching out. We'll get back to you within 24 hours.</p>
         </div>
     </div>
 
-    <div id="contact-error" class="form-message error" style="display: none;">
+    <div id="contact-error" class="form-message error" style="display: none;" role="alert" aria-live="polite">
         <div class="form-message-content">
-            <span class="form-message-icon">❌</span>
+            <span class="form-message-icon" aria-hidden="true">❌</span>
             <h3>Something went wrong</h3>
             <p>Please try again or email us at hello@troddr.com</p>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="js/main.js" defer></script>
+    
+    <!-- Performance monitoring (optional) -->
+    <script>
+        // Simple performance monitoring
+        window.addEventListener('load', function() {
+            if ('performance' in window) {
+                const perfData = performance.getEntriesByType('navigation')[0];
+                if (perfData && perfData.loadEventEnd > 0) {
+                    console.log('Page load time:', perfData.loadEventEnd - perfData.fetchStart, 'ms');
+                }
+            }
+        });
+    </script>
 </body>
 </html>
