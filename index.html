@@ -177,7 +177,7 @@
         <section id="waitlist" class="waitlist-section" aria-labelledby="waitlist-title">
             <div class="waitlist-container">
                 <h2 id="waitlist-title">Be the First to Explore the TRODDR App</h2>
-                <p>Get insider travel recommendations before anyone else.</p>
+                <p id="waitlist-description" class="sr-only">Join our waitlist to be notified when the TRODDR app launches</p>
                 <form id="waitlist-form" novalidate aria-labelledby="waitlist-title">
                     <div class="form-group">
                         <label for="waitlist-name" class="sr-only">Your name</label>
@@ -189,11 +189,10 @@
                         <input type="email" id="waitlist-email" placeholder="Your email" name="email" required 
                                aria-required="true" autocomplete="email">
                     </div>
-                    <button type="submit" aria-describedby="waitlist-description">
+                    <button type="submit" class="waitlist-cta" aria-describedby="waitlist-description">
                         Join Waitlist
                     </button>
                 </form>
-                <p id="waitlist-description" class="sr-only">Join our waitlist to be notified when the TRODDR app launches</p>
             </div>
         </section>
 
