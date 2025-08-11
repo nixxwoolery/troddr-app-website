@@ -48,10 +48,11 @@ html, body {
 }
 
 .logo {
-    font-size: 1.5rem;
+    font-size: 30px;
     font-weight: 700;
     color: var(--primary);
     text-decoration: none;
+    letter-spacing: -1px;
 }
 
 /* Mobile menu button */
@@ -127,11 +128,11 @@ html, body {
     background: rgba(0, 119, 204, 0.1);
 }
 
-.nav-item.active {
+/* .nav-item.active {
     color: var(--primary);
     font-weight: 600;
     background: rgba(0, 119, 204, 0.1);
-}
+} */
 
 .nav-cta {
     background: var(--primary);
@@ -707,7 +708,11 @@ html, body {
     }
     
     .logo {
-        font-size: 1.6rem;
+        font-size: 30px;
+        font-weight: 700;
+        color: var(--primary);
+        text-decoration: none;
+        letter-spacing: -1px;
     }
     
     .contact-hero {
