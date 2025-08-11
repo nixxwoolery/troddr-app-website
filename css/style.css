@@ -2220,6 +2220,7 @@ code {
     .btn-primary,
     .btn-secondary {
         border: 2px solid currentColor;
+        justify-content: center;
     }
 }
 
@@ -2232,6 +2233,7 @@ code {
 .download-btn:focus {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
+    justify-content: center;
 }
 
 input:focus,
