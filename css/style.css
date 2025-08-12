@@ -274,7 +274,7 @@ body {
     opacity: 0.5;
 }
 
-.hero-buttons { display: flex; justify-content: left; gap: 1rem; }
+/* .hero-buttons { display: flex; justify-content: left; gap: 1rem; } */
 
 /* About TRODDR Section */
 .about-app { background: #fff; }
@@ -550,7 +550,15 @@ body {
 
 .destination-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+/* Correctly scoped hero button centering (global; mobile-first) */
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
 }
 
 .destination-image {
@@ -2920,42 +2928,98 @@ textarea:focus {
   /* Lock background scroll when mobile menu is open */
     body.menu-open { overflow: hidden; }
 
-    /* Mobile baseline: hidden by default */
-    @media (max-width: 768px) {
-        .nav-links {
+    /* Mobile baseline: hidden nav menu by default */
+@media (max-width: 768px) {
+    .nav-links {
         display: none;
         background: #fff !important;
         color: #0077cc;
         position: fixed !important;
-          top: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          left: 0 !important;
-          z-index: 2000 !important;
-        }
-        .nav-links.mobile-open {
-        display:flex ;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        z-index: 2000 !important;
+    }
+    .nav-links.mobile-open {
+        display: flex;
         background: #fff !important;
         color: #0077cc;
+    }
+    /* optional: lock scroll when open */
+    body.menu-open { overflow: hidden; }
+}
+
+/* Hero CTA positioning */
+.hero-buttons {
+    display: flex;
+    justify-content: center;  /* default mobile centering */
+    align-items: center;
+    width: 100%;
+}
+
+.hero-cta {
+    margin: 0 auto;
+}
+
+/* Force center on small screens */
+@media (max-width: 768px) {
+    .hero-buttons { justify-content: center !important; }
+    .hero-cta { margin-left: auto !important; margin-right: auto !important; }
+}
+
+/* Left-align on laptop+ screens */
+@media (min-width: 1024px) {
+    .hero-buttons {
+        justify-content: flex-start;
+    }
+    .hero-cta {
+        margin: 0; /* remove auto margins when left-aligned */
+    }
+}
+
+    /* Close button for mobile nav */
+    @media (max-width: 768px) {
+        .nav-close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 44px;
+        height: 44px;
+        border: none;
+        border-radius: 999px;
+        background: #f3f4f6; /* light grey */
+        color: #111827;      /* near-black */
+        font-size: 1.5rem;
+        line-height: 1;
+        display: none;       /* hidden until menu is open */
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 3000;       /* above menu content */
         }
-        /* optional: lock scroll when open */
-        body.menu-open { overflow: hidden; }
+        .nav-links.mobile-open .nav-close-btn { display: inline-flex; }
+        .nav-close-btn:focus { outline: 2px solid #0077cc; outline-offset: 2px; }
     }
 
-    /* Center the hero CTA reliably */
-    .hero-buttons {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;           /* span full row so flex centering works */
+    @media (min-width: 769px) {
+        /* Ensure desktop nav is inline and visible */
+        .nav-links {
+          position: static !important;
+          transform: none !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          display: flex !important;
+          background: transparent !important;
+          color: inherit !important;
+          padding: 0 !important;
+          gap: 2rem; /* keep your desktop spacing */
+          z-index: auto !important;
+        }
     }
-    
-    .hero-cta {
-        margin: 0 auto;        /* cancel any stray left/right offsets */
-    }
-    
-    /* Extra certainty on small screens */
-    @media (max-width: 768px) {
-        .hero-buttons { justify-content: center !important; }
-        .hero-cta { margin-left: auto !important; margin-right: auto !important; }
-    }
+    @media (min-width: 769px) {
+        .nav-close-btn,
+        .mobile-menu-btn {
+          display: none !important;
+        }
+      }

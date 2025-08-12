@@ -83,6 +83,7 @@
                     <span aria-hidden="true">☰</span>
             </button>
             <div class="nav-links" id="primary-navigation" role="navigation">
+                <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
                 <a href="about.html" class="nav-item">About</a>
                 <a href="#features" class="nav-item">Features</a>
                 <a href="contact.html" class="nav-item">Contact</a>
@@ -444,8 +445,9 @@
 
     <script>
         (function(){
-          const menuBtn = document.querySelector('.mobile-menu-btn');
+          const menuBtn  = document.querySelector('.mobile-menu-btn');
           const navLinks = document.querySelector('.nav-links');
+          const closeBtn = document.querySelector('.nav-close-btn');
       
           if (!menuBtn || !navLinks) return;
       
@@ -457,7 +459,7 @@
             document.body.classList.toggle('menu-open', isOpen);
           });
       
-          // Close menu when a nav link is clicked
+          // Close when a nav link is clicked
           navLinks.addEventListener('click', function(e){
             const link = e.target.closest('a');
             if (!link) return;
@@ -466,6 +468,16 @@
             menuBtn.setAttribute('aria-expanded', 'false');
             document.body.classList.remove('menu-open');
           });
+      
+          // ✅ Close when the explicit close button is clicked
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              navLinks.classList.remove('mobile-open');
+              menuBtn.classList.remove('active');
+              menuBtn.setAttribute('aria-expanded', 'false');
+              document.body.classList.remove('menu-open');
+            });
+          }
       
           // Close on Escape key
           document.addEventListener('keydown', function(e){
