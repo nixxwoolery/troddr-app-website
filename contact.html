@@ -29,15 +29,25 @@
     <div class="floating-element"></div>
     <div class="floating-element"></div>
 
-    <header class="header">
+    <header class="header" role="banner">
         <div class="navbar">
-            <a href="index.html" class="logo">troddr</a>
-            <nav class="nav-links">
-                <a href="index.html#founder" class="nav-item">About</a>
-                <a href="index.html#features" class="nav-item">Features</a>
-                <a href="contact.html" class="nav-item active">Contact</a>
-                <a href="index.html#demo" class="nav-cta">Join Waitlist</a>
-            </nav>
+            <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
+            <!-- <button class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false">
+                ☰
+            </button> -->
+            <button class="mobile-menu-btn"
+                    aria-controls="primary-navigation"
+                    aria-expanded="false"
+                    aria-label="Open menu">
+                    <span aria-hidden="true">☰</span>
+            </button>
+            <div class="nav-links" id="primary-navigation" role="navigation">
+                <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
+                <a href="about.html" class="nav-item">About</a>
+                <a href="#features" class="nav-item">Features</a>
+                <a href="contact.html" class="nav-item">Contact</a>
+                <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+            </div>
         </div>
     </header>
 
@@ -261,7 +271,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h3>TRODDR</h3>
-                    <p>Your ultimate Jamaica travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+                    <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
                 </div>
                 <div class="footer-section">
                     <h3>Company</h3>

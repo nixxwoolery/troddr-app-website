@@ -87,7 +87,7 @@
                 <a href="about.html" class="nav-item">About</a>
                 <a href="#features" class="nav-item">Features</a>
                 <a href="contact.html" class="nav-item">Contact</a>
-                <a href="#waitlist-form" class="nav-cta">Join Waitlist</a>
+                <a href="#waitlist" class="nav-cta">Join Waitlist</a>
             </div>
         </div>
     </header>
@@ -192,21 +192,74 @@
             <div class="waitlist-container">
                 <h2 id="waitlist-title">Be the First to Explore the TRODDR App</h2>
                 <p id="waitlist-description" class="sr-only">Join our waitlist to be notified when the TRODDR app launches</p>
-                <form id="waitlist-form" novalidate aria-labelledby="waitlist-title">
+                <form
+                    action="https://troddr.us3.list-manage.com/subscribe/post?u=c6544ab875bface2c27a11eeb&amp;id=f079a28ace&amp;f_id=00d74ee2f0"
+                    method="post"
+                    id="waitlist-form"
+                    name="mc-embedded-subscribe-form"
+                    target="_blank"
+                    novalidate
+                    aria-labelledby="waitlist-title"
+                    >
                     <div class="form-group">
-                        <label for="waitlist-name" class="sr-only">Your name</label>
-                        <input type="text" id="waitlist-name" placeholder="Your name" name="name" required 
-                               aria-required="true" autocomplete="given-name">
+                        <label for="mc-fname" class="sr-only">First name</label>
+                        <input type="text" id="mc-fname" name="FNAME" placeholder="First name" required aria-required="true" autocomplete="given-name" />
                     </div>
+
                     <div class="form-group">
-                        <label for="waitlist-email" class="sr-only">Your email</label>
-                        <input type="email" id="waitlist-email" placeholder="Your email" name="email" required 
-                               aria-required="true" autocomplete="email">
+                        <label for="mc-lname" class="sr-only">Last name</label>
+                        <input type="text" id="mc-lname" name="LNAME" placeholder="Last name" required aria-required="true" autocomplete="family-name" />
                     </div>
+
+                    <div class="form-group">
+                        <label for="mc-email" class="sr-only">Email</label>
+                        <input type="email" id="mc-email" name="EMAIL" placeholder="Your email" required aria-required="true" autocomplete="email" />
+                    </div>
+
+                    <!-- Mailchimp honeypot (leave exactly as-is) -->
+                    <div aria-hidden="true" style="position:absolute; left:-5000px;">
+                        <input type="text" name="b_c6544ab875bface2c27a11eeb_f079a28ace" tabindex="-1" value="" />
+                    </div>
+
                     <button type="submit" class="waitlist-cta" aria-describedby="waitlist-description">
                         Join Waitlist
                     </button>
                 </form>
+                <div id="waitlist-success" class="form-message success" style="display:none;" role="alert" aria-live="polite">
+                    <div class="form-message-content">
+                      <span class="form-message-icon" aria-hidden="true">✅</span>
+                      <h3>You're in! 🎉</h3>
+                      <p>Thanks for joining the TRODDR beta test. Here’s your access:</p>
+                      <p><strong>TestFlight:</strong> <a id="testflight-link" href="https://testflight.apple.com/join/XXXXXXXX" target="_blank" rel="noopener">Join TRODDR Beta</a></p>
+                      <p>Open on your iPhone, accept the invite, and install the TRODDR app. We’ve also emailed you these details.</p>
+                      <hr class="divider" />
+                        <h4 style="margin-top:1rem;">Beta Testing Form</h4>
+                        <p>Please share your device details and any issues or ideas while you explore.</p>
+
+                        <!-- Responsive Google Form Embed -->
+                        <div class="gform-embed">
+                        <iframe
+                            src="https://docs.google.com/forms/d/e/1FAIpQLSf0C643VkA48pWTzEwSGMga6GWWShgMJTQjAvxtaLPthxQ3Zg/viewform?embedded=true"
+                            width="100%"
+                            height="1100"
+                            frameborder="0"
+                            marginheight="0"
+                            marginwidth="0"
+                            loading="lazy"
+                            title="TRODDR Beta Testing Form">
+                            Loading…
+                        </iframe>
+                        </div>
+
+                        <p style="margin-top:.75rem;">
+                        Prefer a new tab? 
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSf0C643VkA48pWTzEwSGMga6GWWShgMJTQjAvxtaLPthxQ3Zg/viewform"
+                            target="_blank" rel="noopener">
+                            Open the testing form
+                        </a>.
+                        </p>
+                    </div>
+                  </div>
             </div>
         </section>
 
@@ -287,7 +340,7 @@
                 <h2 id="cta-title">Ready to Explore Jamaica Like a Local?</h2>
                 <p>Skip the guesswork. Join the waitlist for handpicked local gems and planning that takes minutes.</p>
                 <div class="cta-buttons">
-                    <a href="#waitlist-form" class="btn-primary" aria-describedby="cta-title">
+                    <a href="#waitlist" class="btn-primary" aria-describedby="cta-title">
                         Join Waitlist
                     </a>
                     <a href="contact.html" class="btn-secondary">
@@ -373,7 +426,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h3>TRODDR</h3>
-                    <p>Your ultimate Jamaica travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+                    <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
                 </div>
                 <div class="footer-section">
                     <h3>Company</h3>
@@ -381,7 +434,7 @@
                         <a href="about.html">About Us</a>
                         <a href="#features">Features</a>
                         <a href="contact.html">Contact</a>
-                        <a href="#waitlist-form">Join Waitlist</a>
+                        <a href="#waitlist">Join Waitlist</a>
                     </nav>
                 </div>
                 <div class="footer-section">
@@ -488,6 +541,34 @@
               document.body.classList.remove('menu-open');
             }
           });
+        })();
+        (function(){
+            const form = document.getElementById('waitlist-form');
+            const success = document.getElementById('waitlist-success');
+            if (!form) return;
+
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const params = new URLSearchParams(formData);
+
+                // Build Mailchimp JSON endpoint from the normal action
+                const base = form.action.replace('/post?', '/post-json?');
+                const url = base + '&' + params.toString() + '&c=?';
+
+                // Fire request; assume success for UX and still let Mailchimp process
+                fetch(url, { method: 'GET', mode: 'no-cors' })
+                .then(function(){
+                    form.style.display = 'none';
+                    if (success) success.style.display = 'block';
+                    try { gtag('event', 'waitlist_signup', { method: 'mailchimp' }); } catch(err){}
+                })
+                .catch(function(){
+                    // Fallback: submit normally if fetch fails
+                    form.submit();
+                });
+            });
         })();
       </script>
 </body>

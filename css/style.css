@@ -691,14 +691,14 @@ body {
 /* Ticker / Rolling CTA Section */
 .ticker-section { background: var(--primary); color: white; overflow: hidden; }
 .ticker-row { position: relative; border-top: 1px solid rgba(255,255,255,0.08); }
-.ticker-inner { display: flex; gap: 2rem; padding: 0.35rem 0; }
+.ticker-inner { display: flex; gap: 2rem; padding: 0.25rem 0; }
 .ticker-track { display: flex; gap: 2rem; white-space: nowrap; will-change: transform; animation: marquee 28s linear infinite; }
 .ticker-row:hover .ticker-track { animation-play-state: paused; }
 /* Download Ticker Variant */
 .ticker-section.ticker-download { background: var(--primary); }
 .ticker-section.ticker-download .ticker-inner { padding: 1.1rem 0; }
 .ticker-section.ticker-download .ticker-track { gap: 8rem; }
-.ticker-section.ticker-download .ticker-item { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.3px; }
+.ticker-section.ticker-download .ticker-item { font-size: 1.1rem; line-height: 1.2; font-weight: 700; letter-spacing: 0.3px; }
 .store-badge { display: inline-block; padding: 0.35rem 0.8rem; border-radius: 999px; background: white; color: var(--dark); font-weight: 700; font-size: 0.9rem; text-decoration: none; }
 .social-link { color: white; text-decoration: none; font-weight: 600; opacity: 0.95; }
 .social-link:hover { opacity: 1; text-decoration: underline; }
@@ -812,7 +812,7 @@ justify-content: center !important;
 }
 
 #waitlist-form button {
-display: inline-block; margin: 0.75rem auto 0;
+display: inline-block;
 background: white;
 color: var(--primary);
 font-weight: bold;
@@ -3022,4 +3022,9 @@ textarea:focus {
         .mobile-menu-btn {
           display: none !important;
         }
-      }
+    }
+
+.gform-embed iframe { width: 100%; max-width: 100%; border: 0; }
+@media (max-width: 768px) {
+  .gform-embed iframe { height: 1400px; } /* more room on mobile */
+}
