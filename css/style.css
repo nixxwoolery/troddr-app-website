@@ -348,8 +348,8 @@ body {
 }
 
 #founder .section-title {
-    text-align: left; /* Keeps heading text itself left-aligned */
-    width: 600px;     /* Matches story-content width */
+    text-align: left;
+    width: min(100%, 600px);
 }
 
 #founder .story-content {

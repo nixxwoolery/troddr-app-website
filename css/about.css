@@ -22,6 +22,24 @@ body {
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Ensure opaque header when mobile menu is open or on small screens */
+body.menu-open .header {
+  background: #fff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+@media (max-width: 768px) {
+  .header {
+    background: #fff !important;           /* prevent frosted translucency over mobile overlay */
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .navbar {
+    padding: 0.75rem 1rem;                  /* slightly tighter padding on mobile */
+  }
+}
+
 .navbar {
     display: flex;
     justify-content: space-between;
