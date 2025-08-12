@@ -322,6 +322,52 @@
         </div>
     </footer>
 
-    <script src="js/contact.js"></script>
+    <script src="js/contact.js">
+        (function(){
+          const menuBtn  = document.querySelector('.mobile-menu-btn');
+          const navLinks = document.querySelector('.nav-links');
+          const closeBtn = document.querySelector('.nav-close-btn');
+      
+          if (!menuBtn || !navLinks) return;
+      
+          // Toggle menu open/close
+          menuBtn.addEventListener('click', function(){
+            const isOpen = navLinks.classList.toggle('mobile-open');
+            this.classList.toggle('active', isOpen);
+            this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            document.body.classList.toggle('menu-open', isOpen);
+          });
+      
+          // Close when a nav link is clicked
+          navLinks.addEventListener('click', function(e){
+            const link = e.target.closest('a');
+            if (!link) return;
+            navLinks.classList.remove('mobile-open');
+            menuBtn.classList.remove('active');
+            menuBtn.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('menu-open');
+          });
+      
+          // ✅ Close when the explicit close button is clicked
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              navLinks.classList.remove('mobile-open');
+              menuBtn.classList.remove('active');
+              menuBtn.setAttribute('aria-expanded', 'false');
+              document.body.classList.remove('menu-open');
+            });
+          }
+      
+          // Close on Escape key
+          document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape') {
+              navLinks.classList.remove('mobile-open');
+              menuBtn.classList.remove('active');
+              menuBtn.setAttribute('aria-expanded', 'false');
+              document.body.classList.remove('menu-open');
+            }
+          });
+        })();
+    </script>
 </body>
 </html>
