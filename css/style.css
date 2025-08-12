@@ -1934,7 +1934,7 @@ body {
 
 /* ===== WAITLIST SECTION ===== */
 .waitlist-section {
-    background: linear-gradient(135deg, var(--primary), #0077cc);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
     padding: 4rem 1rem;
     text-align: center;
     color: white;
