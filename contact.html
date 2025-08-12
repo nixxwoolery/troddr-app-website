@@ -368,6 +368,34 @@
             }
           });
         })();
+        (function(){
+            const form = document.getElementById('waitlist-form');
+            const success = document.getElementById('waitlist-success');
+            if (!form) return;
+
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const params = new URLSearchParams(formData);
+
+                // Build Mailchimp JSON endpoint from the normal action
+                const base = form.action.replace('/post?', '/post-json?');
+                const url = base + '&' + params.toString() + '&c=?';
+
+                // Fire request; assume success for UX and still let Mailchimp process
+                fetch(url, { method: 'GET', mode: 'no-cors' })
+                .then(function(){
+                    form.style.display = 'none';
+                    if (success) success.style.display = 'block';
+                    try { gtag('event', 'waitlist_signup', { method: 'mailchimp' }); } catch(err){}
+                })
+                .catch(function(){
+                    // Fallback: submit normally if fetch fails
+                    form.submit();
+                });
+            });
+        })();
     </script>
 </body>
 </html>
