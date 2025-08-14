@@ -1,0 +1,157 @@
+:root{
+    --primary: #0077cc;
+    --primary-dark:#005da1;
+    --primary-light:#3aa0ff;
+    --dark:#0f172a;
+    --gray:#6b7280;
+    --light:#f8fafc;
+    --card:#ffffff;
+    --green:#10b981;
+    --amber:#f59e0b;
+    --rose:#ef4444;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:var(--dark)}
+
+  /* Dark background option */
+  .dark-bg { background: #1e293b !important; color: #f8fafc !important; }
+
+  .hidden{display:none}
+  .error{max-width:900px;margin:40px auto;padding:20px;border:1px solid #fee2e2;background:#fef2f2;color:#991b1b;border-radius:12px}
+
+  /* Header */
+  /* Place itinerary meta bar under the main site header (not sticky) */
+  .itinerary-header{position:relative;top:auto;z-index:10;background:#fff;border-bottom:1px solid #eef2f7}
+  .itinerary-header .bar{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px}
+  .logo{font-weight:800;letter-spacing:.5px}
+  .logo a{color:var(--dark);text-decoration:none}
+  .trip-meta{display:flex;flex-wrap:wrap;gap:12px;margin-left:auto;align-items:center}
+  .meta-pill{background:var(--light);border:1px solid #eef2f7;border-radius:999px;padding:6px 12px;font-size:.9rem;color:#334155}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:var(--dark);padding:.6rem 1rem;font-weight:600;text-decoration:none;cursor:pointer}
+  .btn-primary{background:var(--primary);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(0,119,204,.25)}
+  .btn-primary:hover{background:var(--primary-dark)}
+
+  /* Hero summary */
+  .trip-hero{max-width:1200px;margin:0 auto;padding:22px 20px 10px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+  .trip-title{font-size:1.6rem;margin:0}
+  .trip-sub{color:var(--gray);margin:.25rem 0 0}
+
+  /* Tabs for days */
+  /* Since the itinerary meta bar is no longer sticky, tabs can pin to the top */
+  .day-tabs{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #eef2f7}
+  .day-track{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;gap:8px;overflow:auto}
+  .day-pill{padding:8px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#0f172a;font-weight:600;white-space:nowrap;cursor:pointer}
+  .day-pill.active,.day-pill:hover{background:var(--primary);color:#fff;border-color:transparent}
+
+  /* Layout */
+  .page{max-width:1200px;margin:0 auto;padding:18px 20px 40px;display:grid;grid-template-columns: 1fr;gap:18px}
+
+  /* Day section */
+  .day-section{scroll-margin-top:80px}
+  .day-header{display:flex;align-items:baseline;gap:10px;margin:18px 0 10px}
+  .day-title{font-size:1.25rem;margin:0}
+  .day-date{color:var(--gray)}
+
+  /* Stop cards */
+  .stops{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .stop-card{background:var(--card);border:1px solid #eef2f7;border-radius:14px;overflow:hidden;box-shadow:0 8px 18px rgba(15,23,42,.04)}
+  .stop-cover{height:130px;background:#e2e8f0;background-position:center;background-size:cover}
+  .stop-body{padding:12px 14px}
+  .stop-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .stop-name{margin:0;font-size:1.05rem}
+  .badge{padding:4px 8px;border-radius:999px;font-size:.75rem;font-weight:700}
+  .badge.eat{background:#fff7ed;border:1px solid #fed7aa;color:#c2410c}
+  .badge.play{background:#ecfeff;border:1px solid #a5f3fc;color:#155e75}
+  .badge.stay{background:#f0f9ff;border:1px solid #bae6fd;color:#075985}
+  .stop-meta{display:flex;gap:10px;color:var(--gray);font-size:.9rem;margin:8px 0}
+  .stop-actions{display:flex;gap:8px}
+  .btn-mini{padding:.45rem .7rem;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#0f172a;font-weight:600;text-decoration:none}
+  .btn-mini:hover{border-color:#cbd5e1}
+
+  /* Map placeholder */
+  .map-wrap{border:1px dashed #cbd5e1;border-radius:14px;height:220px;display:flex;align-items:center;justify-content:center;color:#64748b}
+
+  @media (min-width: 1000px){
+    .page{grid-template-columns: 320px 1fr;align-items:start}
+    .sidebar{position:sticky;top:80px}
+  }
+
+  /* --- Polish --------------------------------------------------------- */
+  .container{max-width:1200px;margin:0 auto;padding:0 20px}
+  .itinerary-header{backdrop-filter:saturate(1.2) blur(6px);background:rgba(255,255,255,.85)}
+  .itinerary-header .bar{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 20px}
+  .itinerary-header .logo{font-weight:800;letter-spacing:.5px;font-size:1.05rem;color:var(--dark);text-decoration:none}
+
+  .trip-hero{border-bottom:1px solid #eef2f7}
+  .trip-title{font-size:2rem;letter-spacing:-.2px}
+  .trip-sub{font-size:1rem}
+
+  .map-wrap{background:linear-gradient(180deg,#f8fbff 0%,#eef6ff 100%);border:1px solid #e6eef9}
+
+  .day-tabs{box-shadow:0 6px 16px rgba(15,23,42,.04)}
+  .day-pill{transition:all .15s ease}
+
+  .stop-card{transition:box-shadow .2s ease,transform .2s ease}
+  .stop-card:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(15,23,42,.08)}
+  .stop-cover{position:relative}
+  .time-badge{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.65);color:#fff;padding:4px 8px;border-radius:999px;font-size:.75rem;font-weight:700}
+
+  .btn{transition:transform .08s ease, box-shadow .2s ease}
+  .btn:active{transform:translateY(1px)}
+
+  /* Better spacing for main grid */
+  @media (min-width:1000px){
+    .page{gap:24px}
+  }
+
+  /* --- Dark mode ------------------------------------------------------ */
+  @media (prefers-color-scheme: dark){
+    html,body{background:#0b1220;color:#e5e7eb}
+    .itinerary-header{background:rgba(15,23,42,.7)}
+    .itinerary-header .logo{color:#e5e7eb}
+    .meta-pill{background:#0f172a;border-color:#1f2937;color:#cbd5e1}
+    .day-tabs{background:#0b1220;border-color:#1f2937}
+    .day-pill{background:#0f172a;border-color:#1f2937;color:#e5e7eb}
+    .day-pill.active,.day-pill:hover{background:var(--primary);color:#fff}
+    .stop-card{background:#0f172a;border-color:#1f2937;box-shadow:0 8px 18px rgba(0,0,0,.25)}
+    .stop-meta{color:#9ca3af}
+    .btn{background:#0f172a;color:#e5e7eb;border-color:#1f2937}
+    .btn-primary{background:var(--primary)}
+    .map-wrap{background:linear-gradient(180deg,#0f172a,#0b1220);border-color:#1f2937;color:#9ca3af}
+    .error{background:#2b1d1d;border-color:#7f1d1d;color:#fecaca}
+  }
+  /* ===================== Mobile tweaks ===================== */
+  @media (max-width: 640px){
+    /* Layout & spacing */
+    .itinerary-header .bar{padding:10px 12px;gap:10px}
+    .trip-meta{margin-left:0;gap:8px}
+    .meta-pill{font-size:.8rem;padding:6px 10px}
+    .btn{padding:.55rem .9rem}
+    .btn-primary{box-shadow:none}
+
+    .trip-hero{grid-template-columns:1fr;gap:10px;padding:16px 12px 8px}
+    .trip-title{font-size:1.35rem}
+    .trip-sub{font-size:.9rem}
+    .map-wrap{height:180px}
+
+    .day-track{padding:8px 12px;gap:6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+    .day-pill{scroll-snap-align:start;padding:8px 10px;font-size:.9rem}
+
+    .page{padding:14px 12px 28px;gap:14px}
+    .page{grid-template-columns: 1fr}
+    .sidebar{position:static;top:auto}
+
+    .stops{grid-template-columns:1fr}
+    .stop-cover{height:180px}
+    .stop-body{padding:12px}
+    .stop-name{font-size:1rem}
+    .btn-mini{padding:.55rem .75rem}
+
+    .day-section{scroll-margin-top:64px}
+  }
+
+  /* iOS safe areas for sticky tabs */
+  @supports (padding: max(0px)){
+    .day-tabs{top:0;padding-top: env(safe-area-inset-top)}
+  }
