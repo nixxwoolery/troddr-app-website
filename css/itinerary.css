@@ -105,7 +105,7 @@
   /* --- Dark mode ------------------------------------------------------ */
   @media (prefers-color-scheme: dark){
     html,body{background:#0b1220;color:#e5e7eb}
-    .itinerary-header{margin-top: 4rem;background:rgba(15,23,42,.7)}
+    .itinerary-header{margin-top: 6rem;background:rgba(15,23,42,.7)}
     .meta-pill{background:#0f172a;border-color:#1f2937;color:#cbd5e1}
     .day-tabs{background:#0b1220;border-color:#1f2937}
     .day-pill{background:#0f172a;border-color:#1f2937;color:#e5e7eb}

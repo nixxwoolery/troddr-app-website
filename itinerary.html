@@ -243,6 +243,9 @@
     const debug = (...args) => { try { console.debug('[itinerary]', ...args); } catch {} };
     debug('ENV', { url: SUPABASE_URL && 'ok', anon: SUPABASE_ANON_KEY ? 'set' : 'missing' });
 
+    // ====== URL FLAG HELPER ======
+    const urlFlag = (k) => new URLSearchParams(location.search.replace(/^\?/, '')).get(k) || new URLSearchParams(location.hash.replace(/^#/, '')).get(k);
+
     // ====== UTIL ======
     const fmtDate = (iso) => {
       if (!iso) return '';
@@ -378,9 +381,22 @@
       onScroll();
     }
 
+    // ====== DEBUG PANEL ======
+    function mountDebugPanel(ctx){
+      if (!(urlFlag('debug') === '1')) return; // opt-in only
+      const box = document.createElement('pre');
+      box.id = 'itinerary-debug';
+      box.style.cssText = 'position:fixed;bottom:10px;right:10px;z-index:9999;max-width:90vw;max-height:40vh;overflow:auto;background:#0b1220;color:#e5e7eb;border:1px solid #1f2937;border-radius:8px;padding:10px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.4)';
+      box.textContent = JSON.stringify(ctx, null, 2);
+      document.body.appendChild(box);
+      return (extra) => { try { box.textContent = JSON.stringify({ ...ctx, ...extra }, null, 2); } catch {} };
+    }
+
     async function main(){
+      const dbg = mountDebugPanel({ phase: 'start', href: location.href });
       const token = parseTokenFromUrl();
       debug('parsed token', token);
+      if (dbg) dbg({ phase: 'token', token });
       if (saveBtn && token) {
         saveBtn.setAttribute('href', `troddrapp://import/shared_itinerary?token=${encodeURIComponent(token)}`);
       }
@@ -395,6 +411,7 @@
         // 1) Try token as-is
         ({ data, error } = await supa.rpc('get_shared_itinerary', { _token: token }));
         debug('RPC get_shared_itinerary', { hasData: !!data, hasError: !!error, token });
+        if (dbg) dbg({ phase: 'rpc1', hasData: !!data, hasError: !!error });
 
         // 2) Retry with dashless token if not found
         if ((!data || error) && token.includes('-')) {
@@ -403,6 +420,7 @@
           const retry = await supa.rpc('get_shared_itinerary', { _token: tokenNoDash });
           data = retry.data; error = retry.error;
           debug('Retry result', { hasData: !!data, hasError: !!error });
+          if (dbg) dbg({ phase: 'rpc2', hasData: !!data, hasError: !!error });
         }
 
         // 3) If still nothing and it looks like an itinerary UUID, try by itinerary_id via a separate RPC
@@ -411,9 +429,11 @@
           const byId = await supa.rpc('get_shared_itinerary_by_id', { _itinerary_id: token });
           data = byId.data; error = byId.error;
           debug('ById result', { hasData: !!data, hasError: !!error });
+          if (dbg) dbg({ phase: 'byId', hasData: !!data, hasError: !!error });
         }
 
         if (error || !data){ throw error || new Error('Not found'); }
+        if (dbg) dbg({ phase: 'render', items: Array.isArray(data.items) ? data.items.length : 0, metaTitle: data.title });
         render(data.items || [], data);
         // Bump views (ignore errors)
         supa.rpc('bump_share_view', { _token: token }).catch(()=>{});
@@ -432,6 +452,7 @@
           });
         }
       }catch(e){
+        if (typeof dbg === 'function') dbg({ phase: 'error', message: (e && e.message) || String(e) });
         console.error('[itinerary] load error', e);
         errorBox.classList.remove('hidden');
         titleEl.textContent = 'Itinerary unavailable';
