@@ -22,10 +22,8 @@
 
   /* Header */
   /* Place itinerary meta bar under the main site header (not sticky) */
-  .itinerary-header{position:relative;top:auto;z-index:10;background:#fff;border-bottom:1px solid #eef2f7}
+  .itinerary-header{margin-top: 5rem;position:relative;top:auto;z-index:10;background:#fff;border-bottom:1px solid #eef2f7}
   .itinerary-header .bar{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px}
-  .logo{font-weight:800;letter-spacing:.5px}
-  .logo a{color:var(--dark);text-decoration:none}
   .trip-meta{display:flex;flex-wrap:wrap;gap:12px;margin-left:auto;align-items:center}
   .meta-pill{background:var(--light);border:1px solid #eef2f7;border-radius:999px;padding:6px 12px;font-size:.9rem;color:#334155}
   .btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:var(--dark);padding:.6rem 1rem;font-weight:600;text-decoration:none;cursor:pointer}
@@ -81,7 +79,6 @@
   .container{max-width:1200px;margin:0 auto;padding:0 20px}
   .itinerary-header{backdrop-filter:saturate(1.2) blur(6px);background:rgba(255,255,255,.85)}
   .itinerary-header .bar{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 20px}
-  .itinerary-header .logo{font-weight:800;letter-spacing:.5px;font-size:1.05rem;color:var(--dark);text-decoration:none}
 
   .trip-hero{border-bottom:1px solid #eef2f7}
   .trip-title{font-size:2rem;letter-spacing:-.2px}
@@ -108,8 +105,7 @@
   /* --- Dark mode ------------------------------------------------------ */
   @media (prefers-color-scheme: dark){
     html,body{background:#0b1220;color:#e5e7eb}
-    .itinerary-header{background:rgba(15,23,42,.7)}
-    .itinerary-header .logo{color:#e5e7eb}
+    .itinerary-header{margin-top: 4rem;background:rgba(15,23,42,.7)}
     .meta-pill{background:#0f172a;border-color:#1f2937;color:#cbd5e1}
     .day-tabs{background:#0b1220;border-color:#1f2937}
     .day-pill{background:#0f172a;border-color:#1f2937;color:#e5e7eb}

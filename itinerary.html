@@ -93,22 +93,18 @@
           </div>
       </div>
   </header>
-  <div class="itinerary-header">
-    <div class="bar">
-      <div class="trip-meta">
-        <span class="meta-pill" id="meta-destination">—</span>
-        <span class="meta-pill" id="meta-dates"></span>
-        <button class="btn" id="btn-copy">Copy Link</button>
-        <a class="btn btn-primary" href="troddrapp://import/shared_itinerary?token=<TOKEN>" id="btn-save">Open in App</a>
-      </div>
-    </div>
-  </div>
 
   <!-- Summary hero (dynamic) -->
   <section class="trip-hero">
     <div>
       <h1 class="trip-title" id="trip-title">Loading…</h1>
       <p class="trip-sub" id="trip-sub"></p>
+      <div class="trip-meta" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
+        <span class="meta-pill" id="meta-destination">—</span>
+        <span class="meta-pill" id="meta-dates"></span>
+        <button class="btn" id="btn-copy">Copy Link</button>
+        <a class="btn btn-primary" href="troddrapp://import/shared_itinerary?token=<TOKEN>" id="btn-save">Open in App</a>
+      </div>
     </div>
     <div class="map-wrap" id="map-preview">Map preview</div>
   </section>
