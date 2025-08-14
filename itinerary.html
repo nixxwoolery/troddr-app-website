@@ -256,7 +256,10 @@
           <a class="btn-mini" href="#" id="qa-open-maps">Open in Maps</a>
         </div>
       </div>
-      <div id="error-box" class="error hidden">Unable to load itinerary. The link may be invalid or expired.</div>
+      <div id="error-box" class="error hidden">
+        <div style="font-weight:700;margin-bottom:6px">Unable to load itinerary.</div>
+        <div id="error-detail">The link may be invalid or expired.</div>
+      </div>
     </aside>
 
     <section id="days-root"></section>
@@ -290,6 +293,9 @@
     const copyBtn = $('#btn-copy');
     const saveBtn = $('#btn-save');
     const errorBox = $('#error-box');
+    const errorDetail = $('#error-detail');
+    const debug = (...args) => { try { console.debug('[itinerary]', ...args); } catch {} };
+    debug('ENV', { url: SUPABASE_URL && 'ok', anon: SUPABASE_ANON_KEY ? 'set' : 'missing' });
 
     // ====== UTIL ======
     const fmtDate = (iso) => {
@@ -408,10 +414,12 @@
       if (!token){
         errorBox.classList.remove('hidden');
         titleEl.textContent = 'Invalid link';
+        if (errorDetail) errorDetail.textContent = 'No token found in URL path. Expected /itinerary/<token>.';
         return;
       }
       try{
         const { data, error } = await supa.rpc('get_shared_itinerary', { _token: token });
+        debug('RPC get_shared_itinerary', { hasData: !!data, hasError: !!error });
         if (error || !data){ throw error || new Error('Not found'); }
         render(data.items || [], data);
         // Bump views (ignore errors)
@@ -431,9 +439,10 @@
           });
         }
       }catch(e){
-        console.error(e);
+        console.error('[itinerary] load error', e);
         errorBox.classList.remove('hidden');
         titleEl.textContent = 'Itinerary unavailable';
+        if (errorDetail) errorDetail.textContent = (e && e.message) ? e.message : 'Failed to fetch from Supabase. Check env vars and RPC permissions.';
       }
     }
 
