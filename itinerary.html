@@ -147,6 +147,79 @@
   </script>
   <!-- Supabase client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>(function(){
+    const menuBtn  = document.querySelector('.mobile-menu-btn');
+    const navLinks = document.querySelector('.nav-links');
+    const closeBtn = document.querySelector('.nav-close-btn');
+
+    if (!menuBtn || !navLinks) return;
+
+    // Toggle menu open/close
+    menuBtn.addEventListener('click', function(){
+      const isOpen = navLinks.classList.toggle('mobile-open');
+      this.classList.toggle('active', isOpen);
+      this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      document.body.classList.toggle('menu-open', isOpen);
+    });
+
+    // Close when a nav link is clicked
+    navLinks.addEventListener('click', function(e){
+      const link = e.target.closest('a');
+      if (!link) return;
+      navLinks.classList.remove('mobile-open');
+      menuBtn.classList.remove('active');
+      menuBtn.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('menu-open');
+    });
+
+    // ✅ Close when the explicit close button is clicked
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        navLinks.classList.remove('mobile-open');
+        menuBtn.classList.remove('active');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open');
+      });
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') {
+        navLinks.classList.remove('mobile-open');
+        menuBtn.classList.remove('active');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open');
+      }
+    });
+  })();
+  (function(){
+      const form = document.getElementById('waitlist-form');
+      const success = document.getElementById('waitlist-success');
+      if (!form) return;
+
+      form.addEventListener('submit', function(e){
+          e.preventDefault();
+
+          const formData = new FormData(form);
+          const params = new URLSearchParams(formData);
+
+          // Build Mailchimp JSON endpoint from the normal action
+          const base = form.action.replace('/post?', '/post-json?');
+          const url = base + '&' + params.toString() + '&c=?';
+
+          // Fire request; assume success for UX and still let Mailchimp process
+          fetch(url, { method: 'GET', mode: 'no-cors' })
+          .then(function(){
+              form.style.display = 'none';
+              if (success) success.style.display = 'block';
+              try { gtag('event', 'waitlist_signup', { method: 'mailchimp' }); } catch(err){}
+          })
+          .catch(function(){
+              // Fallback: submit normally if fetch fails
+              form.submit();
+          });
+      });
+  })();</script>
   <script>
     // ====== CONFIG ======
     const SUPABASE_URL = window.env?.SUPABASE_URL || 'https://YOUR_SUPABASE_PROJECT.supabase.co';
