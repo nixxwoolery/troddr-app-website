@@ -418,8 +418,17 @@
         return;
       }
       try{
-        const { data, error } = await supa.rpc('get_shared_itinerary', { _token: token });
-        debug('RPC get_shared_itinerary', { hasData: !!data, hasError: !!error });
+        let { data, error } = await supa.rpc('get_shared_itinerary', { _token: token });
+        debug('RPC get_shared_itinerary', { hasData: !!data, hasError: !!error, token });
+
+        if ((!data || error) && token.includes('-')) {
+          const tokenNoDash = token.replace(/-/g, '');
+          debug('Retry with dashless token', tokenNoDash);
+          const retry = await supa.rpc('get_shared_itinerary', { _token: tokenNoDash });
+          data = retry.data; error = retry.error;
+          debug('Retry result', { hasData: !!data, hasError: !!error });
+        }
+
         if (error || !data){ throw error || new Error('Not found'); }
         render(data.items || [], data);
         // Bump views (ignore errors)
