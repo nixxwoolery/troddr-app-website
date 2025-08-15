@@ -55,27 +55,15 @@
     </script>
 
     <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "TRODDR",
-        "description": "Jamaica-first travel guide and trip planner for authentic Caribbean experiences",
-        "url": "https://troddr.com",
-        "applicationCategory": "TravelApplication",
-        "operatingSystem": "iOS, Android, Web",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD"
-        },
-        "publisher": {
-            "@type": "Organization",
-            "name": "TRODDR Ltd",
-            "url": "https://troddr.com"
-        }
-    }
-    </script>
+</script>
+    <!-- Leaflet (lightweight interactive map, no API key required) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+      /* Ensure the preview has a visible height */
+      #map-preview { height: 260px; border-radius: 12px; overflow: hidden; }
+      @media (min-width: 1024px) { #map-preview { height: 320px; } }
+    </style>
 </head>
 <body>
   <!-- Header -->
@@ -310,6 +298,48 @@
     // Helper to detect UUIDs
     const isUuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
 
+    function mountMapPreview(items){
+      const el = document.getElementById('map-preview');
+      if (!el || !window.L) return;
+
+      // Extract coordinates from items; support multiple possible field names
+      const coords = (items || []).map(it => {
+        const lat = Number(it.latitude ?? it.lat ?? it.Latitude ?? it.Lat);
+        const lng = Number(it.longitude ?? it.lng ?? it.Longitude ?? it.Lng ?? it.lon);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) return [lat, lng, it];
+        return null;
+      }).filter(Boolean);
+
+      // Clear any placeholder text
+      el.innerHTML = '';
+
+      if (!coords.length) {
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.textContent = 'Map preview unavailable';
+        return;
+      }
+
+      const map = L.map(el, { zoomControl: false });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const latlngs = coords.map(c => L.latLng(c[0], c[1]));
+      const bounds = L.latLngBounds(latlngs);
+      map.fitBounds(bounds, { padding: [24, 24] });
+
+      coords.forEach(([lat, lng, it]) => {
+        const m = L.circleMarker([lat, lng], { radius: 6, weight: 2 });
+        m.addTo(map);
+        if (it && (it.name || it.town)) {
+          const lines = [it.name, [it.town, it.parish].filter(Boolean).join(', ')].filter(Boolean);
+          m.bindPopup(lines.join('<br/>'));
+        }
+      });
+    }
+
     function render(items, meta){
       // Header/meta
       titleEl.textContent = meta.title || 'Itinerary';
@@ -318,6 +348,14 @@
       const range = fmtRange(meta.start_date, meta.end_date);
       datesMeta.textContent = range ? `${range}` : '';
       destDetail.textContent = meta.destination || '—';
+
+      // Show who shared it (if provided by RPC)
+      const createdByEl = document.getElementById('detail-createdby');
+      if (createdByEl) {
+        createdByEl.textContent = meta.owner_name
+          ? `👤 ${meta.owner_name} shared this itinerary`
+          : '👤 Shared itinerary';
+      }
 
       // Tabs + sections
       const { keys, buckets } = groupByDay(items);
@@ -391,6 +429,8 @@
       };
       document.addEventListener('scroll', onScroll, {passive:true});
       onScroll();
+      // Mount the small map preview using item coordinates
+      try { mountMapPreview(items); } catch(e) { console.warn('map preview error', e); }
     }
 
     // ====== DEBUG PANEL ======

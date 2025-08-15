@@ -25,6 +25,11 @@
   .itinerary-header{margin-top: 5rem;position:relative;top:auto;z-index:10;background:#fff;border-bottom:1px solid #eef2f7}
   .itinerary-header .bar{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px}
   .trip-meta{display:flex;flex-wrap:wrap;gap:12px;margin-left:auto;align-items:center}
+  /* Allow horizontal scroll for meta pills when space is tight */
+  @media (max-width: 640px){
+    .trip-meta{flex-wrap:nowrap;overflow:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .trip-meta::-webkit-scrollbar{display:none}
+  }
   .meta-pill{background:var(--light);border:1px solid #eef2f7;border-radius:999px;padding:6px 12px;font-size:.9rem;color:#334155}
   .btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:var(--dark);padding:.6rem 1rem;font-weight:600;text-decoration:none;cursor:pointer}
   .btn-primary{background:var(--primary);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(0,119,204,.25)}
@@ -119,35 +124,40 @@
   }
   /* ===================== Mobile tweaks ===================== */
   @media (max-width: 640px){
-    /* Layout & spacing */
+    /* Header & controls */
+    .itinerary-header{margin-top: 3.75rem}
     .itinerary-header .bar{padding:10px 12px;gap:10px}
-    .trip-meta{margin-left:0;gap:8px}
-    .meta-pill{font-size:.8rem;padding:6px 10px}
-    .btn{padding:.55rem .9rem}
+    .trip-meta{margin-left:0;gap:8px;overflow:auto;white-space:nowrap;scrollbar-width:none}
+    .trip-meta::-webkit-scrollbar{display:none}
+    .meta-pill{font-size:.85rem;padding:6px 10px}
+    .btn{padding:.6rem 1rem;font-size:.95rem}
     .btn-primary{box-shadow:none}
 
-    .trip-hero{grid-template-columns:1fr;gap:10px;padding:16px 12px 8px}
-    .trip-title{font-size:1.35rem}
-    .trip-sub{font-size:.9rem}
-    .map-wrap{height:180px}
+    /* Hero */
+    .trip-hero{grid-template-columns:1fr;gap:10px;padding:14px 12px 6px}
+    .trip-title{font-size:clamp(1.1rem, 4.5vw, 1.4rem)}
+    .trip-sub{font-size:.95rem}
 
-    .day-track{padding:8px 12px;gap:6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
-    .day-pill{scroll-snap-align:start;padding:8px 10px;font-size:.9rem}
+    /* Map preview */
+    .map-wrap{height:200px;margin-top:8px}
 
-    .page{padding:14px 12px 28px;gap:14px}
+    /* Day tabs */
+    .day-tabs{top:0}
+    .day-track{padding:8px 12px;gap:6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overflow:auto}
+    .day-pill{scroll-snap-align:start;padding:8px 10px;font-size:.95rem}
+
+    /* Layout */
+    .page{padding:14px 12px max(28px, env(safe-area-inset-bottom));gap:14px}
     .page{grid-template-columns: 1fr}
     .sidebar{position:static;top:auto}
 
+    /* Cards */
     .stops{grid-template-columns:1fr}
-    .stop-cover{height:180px}
+    .stop-cover{height:220px}
     .stop-body{padding:12px}
-    .stop-name{font-size:1rem}
-    .btn-mini{padding:.55rem .75rem}
+    .stop-name{font-size:1.05rem}
+    .btn-mini{padding:.6rem .85rem}
 
+    /* Anchor offset when jumping to a day */
     .day-section{scroll-margin-top:64px}
-  }
-
-  /* iOS safe areas for sticky tabs */
-  @supports (padding: max(0px)){
-    .day-tabs{top:0;padding-top: env(safe-area-inset-top)}
   }
