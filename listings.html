@@ -154,8 +154,18 @@
     /* Map card */
     .mapCard{border-radius:5px;overflow:hidden;background:#f8f9fa;border:1px solid var(--line)}
     .mapHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
-    .mapBody{position:relative;height:420px;display:flex;align-items:center;justify-content:center;color:#8E8E93}
-    .mapPin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);pointer-events:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+    .mapBody{height:420px;display:flex;align-items:center;justify-content:center;color:#8E8E93;position:relative}
+
+    .mapPin{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-100%);
+      width:28px;
+      height:28px;
+      pointer-events:none;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.35));
+    }
     .mapPin svg{display:block}
 
     @media (max-width: 980px){
@@ -1049,14 +1059,18 @@ let __mapsActiveTrigger;
         iframe.style.width = '100%';
         iframe.style.height = '100%';
         iframe.style.border = '0';
-        // Center map without dropping a coordinate label card
+        // Use centered view to avoid the info card / label
         iframe.src = `https://www.google.com/maps/@${lat},${lng},15z?hl=en&output=embed`;
         body.innerHTML='';
         body.appendChild(iframe);
-        // Simple centered pin overlay (so we still indicate the exact spot)
+        // Overlay a simple pin at the center
         const pin = document.createElement('div');
         pin.className = 'mapPin';
-        pin.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="#d23b3b"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>';
+        pin.setAttribute('aria-hidden','true');
+        pin.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2c-3.87 0-7 3.13-7 7 0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#e53935"/>
+          <circle cx="12" cy="9" r="3" fill="#fff"/>
+        </svg>`;
         body.appendChild(pin);
       } else {
         body.textContent = 'Map preview unavailable';
