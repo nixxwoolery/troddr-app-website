@@ -55,6 +55,7 @@
     </script>
 
     <!-- Structured Data -->
+</script>
     <!-- Leaflet (lightweight interactive map, no API key required) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -297,12 +298,43 @@
     // Helper to detect UUIDs
     const isUuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
 
+    // Lightweight geocoding fallback (Nominatim). Caches results in localStorage.
+    async function geocodeFew(items, limit = 3){
+      const out = [];
+      const store = window.localStorage || null;
+      for (const it of items){
+        if (out.length >= limit) break;
+        const qBase = [it.name, it.town, it.parish, 'Jamaica'].filter(Boolean).join(', ');
+        if (!qBase) continue;
+        const cacheKey = 'geo:' + encodeURIComponent(qBase);
+        try{
+          let cached = store ? store.getItem(cacheKey) : null;
+          if (cached){
+            const { lat, lon } = JSON.parse(cached);
+            if (Number.isFinite(lat) && Number.isFinite(lon)) { out.push([lat, lon, it]); continue; }
+          }
+          const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(qBase)}`;
+          const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+          if (!resp.ok) continue;
+          const arr = await resp.json();
+          if (Array.isArray(arr) && arr[0]){
+            const lat = Number(arr[0].lat), lon = Number(arr[0].lon);
+            if (Number.isFinite(lat) && Number.isFinite(lon)){
+              out.push([lat, lon, it]);
+              if (store) store.setItem(cacheKey, JSON.stringify({ lat, lon, t: Date.now() }));
+            }
+          }
+        }catch(e){ /* ignore */ }
+      }
+      return out;
+    }
+
     function mountMapPreview(items){
       const el = document.getElementById('map-preview');
       if (!el || !window.L) return;
 
       // Extract coordinates from items; support multiple possible field names
-      const coords = (items || []).map(it => {
+      let coords = (items || []).map(it => {
         const lat = Number(it.latitude ?? it.lat ?? it.Latitude ?? it.Lat);
         const lng = Number(it.longitude ?? it.lng ?? it.Longitude ?? it.Lng ?? it.lon);
         if (Number.isFinite(lat) && Number.isFinite(lng)) return [lat, lng, it];
@@ -312,31 +344,52 @@
       // Clear any placeholder text
       el.innerHTML = '';
 
-      if (!coords.length) {
-        el.style.display = 'flex';
-        el.style.alignItems = 'center';
-        el.style.justifyContent = 'center';
-        el.textContent = 'Map preview unavailable';
+      // Fallback: try to geocode a few items if no coordinates in payload
+      if (!coords.length){
+        el.textContent = 'Locating places…';
+        // Attempt up to 3 geocodes using name + town/parish (cached)
+        // This is a last-resort; best is to include lat/lon in the RPC payload.
+        // We scope to Jamaica to keep results relevant.
+        // Note: polite usage — tiny number of lookups, cached.
+        // eslint-disable-next-line no-inner-declarations
+        const run = async () => {
+          const found = await geocodeFew(items, 3);
+          if (found.length) {
+            coords = found;
+            renderMap();
+          } else {
+            el.style.display = 'flex';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'center';
+            el.textContent = 'Map preview unavailable';
+          }
+        };
+        run();
         return;
       }
 
-      const map = L.map(el, { zoomControl: false });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
+      renderMap();
 
-      const latlngs = coords.map(c => L.latLng(c[0], c[1]));
-      const bounds = L.latLngBounds(latlngs);
-      map.fitBounds(bounds, { padding: [24, 24] });
+      function renderMap(){
+        el.innerHTML = '';
+        const map = L.map(el, { zoomControl: false });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
 
-      coords.forEach(([lat, lng, it]) => {
-        const m = L.circleMarker([lat, lng], { radius: 6, weight: 2 });
-        m.addTo(map);
-        if (it && (it.name || it.town)) {
-          const lines = [it.name, [it.town, it.parish].filter(Boolean).join(', ')].filter(Boolean);
-          m.bindPopup(lines.join('<br/>'));
-        }
-      });
+        const latlngs = coords.map(c => L.latLng(c[0], c[1]));
+        const bounds = L.latLngBounds(latlngs);
+        map.fitBounds(bounds, { padding: [24, 24] });
+
+        coords.forEach(([lat, lng, it]) => {
+          const m = L.circleMarker([lat, lng], { radius: 6, weight: 2 });
+          m.addTo(map);
+          if (it && (it.name || it.town)) {
+            const lines = [it.name, [it.town, it.parish].filter(Boolean).join(', ')].filter(Boolean);
+            m.bindPopup(lines.join('<br/>'));
+          }
+        });
+      }
     }
 
     function render(items, meta){
@@ -347,6 +400,14 @@
       const range = fmtRange(meta.start_date, meta.end_date);
       datesMeta.textContent = range ? `${range}` : '';
       destDetail.textContent = meta.destination || '—';
+
+      // Show who shared it (if provided by RPC)
+      const createdByEl = document.getElementById('detail-createdby');
+      if (createdByEl) {
+        createdByEl.textContent = meta.owner_name
+          ? `👤 ${meta.owner_name} shared this itinerary`
+          : '👤 Shared itinerary';
+      }
 
       // Tabs + sections
       const { keys, buckets } = groupByDay(items);
