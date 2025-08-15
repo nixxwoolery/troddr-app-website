@@ -196,13 +196,6 @@
     background:#fff;
     transform:scale(1.2);
   }
-  /* Map chooser popover */
-  .maps-chooser{position:fixed;inset:auto auto auto auto;z-index:1100;min-width:240px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding:6px;display:none}
-  .maps-chooser.open{display:block}
-  .maps-chooser h4{margin:6px 10px 8px 10px;font-size:13px;color:#6b7280;font-weight:600;letter-spacing:.02em}
-  .maps-chooser a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#0b1220}
-  .maps-chooser a:hover{background:#f7fbff}
-  .maps-chooser .mi{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#eef5ff;font-size:14px}
   </style>
   <script>
     // Expose env (same pattern as itinerary page)
@@ -780,56 +773,6 @@
       }, { passive: true });
     }
 
-    // --- Map chooser helpers ---
-    function buildMapLinks(place){
-      const hasLL = Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude));
-      const lat = Number(place.latitude), lng = Number(place.longitude);
-      const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
-      return {
-        apple: hasLL ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://maps.apple.com/?q=${encodeURIComponent(q)}`,
-        google: hasLL ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,
-        waze: hasLL ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes` : `https://www.waze.com/ul?q=${encodeURIComponent(q)}&navigate=yes`,
-        osm: hasLL ? `https://www.openstreetmap.org/directions?to=${lat},${lng}` : `https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`
-      };
-    }
-
-    let __mapsChooserEl;
-    function showMapChooser(btn, place){
-      const links = buildMapLinks(place);
-      if (!__mapsChooserEl){
-        __mapsChooserEl = document.createElement('div');
-        __mapsChooserEl.className = 'maps-chooser';
-        __mapsChooserEl.innerHTML = `
-          <h4>Open with</h4>
-          <a target="_blank" rel="noopener" data-k="apple"><span class="mi"></span><span>Apple Maps</span></a>
-          <a target="_blank" rel="noopener" data-k="google"><span class="mi">🗺️</span><span>Google Maps</span></a>
-          <a target="_blank" rel="noopener" data-k="waze"><span class="mi">🚗</span><span>Waze</span></a>
-          <a target="_blank" rel="noopener" data-k="osm"><span class="mi">🧭</span><span>OpenStreetMap</span></a>
-        `;
-        document.body.appendChild(__mapsChooserEl);
-        // close behavior
-        document.addEventListener('click', (e)=>{
-          if (!__mapsChooserEl.classList.contains('open')) return;
-          const inside = __mapsChooserEl.contains(e.target);
-          const onBtn = btn.contains && btn.contains(e.target);
-          if (!inside && !onBtn) __mapsChooserEl.classList.remove('open');
-        });
-        document.addEventListener('keydown', (e)=>{
-          if (e.key === 'Escape') __mapsChooserEl.classList.remove('open');
-        });
-      }
-      [...__mapsChooserEl.querySelectorAll('a[data-k]')].forEach(a=>{
-        const k = a.getAttribute('data-k');
-        a.href = links[k];
-      });
-      const r = btn.getBoundingClientRect();
-      // position below button with viewport clamping
-      __mapsChooserEl.style.top = `${Math.min(window.scrollY + r.bottom + 8, window.scrollY + window.innerHeight - 10)}px`;
-      const desiredLeft = window.scrollX + r.left;
-      __mapsChooserEl.style.left = `${Math.min(desiredLeft, window.scrollX + window.innerWidth - (__mapsChooserEl.offsetWidth || 260) - 8)}px`;
-      __mapsChooserEl.classList.add('open');
-    }
-
     function setActions(place){
       const dirA = document.getElementById('action-directions');
       const mapBtn = document.getElementById('mapDirections');
@@ -846,11 +789,6 @@
       if (dirA) dirA.href = url;
       if (mapBtn) mapBtn.href = url;
       if (stickDir) stickDir.href = url;
-
-      // Map chooser handlers for directions buttons
-      const openChooser = (e)=>{ e.preventDefault(); showMapChooser(e.currentTarget, place); };
-      if (dirA){ dirA.addEventListener('click', openChooser); }
-      if (mapBtn){ mapBtn.addEventListener('click', openChooser); }
 
       const webA = document.getElementById('action-website'); if (webA) { if (place.website) webA.href = place.website; else webA.style.display='none'; }
       const menuA = document.getElementById('action-menu'); if (menuA) { if (place.menu_link) menuA.href = place.menu_link; else menuA.style.display='none'; }
