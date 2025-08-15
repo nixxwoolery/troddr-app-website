@@ -41,6 +41,12 @@
       .grid{grid-template-columns:1fr}
     }
   </style>
+  <script>
+    window.env = {
+      SUPABASE_URL: 'https://rprpwudhplodaqmmwqkf.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk'
+    };
+  </script>
 </head>
 <body>
   <div class="wrap">
@@ -64,7 +70,7 @@
     <section class="grid">
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Overview</div>
-        <div id="overview">This is the web version of your listing page. Content will mirror the app’s detail screen.</div>
+        <div id="details" style="margin-top:12px"></div>
       </div>
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Quick Actions</div>
@@ -77,50 +83,146 @@
     </section>
   </div>
 
-  <script>
-    (function(){
-      const params = new URLSearchParams(location.search);
-      const pathMatch = location.pathname.match(/\/listings\/([^\/?#]+)/i);
-      const slug = params.get('slug') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
-      const title = slug ? slug.replace(/-/g,' ').replace(/\b\w/g,s=>s.toUpperCase()) : 'Listing';
-
-      // Optional query params to feed hero images now; Supabase wiring can replace later
-      const qImg1 = params.get('img1');
-      const qImg2 = params.get('img2');
-      const qImg3 = params.get('img3');
-      const heroCount = params.get('count');
-
-      // Fallbacks matching your style (food shot, close-up, interior)
-      const FALLBACKS = [
-        'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=1400&q=80&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80&auto=format&fit=crop'
-      ];
-
-      document.getElementById('listing-title').textContent = title;
-      document.getElementById('listing-sub').textContent = 'Web view';
-
-      const deeplink = 'troddrapp://listing/' + encodeURIComponent(slug);
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  
+    // Resolve slug from ?slug=… or /listings/<slug>
+    const params = new URLSearchParams(location.search);
+    const pathMatch = location.pathname.match(/\/listings\/([^\/?#]+)/i);
+    const slug = params.get('slug') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
+  
+    // Supabase client (same values you used in itinerary.html)
+    const SUPABASE_URL = (window.SUPABASE_URL || '').trim() || 'SUPABASE_URL_HERE';
+    const SUPABASE_ANON_KEY = (window.SUPABASE_ANON_KEY || '').trim() || 'SUPABASE_ANON_KEY_HERE';
+    const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+  
+    const $ = (sel) => document.querySelector(sel);
+    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
+  
+    // Robustly normalize your `image` column (jsonb array, text[], or string)
+    const normalizeImages = (img) => {
+      try {
+        if (Array.isArray(img)) return img.filter(Boolean);
+        if (typeof img === 'string') {
+          const s = img.trim();
+          if (!s) return [];
+          if (s.startsWith('[')) { const a = JSON.parse(s); return Array.isArray(a) ? a.filter(Boolean) : []; }
+          return [s];
+        }
+        if (img && typeof img === 'object') {
+          const a = JSON.parse(JSON.stringify(img));
+          return Array.isArray(a) ? a.filter(Boolean) : [];
+        }
+      } catch {}
+      return [];
+    };
+  
+    const titleCaseSlug = (str) => (str || '').replace(/-/g,' ').replace(/\b\w/g, s => s.toUpperCase());
+  
+    async function main(){
+      if (!slug) { set('listing-title','Listing'); set('listing-sub',''); return; }
+  
+      // Default header while loading
+      set('listing-title', titleCaseSlug(slug));
+      set('listing-sub', 'Web view');
       const openInApp = document.getElementById('open-in-app');
-      openInApp.href = deeplink;
-
-      const imgs = [
-        document.getElementById('img1'),
-        document.getElementById('img2'),
-        document.getElementById('img3')
-      ];
-      const provided = [qImg1, qImg2, qImg3];
-      imgs.forEach((el, i) => { el.src = provided[i] || FALLBACKS[i]; el.alt = title; });
-      if (heroCount) document.getElementById('countBadge').textContent = heroCount;
-
-      // Wire basic actions (no-op if we don't know the data yet)
-      const mapURL = params.get('maps') || '';
-      if (mapURL) document.getElementById('action-directions').href = mapURL;
-      const site = params.get('website') || '';
-      if (site) document.getElementById('action-website').href = site;
-      const phone = params.get('tel') || '';
-      if (phone) document.getElementById('action-call').href = 'tel:' + phone;
-    })();
+      if (openInApp) openInApp.href = 'troddrapp://listing/' + encodeURIComponent(slug);
+  
+      // Fetch the listing
+      const { data, error } = await supa
+        .from('places')
+        .select(`
+          id, name, slug, description, image, address, town, parish, latitude, longitude,
+          website, phone_number, menu_link,
+          category, type, activities, perfect_for, meal_type, cuisine, price_range,
+          ambiance, number_of_rooms, amenities, room_types, opening_hours
+        `)
+        .eq('slug', slug)
+        .single();
+  
+      if (error || !data) {
+        console.warn('Listing not found:', error?.message || 'no data');
+        $('#overview').textContent = "We couldn't load this listing right now.";
+        return;
+      }
+  
+      const place = data;
+  
+      // Header/subtitle
+      set('listing-title', place.name || titleCaseSlug(slug));
+      const locStr = [place.town, place.parish].filter(Boolean).join(', ');
+      set('listing-sub', locStr || '');
+  
+      // Overview
+      $('#overview').textContent = place.description || '—';
+  
+      // Details (simple key:value)
+      const details = [
+        ['Type', place.type],
+        ['Category', place.category],
+        ['Meal Service', place.meal_type],
+        ['Cuisine', place.cuisine],
+        ['Price Range', place.price_range],
+        ['Ambiance', place.ambiance],
+        ['Activities', place.activities],
+        ['Perfect For', place.perfect_for],
+        ['Number of Rooms', place.number_of_rooms],
+        ['Amenities', place.amenities],
+        ['Room Types', place.room_types],
+        ['Opening Hours', place.opening_hours],
+        ['Address', [place.address, locStr].filter(Boolean).join(', ')]
+      ].filter(([,v]) => v);
+  
+      const detailsEl = document.getElementById('details');
+      if (detailsEl) {
+        if (details.length) {
+          detailsEl.innerHTML = details.map(([k,v]) =>
+            `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <span>${String(v)}</span></div>`
+          ).join('');
+        } else {
+          detailsEl.textContent = '';
+        }
+      }
+  
+      // Hero images (3 panels)
+      const provided = [params.get('img1'), params.get('img2'), params.get('img3')].filter(Boolean);
+      let imgs = provided.length ? provided : normalizeImages(place.image);
+      if (!imgs.length) {
+        imgs = [
+          'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=1400&q=80&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80&auto=format&fit=crop'
+        ];
+      }
+      while (imgs.length < 3) imgs.push(imgs[imgs.length - 1]);
+      ['img1','img2','img3'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) { el.src = imgs[i]; el.alt = place.name; }
+      });
+      const countBadge = document.getElementById('countBadge');
+      if (countBadge) countBadge.textContent = String(normalizeImages(place.image).length || imgs.length);
+  
+      // Quick actions
+      const dirA = document.getElementById('action-directions');
+      if (dirA) {
+        let mapsUrl = '';
+        if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))) {
+          mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`;
+        } else {
+          const q = [place.name, place.address, locStr].filter(Boolean).join(', ');
+          mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+        }
+        dirA.href = mapsUrl;
+      }
+  
+      const webA = document.getElementById('action-website');
+      if (webA) { if (place.website) webA.href = place.website; else webA.style.display = 'none'; }
+  
+      const callA = document.getElementById('action-call');
+      if (callA) { if (place.phone_number) callA.href = 'tel:' + place.phone_number; else callA.style.display = 'none'; }
+    }
+  
+    main();
   </script>
 </body>
 </html>
