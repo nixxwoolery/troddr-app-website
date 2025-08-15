@@ -19,6 +19,8 @@
     a{text-decoration:none;color:inherit}
 
     .wrap{max-width:1100px;margin:0 auto;padding:0 20px 20px}
+    /* ensure no extra top padding after sticky header */
+    .header + .wrap{padding-top:0}
 
     /* Title Row */
     header.page{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 12px}
@@ -27,15 +29,13 @@
     .sub{color:var(--muted);font-size:14px}
     .cta{display:inline-flex;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
 
-    /* HERO — 3-panel collage */
+    /* HERO — 3-panel collage (taller, 56vh max 680px) */
     .hero{
       display:grid;
-      grid-template-columns:repeat(3, minmax(0,1fr));
-      grid-template-rows:1fr;               /* make the single row fill the container */
-      align-items:stretch;                   /* stretch children to row height */
+      grid-template-columns:1fr 1fr 1fr;
       gap:0;
-      height:min(42vh,520px);
-      margin-top:0;
+      height:min(56vh, 680px);
+      margin-top:8px;
       /* full-bleed while page stays centered */
       width:100vw;
       margin-left:calc(50% - 50vw);
@@ -43,7 +43,6 @@
     }
     .hero .col{
       position:relative;
-      height:100%;                           /* ensure each column matches .hero height */
       overflow:hidden;
       background:#e9ecef;
     }
@@ -52,6 +51,11 @@
       height:100%;
       object-fit:cover;
       display:block;
+    }
+    .wrap > .hero,
+    .wrap section.hero{
+      padding-top:0 !important;
+      margin-block-start:0 !important;
     }
     .hero .count{position:absolute;right:12px;bottom:12px;background:#fff;border-radius:10px;padding:6px 10px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.15);}
 
@@ -112,7 +116,7 @@
     }
     @media (max-width: 900px){
       .hero{grid-template-columns:1fr; height:auto}
-      .hero .col{height:clamp(220px, 42vh, 420px)}
+      .hero .col{height:42vh}
     }
     @media (max-width: 600px){
     .mapBody{height:240px}
