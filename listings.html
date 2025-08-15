@@ -71,7 +71,7 @@
       padding-top:0 !important;
       margin-block-start:0 !important;
     }
-    .hero .count{position:absolute;right:12px;bottom:12px;background:#fff;border-radius:10px;padding:6px 10px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.15);}
+
 
     /* Action row */
     .actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
@@ -235,7 +235,7 @@
 
     <!-- Collage hero (3 images) -->
     <section class="hero" id="hero">
-      <div class="col"><img id="img1" alt="" /><div class="count" id="countBadge">3</div></div>
+      <div class="col"><img id="img1" alt="" /></div>
       <div class="col"><img id="img2" alt="" /></div>
       <div class="col"><img id="img3" alt="" /></div>
     </section>
@@ -613,13 +613,6 @@
           col.hidden = true;
         }
       });
-
-      // Photo count badge reflects total available (from place.image if present)
-      const countBadge = document.getElementById('countBadge');
-      if (countBadge){
-        const total = (normalizeImages(place.image).length) || imgs.length;
-        countBadge.textContent = String(total);
-      }
     }
 
     // Enable swipeable hero for mobile
