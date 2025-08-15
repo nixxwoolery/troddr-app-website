@@ -8,6 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/images/troddr_logo.png">
+  <link rel="icon" type="image/png" href="/images/troddr_logo.png">
+  <link rel="apple-touch-icon" href="/images/troddr_logo.png">
+  
   <style>
     :root{
       --brand:#0077cc; --bg:#ffffff; --fg:#0b1220; --muted:#6b7280; --card:#f8fafc; --line:#e5e7eb;
@@ -182,8 +187,8 @@
   .hero.mcarousel{
     position:relative;
     grid-template-columns:1fr !important;
-    height:380px;         /* increased height on mobile */
-    min-height:380px;
+    height:400px;         /* increased height on mobile */
+    min-height:400px;
     overflow:hidden;
   }
   .hero.mcarousel .col{height:100%}
@@ -264,12 +269,13 @@
       <a class="cta" id="open-in-app" href="#">Open in App</a>
     </header>
 
-    <!-- Actions row (Directions/Website/Menu/Call) -->
+    <!-- Actions row (Directions/Website/Menu/Call/Share) -->
     <div class="actions">
       <a class="btn btn-outline" id="action-directions" href="#">Directions</a>
       <a class="btn btn-outline" id="action-website" href="#">Website</a>
       <a class="btn btn-outline" id="action-menu" href="#">Menu</a>
       <a class="btn btn-outline" id="action-call" href="#">Call</a>
+      <a class="btn btn-outline" id="action-share" href="#">Share</a>
     </div>
 
     <!-- Content grid: Info only (map moved to bottom) -->
@@ -441,6 +447,41 @@
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
 
+    /** Basic analytics shim (gtag if present) */
+    function track(eventName, params = {}){
+      try {
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', eventName, params);
+        }
+        // Debug fallback
+        console.debug('[track]', eventName, params);
+      } catch {}
+    }
+
+    /** Copy text to clipboard with fallback */
+    async function copyToClipboard(text){
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch {}
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-1000px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch {
+        return false;
+      }
+    }
+
     // Helpers
     const titleCaseSlug = (str) => (str || '').replace(/-/g,' ').replace(/\b\w/g, s => s.toUpperCase());
     const asList = (v) => {
@@ -511,6 +552,43 @@
         el.type = 'application/ld+json';
         el.textContent = JSON.stringify(schema, null, 2);
         document.head.appendChild(el);
+      }catch(e){}
+    }
+
+    function upsertMeta(attr, name, content){
+      let sel = `${attr}="${name}"`;
+      let el = document.head.querySelector(`meta[${sel}]`);
+      if (!el){ el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    }
+    function injectOG(place, slug){
+      try{
+        const url = location.origin + '/listings/' + encodeURIComponent(slug);
+        const title = `${place.name || titleCaseSlug(slug)} — TRODDR`;
+        const desc = (place.description && String(place.description).slice(0, 200)) || `${[place.town, place.parish].filter(Boolean).join(', ')} • TRODDR`;
+        const img = (window.__gallery && window.__gallery[0]) || '/images/troddr_og_fallback.jpg';
+
+        // Open Graph
+        upsertMeta('property','og:title', title);
+        upsertMeta('property','og:description', desc);
+        upsertMeta('property','og:type', 'website');
+        upsertMeta('property','og:url', url);
+        upsertMeta('property','og:image', img);
+
+        // Twitter
+        upsertMeta('name','twitter:card','summary_large_image');
+        upsertMeta('name','twitter:title', title);
+        upsertMeta('name','twitter:description', desc);
+        upsertMeta('name','twitter:image', img);
+
+        // Canonical
+        let link = document.head.querySelector('link[rel="canonical"]');
+        if (!link){
+          link = document.createElement('link');
+          link.setAttribute('rel','canonical');
+          document.head.appendChild(link);
+        }
+        link.setAttribute('href', url);
       }catch(e){}
     }
 
@@ -767,14 +845,17 @@
         updateCount();
       };
 
-      // Bind the hero images to open the lightbox
-      document.querySelectorAll('#img1,#img2,#img3').forEach(el => {
-        el.style.cursor = 'zoom-in';
-        el.addEventListener('click', () => {
-          const i = Number(el.dataset.index || 0);
+      // Bind hero container (works for collage and mobile carousel)
+      const heroEl = document.getElementById('hero');
+      if (heroEl){
+        heroEl.style.cursor = 'zoom-in';
+        heroEl.addEventListener('click', (evt) => {
+          const imgEl = evt.target && evt.target.closest('img');
+          if (!imgEl || !heroEl.contains(imgEl)) return;
+          const i = Number(imgEl.dataset.index || 0);
           open(i);
-        });
-      });
+        }, true);
+      }
 
       // Controls
       closeBtn && closeBtn.addEventListener('click', close);
@@ -807,6 +888,35 @@
           else prev();
         }
       }, { passive: true });
+    }
+
+    function setupWebShare(place, slug){
+      const btn = document.getElementById('action-share');
+      if (!btn) return;
+      const url = location.origin + '/listings/' + encodeURIComponent(slug);
+      const shareData = {
+        title: place.name || 'TRODDR',
+        text: `Check out ${place.name || titleCaseSlug(slug)} in ${[place.town, place.parish].filter(Boolean).join(', ')} on TRODDR!`,
+        url
+      };
+      const doShare = async (e) => {
+        e.preventDefault();
+        try{
+          if (navigator.share) {
+            await navigator.share(shareData);
+            track('share', { method: 'web_share', slug });
+            return;
+          }
+          // Fallback: copy to clipboard
+          const copied = await copyToClipboard(url);
+          alert(copied ? 'Link copied to clipboard!' : 'Unable to copy link. You can copy it from the address bar.');
+          track('share', { method: 'copy_link', slug });
+        } catch(err){
+          // user canceled or unsupported
+        }
+      };
+      btn.addEventListener('click', doShare);
+      btn.addEventListener('touchend', doShare, { passive: false });
     }
 
     // --- Map chooser helpers ---
@@ -851,6 +961,14 @@
         const k = a.getAttribute('data-k');
         a.href = links[k];
       });
+      // Track provider selection
+      [...__mapsChooserEl.querySelectorAll('a[data-k]')].forEach(a => {
+        a.addEventListener('click', () => {
+          const k = a.getAttribute('data-k');
+          track('directions_provider', { provider: k, slug: (place.slug || '') });
+          __mapsChooserEl.classList.remove('open');
+        });
+      });
       const r = btn.getBoundingClientRect();
       // position below button with viewport clamping
       __mapsChooserEl.style.top = `${Math.min(window.scrollY + r.bottom + 8, window.scrollY + window.innerHeight - 10)}px`;
@@ -876,16 +994,27 @@
       if (mapBtn) mapBtn.href = url;
       if (stickDir) stickDir.href = url;
 
-      // Map chooser handlers for directions buttons
-      const openChooser = (e)=>{ e.preventDefault(); showMapChooser(e.currentTarget, place); };
-      if (dirA){ dirA.addEventListener('click', openChooser); }
-      if (mapBtn){ mapBtn.addEventListener('click', openChooser); }
+      // Map chooser handlers for directions buttons (click + touch)
+      const openChooser = (e)=>{ e.preventDefault(); e.stopPropagation(); showMapChooser(e.currentTarget, place); track('directions_open', { slug: place.slug || '', source: e.currentTarget.id }); };
+      if (dirA){
+        dirA.addEventListener('click', openChooser, true);
+        dirA.addEventListener('touchend', openChooser, { passive:false, capture:true });
+      }
+      if (mapBtn){
+        mapBtn.addEventListener('click', openChooser, true);
+        mapBtn.addEventListener('touchend', openChooser, { passive:false, capture:true });
+      }
 
       const webA = document.getElementById('action-website'); if (webA) { if (place.website) webA.href = place.website; else webA.style.display='none'; }
       const menuA = document.getElementById('action-menu'); if (menuA) { if (place.menu_link) menuA.href = place.menu_link; else menuA.style.display='none'; }
       const call = place.phone_number || place.phone;
       const callA = document.getElementById('action-call'); if (callA) { if (call) callA.href = 'tel:'+call; else callA.style.display='none'; }
       if (stickCall) { if (call) stickCall.href = 'tel:'+call; else stickCall.style.display='none'; }
+
+      // Track Website/Menu/Call clicks
+      if (webA)  webA.addEventListener('click', ()=> track('click_website', { slug: place.slug || '' }), { passive:true });
+      if (menuA) menuA.addEventListener('click', ()=> track('click_menu', { slug: place.slug || '' }), { passive:true });
+      if (callA) callA.addEventListener('click', ()=> track('click_call', { slug: place.slug || '' }), { passive:true });
     }
 
     function setMapPreview(place){
@@ -905,7 +1034,12 @@
       }
     }
 
-    function setOpenInApp(slug){ const link = document.getElementById('open-in-app'); if (link) link.href = 'troddrapp://listing/' + encodeURIComponent(slug); }
+    function setOpenInApp(slug){
+      const link = document.getElementById('open-in-app');
+      if (!link) return;
+      link.href = 'troddrapp://listing/' + encodeURIComponent(slug);
+      link.addEventListener('click', ()=> track('open_in_app', { slug }), { passive:true });
+    }
 
     async function renderDishes(listing){
       const wrap = document.getElementById('dishes');
@@ -961,6 +1095,8 @@
       setupMobileCarousel();
       setupLightbox();
       setActions(place);
+      setupWebShare(place, slug);
+      injectOG(place, slug);
       setMapPreview(place);
       renderDishes(place);
       injectSchema(place, slug);
