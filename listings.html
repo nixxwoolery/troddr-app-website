@@ -228,10 +228,10 @@
       <div class="mapBody" id="mapBody">Map preview unavailable</div>
     </section>
   </div>
-  <div class="sticky-cta">
+  <!-- <div class="sticky-cta">
     <a class="btn btn-primary" id="sticky-directions" href="#"><span class="i">📍</span>Directions</a>
     <a class="btn btn-outline" id="sticky-call" href="#"><span class="i">📞</span>Call</a>
-  </div>
+  </div> -->
   <!-- Footer -->
   <footer class="footer">
     <div class="section-container">
@@ -602,11 +602,26 @@
 
     async function renderDishes(listing){
       const wrap = document.getElementById('dishes');
+      const card = document.querySelector('.card.narrow.dishes');
+      if (!wrap){ if (card) card.style.display = 'none'; return; }
+
       wrap.innerHTML = '';
       const names = parseDishNames(listing);
-      if (!names.length){ wrap.innerHTML = '<div style="color:#8E8E93">No dishes added yet.</div>'; return; }
+
+      // If no dishes, hide the entire card section
+      if (!names.length){
+        if (card) card.style.display = 'none';
+        return;
+      }
+
+      // Ensure the card is visible when we DO have dishes
+      if (card) card.style.display = '';
+
       const cache = {};
-      for (const name of names){ cache[name] = await fetchDishDetails(name, listing.slug, listing.id); }
+      for (const name of names){
+        cache[name] = await fetchDishDetails(name, listing.slug, listing.id);
+      }
+
       names.forEach((name, idx)=>{
         const d = document.createElement('div'); d.className='dish';
         const h = document.createElement('div'); h.className='dishH'; h.innerHTML = `🍽️ <span style="flex:1">${name}</span><span id="chev${idx}">›</span>`;
