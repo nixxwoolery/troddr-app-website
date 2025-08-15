@@ -70,7 +70,11 @@
     <section class="grid">
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Overview</div>
-        <div id="details" style="margin-top:12px"></div>
+        <div class="card">
+          <div class="sub" style="margin-bottom:6px">Overview</div>
+          <div id="overview" style="margin:6px 0 10px 0;color:#0b1220"></div>
+          <div id="details" style="margin-top:12px"></div>
+        </div>
       </div>
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Quick Actions</div>
@@ -92,9 +96,9 @@
     const slug = params.get('slug') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
   
     // Supabase client (same values you used in itinerary.html)
-    const SUPABASE_URL = (window.SUPABASE_URL || '').trim() || 'SUPABASE_URL_HERE';
-    const SUPABASE_ANON_KEY = (window.SUPABASE_ANON_KEY || '').trim() || 'SUPABASE_ANON_KEY_HERE';
-    const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const SUPABASE_URL = (window.env?.SUPABASE_URL || window.SUPABASE_URL || '').trim();
+const SUPABASE_ANON_KEY = (window.env?.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '').trim();
+const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
   
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
