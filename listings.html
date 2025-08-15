@@ -154,42 +154,7 @@
     /* Map card */
     .mapCard{border-radius:5px;overflow:hidden;background:#f8f9fa;border:1px solid var(--line)}
     .mapHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
-    .mapBody{height:420px;display:flex;align-items:center;justify-content:center;color:#8E8E93;position:relative}
-.mapBody iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
-
-    /* mask the embedded map's top info card (hide label + directions) */
-    .mapLabelMask{
-      position:absolute;
-      top:8px;
-      left:8px;
-      right:8px;          /* stretch across */
-      height:56px;        /* taller to cover the whole card header */
-      background:#fff;
-      border-radius:8px;
-      pointer-events:none; /* allow clicks to pass through to iframe */
-      z-index:3;
-    }
-    @media (max-width:640px){
-      .mapLabelMask{
-        top:8px;
-        left:8px;
-        right:8px;
-        height:50px;
-        border-radius:8px;
-      }
-    }
-
-    .mapPin{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-100%);
-      width:28px;
-      height:28px;
-      pointer-events:none;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,.35));
-    }
-    .mapPin svg{display:block}
+    .mapBody{height:420px;display:flex;align-items:center;justify-content:center;color:#8E8E93}
 
     @media (max-width: 980px){
       .grid{grid-template-columns:1fr}
@@ -1073,53 +1038,19 @@ let __mapsActiveTrigger;
 
     function setMapPreview(place){
       const body = document.getElementById('mapBody');
-      if (!body) return;
-
-      // Determine embed source (prefer lat/lng, fallback to text query)
-      const hasLL = Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude));
-      const lat = Number(place.latitude), lng = Number(place.longitude);
-      const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
-      const src = hasLL
-        ? `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`
-        : (q ? `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=15&output=embed` : '');
-
-      // Clear any previous content
-      body.innerHTML = '';
-
-      if (!src){
+      if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))){
+        const lat = Number(place.latitude), lng = Number(place.longitude);
+        const iframe = document.createElement('iframe');
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer-when-downgrade';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = '0';
+        iframe.src = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+        body.innerHTML=''; body.appendChild(iframe);
+      } else {
         body.textContent = 'Map preview unavailable';
-        return;
       }
-
-      // Create the iframe and set src immediately (more reliable in Safari)
-      const iframe = document.createElement('iframe');
-      iframe.src = src;
-      iframe.loading = 'lazy';
-      iframe.referrerPolicy = 'no-referrer-when-downgrade';
-      iframe.setAttribute('aria-label','Map preview');
-      // Inline styles in case CSS hasn't loaded yet
-      iframe.style.position = 'absolute';
-      iframe.style.inset = '0';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = '0';
-      body.appendChild(iframe);
-
-      // Mask only the lat/long label area in the Google info card (top-left)
-      const mask = document.createElement('div');
-      mask.className = 'mapLabelMask';
-      mask.setAttribute('aria-hidden','true');
-      body.appendChild(mask);
-
-      // Optional center pin overlay for a subtle focus (non-interactive)
-      const pin = document.createElement('div');
-      pin.className = 'mapPin';
-      pin.innerHTML = `
-        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
-          <path fill="#E53935" d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7z"/>
-          <circle cx="12" cy="9" r="2.5" fill="#fff"/>
-        </svg>`;
-      body.appendChild(pin);
     }
 
     function setOpenInApp(slug){
