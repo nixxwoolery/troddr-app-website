@@ -27,8 +27,22 @@
     .cta{display:inline-flex;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
 
     /* HERO — 3-panel collage */
-    .hero{display:grid;grid-template-columns:1.05fr 1.2fr 0.9fr;gap:var(--gap);height:min(56vh,680px);margin-top:8px}
-    .hero .col{position:relative;border-radius:16px;overflow:hidden;background:#e9ecef}
+    .hero{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:0;
+      height:min(56vh,680px);
+      margin-top:8px;
+      /* full-bleed while page stays centered */
+      width:100vw;
+      margin-left:calc(50% - 50vw);
+      margin-right:calc(50% - 50vw);
+    }
+    .hero .col{
+      position:relative;
+      /* border-radius:16px; */
+      overflow:hidden;
+      background:#e9ecef}
     .hero img{width:100%;height:100%;object-fit:cover;display:block}
     .hero .count{position:absolute;right:12px;bottom:12px;background:#fff;border-radius:10px;padding:6px 10px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.15);}
 
@@ -38,6 +52,8 @@
     .btn-primary{background:var(--brand);color:#fff}
     .btn-outline{background:#fff;border:1px solid var(--line);color:var(--brand)}
     .btn-outline:hover{background:#f7fbff}
+    .moreLink{display:none;font-weight:600;font-size:14px;color:var(--brand);margin:6px 0 12px;cursor:pointer}
+    .moreLink:hover{text-decoration:underline}
     /* .btn-muted{background:#e6f1fb;color:var(--brand)} */
 
     /* Cards */
@@ -116,7 +132,7 @@
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Overview</div>
         <div id="overview" style="margin:6px 0 12px 0;color:#0b1220"></div>
-        <button id="toggleOverview" class="btn btn-muted" style="display:none;margin-bottom:12px;padding:8px 12px">View more</button>
+        <span id="toggleOverview" class="moreLink">Read more</span>
 
         <div class="infoList" id="infoList"></div>
       </div>
@@ -234,10 +250,12 @@
       const o = document.getElementById('overview');
       const b = document.getElementById('toggleOverview');
       if (!desc){ o.textContent='—'; b.style.display='none'; return; }
-      if (desc.length <= 180){ o.textContent = desc; b.style.display='none'; return; }
+      const LIMIT = 420; // longer snippet on web before expand
+      if (desc.length <= LIMIT){ o.textContent = desc; b.style.display='none'; return; }
       let expanded = false;
-      const update = () => { o.textContent = expanded ? desc : `${desc.slice(0,180)}…`; b.textContent = expanded ? 'View less' : 'View more'; };
-      b.style.display='inline-flex'; b.onclick=()=>{ expanded=!expanded; update(); };
+      const update = () => { o.textContent = expanded ? desc : `${desc.slice(0, LIMIT)}…`; b.textContent = expanded ? 'Read less' : 'Read more'; };
+      b.style.display='inline';
+      b.onclick = () => { expanded = !expanded; update(); };
       update();
     }
 
