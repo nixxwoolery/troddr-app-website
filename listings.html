@@ -516,17 +516,56 @@
     }
 
     function setImages(place){
-      const provided = [new URLSearchParams(location.search).get('img1'), new URLSearchParams(location.search).get('img2'), new URLSearchParams(location.search).get('img3')].filter(Boolean);
+      const qs = new URLSearchParams(location.search);
+      const provided = [qs.get('img1'), qs.get('img2'), qs.get('img3')].filter(Boolean);
       let imgs = provided.length ? provided : normalizeImages(place.image);
-      if (!imgs.length){ imgs = [
-        'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=1400&q=80&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80&auto=format&fit=crop'
-      ];}
-      while (imgs.length < 3) imgs.push(imgs[imgs.length-1]);
+      imgs = (imgs || []).filter(Boolean);
+
+      // Fallbacks (three distinct stock images). Only used when there are truly no images.
+      if (!imgs.length){
+        imgs = [
+          'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=1400&q=80&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80&auto=format&fit=crop'
+        ];
+      }
+
+      // Expose full gallery for the lightbox
       window.__gallery = imgs.slice();
-      ['img1','img2','img3'].forEach((id,i)=>{ const el=document.getElementById(id); if (el){ el.src = imgs[i]; el.alt = place.name; el.dataset.index = String(i); }});
-      const countBadge = document.getElementById('countBadge'); if (countBadge) countBadge.textContent = String(normalizeImages(place.image).length || imgs.length);
+
+      const hero = document.getElementById('hero');
+      if (!hero) return;
+      const cols = hero.querySelectorAll('.col'); // up to 3 placeholders in markup
+      const visibleCount = Math.min(imgs.length, cols.length); // show 1..3, no repeats
+
+      // Set the grid columns to match how many we will actually show
+      hero.style.gridTemplateColumns = `repeat(${Math.max(1, visibleCount)}, minmax(0,1fr))`;
+
+      cols.forEach((col, idx) => {
+        const imgEl = col.querySelector('img');
+        if (idx < visibleCount){
+          col.style.display = '';
+          col.hidden = false;
+          if (imgEl){
+            imgEl.src = imgs[idx];
+            imgEl.alt = place.name || '';
+            // retain index for lightbox
+            col.dataset.index = String(idx);
+            imgEl.dataset.index = String(idx);
+          }
+        } else {
+          // Hide extra columns entirely (no duplicates)
+          col.style.display = 'none';
+          col.hidden = true;
+        }
+      });
+
+      // Photo count badge reflects total available (from place.image if present)
+      const countBadge = document.getElementById('countBadge');
+      if (countBadge){
+        const total = (normalizeImages(place.image).length) || imgs.length;
+        countBadge.textContent = String(total);
+      }
     }
 
     function setupLightbox(){
