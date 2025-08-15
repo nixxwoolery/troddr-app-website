@@ -80,7 +80,8 @@
   <script>
     (function(){
       const params = new URLSearchParams(location.search);
-      const slug = params.get('slug') || '';
+      const pathMatch = location.pathname.match(/\/listings\/([^\/?#]+)/i);
+      const slug = params.get('slug') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
       const title = slug ? slug.replace(/-/g,' ').replace(/\b\w/g,s=>s.toUpperCase()) : 'Listing';
 
       // Optional query params to feed hero images now; Supabase wiring can replace later
