@@ -29,13 +29,19 @@
     .sub{color:var(--muted);font-size:14px}
     .cta{display:inline-flex;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
 
-    /* HERO — 3-panel collage (taller, 56vh max 680px) */
+    /* HERO — 3-panel collage */
     .hero{
       display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:0;
-      height:min(56vh, 680px);
-      margin-top:8px;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      align-items:stretch;
+      gap:.5px;
+      /* Explicit hero height so the background and the images match */
+      height:600px;
+      min-height:600px;
+      padding:0 !important;
+      /* sit flush under the header */
+      margin-top:0 !important;
+      margin-bottom:0 !important;
       /* full-bleed while page stays centered */
       width:100vw;
       margin-left:calc(50% - 50vw);
@@ -43,6 +49,7 @@
     }
     .hero .col{
       position:relative;
+      height:100%;
       overflow:hidden;
       background:#e9ecef;
     }
@@ -115,8 +122,8 @@
       .grid{grid-template-columns:1fr}
     }
     @media (max-width: 900px){
-      .hero{grid-template-columns:1fr; height:auto}
-      .hero .col{height:42vh}
+      .hero{grid-template-columns:1fr; height:auto; padding:0 !important; margin-top:0 !important;}
+      .hero .col{height:220px}
     }
     @media (max-width: 600px){
     .mapBody{height:240px}
