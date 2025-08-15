@@ -161,41 +161,6 @@
     font-size:12px;
     letter-spacing:.02em;
   }
-
-  /* --- Mobile carousel styles for hero --- */
-  .hero.mcarousel{
-    position:relative;
-    grid-template-columns:1fr !important;
-    height:280px;         /* compact height on mobile */
-    min-height:280px;
-    overflow:hidden;
-  }
-  .hero.mcarousel .col{height:100%}
-  .hero-dots{
-    position:absolute;
-    left:50%;
-    transform:translateX(-50%);
-    bottom:10px;
-    display:flex;
-    gap:6px;
-    z-index:2;
-    user-select:none;
-    -webkit-user-select:none;
-  }
-  .hero-dots button{
-    width:8px;
-    height:8px;
-    border-radius:999px;
-    background:rgba(255,255,255,.75);
-    border:none;
-    padding:0;
-    box-shadow:0 1px 2px rgba(0,0,0,.25);
-    cursor:pointer;
-  }
-  .hero-dots button.active{
-    background:#fff;
-    transform:scale(1.2);
-  }
   </style>
   <script>
     // Expose env (same pattern as itinerary page)
@@ -616,67 +581,6 @@
     }
 
     function setupLightbox(){
-    // Enable swipeable hero for mobile
-    function setupMobileCarousel(){
-      const hero = document.getElementById('hero');
-      const gallery = (window.__gallery || []).filter(Boolean);
-      if (!hero || gallery.length < 2) return;
-      const isMobile = window.matchMedia('(max-width: 900px)').matches;
-      if (!isMobile) return;
-
-      // Use first column and hide the rest; swap image source on swipe
-      hero.classList.add('mcarousel');
-      const cols = hero.querySelectorAll('.col');
-      cols.forEach((c, i) => { if (i > 0) { c.style.display = 'none'; c.hidden = true; } else { c.style.display = ''; c.hidden = false; } });
-
-      const img = document.getElementById('img1');
-      if (!img) return;
-
-      // Dots / indicators
-      let dots = document.getElementById('hero-dots');
-      if (!dots){
-        dots = document.createElement('div');
-        dots.id = 'hero-dots';
-        dots.className = 'hero-dots';
-        hero.appendChild(dots);
-      }
-      dots.innerHTML = '';
-      gallery.forEach((_, i) => {
-        const b = document.createElement('button');
-        b.setAttribute('aria-label', `Go to image ${i+1}`);
-        b.addEventListener('click', () => { idx = i; update(); });
-        dots.appendChild(b);
-      });
-
-      let idx = 0;
-      const setActive = () => {
-        [...dots.children].forEach((el, i) => el.classList.toggle('active', i === idx));
-      };
-      const update = () => {
-        img.src = gallery[idx];
-        img.dataset.index = String(idx); // so lightbox opens at correct slide
-        setActive();
-      };
-
-      // Touch swipe handlers
-      let startX = 0, deltaX = 0;
-      img.addEventListener('touchstart', (e) => {
-        startX = e.changedTouches[0].clientX;
-        deltaX = 0;
-      }, { passive: true });
-      img.addEventListener('touchmove', (e) => {
-        deltaX = e.changedTouches[0].clientX - startX;
-      }, { passive: true });
-      img.addEventListener('touchend', () => {
-        if (Math.abs(deltaX) > 40) {
-          if (deltaX < 0) idx = (idx + 1) % gallery.length;
-          else idx = (idx - 1 + gallery.length) % gallery.length;
-          update();
-        }
-      }, { passive: true });
-
-      update();
-    }
       const lb = document.getElementById('lightbox');
       const img = document.getElementById('lb-img');
       const closeBtn = document.querySelector('.lb-close');
@@ -867,7 +771,6 @@
       setupOverview(place.description || '—');
       renderDetails(place);
       setImages(place);
-      setupMobileCarousel();
       setupLightbox();
       setActions(place);
       setMapPreview(place);
