@@ -77,19 +77,32 @@
       margin-block-start:0 !important;
     }
 
-    /* Desktop-only photo count badge for hero */
+    /* Desktop-only photo count badge for hero (last image) */
     @media (min-width:1024px){
       .hero .deskCount{
         position:absolute;
-        right:12px;
-        bottom:12px;
-        background:rgba(255,255,255,.9);
-        border-radius:10px;
-        padding:6px 10px;
-        font-weight:600;
-        box-shadow:0 6px 18px rgba(0,0,0,.12);
-        font-size:12px;
-        color:#0b1220;
+        right:14px;
+        bottom:14px;
+        background:#fff;
+        border-radius:12px;
+        padding:8px;
+        box-shadow:0 8px 24px rgba(0,0,0,.18);
+        border:1px solid rgba(0,0,0,.06);
+        display:flex;
+        align-items:center;
+        gap:6px;
+        color:#6b7280;          /* icon color */
+        pointer-events:none;    /* allow clicks to pass through for lightbox */
+      }
+      .hero .deskCount svg{
+        display:block;
+        color:#6b7280;
+      }
+      .hero .deskCount .deskCount-num{
+        color:#d23b3b;          /* red number */
+        font-weight:700;
+        font-size:14px;
+        line-height:1;
       }
     }
 
@@ -141,7 +154,9 @@
     /* Map card */
     .mapCard{border-radius:5px;overflow:hidden;background:#f8f9fa;border:1px solid var(--line)}
     .mapHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
-    .mapBody{height:420px;display:flex;align-items:center;justify-content:center;color:#8E8E93}
+    .mapBody{position:relative;height:420px;display:flex;align-items:center;justify-content:center;color:#8E8E93}
+    .mapPin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);pointer-events:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+    .mapPin svg{display:block}
 
     @media (max-width: 980px){
       .grid{grid-template-columns:1fr}
@@ -708,24 +723,29 @@
         }
       });
 
-      // Desktop-only count badge (2+ images)
+      // Desktop-only count badge (show on the LAST visible image)
       try{
         const total = (window.__gallery || []).length;
-        const firstCol = hero.querySelector('.col');
-        let badge = firstCol ? firstCol.querySelector('.deskCount') : null;
-        if (firstCol){
-          if (total > 1){
-            if (!badge){
-              badge = document.createElement('div');
-              badge.className = 'deskCount';
-              firstCol.appendChild(badge);
-            }
-            badge.textContent = `${total} photo${total>1?'s':''}`;
-          } else if (badge){
-            badge.remove();
+        // Remove any existing badges
+        hero.querySelectorAll('.deskCount').forEach(n => n.remove());
+        if (total > 1){
+          const shownCols = [...hero.querySelectorAll('.col')].filter(c => c.style.display !== 'none' && !c.hidden);
+          const lastCol = shownCols[shownCols.length - 1] || hero.querySelector('.col:last-child');
+          if (lastCol){
+            const badge = document.createElement('div');
+            badge.className = 'deskCount';
+            badge.setAttribute('aria-label', `${total} photos`);
+            badge.innerHTML = `
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="18">
+                <rect x="4" y="6" width="14" height="10" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"></rect>
+                <rect x="7" y="3" width="14" height="10" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"></rect>
+              </svg>
+              <span class="deskCount-num">${total}</span>
+            `;
+            lastCol.appendChild(badge);
           }
         }
-      }catch(e){}
+      } catch(e){}
     }
 
     // Enable swipeable hero for mobile
@@ -932,9 +952,11 @@
       };
     }
 
-    let __mapsChooserEl;
+let __mapsChooserEl;
+let __mapsActiveTrigger;
     function showMapChooser(btn, place){
       const links = buildMapLinks(place);
+      __mapsActiveTrigger = btn; // remember which trigger opened the chooser
       if (!__mapsChooserEl){
         __mapsChooserEl = document.createElement('div');
         __mapsChooserEl.className = 'maps-chooser';
@@ -950,7 +972,7 @@
         document.addEventListener('click', (e)=>{
           if (!__mapsChooserEl.classList.contains('open')) return;
           const inside = __mapsChooserEl.contains(e.target);
-          const onBtn = btn.contains && btn.contains(e.target);
+          const onBtn = __mapsActiveTrigger && __mapsActiveTrigger.contains(e.target);
           if (!inside && !onBtn) __mapsChooserEl.classList.remove('open');
         });
         document.addEventListener('keydown', (e)=>{
@@ -963,11 +985,11 @@
       });
       // Track provider selection
       [...__mapsChooserEl.querySelectorAll('a[data-k]')].forEach(a => {
-        a.addEventListener('click', () => {
+        a.onclick = () => {
           const k = a.getAttribute('data-k');
           track('directions_provider', { provider: k, slug: (place.slug || '') });
           __mapsChooserEl.classList.remove('open');
-        });
+        };
       });
       const r = btn.getBoundingClientRect();
       // position below button with viewport clamping
@@ -1027,8 +1049,15 @@
         iframe.style.width = '100%';
         iframe.style.height = '100%';
         iframe.style.border = '0';
-        iframe.src = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
-        body.innerHTML=''; body.appendChild(iframe);
+        // Center map without dropping a coordinate label card
+        iframe.src = `https://www.google.com/maps/@${lat},${lng},15z?hl=en&output=embed`;
+        body.innerHTML='';
+        body.appendChild(iframe);
+        // Simple centered pin overlay (so we still indicate the exact spot)
+        const pin = document.createElement('div');
+        pin.className = 'mapPin';
+        pin.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="#d23b3b"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>';
+        body.appendChild(pin);
       } else {
         body.textContent = 'Map preview unavailable';
       }
