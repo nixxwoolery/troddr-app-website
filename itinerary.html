@@ -137,7 +137,7 @@
       }
 
       .day-section .stop-cover{
-        height: 320px;               /* tall, image-led card */
+        height: 250px;               /* tall, image-led card */
         background-size: cover;
         background-position: center;
         border-top-left-radius: 8px;
@@ -410,6 +410,18 @@
     };
     const fmtRange = (s, e) => s && e ? `${fmtDate(s)} – ${fmtDate(e)}` : (s || e ? (fmtDate(s||e)) : '');
 
+    // Display times in 12‑hour format like "1:30 PM"
+    const to12h = (t) => {
+      if (!t) return '';
+      const m = String(t).match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+      if (!m) return String(t);
+      let h = parseInt(m[1], 10);
+      const mm = m[2];
+      const suffix = h >= 12 ? 'PM' : 'AM';
+      h = h % 12; if (h === 0) h = 12;
+      return `${h}:${mm} ${suffix}`;
+    };
+
     const parseIdentifierFromUrl = () => {
       const { pathname, search, hash } = location;
 
@@ -647,7 +659,7 @@
           const viewHref = listingHrefFor(item, slugMap);
           place.innerHTML = `
             <div class="stop-cover" ${cover}>
-              ${item.planned_time ? `<span class="time-badge">${item.planned_time}</span>` : ''}
+              ${item.planned_time ? `<span class="time-badge">${to12h(item.planned_time)}</span>` : ''}
             </div>
             <div class="stop-body">
               <div class="stop-top">
