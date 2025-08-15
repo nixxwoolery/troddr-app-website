@@ -10,9 +10,13 @@
     --amber:#f59e0b;
     --rose:#ef4444;
     --radius:16px;
+    --shadow-soft: 0 6px 16px rgba(15,23,42,.06);
+    --shadow-hover: 0 16px 34px rgba(15,23,42,.12);
+    --ring: 0 0 0 3px rgba(0,119,204,.18);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:var(--dark)}
+  html,body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; letter-spacing:.01em; }
 
   /* Dark background option */
   .dark-bg { background: #1e293b !important; color: #f8fafc !important; }
@@ -31,7 +35,9 @@
     .trip-meta::-webkit-scrollbar{display:none}
   }
   .meta-pill{background:var(--light);border:1px solid #eef2f7;border-radius:999px;padding:6px 12px;font-size:.9rem;color:#334155}
+  .meta-pill:hover{background:#f1f5f9}
   .btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:var(--dark);padding:.6rem 1rem;font-weight:600;text-decoration:none;cursor:pointer}
+  .btn:focus-visible, .btn-mini:focus-visible, .day-pill:focus-visible{outline:none;box-shadow:var(--ring)}
   .btn-primary{background:var(--primary);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(0,119,204,.25)}
   .btn-primary:hover{background:var(--primary-dark)}
 
@@ -45,21 +51,21 @@
   .day-tabs{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #eef2f7}
   .day-track{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;gap:8px;overflow:auto}
   .day-pill{padding:8px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#0f172a;font-weight:600;white-space:nowrap;cursor:pointer}
-  .day-pill.active,.day-pill:hover{background:var(--primary);color:#fff;border-color:transparent}
+  .day-pill.active,.day-pill:hover{background:var(--primary);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(0,119,204,.18)}
 
   /* Layout */
-  .page{max-width:1200px;margin:0 auto;padding:18px 20px 40px;display:grid;grid-template-columns: 1fr;gap:18px}
+  .page{max-width:1200px;margin:0 auto;padding:18px 20px 40px;display:grid;grid-template-columns: 1fr;gap:24px}
 
   /* Day section */
   .day-section{scroll-margin-top:80px}
-  .day-header{display:flex;align-items:baseline;gap:10px;margin:18px 0 10px}
+  .day-header{display:flex;align-items:center;gap:10px;margin:18px 0 10px}
   .day-title{font-size:1.25rem;margin:0}
   .day-date{color:var(--gray)}
 
   /* Stop cards */
   .stops{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-  .stop-card{background:var(--card);border:1px solid #eef2f7;border-radius:14px;overflow:hidden;box-shadow:0 8px 18px rgba(15,23,42,.04)}
-  .stop-cover{height:130px;background:#e2e8f0;background-position:center;background-size:cover}
+  .stop-card{background:var(--card);border:1px solid #eef2f7;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-soft);transition:box-shadow .2s ease,transform .2s ease}
+  .stop-cover{height:160px;background:#e2e8f0;background-position:center;background-size:cover;border-bottom:1px solid #eef2f7}
   .stop-body{padding:12px 14px}
   .stop-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .stop-name{margin:0;font-size:1.05rem}
@@ -73,10 +79,10 @@
   .btn-mini:hover{border-color:#cbd5e1}
 
   /* Map placeholder */
-  .map-wrap{border:1px dashed #cbd5e1;border-radius:14px;height:220px;display:flex;align-items:center;justify-content:center;color:#64748b}
+  .map-wrap{border:1px dashed #cbd5e1;border-radius:14px;height:260px;display:flex;align-items:center;justify-content:center;color:#64748b}
 
   @media (min-width: 1000px){
-    .page{grid-template-columns: 320px 1fr;align-items:start}
+    .page{grid-template-columns: 340px 1fr;align-items:start;gap:28px}
     .sidebar{position:sticky;top:80px}
   }
 
@@ -94,8 +100,7 @@
   .day-tabs{box-shadow:0 6px 16px rgba(15,23,42,.04)}
   .day-pill{transition:all .15s ease}
 
-  .stop-card{transition:box-shadow .2s ease,transform .2s ease}
-  .stop-card:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(15,23,42,.08)}
+  .stop-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
   .stop-cover{position:relative}
   .time-badge{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.65);color:#fff;padding:4px 8px;border-radius:999px;font-size:.75rem;font-weight:700}
 
@@ -104,7 +109,7 @@
 
   /* Better spacing for main grid */
   @media (min-width:1000px){
-    .page{gap:24px}
+    .page{gap:28px}
   }
 
   /* --- Dark mode ------------------------------------------------------ */
@@ -139,7 +144,7 @@
     .trip-sub{font-size:.95rem}
 
     /* Map preview */
-    .map-wrap{height:200px;margin-top:8px}
+    .map-wrap{height:200px;margin-top:8px;border-radius:14px}
 
     /* Day tabs */
     .day-tabs{top:0}
@@ -160,4 +165,7 @@
 
     /* Anchor offset when jumping to a day */
     .day-section{scroll-margin-top:64px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .btn, .btn-mini, .day-pill, .stop-card{transition:none !important}
   }
