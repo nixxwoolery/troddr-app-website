@@ -6,11 +6,11 @@
   <title>TRODDR — Listing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --brand:#0077cc; --bg:#ffffff; --fg:#0b1220; --muted:#6b7280; --card:#f7f7fb;
-      --radius:14px; --gap:12px;
+      --brand:#0077cc; --bg:#ffffff; --fg:#0b1220; --muted:#6b7280; --card:#f8fafc; --line:#e5e7eb;
+      --radius:14px; --gap:14px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -19,30 +19,62 @@
 
     .wrap{max-width:1100px;margin:0 auto;padding:20px}
 
-    /* HERO — 3-panel collage like your app detail screen */
-    .hero{display:grid;grid-template-columns:1.05fr 1.2fr 0.9fr;gap:var(--gap);height:min(65vh,720px);margin-top:8px}
-    .hero .col{position:relative;border-radius:var(--radius);overflow:hidden;background:#e9ecef}
-    .hero img{width:100%;height:100%;object-fit:cover;display:block}
-    .hero .count{position:absolute;right:12px;bottom:12px;background:#fff;border-radius:10px;padding:6px 10px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.15);}
-
-    /* Title row */
-    header.page{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 10px}
+    /* Title Row */
+    header.page{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 12px}
     .titleBlock{min-width:0}
-    .title{font-size:clamp(22px,3.2vw,36px);font-weight:800;margin:0 0 4px}
+    .title{font-size:clamp(22px,3.2vw,36px);font-weight:800;margin:0 0 6px}
     .sub{color:var(--muted);font-size:14px}
     .cta{display:inline-flex;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
 
-    .card{background:var(--card);border:1px solid #e5e7eb;border-radius:var(--radius);padding:16px}
-    .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+    /* HERO — 3-panel collage */
+    .hero{display:grid;grid-template-columns:1.05fr 1.2fr 0.9fr;gap:var(--gap);height:min(56vh,680px);margin-top:8px}
+    .hero .col{position:relative;border-radius:16px;overflow:hidden;background:#e9ecef}
+    .hero img{width:100%;height:100%;object-fit:cover;display:block}
+    .hero .count{position:absolute;right:12px;bottom:12px;background:#fff;border-radius:10px;padding:6px 10px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.15);}
 
+    /* Action row */
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:12px;font-weight:700}
+    .btn-primary{background:var(--brand);color:#fff}
+    .btn-muted{background:#e6f1fb;color:var(--brand)}
+
+    /* Cards */
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+    .grid{display:grid;gap:16px;grid-template-columns:2fr 1fr}
+
+    /* Info list like the app */
+    .infoList{display:grid;gap:12px}
+    .infoRow{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+    .infoRow:last-child{border-bottom:none}
+    .icon{width:32px;height:32px;border-radius:16px;background:#e8f3ff;color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .kv{flex:1}
+    .kv .k{font-size:13px;color:#111;font-weight:600;margin-bottom:2px}
+    .kv .v{font-size:14px;color:#555;font-weight:500}
+
+    /* Dishes */
+    .dishes{display:flex;flex-direction:column;gap:10px}
+    .dish{background:#f2f6fb;border:1px solid var(--line);border-left:4px solid #5EB7C3;border-radius:12px;overflow:hidden}
+    .dishH{display:flex;align-items:center;gap:10px;padding:12px 14px;color:#007E94;font-weight:600;cursor:pointer}
+    .dishBody{display:none;padding:0 14px 14px 14px}
+    .dishBody img{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:8px}
+    .pillRow{display:flex;gap:10px;flex-wrap:wrap}
+
+    /* Map card */
+    .mapCard{border-radius:16px;overflow:hidden;background:#f8f9fa;border:1px solid var(--line)}
+    .mapHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
+    .mapBody{height:220px;display:flex;align-items:center;justify-content:center;color:#8E8E93}
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
     @media (max-width: 900px){
       .hero{grid-template-columns:1fr;height:auto}
       .hero .col{height:42vh}
-      .grid{grid-template-columns:1fr}
     }
   </style>
   <script>
-    window.env = {
+    // Expose env (same pattern as itinerary page)
+    window.env = window.env || {
       SUPABASE_URL: 'https://rprpwudhplodaqmmwqkf.supabase.co',
       SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk'
     };
@@ -65,212 +97,234 @@
       <div class="col"><img id="img3" alt="" /></div>
     </section>
 
-    <div style="height:18px"></div>
+    <!-- Actions row (Directions/Website/Menu/Call) -->
+    <div class="actions">
+      <a class="btn btn-primary" id="action-directions" href="#">Directions</a>
+      <a class="btn btn-primary" id="action-website" href="#">Website</a>
+      <a class="btn btn-primary" id="action-menu" href="#">Menu</a>
+      <a class="btn btn-primary" id="action-call" href="#">Call</a>
+    </div>
 
+    <!-- Content grid: Info + Map -->
     <section class="grid">
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <a class="cta" id="action-directions" href="#">Directions</a>
-        <a class="cta" id="action-website" href="#">Website</a>
-        <a class="cta" id="action-menu" href="#">Menu</a>
-        <a class="cta" id="action-call" href="#">Call</a>
-      </div>
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Overview</div>
-        <div id="overview" style="margin:6px 0 10px 0;color:#0b1220"></div>
-        <div id="details" style="margin-top:12px"></div>
+        <div id="overview" style="margin:6px 0 12px 0;color:#0b1220"></div>
+        <button id="toggleOverview" class="btn btn-muted" style="display:none;margin-bottom:12px;padding:8px 12px">View more</button>
+
+        <div class="infoList" id="infoList"></div>
+      </div>
+
+      <div class="mapCard">
+        <div class="mapHead">
+          <div style="font-weight:700">Location</div>
+          <a class="btn btn-muted" id="mapDirections" href="#" style="padding:8px 12px">Get Directions</a>
+        </div>
+        <div class="mapBody" id="mapBody">Map preview unavailable</div>
       </div>
     </section>
+
+    <!-- Dishes -->
+    <div class="card" style="margin-top:16px">
+      <div class="sub" style="margin-bottom:8px;font-weight:700;color:#000">Must‑Try Dishes</div>
+      <div id="dishes" class="dishes"></div>
+    </div>
   </div>
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    function showLoadError(msg) {
-      const el = document.getElementById('overview');
-      if (el) el.textContent = msg || "We couldn't load this listing right now.";
-    }
-  
-    // Resolve slug from ?slug=… or /listings/<slug>
+
+    const SUPABASE_URL = (window.env?.SUPABASE_URL || window.SUPABASE_URL || '').trim();
+    const SUPABASE_ANON_KEY = (window.env?.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '').trim();
+    const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+
     const params = new URLSearchParams(location.search);
     const pathMatch = location.pathname.match(/\/listings\/([^\/?#]+)/i);
     const slug = params.get('slug') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
-  
-    // Supabase client (same values you used in itinerary.html)
-    const SUPABASE_URL = (window.env?.SUPABASE_URL || window.SUPABASE_URL || '').trim();
-const SUPABASE_ANON_KEY = (window.env?.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '').trim();
-const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
-  
+
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
+
+    // Helpers
+    const titleCaseSlug = (str) => (str || '').replace(/-/g,' ').replace(/\b\w/g, s => s.toUpperCase());
     const asList = (v) => {
       if (v == null) return '';
       if (Array.isArray(v)) return v.filter(Boolean).join(', ');
-      if (typeof v === 'object') {
-        try {
-          // json/jsonb -> join values
-          const arr = Array.isArray(v) ? v : Object.values(v);
-          return arr.filter(Boolean).join(', ');
-        } catch {}
-      }
+      if (typeof v === 'object') { try { const a = Array.isArray(v) ? v : Object.values(v); return a.filter(Boolean).join(', ');} catch {} }
       const s = String(v);
       if (!s) return '';
-      // handle text[] serialized as JSON string
       try { const parsed = JSON.parse(s); if (Array.isArray(parsed)) return parsed.filter(Boolean).join(', '); } catch {}
       return s;
     };
-  
-    // Robustly normalize your `image` column (jsonb array, text[], or string)
     const normalizeImages = (img) => {
       try {
         if (Array.isArray(img)) return img.filter(Boolean);
-        if (typeof img === 'string') {
-          const s = img.trim();
-          if (!s) return [];
-          if (s.startsWith('[')) { const a = JSON.parse(s); return Array.isArray(a) ? a.filter(Boolean) : []; }
-          return [s];
-        }
-        if (img && typeof img === 'object') {
-          const a = JSON.parse(JSON.stringify(img));
-          return Array.isArray(a) ? a.filter(Boolean) : [];
-        }
+        if (typeof img === 'string') { const s = img.trim(); if (!s) return []; if (s.startsWith('[')) { const a = JSON.parse(s); return Array.isArray(a) ? a.filter(Boolean) : []; } return [s]; }
+        if (img && typeof img === 'object') { const a = JSON.parse(JSON.stringify(img)); return Array.isArray(a) ? a.filter(Boolean) : []; }
       } catch {}
       return [];
     };
-  
-    const titleCaseSlug = (str) => (str || '').replace(/-/g,' ').replace(/\b\w/g, s => s.toUpperCase());
-  
-    async function main(){
-      if (!slug) { set('listing-title','Listing'); set('listing-sub',''); return; }
-  
-      // Default header while loading
-      set('listing-title', titleCaseSlug(slug));
-      set('listing-sub', 'Web view');
-      const openInApp = document.getElementById('open-in-app');
-      if (openInApp) openInApp.href = 'troddrapp://listing/' + encodeURIComponent(slug);
-  
-      // Fetch the listing
-      async function fetchPlaceBySlug(slug) {
-        // 1) Try direct table read
-        const sel = await supa
-          .from('places')
-          .select('*')
-          .eq('slug', slug)
-          .maybeSingle();
 
-        if (sel.data) return { data: sel.data };
+    // Fetch place (table first, then RPC fallback like app)
+    async function fetchPlaceBySlug(slug){
+      const sel = await supa.from('places').select('*').eq('slug', slug).maybeSingle();
+      if (sel.data) return { data: sel.data };
+      const tryRPC = async (fn) => { try{ const r = await supa.rpc(fn, { _slug: slug }); if (!r.error && r.data) return { data:r.data }; return { error:r.error || new Error('No data from '+fn) }; } catch(e){ return { error:e }; }};
+      const viaPublic = await tryRPC('get_place_public'); if (viaPublic.data) return viaPublic;
+      const viaBySlug = await tryRPC('get_place_by_slug'); if (viaBySlug.data) return viaBySlug;
+      return { error: sel.error || viaPublic.error || viaBySlug.error || new Error('Not found') };
+    }
 
-        // 2) Fallback: RPCs that can be SECURITY DEFINER in DB
-        const tryRPC = async (fn) => {
-          try {
-            const r = await supa.rpc(fn, { _slug: slug });
-            if (!r.error && r.data) return { data: r.data };
-            return { error: r.error || new Error('No data from ' + fn) };
-          } catch (e) {
-            return { error: e };
-          }
-        };
-
-        // Try either function name—use whichever you created in the DB
-        const viaPublic = await tryRPC('get_place_public');
-        if (viaPublic.data) return viaPublic;
-
-        const viaBySlug = await tryRPC('get_place_by_slug');
-        if (viaBySlug.data) return viaBySlug;
-
-        return { error: sel.error || viaPublic.error || viaBySlug.error || new Error('Not found') };
+    // Dishes helpers
+    const parseDishNames = (listing) => {
+      const raw = listing?.recommended_dishes;
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw.filter(Boolean);
+      if (typeof raw === 'string'){
+        try { const j = JSON.parse(raw); if (Array.isArray(j)) { if (j.length && typeof j[0]==='string') return j; if (j[0]?.dish_name) return j.map(d=>d.dish_name); } } catch{}
+        return raw.split(',').map(s=>s.trim()).filter(Boolean);
       }
+      return [];
+    };
+    async function fetchDishDetails(name, slug, id){
+      try{
+        const { data, error } = await supa
+          .from('recommended_dishes')
+          .select('dish_name,dish_description,dish_image_url')
+          .or(`place_slug.eq.${slug},place_id.eq.${id}`)
+          .ilike('dish_name', name);
+        if (!error && data && data.length) return data[0];
+      }catch(e){ /* ignore */ }
+      return null;
+    }
 
-      // Fetch with fallbacks
-      const { data: place, error } = await fetchPlaceBySlug(slug);
-
-      if (error || !place) {
-        console.warn('Listing load failed:', error?.message || error || 'no data');
-        showLoadError("We couldn't load this listing right now.");
-        return;
-      }
-  
-      // Header/subtitle
-      set('listing-title', place.name || titleCaseSlug(slug));
-      const locStr = [place.town, place.parish].filter(Boolean).join(', ');
-      set('listing-sub', locStr || '');
-  
-      // Overview
-      $('#overview').textContent = place.description || '—';
-  
-      // Details (simple key:value)
-      const details = [
+    function renderDetails(place){
+      const info = [
         ['Type', place.type],
-        ['Category', place.category],
         ['Meal Service', place.meal_type || place.meal_service],
         ['Cuisine', asList(place.cuisine)],
         ['Price Range', place.price_range || place.price],
         ['Ambiance', asList(place.ambiance)],
-        ['Activities', asList(place.activities)],
-        ['Perfect For', asList(place.perfect_for)],
-        ['Number of Rooms', place.number_of_rooms],
-        ['Amenities', asList(place.amenities)],
-        ['Room Types', asList(place.room_types)],
         ['Opening Hours', place.opening_hours || place.hours],
         ['Address', [place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ')],
         ['Phone', place.phone_number || place.phone],
         ['Website', place.website],
-        ['Menu', place.menu_link],
       ].filter(([,v]) => v && String(v).trim() !== '');
-
-      const detailsEl = document.getElementById('details');
-      if (detailsEl) {
-        if (details.length) {
-          detailsEl.innerHTML = details.map(([k, v]) => {
-            if (k === 'Website' && v) return `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <a href="${v}" target="_blank" rel="noopener">${v}</a></div>`;
-            if (k === 'Menu' && v) return `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <a href="${v}" target="_blank" rel="noopener">View Menu</a></div>`;
-            if (k === 'Phone' && v) return `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <a href="tel:${v}">${v}</a></div>`;
-            return `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <span>${asList(v)}</span></div>`;
-          }).join('');
-        } else {
-          detailsEl.textContent = '';
-        }
-      }
-  
-      // Hero images (3 panels)
-      const provided = [params.get('img1'), params.get('img2'), params.get('img3')].filter(Boolean);
-      let imgs = provided.length ? provided : normalizeImages(place.image);
-      if (!imgs.length) {
-        imgs = [
-          'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=1400&q=80&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80&auto=format&fit=crop'
-        ];
-      }
-      while (imgs.length < 3) imgs.push(imgs[imgs.length - 1]);
-      ['img1','img2','img3'].forEach((id, i) => {
-        const el = document.getElementById(id);
-        if (el) { el.src = imgs[i]; el.alt = place.name; }
-      });
-      const countBadge = document.getElementById('countBadge');
-      if (countBadge) countBadge.textContent = String(normalizeImages(place.image).length || imgs.length);
-  
-      // Quick actions
-      const dirA = document.getElementById('action-directions');
-      if (dirA) {
-        let mapsUrl = '';
-        if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))) {
-          mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`;
-        } else {
-          const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
-          mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
-        }
-        dirA.href = mapsUrl;
-      }
-
-      const webA = document.getElementById('action-website');
-      if (webA) { if (place.website) webA.href = place.website; else webA.style.display = 'none'; }
-
-      const menuA = document.getElementById('action-menu');
-      if (menuA) { if (place.menu_link) menuA.href = place.menu_link; else menuA.style.display = 'none'; }
-
-      const callA = document.getElementById('action-call');
-      if (callA) { if (place.phone_number || place.phone) callA.href = 'tel:' + (place.phone_number || place.phone); else callA.style.display = 'none'; }
+      const el = document.getElementById('infoList');
+      el.innerHTML = info.map(([k,v])=>{
+        const val = asList(v);
+        const vHtml = k==='Website' ? `<a href="${val}" target="_blank" rel="noopener">${val}</a>`
+          : k==='Phone' ? `<a href="tel:${val}">${val}</a>`
+          : `<span class="v">${val}</span>`;
+        const icon = ({
+          'Type':'🏷️','Meal Service':'🍽️','Cuisine':'🍜','Price Range':'💵','Ambiance':'🎨','Opening Hours':'⏰','Address':'📍','Phone':'📞','Website':'🌐'
+        })[k] || '•';
+        return `<div class="infoRow"><div class="icon">${icon}</div><div class="kv"><div class="k">${k}</div>${vHtml}</div></div>`;
+      }).join('');
     }
-  
+
+    function setupOverview(desc){
+      const o = document.getElementById('overview');
+      const b = document.getElementById('toggleOverview');
+      if (!desc){ o.textContent='—'; b.style.display='none'; return; }
+      if (desc.length <= 180){ o.textContent = desc; b.style.display='none'; return; }
+      let expanded = false;
+      const update = () => { o.textContent = expanded ? desc : `${desc.slice(0,180)}…`; b.textContent = expanded ? 'View less' : 'View more'; };
+      b.style.display='inline-flex'; b.onclick=()=>{ expanded=!expanded; update(); };
+      update();
+    }
+
+    function setImages(place){
+      const provided = [new URLSearchParams(location.search).get('img1'), new URLSearchParams(location.search).get('img2'), new URLSearchParams(location.search).get('img3')].filter(Boolean);
+      let imgs = provided.length ? provided : normalizeImages(place.image);
+      if (!imgs.length){ imgs = [
+        'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=1400&q=80&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80&auto=format&fit=crop'
+      ];}
+      while (imgs.length < 3) imgs.push(imgs[imgs.length-1]);
+      ['img1','img2','img3'].forEach((id,i)=>{ const el=document.getElementById(id); if (el){ el.src = imgs[i]; el.alt = place.name; }});
+      const countBadge = document.getElementById('countBadge'); if (countBadge) countBadge.textContent = String(normalizeImages(place.image).length || imgs.length);
+    }
+
+    function setActions(place){
+      const dirA = document.getElementById('action-directions');
+      const mapBtn = document.getElementById('mapDirections');
+      const mkMapsUrl = () => {
+        if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))){
+          return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`;
+        }
+        const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
+        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+      };
+      const url = mkMapsUrl();
+      if (dirA) dirA.href = url;
+      if (mapBtn) mapBtn.href = url;
+
+      const webA = document.getElementById('action-website'); if (webA) { if (place.website) webA.href = place.website; else webA.style.display='none'; }
+      const menuA = document.getElementById('action-menu'); if (menuA) { if (place.menu_link) menuA.href = place.menu_link; else menuA.style.display='none'; }
+      const callA = document.getElementById('action-call'); if (callA) { const p = place.phone_number || place.phone; if (p) callA.href = 'tel:'+p; else callA.style.display='none'; }
+    }
+
+    function setMapPreview(place){
+      const body = document.getElementById('mapBody');
+      if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))){
+        const lat = Number(place.latitude), lng = Number(place.longitude);
+        const iframe = document.createElement('iframe');
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer-when-downgrade';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = '0';
+        iframe.src = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+        body.innerHTML=''; body.appendChild(iframe);
+      } else {
+        body.textContent = 'Map preview unavailable';
+      }
+    }
+
+    function setOpenInApp(slug){ const link = document.getElementById('open-in-app'); if (link) link.href = 'troddrapp://listing/' + encodeURIComponent(slug); }
+
+    async function renderDishes(listing){
+      const wrap = document.getElementById('dishes');
+      wrap.innerHTML = '';
+      const names = parseDishNames(listing);
+      if (!names.length){ wrap.innerHTML = '<div style="color:#8E8E93">No dishes added yet.</div>'; return; }
+      const cache = {};
+      for (const name of names){ cache[name] = await fetchDishDetails(name, listing.slug, listing.id); }
+      names.forEach((name, idx)=>{
+        const d = document.createElement('div'); d.className='dish';
+        const h = document.createElement('div'); h.className='dishH'; h.innerHTML = `🍽️ <span style="flex:1">${name}</span><span id="chev${idx}">›</span>`;
+        const b = document.createElement('div'); b.className='dishBody';
+        const det = cache[name];
+        if (det){
+          if (det.dish_image_url){ const img = document.createElement('img'); img.src = det.dish_image_url; img.alt = name; b.appendChild(img); }
+          if (det.dish_description){ const p = document.createElement('div'); p.style.marginTop='8px'; p.style.color='#007E94'; p.textContent = det.dish_description; b.appendChild(p); }
+        }
+        h.onclick = () => { const open = b.style.display === 'block'; b.style.display = open ? 'none' : 'block'; document.getElementById('chev'+idx).textContent = open ? '›' : '˅'; };
+        d.appendChild(h); d.appendChild(b); wrap.appendChild(d);
+      });
+    }
+
+    async function main(){
+      if (!slug){ set('listing-title','Listing'); set('listing-sub',''); return; }
+      setOpenInApp(slug);
+      set('listing-title', titleCaseSlug(slug));
+      set('listing-sub','Web view');
+
+      const { data: place, error } = await fetchPlaceBySlug(slug);
+      if (error || !place){ document.getElementById('overview').textContent = "We couldn't load this listing right now."; return; }
+
+      set('listing-title', place.name || titleCaseSlug(slug));
+      set('listing-sub', [place.town, place.parish].filter(Boolean).join(', '));
+      setupOverview(place.description || '—');
+      renderDetails(place);
+      setImages(place);
+      setActions(place);
+      setMapPreview(place);
+      renderDishes(place);
+    }
+
     main();
   </script>
 </body>
