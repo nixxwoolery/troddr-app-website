@@ -111,7 +111,7 @@
         <span class="meta-pill" id="meta-destination">—</span>
         <span class="meta-pill" id="meta-dates"></span>
         <button class="btn" id="btn-copy">Copy Link</button>
-        <a class="btn btn-primary" href="troddrapp://import/shared_itinerary?token=<TOKEN>" id="btn-save">Open in App</a>
+        <a class="btn btn-primary" href="troddrapp://shared_itinerary/<ID>" id="btn-save">Open in App</a>
       </div>
     </div>
     <div class="map-wrap" id="map-preview">Map preview</div>
@@ -411,8 +411,7 @@
       debug('parsed identifier', { ident, looksUuid });
       if (dbg) dbg({ phase: 'ident', ident, looksUuid });
       if (saveBtn && ident) {
-        const param = looksUuid ? `id=${encodeURIComponent(ident)}` : `token=${encodeURIComponent(ident)}`;
-        saveBtn.setAttribute('href', `troddrapp://import/shared_itinerary?${param}`);
+        saveBtn.setAttribute('href', `troddrapp://shared_itinerary/${encodeURIComponent(ident)}`);
       }
       if (!ident){
         errorBox.classList.remove('hidden');
@@ -423,52 +422,51 @@
       try{
         let data, error;
 
-        if (looksUuid) {
-          // Prefer direct itinerary-id lookups first
+        // Always try TOKEN flow first (works for both dashed and dashless tokens)
+        let res = await supa.rpc('get_shared_itinerary', { _token: ident });
+        data = res.data; error = res.error;
+        debug('RPC get_shared_itinerary (as-is)', { hasData: !!data, hasError: !!error });
+        if (dbg) dbg({ phase: 'rpc1_token', hasData: !!data, hasError: !!error });
+
+        // Retry with dashless if original had dashes
+        if ((!data || error) && String(ident).includes('-')) {
+          const tokenNoDash = String(ident).replace(/-/g, '');
+          debug('Retry token dashless', tokenNoDash);
+          res = await supa.rpc('get_shared_itinerary', { _token: tokenNoDash });
+          data = res.data; error = res.error;
+          if (dbg) dbg({ phase: 'rpc2_dashless', hasData: !!data, hasError: !!error });
+        }
+
+        // Retry with dashed UUID shape if it looks like 32-hex (dashless)
+        if ((!data || error) && /^[0-9a-fA-F]{32}$/.test(String(ident))) {
+          const tokenDashed = String(ident).replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5');
+          debug('Retry token dashed', tokenDashed);
+          res = await supa.rpc('get_shared_itinerary', { _token: tokenDashed });
+          data = res.data; error = res.error;
+          if (dbg) dbg({ phase: 'rpc3_dashed', hasData: !!data, hasError: !!error });
+        }
+
+        // If still not found and it LOOKS like a UUID, try by-itinerary-id
+        if ((!data || error) && looksUuid) {
           const byId = await supa.rpc('get_shared_itinerary_by_id', { _itinerary_id: ident });
           data = byId.data; error = byId.error;
           debug('RPC get_shared_itinerary_by_id', { hasData: !!data, hasError: !!error, ident });
           if (dbg) dbg({ phase: 'byId', hasData: !!data, hasError: !!error });
         }
 
-        // If not a UUID, or UUID lookup failed, try token flows
-        if ((!data || error) && !looksUuid) {
-          // 1) Try token as-is
-          let res = await supa.rpc('get_shared_itinerary', { _token: ident });
-          data = res.data; error = res.error;
-          debug('RPC get_shared_itinerary (as-is)', { hasData: !!data, hasError: !!error });
-          if (dbg) dbg({ phase: 'rpc1', hasData: !!data, hasError: !!error });
-
-          // Helper: add dashes to a 32-hex string => 8-4-4-4-12
-          const toDashed = (t) =>
-            /^[0-9a-fA-F]{32}$/.test(t)
-              ? t.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5')
-              : t;
-
-          // 2a) Retry with dashless if original had dashes
-          if ((!data || error) && String(ident).includes('-')) {
-            const tokenNoDash = String(ident).replace(/-/g, '');
-            debug('Retry token dashless', tokenNoDash);
-            res = await supa.rpc('get_shared_itinerary', { _token: tokenNoDash });
-            data = res.data; error = res.error;
-            if (dbg) dbg({ phase: 'rpc2_dashless', hasData: !!data, hasError: !!error });
-          }
-
-          // 2b) Retry with dashed if looked like 32-hex
-          if ((!data || error) && /^[0-9a-fA-F]{32}$/.test(String(ident))) {
-            const tokenDashed = toDashed(String(ident));
-            debug('Retry token dashed', tokenDashed);
-            res = await supa.rpc('get_shared_itinerary', { _token: tokenDashed });
-            data = res.data; error = res.error;
-            if (dbg) dbg({ phase: 'rpc2_dashed', hasData: !!data, hasError: !!error });
-          }
-        }
-
         if (error || !data){ throw error || new Error('Not found'); }
         if (dbg) dbg({ phase: 'render', items: Array.isArray(data.items) ? data.items.length : 0, metaTitle: data.title });
         render(data.items || [], data);
-        // Bump views (ignore errors) — only meaningful for tokens but harmless otherwise
-        supa.rpc('bump_share_view', { _token: String(ident) }).catch(()=>{});
+
+        // Clear any prior error UI or title from earlier attempts
+        if (errorBox) errorBox.classList.add('hidden');
+        if (titleEl) titleEl.textContent = data.title || 'Itinerary';
+
+        // Bump views (ignore errors) — run via async IIFE so it doesn't throw synchronously
+        (async () => {
+          try { await supa.rpc('bump_share_view', { _token: String(ident) }); } catch (e) {}
+        })();
+
         // Wire buttons
         if (copyBtn){
           copyBtn.addEventListener('click', async () => {
@@ -478,9 +476,7 @@
         if (saveBtn){
           saveBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const deep = looksUuid
-              ? `troddrapp://import/shared_itinerary?id=${encodeURIComponent(String(ident))}`
-              : `troddrapp://import/shared_itinerary?token=${encodeURIComponent(String(ident))}`;
+            const deep = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
             window.location.href = deep;
           });
         }
