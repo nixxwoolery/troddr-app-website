@@ -70,11 +70,8 @@
     <section class="grid">
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Overview</div>
-        <div class="card">
-          <div class="sub" style="margin-bottom:6px">Overview</div>
-          <div id="overview" style="margin:6px 0 10px 0;color:#0b1220"></div>
-          <div id="details" style="margin-top:12px"></div>
-        </div>
+        <div id="overview" style="margin:6px 0 10px 0;color:#0b1220"></div>
+        <div id="details" style="margin-top:12px"></div>
       </div>
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Quick Actions</div>
@@ -89,6 +86,10 @@
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    function showLoadError(msg) {
+      const el = document.getElementById('overview');
+      if (el) el.textContent = msg || "We couldn't load this listing right now.";
+    }
   
     // Resolve slug from ?slug=… or /listings/<slug>
     const params = new URLSearchParams(location.search);
@@ -133,24 +134,50 @@ const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSess
       if (openInApp) openInApp.href = 'troddrapp://listing/' + encodeURIComponent(slug);
   
       // Fetch the listing
-      const { data, error } = await supa
-        .from('places')
-        .select(`
-          id, name, slug, description, image, address, town, parish, latitude, longitude,
-          website, phone_number, menu_link,
-          category, type, activities, perfect_for, meal_type, cuisine, price_range,
-          ambiance, number_of_rooms, amenities, room_types, opening_hours
-        `)
-        .eq('slug', slug)
-        .single();
-  
-      if (error || !data) {
-        console.warn('Listing not found:', error?.message || 'no data');
-        $('#overview').textContent = "We couldn't load this listing right now.";
+      async function fetchPlaceBySlug(slug) {
+        // 1) Try direct table read
+        const sel = await supa
+          .from('places')
+          .select(`
+            id, name, slug, description, image, address, town, parish, latitude, longitude,
+            website, phone_number, menu_link,
+            category, type, activities, perfect_for, meal_type, cuisine, price_range,
+            ambiance, number_of_rooms, amenities, room_types, opening_hours
+          `)
+          .eq('slug', slug)
+          .maybeSingle(); // don't throw on not found
+
+        if (sel.data) return { data: sel.data };
+
+        // 2) Fallback: RPCs that can be SECURITY DEFINER in DB
+        const tryRPC = async (fn) => {
+          try {
+            const r = await supa.rpc(fn, { _slug: slug });
+            if (!r.error && r.data) return { data: r.data };
+            return { error: r.error || new Error('No data from ' + fn) };
+          } catch (e) {
+            return { error: e };
+          }
+        };
+
+        // Try either function name—use whichever you created in the DB
+        const viaPublic = await tryRPC('get_place_public');
+        if (viaPublic.data) return viaPublic;
+
+        const viaBySlug = await tryRPC('get_place_by_slug');
+        if (viaBySlug.data) return viaBySlug;
+
+        return { error: sel.error || viaPublic.error || viaBySlug.error || new Error('Not found') };
+      }
+
+      // Fetch with fallbacks
+      const { data: place, error } = await fetchPlaceBySlug(slug);
+
+      if (error || !place) {
+        console.warn('Listing load failed:', error?.message || error || 'no data');
+        showLoadError("We couldn't load this listing right now.");
         return;
       }
-  
-      const place = data;
   
       // Header/subtitle
       set('listing-title', place.name || titleCaseSlug(slug));
