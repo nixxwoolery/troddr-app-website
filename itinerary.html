@@ -118,10 +118,49 @@
     <!-- Leaflet (lightweight interactive map, no API key required) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</style>
     <style>
-      /* Ensure the preview has a visible height */
-      #map-preview { height: 260px; border-radius: 12px; overflow: hidden; }
-      @media (min-width: 1024px) { #map-preview { height: 320px; } }
+      /* --- Day Stop Cards: sleeker look, tighter radius (8px) ------------------ */
+      .day-section .stops{ 
+        max-width: 760px;           /* narrower than full page */
+        margin: 0 auto; 
+        display: grid; 
+        gap: 16px; 
+      }
+
+      .day-section .stop-card{
+        border-radius: 8px;          /* requested radius */
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e6eaf0;  /* subtle edge */
+        box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 6px 20px rgba(16,24,40,.04);
+      }
+
+      .day-section .stop-cover{
+        height: 320px;               /* tall, image-led card */
+        background-size: cover;
+        background-position: center;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+      }
+      @media (max-width: 900px){
+        .day-section .stop-cover{ height: 240px; }
+      }
+
+      .day-section .stop-body{ padding: 16px 18px 18px; }
+      .day-section .stop-name{ font-size: clamp(18px,2.2vw,24px); font-weight: 700; margin: 0; }
+      .day-section .stop-meta{ color:#6b7280; margin-top:6px; }
+
+      .day-section .stop-actions{ display:flex; gap:10px; margin-top:12px; }
+      .day-section .btn-mini{ 
+        padding: 10px 12px; 
+        border-radius: 8px;          /* match card radius language */
+        border: 1px solid #e6eaf0; 
+        background: #fff; 
+        color:#0b1220; 
+        font-weight: 600; 
+      }
+      .day-section .btn-mini:hover{ background:#f7f8fb; border-color:#cdd6e1; }
     </style>
 </head>
 <body>
@@ -157,8 +196,8 @@
       <div class="trip-meta" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
         <span class="meta-pill" id="meta-destination">—</span>
         <span class="meta-pill" id="meta-dates"></span>
-        <button class="btn" id="btn-copy">Copy Link</button>
-        <button class="btn" id="btn-share">Share</button>
+        <!-- <button class="btn" id="btn-copy">Copy Link</button>
+        <button class="btn" id="btn-share">Share</button> -->
         <a class="btn btn-primary" href="troddrapp://shared_itinerary/<ID>" id="btn-save">Open in App</a>
       </div>
       <div class="stats" id="stats-row"></div>
@@ -491,7 +530,6 @@
       el.innerHTML = `
         <div class="stat"><div class="num">${tripLen ?? '—'}</div><div class="lbl">Days</div></div>
         <div class="stat"><div class="num">${stops}</div><div class="lbl">Stops</div></div>
-        <div class="stat"><div class="num">${km || '—'}</div><div class="lbl">Approx km</div></div>
       `;
     }
 
