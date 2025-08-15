@@ -36,11 +36,17 @@
     .actions{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:12px;font-weight:700}
     .btn-primary{background:var(--brand);color:#fff}
-    .btn-muted{background:#e6f1fb;color:var(--brand)}
+    .btn-outline{background:#fff;border:1px solid var(--line);color:var(--brand)}
+    .btn-outline:hover{background:#f7fbff}
+    /* .btn-muted{background:#e6f1fb;color:var(--brand)} */
 
     /* Cards */
-    /* .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px} */
-    .grid{display:grid;gap:16px;grid-template-columns:2fr 1fr}
+    .card{
+      /* background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px; */
+      padding:18px}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr}
 
     /* Info list like the app */
     .infoList{display:grid;gap:12px}
@@ -99,13 +105,13 @@
 
     <!-- Actions row (Directions/Website/Menu/Call) -->
     <div class="actions">
-      <a class="btn btn-primary" id="action-directions" href="#">Directions</a>
-      <a class="btn btn-primary" id="action-website" href="#">Website</a>
-      <a class="btn btn-primary" id="action-menu" href="#">Menu</a>
-      <a class="btn btn-primary" id="action-call" href="#">Call</a>
+      <a class="btn btn-outline" id="action-directions" href="#">Directions</a>
+      <a class="btn btn-outline" id="action-website" href="#">Website</a>
+      <a class="btn btn-outline" id="action-menu" href="#">Menu</a>
+      <a class="btn btn-outline" id="action-call" href="#">Call</a>
     </div>
 
-    <!-- Content grid: Info + Map -->
+    <!-- Content grid: Info only (map moved to bottom) -->
     <section class="grid">
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Overview</div>
@@ -114,14 +120,6 @@
 
         <div class="infoList" id="infoList"></div>
       </div>
-
-      <div class="mapCard">
-        <div class="mapHead">
-          <div style="font-weight:700">Location</div>
-          <a class="btn btn-muted" id="mapDirections" href="#" style="padding:8px 12px">Get Directions</a>
-        </div>
-        <div class="mapBody" id="mapBody">Map preview unavailable</div>
-      </div>
     </section>
 
     <!-- Dishes -->
@@ -129,6 +127,15 @@
       <div class="sub" style="margin-bottom:8px;font-weight:700;color:#000">Must‑Try Dishes</div>
       <div id="dishes" class="dishes"></div>
     </div>
+
+    <!-- Location moved to bottom -->
+    <section class="mapCard" style="margin-top:16px">
+      <div class="mapHead">
+        <div style="font-weight:700">Location</div>
+        <a class="btn btn-outline" id="mapDirections" href="#" style="padding:8px 12px">Get Directions</a>
+      </div>
+      <div class="mapBody" id="mapBody">Map preview unavailable</div>
+    </section>
   </div>
 
   <script type="module">
