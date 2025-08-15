@@ -337,10 +337,7 @@
       let coords = (items || []).map(it => {
         const lat = Number(it.latitude ?? it.lat ?? it.Latitude ?? it.Lat);
         const lng = Number(it.longitude ?? it.lng ?? it.Longitude ?? it.Lng ?? it.lon);
-        // require finite numbers and ignore 0,0 (often from blank strings)
-        if (Number.isFinite(lat) && Number.isFinite(lng) && !(Math.abs(lat) < 1e-6 && Math.abs(lng) < 1e-6)) {
-          return [lat, lng, it];
-        }
+        if (Number.isFinite(lat) && Number.isFinite(lng)) return [lat, lng, it];
         return null;
       }).filter(Boolean);
 
@@ -463,7 +460,7 @@
               </div>
               <div class="stop-meta"><span>${item.town || item.parish || item.location || ''}</span></div>
               <div class="stop-actions">
-                ${item.slug ? `<a class="btn-mini" href="/listings/${encodeURIComponent(item.slug)}">View</a>` : ''}
+                ${item.slug ? `<a class="btn-mini" href="/listing.html?slug=${encodeURIComponent(item.slug)}">View</a>` : ''}
                 <a class="btn-mini" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + (item.town||''))}">Directions</a>
               </div>
             </div>`;
@@ -550,15 +547,8 @@
         }
 
         if (error || !data){ throw error || new Error('Not found'); }
-        // Surface coordinate diagnostics in debug panel
-        const items = Array.isArray(data.items) ? data.items : [];
-        const coordCount = items.filter(it => {
-          const la = Number(it.latitude ?? it.lat ?? it.Latitude ?? it.Lat);
-          const lo = Number(it.longitude ?? it.lng ?? it.Longitude ?? it.Lng ?? it.lon);
-          return Number.isFinite(la) && Number.isFinite(lo) && !(Math.abs(la) < 1e-6 && Math.abs(lo) < 1e-6);
-        }).length;
-        if (dbg) dbg({ phase: 'render', items: items.length, metaTitle: data.title, coordCount, sample: items.slice(0,3) });
-        render(items, data);
+        if (dbg) dbg({ phase: 'render', items: Array.isArray(data.items) ? data.items.length : 0, metaTitle: data.title });
+        render(data.items || [], data);
 
         // Clear any prior error UI or title from earlier attempts
         if (errorBox) errorBox.classList.add('hidden');

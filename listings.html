@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TRODDR — Listing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand:#0077cc; --bg:#ffffff; --fg:#0b1220; --muted:#6b7280; --card:#f7f7fb;
+      --radius:14px; --gap:12px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+    a{text-decoration:none;color:inherit}
+
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+    /* HERO — 3-panel collage like your app detail screen */
+    .hero{display:grid;grid-template-columns:1.05fr 1.2fr 0.9fr;gap:var(--gap);height:min(65vh,720px);margin-top:8px}
+    .hero .col{position:relative;border-radius:var(--radius);overflow:hidden;background:#e9ecef}
+    .hero img{width:100%;height:100%;object-fit:cover;display:block}
+    .hero .count{position:absolute;right:12px;bottom:12px;background:#fff;border-radius:10px;padding:6px 10px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.15);}
+
+    /* Title row */
+    header.page{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 10px}
+    .titleBlock{min-width:0}
+    .title{font-size:clamp(22px,3.2vw,36px);font-weight:800;margin:0 0 4px}
+    .sub{color:var(--muted);font-size:14px}
+    .cta{display:inline-flex;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
+
+    .card{background:var(--card);border:1px solid #e5e7eb;border-radius:var(--radius);padding:16px}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+
+    @media (max-width: 900px){
+      .hero{grid-template-columns:1fr;height:auto}
+      .hero .col{height:42vh}
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="page">
+      <div class="titleBlock">
+        <h1 class="title" id="listing-title">Loading…</h1>
+        <div class="sub" id="listing-sub">—</div>
+      </div>
+      <a class="cta" id="open-in-app" href="#">Open in App</a>
+    </header>
+
+    <!-- Collage hero (3 images) -->
+    <section class="hero" id="hero">
+      <div class="col"><img id="img1" alt="" /><div class="count" id="countBadge">3</div></div>
+      <div class="col"><img id="img2" alt="" /></div>
+      <div class="col"><img id="img3" alt="" /></div>
+    </section>
+
+    <div style="height:18px"></div>
+
+    <section class="grid">
+      <div class="card">
+        <div class="sub" style="margin-bottom:6px">Overview</div>
+        <div id="overview">This is the web version of your listing page. Content will mirror the app’s detail screen.</div>
+      </div>
+      <div class="card">
+        <div class="sub" style="margin-bottom:6px">Quick Actions</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="cta" id="action-directions" href="#">Directions</a>
+          <a class="cta" id="action-website" href="#">Website</a>
+          <a class="cta" id="action-call" href="#">Call</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const slug = params.get('slug') || '';
+      const title = slug ? slug.replace(/-/g,' ').replace(/\b\w/g,s=>s.toUpperCase()) : 'Listing';
+
+      // Optional query params to feed hero images now; Supabase wiring can replace later
+      const qImg1 = params.get('img1');
+      const qImg2 = params.get('img2');
+      const qImg3 = params.get('img3');
+      const heroCount = params.get('count');
+
+      // Fallbacks matching your style (food shot, close-up, interior)
+      const FALLBACKS = [
+        'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=1400&q=80&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80&auto=format&fit=crop'
+      ];
+
+      document.getElementById('listing-title').textContent = title;
+      document.getElementById('listing-sub').textContent = 'Web view';
+
+      const deeplink = 'troddrapp://listing/' + encodeURIComponent(slug);
+      const openInApp = document.getElementById('open-in-app');
+      openInApp.href = deeplink;
+
+      const imgs = [
+        document.getElementById('img1'),
+        document.getElementById('img2'),
+        document.getElementById('img3')
+      ];
+      const provided = [qImg1, qImg2, qImg3];
+      imgs.forEach((el, i) => { el.src = provided[i] || FALLBACKS[i]; el.alt = title; });
+      if (heroCount) document.getElementById('countBadge').textContent = heroCount;
+
+      // Wire basic actions (no-op if we don't know the data yet)
+      const mapURL = params.get('maps') || '';
+      if (mapURL) document.getElementById('action-directions').href = mapURL;
+      const site = params.get('website') || '';
+      if (site) document.getElementById('action-website').href = site;
+      const phone = params.get('tel') || '';
+      if (phone) document.getElementById('action-call').href = 'tel:' + phone;
+    })();
+  </script>
+</body>
+</html>
