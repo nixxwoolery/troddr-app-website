@@ -34,7 +34,7 @@
     }
     .sub{color:var(--muted);font-size:14px}
     .cta{display:inline-flex;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
-    #overview{max-width:65ch}
+    /* #overview{max-width:65ch} */
     
     /* HERO — 3-panel collage */
     .hero{
@@ -149,6 +149,60 @@
   .skeleton{background:linear-gradient(90deg,#f2f4f7,#e9edf2,#f2f4f7);background-size:200% 100%;animation:shimmer 1.2s infinite;color:transparent !important}
   @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
   .skel-line{height:14px;border-radius:7px;margin:8px 0}
+  .lb-count{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:16px;
+    background:rgba(0,0,0,.6);
+    color:#fff;
+    padding:6px 10px;
+    border-radius:12px;
+    font-size:12px;
+    letter-spacing:.02em;
+  }
+
+  /* --- Mobile carousel styles for hero --- */
+  .hero.mcarousel{
+    position:relative;
+    grid-template-columns:1fr !important;
+    height:280px;         /* compact height on mobile */
+    min-height:280px;
+    overflow:hidden;
+  }
+  .hero.mcarousel .col{height:100%}
+  .hero-dots{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:10px;
+    display:flex;
+    gap:6px;
+    z-index:2;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .hero-dots button{
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background:rgba(255,255,255,.75);
+    border:none;
+    padding:0;
+    box-shadow:0 1px 2px rgba(0,0,0,.25);
+    cursor:pointer;
+  }
+  .hero-dots button.active{
+    background:#fff;
+    transform:scale(1.2);
+  }
+  /* Map chooser popover */
+  .maps-chooser{position:fixed;inset:auto auto auto auto;z-index:1100;min-width:240px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding:6px;display:none}
+  .maps-chooser.open{display:block}
+  .maps-chooser h4{margin:6px 10px 8px 10px;font-size:13px;color:#6b7280;font-weight:600;letter-spacing:.02em}
+  .maps-chooser a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#0b1220}
+  .maps-chooser a:hover{background:#f7fbff}
+  .maps-chooser .mi{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#eef5ff;font-size:14px}
   </style>
   <script>
     // Expose env (same pattern as itinerary page)
@@ -569,31 +623,211 @@
     }
 
     function setupLightbox(){
+    // Enable swipeable hero for mobile
+    function setupMobileCarousel(){
+      const hero = document.getElementById('hero');
+      const gallery = (window.__gallery || []).filter(Boolean);
+      if (!hero || gallery.length < 2) return;
+      const isMobile = window.matchMedia('(max-width: 900px)').matches;
+      if (!isMobile) return;
+
+      // Use first column and hide the rest; swap image source on swipe
+      hero.classList.add('mcarousel');
+      const cols = hero.querySelectorAll('.col');
+      cols.forEach((c, i) => { if (i > 0) { c.style.display = 'none'; c.hidden = true; } else { c.style.display = ''; c.hidden = false; } });
+
+      const img = document.getElementById('img1');
+      if (!img) return;
+
+      // Dots / indicators
+      let dots = document.getElementById('hero-dots');
+      if (!dots){
+        dots = document.createElement('div');
+        dots.id = 'hero-dots';
+        dots.className = 'hero-dots';
+        hero.appendChild(dots);
+      }
+      dots.innerHTML = '';
+      gallery.forEach((_, i) => {
+        const b = document.createElement('button');
+        b.setAttribute('aria-label', `Go to image ${i+1}`);
+        b.addEventListener('click', () => { idx = i; update(); });
+        dots.appendChild(b);
+      });
+
+      let idx = 0;
+      const setActive = () => {
+        [...dots.children].forEach((el, i) => el.classList.toggle('active', i === idx));
+      };
+      const update = () => {
+        img.src = gallery[idx];
+        img.dataset.index = String(idx); // so lightbox opens at correct slide
+        setActive();
+      };
+
+      // Touch swipe handlers
+      let startX = 0, deltaX = 0;
+      img.addEventListener('touchstart', (e) => {
+        startX = e.changedTouches[0].clientX;
+        deltaX = 0;
+      }, { passive: true });
+      img.addEventListener('touchmove', (e) => {
+        deltaX = e.changedTouches[0].clientX - startX;
+      }, { passive: true });
+      img.addEventListener('touchend', () => {
+        if (Math.abs(deltaX) > 40) {
+          if (deltaX < 0) idx = (idx + 1) % gallery.length;
+          else idx = (idx - 1 + gallery.length) % gallery.length;
+          update();
+        }
+      }, { passive: true });
+
+      update();
+    }
       const lb = document.getElementById('lightbox');
       const img = document.getElementById('lb-img');
       const closeBtn = document.querySelector('.lb-close');
       const prevBtn = document.querySelector('.lb-prev');
       const nextBtn = document.querySelector('.lb-next');
+      const countEl = document.getElementById('lb-count');
       if (!lb || !img) return;
+
       let idx = 0;
-      const open = (i)=>{ idx = i; img.src = (window.__gallery||[])[idx] || ''; lb.classList.add('open'); lb.setAttribute('aria-hidden','false'); };
-      const close = ()=>{ lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); };
-      const prev = ()=>{ if (!window.__gallery||!window.__gallery.length) return; idx = (idx-1+window.__gallery.length)%window.__gallery.length; img.src = window.__gallery[idx]; };
-      const next = ()=>{ if (!window.__gallery||!window.__gallery.length) return; idx = (idx+1)%window.__gallery.length; img.src = window.__gallery[idx]; };
-      document.querySelectorAll('#img1,#img2,#img3').forEach(el=>{
-        el.style.cursor='zoom-in';
-        el.addEventListener('click',()=>{ const i = Number(el.dataset.index||0); open(i); });
+      const gallery = () => (window.__gallery || []);
+      const total = () => gallery().length;
+
+      const updateCount = () => {
+        if (!countEl) return;
+        const n = total();
+        if (n > 1) {
+          countEl.textContent = `${idx + 1} / ${n}`;
+          countEl.style.display = '';
+        } else {
+          countEl.style.display = 'none';
+        }
+      };
+
+      const open = (i) => {
+        const g = gallery();
+        if (!g.length) return;
+        idx = Math.max(0, Math.min(i, g.length - 1));
+        img.src = g[idx] || '';
+        lb.classList.add('open');
+        lb.setAttribute('aria-hidden','false');
+        updateCount();
+      };
+
+      const close = () => {
+        lb.classList.remove('open');
+        lb.setAttribute('aria-hidden','true');
+      };
+
+      const prev = () => {
+        const g = gallery();
+        if (!g.length) return;
+        idx = (idx - 1 + g.length) % g.length;
+        img.src = g[idx];
+        updateCount();
+      };
+
+      const next = () => {
+        const g = gallery();
+        if (!g.length) return;
+        idx = (idx + 1) % g.length;
+        img.src = g[idx];
+        updateCount();
+      };
+
+      // Bind the hero images to open the lightbox
+      document.querySelectorAll('#img1,#img2,#img3').forEach(el => {
+        el.style.cursor = 'zoom-in';
+        el.addEventListener('click', () => {
+          const i = Number(el.dataset.index || 0);
+          open(i);
+        });
       });
+
+      // Controls
       closeBtn && closeBtn.addEventListener('click', close);
-      prevBtn && prevBtn.addEventListener('click', prev);
-      nextBtn && nextBtn.addEventListener('click', next);
-      lb.addEventListener('click', (e)=>{ if (e.target === lb) close(); });
-      document.addEventListener('keydown', (e)=>{
-        if (!lb.classList.contains('open')) return;
-        if (e.key === 'Escape') close();
-        if (e.key === 'ArrowLeft') prev();
-        if (e.key === 'ArrowRight') next();
+      prevBtn  && prevBtn.addEventListener('click', prev);
+      nextBtn  && nextBtn.addEventListener('click', next);
+
+      // Click on backdrop closes; click on image goes next
+      lb.addEventListener('click', (e) => {
+        if (e.target === lb) close();
       });
+      img.addEventListener('click', () => next());
+
+      // Keyboard support
+      document.addEventListener('keydown', (e) => {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape')       return close();
+        if (e.key === 'ArrowLeft')    return prev();
+        if (e.key === 'ArrowRight')   return next();
+      });
+
+      // Touch swipe on image (mobile)
+      let tX = 0;
+      img.addEventListener('touchstart', (e) => {
+        tX = e.changedTouches[0].clientX;
+      }, { passive: true });
+      img.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - tX;
+        if (Math.abs(dx) > 30) {
+          if (dx < 0) next();
+          else prev();
+        }
+      }, { passive: true });
+    }
+
+    // --- Map chooser helpers ---
+    function buildMapLinks(place){
+      const hasLL = Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude));
+      const lat = Number(place.latitude), lng = Number(place.longitude);
+      const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
+      return {
+        apple: hasLL ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://maps.apple.com/?q=${encodeURIComponent(q)}`,
+        google: hasLL ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,
+        waze: hasLL ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes` : `https://www.waze.com/ul?q=${encodeURIComponent(q)}&navigate=yes`,
+        osm: hasLL ? `https://www.openstreetmap.org/directions?to=${lat},${lng}` : `https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`
+      };
+    }
+
+    let __mapsChooserEl;
+    function showMapChooser(btn, place){
+      const links = buildMapLinks(place);
+      if (!__mapsChooserEl){
+        __mapsChooserEl = document.createElement('div');
+        __mapsChooserEl.className = 'maps-chooser';
+        __mapsChooserEl.innerHTML = `
+          <h4>Open with</h4>
+          <a target="_blank" rel="noopener" data-k="apple"><span class="mi"></span><span>Apple Maps</span></a>
+          <a target="_blank" rel="noopener" data-k="google"><span class="mi">🗺️</span><span>Google Maps</span></a>
+          <a target="_blank" rel="noopener" data-k="waze"><span class="mi">🚗</span><span>Waze</span></a>
+          <a target="_blank" rel="noopener" data-k="osm"><span class="mi">🧭</span><span>OpenStreetMap</span></a>
+        `;
+        document.body.appendChild(__mapsChooserEl);
+        // close behavior
+        document.addEventListener('click', (e)=>{
+          if (!__mapsChooserEl.classList.contains('open')) return;
+          const inside = __mapsChooserEl.contains(e.target);
+          const onBtn = btn.contains && btn.contains(e.target);
+          if (!inside && !onBtn) __mapsChooserEl.classList.remove('open');
+        });
+        document.addEventListener('keydown', (e)=>{
+          if (e.key === 'Escape') __mapsChooserEl.classList.remove('open');
+        });
+      }
+      [...__mapsChooserEl.querySelectorAll('a[data-k]')].forEach(a=>{
+        const k = a.getAttribute('data-k');
+        a.href = links[k];
+      });
+      const r = btn.getBoundingClientRect();
+      // position below button with viewport clamping
+      __mapsChooserEl.style.top = `${Math.min(window.scrollY + r.bottom + 8, window.scrollY + window.innerHeight - 10)}px`;
+      const desiredLeft = window.scrollX + r.left;
+      __mapsChooserEl.style.left = `${Math.min(desiredLeft, window.scrollX + window.innerWidth - (__mapsChooserEl.offsetWidth || 260) - 8)}px`;
+      __mapsChooserEl.classList.add('open');
     }
 
     function setActions(place){
@@ -612,6 +846,11 @@
       if (dirA) dirA.href = url;
       if (mapBtn) mapBtn.href = url;
       if (stickDir) stickDir.href = url;
+
+      // Map chooser handlers for directions buttons
+      const openChooser = (e)=>{ e.preventDefault(); showMapChooser(e.currentTarget, place); };
+      if (dirA){ dirA.addEventListener('click', openChooser); }
+      if (mapBtn){ mapBtn.addEventListener('click', openChooser); }
 
       const webA = document.getElementById('action-website'); if (webA) { if (place.website) webA.href = place.website; else webA.style.display='none'; }
       const menuA = document.getElementById('action-menu'); if (menuA) { if (place.menu_link) menuA.href = place.menu_link; else menuA.style.display='none'; }
@@ -690,6 +929,8 @@
       setupOverview(place.description || '—');
       renderDetails(place);
       setImages(place);
+      setupMobileCarousel();
+      setupLightbox();
       setActions(place);
       setMapPreview(place);
       renderDishes(place);
@@ -704,6 +945,7 @@
     <button class="lb-prev" aria-label="Previous">‹</button>
     <img id="lb-img" alt="Gallery image" />
     <button class="lb-next" aria-label="Next">›</button>
+    <div class="lb-count" id="lb-count"></div>
   </div>
 </body>
 </html>
