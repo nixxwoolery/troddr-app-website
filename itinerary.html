@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +40,29 @@
       @media (min-width: 768px) {
         .trip-hero { margin-top: 28px; }
       }
+      /* Modern hero layout */
+      .trip-hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:start}
+      @media (max-width: 900px){.trip-hero{grid-template-columns:1fr;gap:12px}}
+      .trip-title{font-size:clamp(26px,3.6vw,44px);font-weight:800;margin:0}
+      .trip-sub{color:#6b7280;margin:.35rem 0 0}
+
+      /* Stats row */
+      .stats{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+      @media (max-width:640px){.stats{grid-template-columns:1fr 1fr}}
+      .stat{background:#ffffff;border:1px solid #eef2f7;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 16px rgba(15,23,42,.06)}
+      .stat .num{font-weight:800;font-size:20px}
+      .stat .lbl{color:#6b7280;font-weight:600;font-size:12px}
+
+      /* Sticky bottom CTA on mobile */
+      .sticky-cta{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.98);backdrop-filter:saturate(120%) blur(6px);border-top:1px solid #e5e7eb;display:none;gap:10px;padding:10px 14px;z-index:999}
+      .sticky-cta .cta-btn{flex:1;display:inline-flex;justify-content:center;align-items:center;padding:12px 14px;border-radius:12px;font-weight:700}
+      .sticky-cta .primary{background:#0077cc;color:#fff}
+      .sticky-cta .outline{background:#fff;border:1px solid #e5e7eb;color:#0077cc}
+      @media (max-width: 820px){.sticky-cta{display:flex}}
+
+      /* Map container polish */
+      #map-preview{position:relative}
+      #map-preview .leaflet-container{border-radius:12px}
     </style>
     
     <!-- Google tag (gtag.js) -->
@@ -55,7 +76,6 @@
     </script>
 
     <!-- Structured Data -->
-</script>
     <!-- Leaflet (lightweight interactive map, no API key required) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -99,8 +119,10 @@
         <span class="meta-pill" id="meta-destination">—</span>
         <span class="meta-pill" id="meta-dates"></span>
         <button class="btn" id="btn-copy">Copy Link</button>
+        <button class="btn" id="btn-share">Share</button>
         <a class="btn btn-primary" href="troddrapp://shared_itinerary/<ID>" id="btn-save">Open in App</a>
       </div>
+      <div class="stats" id="stats-row"></div>
     </div>
     <div class="map-wrap" id="map-preview">Map preview</div>
   </section>
@@ -133,6 +155,67 @@
 
     <section id="days-root"></section>
   </main>
+   <!-- Footer -->
+   <footer class="footer">
+    <div class="section-container">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>TRODDR</h3>
+                <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Company</h3>
+                <div class="footer-links">
+                    <a href="about.html">About Us</a>
+                    <a href="#features">Features</a>
+                    <a href="contact.html">Contact</a>
+                    <a href="#demo">Join Waitlist</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Discover</h3>
+                <div class="footer-links">
+                    <a href="#">Eat</a>
+                    <a href="#">Stay</a>
+                    <a href="#">Play</a>
+                    <a href="#">Destinations</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Plan</h3>
+                <div class="footer-links">
+                    <a href="#">Trip Planner</a>
+                    <a href="#">Itineraries</a>
+                    <a href="#">Travel Guides</a>
+                    <a href="#">Local Tips</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Support</h3>
+                <div class="footer-links">
+                    <a href="#">Help Center</a>
+                    <a href="contact.html">Contact Us</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms of Service</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <div class="footer-links">
+                    <a href="mailto:hello@troddr.com">hello@troddr.com</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
+        </div>
+    </div>
+ </footer>
+
+  <div class="sticky-cta" id="sticky-cta" role="region" aria-label="Quick actions">
+    <a href="#" class="cta-btn outline" id="sticky-share">Share</a>
+    <a href="#" class="cta-btn primary" id="sticky-open">Open in App</a>
+  </div>
 
   <!-- Public env for static hosting: safe to expose anon key (RLS protects data) -->
   <script>
@@ -302,7 +385,7 @@
       const el = document.getElementById('map-preview');
       if (!el || !window.L) return;
 
-      // Extract coordinates from items; support multiple possible field names
+      // Extract coords from the given list
       const coords = (items || []).map(it => {
         const lat = Number(it.latitude ?? it.lat ?? it.Latitude ?? it.Lat);
         const lng = Number(it.longitude ?? it.lng ?? it.Longitude ?? it.Lng ?? it.lon);
@@ -310,10 +393,9 @@
         return null;
       }).filter(Boolean);
 
-      // Clear any placeholder text
+      // Reset container each time (simple + robust)
       el.innerHTML = '';
-
-      if (!coords.length) {
+      if (!coords.length){
         el.style.display = 'flex';
         el.style.alignItems = 'center';
         el.style.justifyContent = 'center';
@@ -326,18 +408,79 @@
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
-      const latlngs = coords.map(c => L.latLng(c[0], c[1]));
-      const bounds = L.latLngBounds(latlngs);
-      map.fitBounds(bounds, { padding: [24, 24] });
-
+      const boundsPts = [];
+      const routePts = [];
       coords.forEach(([lat, lng, it]) => {
-        const m = L.circleMarker([lat, lng], { radius: 6, weight: 2 });
-        m.addTo(map);
-        if (it && (it.name || it.town)) {
+        const pt = L.latLng(lat, lng);
+        boundsPts.push(pt);
+        routePts.push(pt);
+        const marker = L.circleMarker(pt, { radius: 6, weight: 2, color: '#0077cc', fillColor: '#0077cc', fillOpacity: 0.2 });
+        marker.addTo(map);
+        if (it && (it.name || it.town)){
           const lines = [it.name, [it.town, it.parish].filter(Boolean).join(', ')].filter(Boolean);
-          m.bindPopup(lines.join('<br/>'));
+          marker.bindPopup(lines.join('<br/>'));
         }
       });
+
+      if (routePts.length > 1){
+        L.polyline(routePts, { color: '#0077cc', weight: 3, opacity: 0.75, lineJoin: 'round' }).addTo(map);
+      }
+
+      const bounds = L.latLngBounds(boundsPts);
+      map.fitBounds(bounds, { padding: [24, 24] });
+    }
+
+    function haversineKm(a, b){
+      const toRad = d => d * Math.PI / 180;
+      const R = 6371;
+      const dLat = toRad(b.lat - a.lat);
+      const dLng = toRad(b.lng - a.lng);
+      const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+      return 2 * R * Math.asin(Math.sqrt(s));
+    }
+    function computeDistanceKm(items){
+      const pts = (items||[]).map(it => ({ lat:Number(it.latitude ?? it.lat), lng:Number(it.longitude ?? it.lng ?? it.lon) })).filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+      if (pts.length < 2) return 0;
+      let sum = 0; for (let i=1;i<pts.length;i++){ sum += haversineKm(pts[i-1], pts[i]); }
+      return Math.round(sum);
+    }
+    function renderStats(meta, allItems){
+      const el = document.getElementById('stats-row'); if(!el) return;
+      const tripLen = (meta.start_date && meta.end_date) ? Math.max(1, Math.round((new Date(meta.end_date)-new Date(meta.start_date))/86400000)+1) : null;
+      const stops = (allItems||[]).length;
+      const km = computeDistanceKm(allItems);
+      el.innerHTML = `
+        <div class="stat"><div class="num">${tripLen ?? '—'}</div><div class="lbl">Days</div></div>
+        <div class="stat"><div class="num">${stops}</div><div class="lbl">Stops</div></div>
+        <div class="stat"><div class="num">${km || '—'}</div><div class="lbl">Approx km</div></div>
+      `;
+    }
+
+    function setupItineraryShare(ident, meta){
+      const url = location.href.split('#')[0];
+      const range = (meta.start_date && meta.end_date) ? `${new Date(meta.start_date).toDateString()} to ${new Date(meta.end_date).toDateString()}` : '';
+      const text = `I'm going to ${meta.destination || 'Jamaica'} ${range ? 'from ' + range + ' ' : ''}with ${ (meta.items_count ?? '') } stops! Check out my trip plans!`;
+      const shareData = { title: meta.title || 'TRODDR Itinerary', text, url };
+      const btn = document.getElementById('btn-share');
+      const stickyShare = document.getElementById('sticky-share');
+      const stickyOpen = document.getElementById('sticky-open');
+
+      async function doShare(e){
+        e.preventDefault();
+        try {
+          if (navigator.share){ await navigator.share(shareData); return; }
+          await navigator.clipboard.writeText(url); alert('Link copied!');
+        } catch {}
+      }
+      if (btn) btn.addEventListener('click', doShare);
+      if (stickyShare) stickyShare.addEventListener('click', doShare);
+      if (stickyOpen){
+        stickyOpen.addEventListener('click', (e)=>{
+          e.preventDefault();
+          const deep = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
+          window.location.href = deep;
+        });
+      }
     }
 
     function render(items, meta){
@@ -345,6 +488,7 @@
       titleEl.textContent = meta.title || 'Itinerary';
       subEl.textContent = meta.destination ? `Around ${meta.destination}` : '';
       destMeta.textContent = meta.destination || '—';
+      renderStats(meta, items);
       const range = fmtRange(meta.start_date, meta.end_date);
       datesMeta.textContent = range ? `${range}` : '';
       destDetail.textContent = meta.destination || '—';
@@ -363,6 +507,7 @@
       daysRoot.innerHTML = '';
 
       if (keys.length) dayTabs.classList.remove('hidden');
+      const daysData = [];
       keys.forEach((k, i) => {
         const label = k === 'undated' ? 'Any day' : fmtDate(k);
         // tab
@@ -390,6 +535,7 @@
           const tb = b.planned_time || '99:99';
           return ta.localeCompare(tb);
         });
+        daysData.push(itemsForDay);
 
         itemsForDay.forEach(item => {
           const cat = (item.category||'').toLowerCase();
@@ -418,19 +564,36 @@
         daysRoot.appendChild(sec);
       });
 
-      // Tab active state
+      // Click to scroll + update map for that day
       const tabs = Array.from(document.querySelectorAll('.day-pill'));
-      const sections = tabs.map(t => document.querySelector(t.getAttribute('href'))).filter(Boolean);
+      tabs.forEach((t, i) => {
+        t.addEventListener('click', (e)=>{
+          e.preventDefault();
+          const sec = document.querySelector(`#day-${i+1}`);
+          if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (daysData[i]) mountMapPreview(daysData[i]);
+        });
+      });
+
+      // Initial map draws for first dated day (or all items)
+      const firstNonEmpty = daysData.find(d => d && d.length) || items;
+      mountMapPreview(firstNonEmpty);
+
+      const tabs2 = Array.from(document.querySelectorAll('.day-pill'));
+      const sections = tabs2.map(t => document.querySelector(t.getAttribute('href'))).filter(Boolean);
+      let lastActive = -1;
       const onScroll = () => {
         const y = window.scrollY + 140;
         let activeIndex = 0;
         sections.forEach((sec,i)=>{ if(sec.offsetTop <= y) activeIndex = i; });
-        tabs.forEach((t,i)=> t.classList.toggle('active', i===activeIndex));
+        if (activeIndex !== lastActive){
+          tabs2.forEach((t,i)=> t.classList.toggle('active', i===activeIndex));
+          if (daysData[activeIndex]) mountMapPreview(daysData[activeIndex]);
+          lastActive = activeIndex;
+        }
       };
       document.addEventListener('scroll', onScroll, {passive:true});
       onScroll();
-      // Mount the small map preview using item coordinates
-      try { mountMapPreview(items); } catch(e) { console.warn('map preview error', e); }
     }
 
     // ====== DEBUG PANEL ======
@@ -497,6 +660,7 @@
         if (error || !data){ throw error || new Error('Not found'); }
         if (dbg) dbg({ phase: 'render', items: Array.isArray(data.items) ? data.items.length : 0, metaTitle: data.title });
         render(data.items || [], data);
+        setupItineraryShare(ident, data);
 
         // Clear any prior error UI or title from earlier attempts
         if (errorBox) errorBox.classList.add('hidden');
