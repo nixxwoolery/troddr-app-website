@@ -68,18 +68,16 @@
     <div style="height:18px"></div>
 
     <section class="grid">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="cta" id="action-directions" href="#">Directions</a>
+        <a class="cta" id="action-website" href="#">Website</a>
+        <a class="cta" id="action-menu" href="#">Menu</a>
+        <a class="cta" id="action-call" href="#">Call</a>
+      </div>
       <div class="card">
         <div class="sub" style="margin-bottom:6px">Overview</div>
         <div id="overview" style="margin:6px 0 10px 0;color:#0b1220"></div>
         <div id="details" style="margin-top:12px"></div>
-      </div>
-      <div class="card">
-        <div class="sub" style="margin-bottom:6px">Quick Actions</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a class="cta" id="action-directions" href="#">Directions</a>
-          <a class="cta" id="action-website" href="#">Website</a>
-          <a class="cta" id="action-call" href="#">Call</a>
-        </div>
       </div>
     </section>
   </div>
@@ -103,6 +101,22 @@ const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSess
   
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
+    const asList = (v) => {
+      if (v == null) return '';
+      if (Array.isArray(v)) return v.filter(Boolean).join(', ');
+      if (typeof v === 'object') {
+        try {
+          // json/jsonb -> join values
+          const arr = Array.isArray(v) ? v : Object.values(v);
+          return arr.filter(Boolean).join(', ');
+        } catch {}
+      }
+      const s = String(v);
+      if (!s) return '';
+      // handle text[] serialized as JSON string
+      try { const parsed = JSON.parse(s); if (Array.isArray(parsed)) return parsed.filter(Boolean).join(', '); } catch {}
+      return s;
+    };
   
     // Robustly normalize your `image` column (jsonb array, text[], or string)
     const normalizeImages = (img) => {
@@ -138,14 +152,9 @@ const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSess
         // 1) Try direct table read
         const sel = await supa
           .from('places')
-          .select(`
-            id, name, slug, description, image, address, town, parish, latitude, longitude,
-            website, phone_number, menu_link,
-            category, type, activities, perfect_for, meal_type, cuisine, price_range,
-            ambiance, number_of_rooms, amenities, room_types, opening_hours
-          `)
+          .select('*')
           .eq('slug', slug)
-          .maybeSingle(); // don't throw on not found
+          .maybeSingle();
 
         if (sel.data) return { data: sel.data };
 
@@ -191,25 +200,31 @@ const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSess
       const details = [
         ['Type', place.type],
         ['Category', place.category],
-        ['Meal Service', place.meal_type],
-        ['Cuisine', place.cuisine],
-        ['Price Range', place.price_range],
-        ['Ambiance', place.ambiance],
-        ['Activities', place.activities],
-        ['Perfect For', place.perfect_for],
+        ['Meal Service', place.meal_type || place.meal_service],
+        ['Cuisine', asList(place.cuisine)],
+        ['Price Range', place.price_range || place.price],
+        ['Ambiance', asList(place.ambiance)],
+        ['Activities', asList(place.activities)],
+        ['Perfect For', asList(place.perfect_for)],
         ['Number of Rooms', place.number_of_rooms],
-        ['Amenities', place.amenities],
-        ['Room Types', place.room_types],
-        ['Opening Hours', place.opening_hours],
-        ['Address', [place.address, locStr].filter(Boolean).join(', ')]
-      ].filter(([,v]) => v);
-  
+        ['Amenities', asList(place.amenities)],
+        ['Room Types', asList(place.room_types)],
+        ['Opening Hours', place.opening_hours || place.hours],
+        ['Address', [place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ')],
+        ['Phone', place.phone_number || place.phone],
+        ['Website', place.website],
+        ['Menu', place.menu_link],
+      ].filter(([,v]) => v && String(v).trim() !== '');
+
       const detailsEl = document.getElementById('details');
       if (detailsEl) {
         if (details.length) {
-          detailsEl.innerHTML = details.map(([k,v]) =>
-            `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <span>${String(v)}</span></div>`
-          ).join('');
+          detailsEl.innerHTML = details.map(([k, v]) => {
+            if (k === 'Website' && v) return `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <a href="${v}" target="_blank" rel="noopener">${v}</a></div>`;
+            if (k === 'Menu' && v) return `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <a href="${v}" target="_blank" rel="noopener">View Menu</a></div>`;
+            if (k === 'Phone' && v) return `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <a href="tel:${v}">${v}</a></div>`;
+            return `<div style="display:flex;gap:8px;margin:6px 0"><strong style="min-width:140px">${k}:</strong> <span>${asList(v)}</span></div>`;
+          }).join('');
         } else {
           detailsEl.textContent = '';
         }
@@ -240,17 +255,20 @@ const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSess
         if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))) {
           mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`;
         } else {
-          const q = [place.name, place.address, locStr].filter(Boolean).join(', ');
+          const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
           mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
         }
         dirA.href = mapsUrl;
       }
-  
+
       const webA = document.getElementById('action-website');
       if (webA) { if (place.website) webA.href = place.website; else webA.style.display = 'none'; }
-  
+
+      const menuA = document.getElementById('action-menu');
+      if (menuA) { if (place.menu_link) menuA.href = place.menu_link; else menuA.style.display = 'none'; }
+
       const callA = document.getElementById('action-call');
-      if (callA) { if (place.phone_number) callA.href = 'tel:' + place.phone_number; else callA.style.display = 'none'; }
+      if (callA) { if (place.phone_number || place.phone) callA.href = 'tel:' + (place.phone_number || place.phone); else callA.style.display = 'none'; }
     }
   
     main();
