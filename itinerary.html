@@ -349,14 +349,6 @@
       datesMeta.textContent = range ? `${range}` : '';
       destDetail.textContent = meta.destination || '—';
 
-      // Show who shared it (if provided by RPC)
-      const createdByEl = document.getElementById('detail-createdby');
-      if (createdByEl) {
-        createdByEl.textContent = meta.owner_name
-          ? `👤 ${meta.owner_name} shared this itinerary`
-          : '👤 Shared itinerary';
-      }
-
       // Tabs + sections
       const { keys, buckets } = groupByDay(items);
       dayTrack.innerHTML = '';
