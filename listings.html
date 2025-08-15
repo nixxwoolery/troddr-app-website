@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
   <style>
     :root{
       --brand:#0077cc; --bg:#ffffff; --fg:#0b1220; --muted:#6b7280; --card:#f8fafc; --line:#e5e7eb;
@@ -117,7 +118,32 @@
   </script>
 </head>
 <body>
+  <header class="header" role="banner">
+    <div class="navbar">
+      <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
+      <button class="mobile-menu-btn"
+              aria-controls="primary-navigation"
+              aria-expanded="false"
+              aria-label="Open menu">
+        <span aria-hidden="true">☰</span>
+      </button>
+      <div class="nav-links" id="primary-navigation" role="navigation">
+        <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
+        <a href="about.html" class="nav-item">About</a>
+        <a href="#features" class="nav-item">Features</a>
+        <a href="contact.html" class="nav-item">Contact</a>
+        <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+      </div>
+    </div>
+  </header>
   <div class="wrap">
+    <!-- Collage hero (3 images) -->
+    <section class="hero" id="hero">
+      <div class="col"><img id="img1" alt="" /><div class="count" id="countBadge">3</div></div>
+      <div class="col"><img id="img2" alt="" /></div>
+      <div class="col"><img id="img3" alt="" /></div>
+    </section>
+
     <header class="page">
       <div class="titleBlock">
         <h1 class="title" id="listing-title">Loading…</h1>
@@ -125,13 +151,6 @@
       </div>
       <a class="cta" id="open-in-app" href="#">Open in App</a>
     </header>
-
-    <!-- Collage hero (3 images) -->
-    <section class="hero" id="hero">
-      <div class="col"><img id="img1" alt="" /><div class="count" id="countBadge">3</div></div>
-      <div class="col"><img id="img2" alt="" /></div>
-      <div class="col"><img id="img3" alt="" /></div>
-    </section>
 
     <!-- Actions row (Directions/Website/Menu/Call) -->
     <div class="actions">
@@ -167,7 +186,131 @@
       <div class="mapBody" id="mapBody">Map preview unavailable</div>
     </section>
   </div>
-
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="section-container">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>TRODDR</h3>
+                <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Company</h3>
+                <div class="footer-links">
+                    <a href="about.html">About Us</a>
+                    <a href="#features">Features</a>
+                    <a href="contact.html">Contact</a>
+                    <a href="#demo">Join Waitlist</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Discover</h3>
+                <div class="footer-links">
+                    <a href="#">Eat</a>
+                    <a href="#">Stay</a>
+                    <a href="#">Play</a>
+                    <a href="#">Destinations</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Plan</h3>
+                <div class="footer-links">
+                    <a href="#">Trip Planner</a>
+                    <a href="#">Itineraries</a>
+                    <a href="#">Travel Guides</a>
+                    <a href="#">Local Tips</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Support</h3>
+                <div class="footer-links">
+                    <a href="#">Help Center</a>
+                    <a href="contact.html">Contact Us</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms of Service</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <div class="footer-links">
+                    <a href="mailto:hello@troddr.com">hello@troddr.com</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
+        </div>
+    </div>
+</footer>
+  <script>
+    (function(){
+      const menuBtn  = document.querySelector('.mobile-menu-btn');
+      const navLinks = document.querySelector('.nav-links');
+      const closeBtn = document.querySelector('.nav-close-btn');
+  
+      if (!menuBtn || !navLinks) return;
+  
+      // Toggle menu open/close
+      menuBtn.addEventListener('click', function(){
+        const isOpen = navLinks.classList.toggle('mobile-open');
+        this.classList.toggle('active', isOpen);
+        this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        document.body.classList.toggle('menu-open', isOpen);
+      });
+  
+      // Close when a nav link is clicked
+      navLinks.addEventListener('click', function(e){
+        const link = e.target.closest('a');
+        if (!link) return;
+        navLinks.classList.remove('mobile-open');
+        menuBtn.classList.remove('active');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open');
+      });
+  
+      // Close when the explicit close button is clicked
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          navLinks.classList.remove('mobile-open');
+          menuBtn.classList.remove('active');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          document.body.classList.remove('menu-open');
+        });
+      }
+  
+      // Close on Escape
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+          navLinks.classList.remove('mobile-open');
+          menuBtn.classList.remove('active');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          document.body.classList.remove('menu-open');
+        }
+      });
+    })();
+  
+    // Optional: waitlist handler (safe if form absent)
+    (function(){
+      const form = document.getElementById('waitlist-form');
+      const success = document.getElementById('waitlist-success');
+      if (!form) return;
+  
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        const base = form.action.replace('/post?', '/post-json?');
+        const url = base + '&' + params.toString() + '&c=?';
+        fetch(url, { method: 'GET', mode: 'no-cors' })
+          .then(function(){
+            form.style.display = 'none';
+            if (success) success.style.display = 'block';
+            try { gtag('event', 'waitlist_signup', { method: 'mailchimp' }); } catch(err){}
+          })
+          .catch(function(){ form.submit(); });
+      });
+    })();
+  </script>
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
