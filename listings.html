@@ -39,7 +39,7 @@
     .btn-muted{background:#e6f1fb;color:var(--brand)}
 
     /* Cards */
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+    /* .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px} */
     .grid{display:grid;gap:16px;grid-template-columns:2fr 1fr}
 
     /* Info list like the app */
@@ -200,13 +200,13 @@
 
     function renderDetails(place){
       const info = [
+        ['Address', [place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ')],
+        ['Price Range', place.price_range || place.price],
+        ['Cuisine', asList(place.cuisine)],
         ['Type', place.type],
         ['Meal Service', place.meal_type || place.meal_service],
-        ['Cuisine', asList(place.cuisine)],
-        ['Price Range', place.price_range || place.price],
         ['Ambiance', asList(place.ambiance)],
         ['Opening Hours', place.opening_hours || place.hours],
-        ['Address', [place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ')],
         ['Phone', place.phone_number || place.phone],
         ['Website', place.website],
       ].filter(([,v]) => v && String(v).trim() !== '');
