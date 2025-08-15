@@ -35,10 +35,49 @@
     <link rel="stylesheet" href="/css/style.css">
     <style>
       /* Space the itinerary hero down from the global header */
-      .trip-hero { margin-top: 20px; }
+      .trip-hero { margin-top: 36px; }
 
       @media (min-width: 768px) {
-        .trip-hero { margin-top: 28px; }
+        .trip-hero { margin-top: 56px; }
+      }
+      /* --- Trip meta polish --------------------------------------------------- */
+      .trip-title { letter-spacing:.2px; }
+      .trip-sub   { color:#6b7280; }
+
+      .trip-meta{
+        margin-top:14px;
+        margin-bottom:6px;
+        display:flex;
+        flex-wrap:wrap;
+        gap:12px;
+        align-items:center;
+      }
+      .trip-meta .meta-pill{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:8px 14px;
+        border-radius:999px;
+        background:#f8fafc;
+        border:1px solid #e5e7eb;
+        color:#0b1220;
+        font-weight:600;
+        line-height:1.2;
+      }
+      /* icons for pills */
+      #meta-destination::before{ content:"📍"; margin-right:6px; }
+      #meta-dates::before{ content:"🗓️"; margin-right:6px; }
+
+      /* tighten buttons in the meta row */
+      .trip-meta .btn{
+        padding:10px 14px;
+        border-radius:10px;
+      }
+
+      /* Sidebar detail icon alignment */
+      #detail-destination::before{
+        content:"📍";
+        margin-right:6px;
       }
       /* Modern hero layout */
       .trip-hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:start}
@@ -456,6 +495,29 @@
       `;
     }
 
+    // Resolve listing slugs for items that don't include .slug
+    async function primeSlugMap(items){
+      try{
+        const ids = Array.from(new Set((items||[])
+          .filter(x => !x.slug && (x.place_id || x.id))
+          .map(x => x.place_id || x.id)
+          .filter(Boolean)));
+        if (!ids.length) return {};
+        const { data, error } = await supa
+          .from('places')
+          .select('id, slug')
+          .in('id', ids);
+        if (error || !data) return {};
+        const map = {};
+        data.forEach(r => { if (r && r.id && r.slug) map[r.id] = r.slug; });
+        return map;
+      }catch(e){ return {}; }
+    }
+    function listingHrefFor(item, slugMap){
+      const s = item?.slug || item?.place_slug || slugMap[item?.place_id || item?.id];
+      return s ? `/listings/${encodeURIComponent(s)}` : '';
+    }
+
     function setupItineraryShare(ident, meta){
       const url = location.href.split('#')[0];
       const range = (meta.start_date && meta.end_date) ? `${new Date(meta.start_date).toDateString()} to ${new Date(meta.end_date).toDateString()}` : '';
@@ -483,8 +545,9 @@
       }
     }
 
-    function render(items, meta){
+    async function render(items, meta){
       // Header/meta
+      const slugMap = await primeSlugMap(items);
       titleEl.textContent = meta.title || 'Itinerary';
       subEl.textContent = meta.destination ? `Around ${meta.destination}` : '';
       destMeta.textContent = meta.destination || '—';
@@ -543,6 +606,7 @@
           const cover = item.image ? `style="background-image:url('${item.image}')"` : '';
           const place = document.createElement('article');
           place.className = 'stop-card';
+          const viewHref = listingHrefFor(item, slugMap);
           place.innerHTML = `
             <div class="stop-cover" ${cover}>
               ${item.planned_time ? `<span class="time-badge">${item.planned_time}</span>` : ''}
@@ -554,7 +618,7 @@
               </div>
               <div class="stop-meta"><span>${item.town || item.parish || item.location || ''}</span></div>
               <div class="stop-actions">
-                ${item.slug ? `<a class="btn-mini" href="/listings/${encodeURIComponent(item.slug)}">View</a>` : ''}
+                ${viewHref ? `<a class="btn-mini" href="${viewHref}">View</a>` : ''}
                 <a class="btn-mini" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + (item.town||''))}">Directions</a>
               </div>
             </div>`;
@@ -659,7 +723,7 @@
 
         if (error || !data){ throw error || new Error('Not found'); }
         if (dbg) dbg({ phase: 'render', items: Array.isArray(data.items) ? data.items.length : 0, metaTitle: data.title });
-        render(data.items || [], data);
+        await render(data.items || [], data);
         setupItineraryShare(ident, data);
 
         // Clear any prior error UI or title from earlier attempts
