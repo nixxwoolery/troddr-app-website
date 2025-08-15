@@ -26,7 +26,7 @@
 
   /* Header */
   /* Place itinerary meta bar under the main site header (not sticky) */
-  .itinerary-header{margin-top: 5rem;position:relative;top:auto;z-index:10;background:#fff;border-bottom:1px solid #eef2f7}
+  .itinerary-header{margin-top: 6.5rem;position:relative;top:auto;z-index:10;background:#fff;border-bottom:1px solid #eef2f7}
   .itinerary-header .bar{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px}
   .trip-meta{display:flex;flex-wrap:wrap;gap:12px;margin-left:auto;align-items:center}
   /* Allow horizontal scroll for meta pills when space is tight */
@@ -42,7 +42,7 @@
   .btn-primary:hover{background:var(--primary-dark)}
 
   /* Hero summary */
-  .trip-hero{max-width:1200px;margin:0 auto;padding:22px 20px 10px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+  .trip-hero{max-width:1200px;margin:0 auto;padding:32px 20px 12px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
   .trip-title{font-size:1.6rem;margin:0}
   .trip-sub{color:var(--gray);margin:.25rem 0 0}
 
@@ -57,14 +57,14 @@
   .page{max-width:1200px;margin:0 auto;padding:18px 20px 40px;display:grid;grid-template-columns: 1fr;gap:24px}
 
   /* Day section */
-  .day-section{scroll-margin-top:80px}
+  .day-section{scroll-margin-top:100px}
   .day-header{display:flex;align-items:center;gap:10px;margin:18px 0 10px}
   .day-title{font-size:1.25rem;margin:0}
   .day-date{color:var(--gray)}
 
   /* Stop cards */
-  .stops{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-  .stop-card{background:var(--card);border:1px solid #eef2f7;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-soft);transition:box-shadow .2s ease,transform .2s ease}
+  .stops{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,340px));gap:16px;justify-content:center}
+  .stop-card{background:var(--card);border:1px solid #eef2f7;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-soft);transition:box-shadow .2s ease,transform .2s ease}
   .stop-cover{height:160px;background:#e2e8f0;background-position:center;background-size:cover;border-bottom:1px solid #eef2f7}
   .stop-body{padding:12px 14px}
   .stop-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -115,7 +115,7 @@
   /* --- Dark mode ------------------------------------------------------ */
   @media (prefers-color-scheme: dark){
     html,body{background:#0b1220;color:#e5e7eb}
-    .itinerary-header{margin-top: 6rem;background:rgba(15,23,42,.7)}
+    .itinerary-header{margin-top: 7rem;background:rgba(15,23,42,.7)}
     .meta-pill{background:#0f172a;border-color:#1f2937;color:#cbd5e1}
     .day-tabs{background:#0b1220;border-color:#1f2937}
     .day-pill{background:#0f172a;border-color:#1f2937;color:#e5e7eb}
@@ -130,7 +130,7 @@
   /* ===================== Mobile tweaks ===================== */
   @media (max-width: 640px){
     /* Header & controls */
-    .itinerary-header{margin-top: 3.75rem}
+    .itinerary-header{margin-top: 4.5rem}
     .itinerary-header .bar{padding:10px 12px;gap:10px}
     .trip-meta{margin-left:0;gap:8px;overflow:auto;white-space:nowrap;scrollbar-width:none}
     .trip-meta::-webkit-scrollbar{display:none}
@@ -164,7 +164,7 @@
     .btn-mini{padding:.6rem .85rem}
 
     /* Anchor offset when jumping to a day */
-    .day-section{scroll-margin-top:64px}
+    .day-section{scroll-margin-top:84px}
   }
   @media (prefers-reduced-motion: reduce){
     .btn, .btn-mini, .day-pill, .stop-card{transition:none !important}
