@@ -155,6 +155,23 @@
     .mapCard{border-radius:5px;overflow:hidden;background:#f8f9fa;border:1px solid var(--line)}
     .mapHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
     .mapBody{height:420px;display:flex;align-items:center;justify-content:center;color:#8E8E93;position:relative}
+.mapBody iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+
+    /* mask the embedded map's top-left label (lat/lng) while keeping the rest clickable */
+    .mapLabelMask{
+      position:absolute;
+      top:12px;
+      left:12px;
+      width:360px;      /* cover the label text area only */
+      height:28px;
+      background:#fff;
+      border-radius:6px;
+      pointer-events:none; /* clicks pass through to the iframe */
+      z-index:3;
+    }
+    @media (max-width:640px){
+      .mapLabelMask{ width:65vw; height:26px; top:10px; left:10px; }
+    }
 
     .mapPin{
       position:absolute;
@@ -975,7 +992,6 @@ let __mapsActiveTrigger;
           <a target="_blank" rel="noopener" data-k="apple"><span class="mi"></span><span>Apple Maps</span></a>
           <a target="_blank" rel="noopener" data-k="google"><span class="mi">🗺️</span><span>Google Maps</span></a>
           <a target="_blank" rel="noopener" data-k="waze"><span class="mi">🚗</span><span>Waze</span></a>
-          <a target="_blank" rel="noopener" data-k="osm"><span class="mi">🧭</span><span>OpenStreetMap</span></a>
         `;
         document.body.appendChild(__mapsChooserEl);
         // close behavior
@@ -1051,30 +1067,53 @@ let __mapsActiveTrigger;
 
     function setMapPreview(place){
       const body = document.getElementById('mapBody');
-      if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))){
-        const lat = Number(place.latitude), lng = Number(place.longitude);
-        const iframe = document.createElement('iframe');
-        iframe.loading = 'lazy';
-        iframe.referrerPolicy = 'no-referrer-when-downgrade';
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.border = '0';
-        // Use centered view to avoid the info card / label
-        iframe.src = `https://www.google.com/maps/@${lat},${lng},15z?hl=en&output=embed`;
-        body.innerHTML='';
-        body.appendChild(iframe);
-        // Overlay a simple pin at the center
-        const pin = document.createElement('div');
-        pin.className = 'mapPin';
-        pin.setAttribute('aria-hidden','true');
-        pin.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2c-3.87 0-7 3.13-7 7 0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#e53935"/>
-          <circle cx="12" cy="9" r="3" fill="#fff"/>
-        </svg>`;
-        body.appendChild(pin);
-      } else {
+      if (!body) return;
+
+      // Determine embed source (prefer lat/lng, fallback to text query)
+      const hasLL = Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude));
+      const lat = Number(place.latitude), lng = Number(place.longitude);
+      const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
+      const src = hasLL
+        ? `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`
+        : (q ? `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=15&output=embed` : '');
+
+      // Clear any previous content
+      body.innerHTML = '';
+
+      if (!src){
         body.textContent = 'Map preview unavailable';
+        return;
       }
+
+      // Create the iframe and set src immediately (more reliable in Safari)
+      const iframe = document.createElement('iframe');
+      iframe.src = src;
+      iframe.loading = 'lazy';
+      iframe.referrerPolicy = 'no-referrer-when-downgrade';
+      iframe.setAttribute('aria-label','Map preview');
+      // Inline styles in case CSS hasn't loaded yet
+      iframe.style.position = 'absolute';
+      iframe.style.inset = '0';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = '0';
+      body.appendChild(iframe);
+
+      // Mask only the lat/long label area in the Google info card (top-left)
+      const mask = document.createElement('div');
+      mask.className = 'mapLabelMask';
+      mask.setAttribute('aria-hidden','true');
+      body.appendChild(mask);
+
+      // Optional center pin overlay for a subtle focus (non-interactive)
+      const pin = document.createElement('div');
+      pin.className = 'mapPin';
+      pin.innerHTML = `
+        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+          <path fill="#E53935" d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5" fill="#fff"/>
+        </svg>`;
+      body.appendChild(pin);
     }
 
     function setOpenInApp(slug){
