@@ -304,7 +304,7 @@
       const store = window.localStorage || null;
       for (const it of items){
         if (out.length >= limit) break;
-        const qBase = [it.name, it.town, it.parish, 'Jamaica'].filter(Boolean).join(', ');
+        const qBase = [it.name, it.location, it.town, it.parish, 'Jamaica'].filter(Boolean).join(', ');
         if (!qBase) continue;
         const cacheKey = 'geo:' + encodeURIComponent(qBase);
         try{
@@ -401,12 +401,10 @@
       datesMeta.textContent = range ? `${range}` : '';
       destDetail.textContent = meta.destination || '—';
 
-      // Show who shared it (if provided by RPC)
+      // Show generic created-by label (no owner lookup)
       const createdByEl = document.getElementById('detail-createdby');
       if (createdByEl) {
-        createdByEl.textContent = meta.owner_name
-          ? `👤 ${meta.owner_name} shared this itinerary`
-          : '👤 Shared itinerary';
+        createdByEl.textContent = '👤 Shared itinerary';
       }
 
       // Tabs + sections
@@ -458,10 +456,10 @@
                 <h3 class="stop-name">${item.name || 'Place'}</h3>
                 ${badge}
               </div>
-              <div class="stop-meta"><span>${item.town || item.parish || item.location || ''}</span></div>
+              <div class="stop-meta"><span>${item.location || [item.town, item.parish].filter(Boolean).join(', ') || ''}</span></div>
               <div class="stop-actions">
                 ${item.slug ? `<a class="btn-mini" href="/listings/${encodeURIComponent(item.slug)}">View</a>` : ''}
-                <a class="btn-mini" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + (item.town||''))}">Directions</a>
+                <a class="btn-mini" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + (item.location || [item.town, item.parish].filter(Boolean).join(', ')))}">Directions</a>
               </div>
             </div>`;
           stopWrap.appendChild(place);
