@@ -318,18 +318,41 @@
     <!-- Bottom breathing room -->
     <style>
       :root{ --safe-bottom: env(safe-area-inset-bottom, 0px); }
-      /* Give generous breathing room at the bottom so the last cards aren't flush with the screen
-         and account for iOS/Android safe area + sticky CTA height on mobile. */
-      body{ padding-bottom: calc(80px + var(--safe-bottom)); }
+      /* Remove extra page-bottom padding */
+      body{ padding-bottom: 0 !important; }
       @media (max-width:820px){
-        body{ padding-bottom: calc(130px + var(--safe-bottom)); }
+        body{ padding-bottom: 0 !important; }
       }
-      /* Add some extra space after the final day section as a safeguard */
-      .day-section:last-of-type{ margin-bottom: 40px; }
-      /* Also ensure the main mount has spacing */
-      .days-root{ padding-bottom: 24px; }
+      /* Also remove any final section spacing */
+      .day-section:last-of-type{ margin-bottom: 0; }
+      .days-root{ padding-bottom: 0; }
     </style>
     <style id="mobile-bg-fix"></style>
+    <style>
+      /* Action buttons – Open in App / Share */
+      .hero-text .btn{
+        border-radius: 8px !important;
+        padding: 10px 14px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .hero-text .btn-primary{
+        background:#0077cc;
+        color:#fff;
+        border:1px solid #0071bf;
+        box-shadow:0 4px 12px rgba(0,119,204,.18);
+      }
+      .hero-text .btn-primary:hover{ filter: brightness(0.96); }
+      .hero-text .btn-outline{
+        background:#fff;
+        color:#0077cc;
+        border:1px solid #e5e7eb;
+      }
+      .hero-text .btn-outline:hover{
+        background:#f7fbff;
+        border-color:#cfe6ff;
+      }
+    </style>
     <style>
       /* Map temporarily disabled */
       .hero-map, #trip-map { display: none !important; }
