@@ -293,8 +293,8 @@
     <div class="hero-cover" id="hero-cover" aria-label="Trip cover">
       <div class="hero-overlay">
         <h1 class="trip-title" id="trip-title-ov">Loading…</h1>
-        <p class="trip-sub" id="trip-sub-ov"></p>
         <div class="trip-loc"><a id="trip-loc-ov" href="#" target="_blank" rel="noopener">—</a></div>
+        <p class="trip-sub" id="trip-sub-ov"></p>
         <div class="cat-pills" id="cat-pills-ov"></div>
       </div>
     </div>
@@ -302,8 +302,8 @@
     <!-- Desktop text hero -->
     <div class="hero-text">
       <h1 class="trip-title" id="trip-title">Loading…</h1>
-      <p class="trip-sub" id="trip-sub"></p>
       <div class="trip-loc"><a id="trip-loc" href="#" target="_blank" rel="noopener">—</a></div>
+      <p class="trip-sub" id="trip-sub"></p>
       <div class="trip-meta" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
         <span class="meta-pill" id="meta-destination">—</span>
         <span class="meta-pill" id="meta-dates"></span>
@@ -321,7 +321,7 @@
 
   <!-- Page layout: sidebar + content (dynamic) -->
   <main class="page">
-    <aside class="sidebar">
+    <!-- <aside class="sidebar">
       <div class="stop-card" style="padding:14px">
         <h3 style="margin:6px 0 4px">Trip Details</h3>
         <div class="stop-meta"><span id="detail-createdby">👤 Shared itinerary</span></div>
@@ -338,7 +338,7 @@
         <div style="font-weight:700;margin-bottom:6px">Unable to load itinerary.</div>
         <div id="error-detail">The link may be invalid or expired.</div>
       </div>
-    </aside>
+    </aside> -->
 
     <section id="days-root"></section>
   </main>
@@ -526,7 +526,20 @@
       if (!iso) return '';
       try { return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return iso; }
     };
-    const fmtRange = (s, e) => s && e ? `${fmtDate(s)} – ${fmtDate(e)}` : (s || e ? (fmtDate(s||e)) : '');
+    const sameDay = (a, b) => {
+      if (!a || !b) return false;
+      const da = new Date(a), db = new Date(b);
+      return da.getFullYear()===db.getFullYear() &&
+             da.getMonth()===db.getMonth() &&
+             da.getDate()===db.getDate();
+    };
+    const fmtRange = (s, e) => {
+      if (s && e) {
+        if (sameDay(s, e)) return fmtDate(s);
+        return `${fmtDate(s)} – ${fmtDate(e)}`;
+      }
+      return (s || e) ? fmtDate(s || e) : '';
+    };
 
     // Display times in 12‑hour format like "1:30 PM"
     const to12h = (t) => {
