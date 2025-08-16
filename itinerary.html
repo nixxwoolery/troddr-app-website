@@ -54,10 +54,10 @@
       /* On ≥1024px: make the header a 2-col grid and show the map */
       @media (min-width: 1024px){
         .trip-hero{
-          grid-template-columns: 1.15fr 0.85fr;  /* text | map */
-          align-items: stretch;
+          grid-template-columns: 1fr; /* text only; map lives in right column */
+          align-items: start;
         }
-        .hero-map{ display:block; }
+        .hero-map{ display:none; }
       }
 
       /* Reuse the rounded border for the preview map too */
@@ -123,7 +123,7 @@
       .trip-loc a::before{ content:"📍"; margin-right:6px; }
 
       .cat-pills{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
-      .cat-pill{ padding:8px 14px; border-radius:10px; font-weight:700; color:#fff; }
+      .cat-pill{ padding:8px 14px; border-radius:8px; font-weight:700; color:#fff; }
       .pill-eat{  background:#0ea5a5; }   /* teal */
       .pill-stay{ background:#a3e635; color:#0b1220; } /* lime with dark text */
       .pill-play{ background:#38bdf8; }   /* sky */
@@ -155,6 +155,30 @@
       #map-preview .leaflet-container{border-radius:12px}
 
       /* Trip map section at bottom */
+</style>
+      /* === Two-column content layout (desktop) ============================== */
+      .content-grid{ max-width:1100px; margin: 12px auto 56px; display:block; }
+      .content-main{ min-width:0; }
+      .content-aside{ display:none; }
+
+      @media (min-width: 1024px){
+        .content-grid{
+          display:grid;
+          grid-template-columns: minmax(0, 1fr) 420px; /* left cards | right map */
+          gap: 24px;
+          align-items:start;
+        }
+        .content-aside{ display:block; }
+        .rightMap{ position: sticky; top: 96px; }
+        /* Place cards column gets normal spacing */
+        .content-main{ padding-bottom: 24px; }
+      }
+
+      /* Give the place-card column some horizontal breathing room on mobile */
+      @media (max-width: 1023.98px){
+        .days-root{ padding-left:16px; padding-right:16px; }
+      }
+
       .mapCard{border-radius:0px;overflow:visible;background:#f8f9fa;border:1px solid #e5e7eb;margin:28px auto 16px;max-width:1100px}
       .mapHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid #e5e7eb}
       .mapBody{height:300px;background:#eef2f7;padding:12px}
@@ -287,7 +311,7 @@
       }
 
       .day-section .stop-body{ padding: 16px 18px 18px; }
-      .day-section .stop-name{ font-size: clamp(18px,2.2vw,24px); font-weight: 700; margin: 0; }
+      .day-section .stop-name{ font-size: clamp(18px,2.2vw,24px); font-weight: 600; margin: 0; }
       .day-section .stop-meta{ color:#6b7280; margin-top:6px; }
 
       .day-section .stop-actions{ display:flex; gap:10px; margin-top:12px; }
@@ -300,6 +324,23 @@
         font-weight: 600; 
       }
       .day-section .btn-mini:hover{ background:#f7f8fb; border-color:#cdd6e1; }
+
+      /* Category badge on place cards */
+      .badge{
+        display:inline-flex;
+        align-items:center;
+        padding:6px 10px;
+        border-radius:8px;
+        background:#f2f6fb;
+        color:#0b1220;
+        font-weight:600;
+        font-size:12px;
+        line-height:1;
+      }
+      .badge.eat{  background:#e6f7f7; color:#067a7a; }
+      .badge.stay{ background:#edf9d1; color:#365314; }
+      .badge.play{ background:#e6f5fe; color:#0b72c8; }
+
       .day-section{ padding-top:8px; }
     </style>
     <style id="mobile-bg-fix">
@@ -369,13 +410,25 @@
     <div class="hero-map" id="hero-map" role="img" aria-label="Trip map (overview)"></div>
   </section>
 
-  <!-- Day tabs (dynamic) -->
-  <nav class="day-tabs hidden" id="day-tabs" role="tablist" aria-label="Trip days">
-    <div class="day-track" id="day-track"></div>
-  </nav>
-
-  <!-- Dynamic day sections mount here -->
-  <main id="days-root" class="days-root" aria-live="polite"></main>
+  <!-- Two-column content grid: left = tabs + cards, right = sticky map (desktop) -->
+  <section class="content-grid" id="content-grid">
+    <div class="content-main">
+      <!-- Day tabs (dynamic) -->
+      <nav class="day-tabs hidden" id="day-tabs" role="tablist" aria-label="Trip days">
+        <div class="day-track" id="day-track"></div>
+      </nav>
+      <!-- Dynamic day sections mount here -->
+      <main id="days-root" class="days-root" aria-live="polite"></main>
+    </div>
+    <aside class="content-aside">
+      <div class="mapCard rightMap" id="right-map-card" aria-label="Trip map">
+        <div class="mapHead"><div style="font-weight:700">Trip Map</div></div>
+        <div class="mapBody">
+          <div id="grid-map" aria-label="Trip map (desktop)"></div>
+        </div>
+      </div>
+    </aside>
+  </section>
 
   <section class="mapCard" id="trip-map">
     <div class="mapHead">
@@ -818,7 +871,7 @@
       // Tabs + sections
       const { keys, buckets } = groupByDay(items);
       // Decide once per render whether we’re drawing in the header or at the bottom
-      const mapTarget = window.matchMedia('(min-width: 1024px)').matches ? 'hero-map' : 'map-preview';
+      const mapTarget = window.matchMedia('(min-width: 1024px)').matches ? 'grid-map' : 'map-preview';
       dayTrack.innerHTML = '';
       daysRoot.innerHTML = '';
 
