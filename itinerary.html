@@ -261,17 +261,14 @@
       }
       .day-section .btn-mini:hover{ background:#f7f8fb; border-color:#cdd6e1; }
     </style>
-    <style id="mobile-bg-fix">
-      /* Force white background on small screens and neutralize any global dark theme */
-      @media (max-width: 820px){
-        html, body { background:#ffffff !important; }
-        /* In case the global CSS draws background via pseudo elements */
-        body::before, body::after { background: transparent !important; }
-        /* Keep all main sections white as well */
-        .page, .trip-hero, .hero-text, .hero-cover, .mapCard, .footer, .section-container { background:#ffffff !important; }
-        /* Prevent horizontal overflow that can expose the page background */
-        .hero-cover{ width:100% !important; margin:0 !important; }
-      }
+    <style id="page-bg-fix">
+      /* Always keep page background white (no media query) */
+      html, body { background-color:#ffffff !important; }
+      /* Neutralize any global pseudo-element backgrounds */
+      body::before, body::after { background: transparent !important; }
+      /* Keep sections white but do NOT override hero image */
+      .page, .trip-hero, .hero-text, .mapCard, .footer, .section-container { background-color:#ffffff !important; }
+      .hero-cover{ background-color: transparent !important; } /* hero uses background-image */
     </style>
 </head>
 <body>
@@ -331,18 +328,6 @@
   <nav class="day-tabs hidden" id="day-tabs" role="tablist" aria-label="Trip days">
     <div class="day-track" id="day-track"></div>
   </nav>
-
-  <!-- Page layout: sidebar + content (dynamic) -->
-  <main class="page">
-    <aside class="sidebar">
-      <div id="error-box" class="error hidden">
-        <div style="font-weight:700;margin-bottom:6px">Unable to load itinerary.</div>
-        <div id="error-detail">The link may be invalid or expired.</div>
-      </div>
-    </aside>
-
-    <section id="days-root"></section>
-  </main>
 
   <section class="mapCard" id="trip-map">
     <div class="mapHead">
