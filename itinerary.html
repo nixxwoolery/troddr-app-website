@@ -37,6 +37,37 @@
       /* Space the itinerary hero down from the global header */
       .trip-hero { margin-top: 36px; }
 
+      /* Desktop header map */
+      .hero-map{
+        display:none;                /* hidden by default; only shown on large screens */
+        height:320px;
+        border-radius:12px;
+        overflow:hidden;
+        background:#eef2f7;
+        border:1px solid #e5e7eb;
+      }
+      .hero-map .leaflet-container{
+        height:100% !important;
+        width:100% !important;
+      }
+
+      /* On ≥1024px: make the header a 2-col grid and show the map */
+      @media (min-width: 1024px){
+        .trip-hero{
+          grid-template-columns: 1.15fr 0.85fr;  /* text | map */
+          align-items: stretch;
+        }
+        .hero-map{ display:block; }
+      }
+
+      /* Reuse the rounded border for the preview map too */
+      #hero-map .leaflet-container{ border-radius:12px; }
+
+      /* Hide the bottom map section on desktop (we’re using the header map there) */
+      @media (min-width: 1024px){
+        #trip-map{ display:none; }
+      }
+
       @media (min-width: 768px) {
         .trip-hero { margin-top: 56px; }
       }
@@ -87,7 +118,8 @@
 
       /* Mobile header rows */
       .trip-loc{ margin-top:8px; }
-      .trip-loc a{ color:#0b72c8; font-weight:700; text-decoration:none; border-bottom:0; }
+      .trip-loc a{ color:#0b72c8; font-weight:700; text-decoration:none; border-bottom:none; box-shadow:none; }
+      .days-root{ max-width:1100px; margin:0 auto; }
       .trip-loc a::before{ content:"📍"; margin-right:6px; }
 
       .cat-pills{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
@@ -199,7 +231,8 @@
             /* ---------------- Mobile header polish (app-like) ---------------- */
             @media (max-width: 640px){
         /* tighter, comfy spacing */
-        .trip-hero{ margin-top: 48px; padding: 12px 16px 8px; gap: 8px; }
+        .trip-hero{ margin-top: 48px; padding: 0; gap: 8px; }
+        .days-root{ padding-left:16px; padding-right:16px; }
 
         /* title/sub sizing and clamping */
         .trip-title{ font-size: clamp(22px, 6vw, 28px); line-height: 1.15; }
@@ -208,7 +241,7 @@
 
         /* location row */
         .trip-loc{ margin-top: 6px; }
-        .trip-loc a{ font-size: 14px; font-weight: 700; text-decoration:none; border-bottom:0; }
+        .trip-loc a{ font-size: 14px; font-weight: 700; }
 
         /* category pills */
         .cat-pills{ margin-top: 10px; gap: 8px; }
@@ -267,20 +300,9 @@
         font-weight: 600; 
       }
       .day-section .btn-mini:hover{ background:#f7f8fb; border-color:#cdd6e1; }
+      .day-section{ padding-top:8px; }
     </style>
     <style id="mobile-bg-fix">
-</style>
-    <style>
-      /* Remove underline/decoration from destination links in both heroes */
-      .trip-loc a,
-      .hero-overlay .trip-loc a,
-      .hero-text .trip-loc a {
-        text-decoration: none !important;
-        border-bottom: 0 !important;
-        box-shadow: none !important;
-      }
-      .trip-loc a:hover,
-      .trip-loc a:focus { text-decoration: none !important; }
       /* Force white background on small screens and neutralize any global dark theme */
       @media (max-width: 820px){
         html, body { background:#ffffff !important; }
@@ -344,6 +366,7 @@
       <div class="cat-pills" id="cat-pills"></div>
       <div class="stats" id="stats-row"></div>
     </div>
+    <div class="hero-map" id="hero-map" role="img" aria-label="Trip map (overview)"></div>
   </section>
 
   <!-- Day tabs (dynamic) -->
@@ -607,8 +630,8 @@
     // Helper to detect UUIDs
     const isUuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
 
-    function mountMapPreview(items){
-      const el = document.getElementById('map-preview');
+    function mountMapPreview(items, targetId = 'map-preview'){
+      const el = document.getElementById(targetId);
       if (!el || !window.L) return;
 
       // Extract coords from the given list
@@ -794,6 +817,8 @@
 
       // Tabs + sections
       const { keys, buckets } = groupByDay(items);
+      // Decide once per render whether we’re drawing in the header or at the bottom
+      const mapTarget = window.matchMedia('(min-width: 1024px)').matches ? 'hero-map' : 'map-preview';
       dayTrack.innerHTML = '';
       daysRoot.innerHTML = '';
 
@@ -863,13 +888,13 @@
           e.preventDefault();
           const sec = document.querySelector(`#day-${i+1}`);
           if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          if (daysData[i]) mountMapPreview(daysData[i]);
+          if (daysData[i]) mountMapPreview(daysData[i], mapTarget);
         });
       });
 
       // Initial map draws for first dated day (or all items)
       const firstNonEmpty = daysData.find(d => d && d.length) || items;
-      mountMapPreview(firstNonEmpty);
+      mountMapPreview(firstNonEmpty, mapTarget);
 
       const tabs2 = Array.from(document.querySelectorAll('.day-pill'));
       const sections = tabs2.map(t => document.querySelector(t.getAttribute('href'))).filter(Boolean);
@@ -880,7 +905,7 @@
         sections.forEach((sec,i)=>{ if(sec.offsetTop <= y) activeIndex = i; });
         if (activeIndex !== lastActive){
           tabs2.forEach((t,i)=> t.classList.toggle('active', i===activeIndex));
-          if (daysData[activeIndex]) mountMapPreview(daysData[activeIndex]);
+          if (daysData[activeIndex]) mountMapPreview(daysData[activeIndex], mapTarget);
           lastActive = activeIndex;
         }
       };
