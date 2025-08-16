@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="preconnect" href="https://rprpwudhplodaqmmwqkf.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
     <meta name="description" content="TRODDR - Jamaica-first travel guide and trip planner. Discover where to eat, stay, and play like a local. Get authentic Caribbean travel experiences.">
     <meta name="keywords" content="Jamaica travel, Caribbean guide, local experiences, trip planner, authentic travel, Jamaica restaurants, local attractions">
     
@@ -324,8 +327,8 @@
         body{ padding-bottom: 0 !important; }
       }
       /* Also remove any final section spacing */
-      .day-section:last-of-type{ margin-bottom: 30px; }
-      .days-root{ padding-bottom: 30px; }
+      .day-section:last-of-type{ margin-bottom: 0; }
+      .days-root{ padding-bottom: 0; }
     </style>
     <style id="mobile-bg-fix"></style>
     <style>
@@ -367,6 +370,14 @@
         .page, .trip-hero, .hero-text, .mapCard, .section-container { background:#ffffff !important; }
         /* Prevent horizontal overflow that can expose the page background */
         .hero-cover{ width:100% !important; margin:0 !important; }
+      }
+    </style>
+    <style>
+      /* Better keyboard focus */
+      .btn:focus-visible, .btn-mini:focus-visible, .day-pill:focus-visible, a:focus-visible {
+        outline: 2px solid #0077cc;
+        outline-offset: 2px;
+        border-radius: 8px;
       }
     </style>
 </head>
@@ -413,7 +424,7 @@
       <p class="trip-sub" id="trip-sub"></p>
       <div class="trip-loc"><a id="trip-loc" href="#" target="_blank" rel="noopener">—</a></div>
       <div class="trip-meta" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
-        <span class="meta-pill" id="meta-destination">—</span>
+        <span class="meta-pill" id="meta-destination"></span>
         <span class="meta-pill" id="meta-dates"></span>
         <div class="cat-pills" id="cat-pills"></div>
       </div>
@@ -794,7 +805,7 @@
 
         const { data, error } = await supa
           .from('places')
-          .select('id, latitude, longitude, lat, lng, town, parish')
+          .select('id, latitude, longitude, lat, lng, town, parish, address')
           .in('id', ids);
         if (error || !data) return items;
 
@@ -809,6 +820,7 @@
           if (Number.isFinite(lng)) it.longitude = lng;
           if (!it.town && m.town) it.town = m.town;
           if (!it.parish && m.parish) it.parish = m.parish;
+          if (!it.address && m.address) it.address = m.address;
         });
       }catch(e){ /* ignore */ }
       return items;
@@ -830,8 +842,13 @@
       async function doShare(e){
         e.preventDefault();
         try {
-          if (navigator.share){ await navigator.share(shareData); return; }
+          if (navigator.share){
+            await navigator.share(shareData);
+            try { gtag('event','share_itinerary',{ method: 'web-share', location: 'itinerary_header' }); } catch(e){}
+            return;
+          }
           await navigator.clipboard.writeText(url); alert('Link copied!');
+          try { gtag('event','share_itinerary',{ method: 'copy-link', location: 'itinerary_header' }); } catch(e){}
         } catch {}
       }
       if (btn) btn.addEventListener('click', doShare);
@@ -839,6 +856,7 @@
       if (stickyOpen){
         stickyOpen.addEventListener('click', (e)=>{
           e.preventDefault();
+          try { gtag('event','open_in_app', { location: 'sticky_footer', target: 'shared_itinerary' }); } catch(e){}
           const deep = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
           window.location.href = deep;
         });
@@ -958,7 +976,13 @@
         itemsForDay.forEach(item => {
           const cat = (item.category||'').toLowerCase();
           const badge = cat ? `<span class="badge ${cat}">${cat.toUpperCase()}</span>` : '';
-          const cover = item.image ? `style="background-image:url('${item.image}')"` : '';
+          const cover = item.image ? `style="background-image:url('${item.image}')" ` : '';
+          const displayAddr = [item.address, item.town, item.parish].filter(Boolean).join(', ');
+          const hasLat = Number.isFinite(Number(item.latitude));
+          const hasLng = Number.isFinite(Number(item.longitude));
+          const dirQuery = (hasLat && hasLng)
+            ? `${Number(item.latitude)},${Number(item.longitude)}`
+            : (displayAddr || `${item.name || ''} ${item.town || ''}`.trim());
           const place = document.createElement('article');
           place.className = 'stop-card';
           const viewHref = listingHrefFor(item, slugMap);
@@ -971,10 +995,10 @@
                 <h3 class="stop-name">${item.name || 'Place'}</h3>
                 ${badge}
               </div>
-              <div class="stop-meta"><span>${item.town || item.parish || item.location || ''}</span></div>
+              <div class="stop-meta"><span>${displayAddr || ''}</span></div>
               <div class="stop-actions">
                 ${viewHref ? `<a class="btn-mini" href="${viewHref}">View</a>` : ''}
-                <a class="btn-mini" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + (item.town||''))}">Directions</a>
+                <a class="btn-mini" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dirQuery)}">Directions</a>
               </div>
             </div>`;
           stopWrap.appendChild(place);
@@ -990,6 +1014,7 @@
           e.preventDefault();
           const sec = document.querySelector(`#day-${i+1}`);
           if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          try { gtag('event','view_trip_day', { index: i+1, label: t.textContent.trim() }); } catch(e){}
           if (daysData[i] && mapTarget) mountMapPreview(daysData[i], mapTarget);
         });
       });
@@ -1103,6 +1128,7 @@
         }
         if (saveBtn){
           saveBtn.addEventListener('click', () => {
+            try { gtag('event','open_in_app', { location: 'itinerary_header', target: 'shared_itinerary' }); } catch(e){}
             const deep = saveBtn.dataset.deep || `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
             window.location.href = deep;
           });
