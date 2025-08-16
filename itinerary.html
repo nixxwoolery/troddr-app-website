@@ -96,10 +96,10 @@
       .pill-stay{ background:#a3e635; color:#0b1220; } /* lime with dark text */
       .pill-play{ background:#38bdf8; }   /* sky */
 
-      /* On mobile, prefer the simplified header; hide meta row */
-      @media (max-width: 820px){
-        .trip-meta{ display:none; }
-      }
+      /* Hide the duplicate pill row (destination/date/Open in App) everywhere;
+         we already show Title, Location and Date once in the header and keep the
+         sticky bottom CTA for "Open in App". */
+      .trip-meta{ display:none !important; }
 
       /* Stats row */
       .stats{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
