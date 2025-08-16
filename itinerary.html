@@ -130,7 +130,7 @@
 </style>
     <style>
       /* --- Mobile cover hero with overlay card --- */
-      .hero-cover{ position:relative; height:220px; border-radius:0; overflow:hidden;
+      .hero-cover{ position:relative; height:350px; border-radius:0; overflow:hidden;
              background:#e5e7eb; background-size:cover; background-position:center; }
 
       @media (max-width: 640px){
@@ -145,7 +145,7 @@
       }
       .hero-overlay{
         position:absolute; left:12px; right:12px; bottom:12px;
-        background:rgba(255,255,255,.96); border-radius:12px;
+        background:rgba(255,255,255,.96); border-radius:8px;
         padding:12px 14px; box-shadow:0 10px 30px rgba(0,0,0,.15);
         backdrop-filter:saturate(120%) blur(4px);
       }
@@ -188,7 +188,6 @@
     <!-- Leaflet (lightweight interactive map, no API key required) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-</style>
     <style>
             /* ---------------- Mobile header polish (app-like) ---------------- */
             @media (max-width: 640px){
@@ -236,6 +235,7 @@
       }
 
       .day-section .stop-cover{
+        position: relative; 
         height: 250px;               /* tall, image-led card */
         background-size: cover;
         background-position: center;
@@ -292,9 +292,9 @@
     <!-- Mobile cover with overlay card -->
     <div class="hero-cover" id="hero-cover" aria-label="Trip cover">
       <div class="hero-overlay">
-        <h1 class="trip-title" id="trip-title-ov">Loading…</h1>
-        <p class="trip-sub" id="trip-sub-ov"></p>
-        <div class="trip-loc"><a id="trip-loc-ov" href="#" target="_blank" rel="noopener">—</a></div>
+        <h1 class="trip-title" id="trip-title">Loading…</h1>
+        <div class="trip-loc"><a id="trip-loc" href="#" target="_blank" rel="noopener">—</a></div>
+        <p class="trip-sub" id="trip-sub"></p>
         <div class="cat-pills" id="cat-pills-ov"></div>
       </div>
     </div>
@@ -307,7 +307,8 @@
       <div class="trip-meta" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
         <span class="meta-pill" id="meta-destination">—</span>
         <span class="meta-pill" id="meta-dates"></span>
-        <a class="btn btn-primary" href="troddrapp://shared_itinerary/<ID>" id="btn-save">Open in App</a>
+        <a class="btn btn-primary" href="troddrapp://shared_itinerary/<ID>" id="btn-save" aria-label="Open this itinerary in the TRODDR app">Open in App</a>
+        <a class="btn btn-outline" href="#" id="btn-share" aria-label="Share this itinerary">Share</a>
       </div>
       <div class="cat-pills" id="cat-pills"></div>
       <div class="stats" id="stats-row"></div>
@@ -315,7 +316,7 @@
   </section>
 
   <!-- Day tabs (dynamic) -->
-  <nav class="day-tabs hidden" id="day-tabs">
+  <nav class="day-tabs hidden" id="day-tabs" role="tablist" aria-label="Trip days">
     <div class="day-track" id="day-track"></div>
   </nav>
 
@@ -526,7 +527,14 @@
       if (!iso) return '';
       try { return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return iso; }
     };
-    const fmtRange = (s, e) => s && e ? `${fmtDate(s)} – ${fmtDate(e)}` : (s || e ? (fmtDate(s||e)) : '');
+    const fmtRange = (s, e) => {
+      if (s && e){
+        const ds = new Date(s), de = new Date(e);
+        if (ds.toDateString() === de.toDateString()) return fmtDate(s); // single day
+        return `${fmtDate(s)} – ${fmtDate(e)}`;
+      }
+      return (s || e) ? fmtDate(s || e) : '';
+    };
 
     // Display times in 12‑hour format like "1:30 PM"
     const to12h = (t) => {
