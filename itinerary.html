@@ -127,47 +127,6 @@
       .mapHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid #e5e7eb}
       .mapBody{height:300px;background:#eef2f7}
       @media (max-width:820px){ .mapBody{height:260px} }
-</style>
-    <style>
-      /* --- Mobile cover hero with overlay card --- */
-      .hero-cover{ display:none; }
-      .hero-overlay{
-        position:absolute; left:12px; right:12px; bottom:12px;
-        background:rgba(255,255,255,.96); border-radius:12px;
-        padding:12px 14px; box-shadow:0 10px 30px rgba(0,0,0,.15);
-        backdrop-filter:saturate(120%) blur(4px);
-      }
-      .hero-overlay .trip-title{ font-size: clamp(18px, 5vw, 22px); margin:0; }
-      .hero-overlay .trip-sub{ font-size:12px; margin:4px 0 6px; color:#6b7280; }
-      .hero-overlay .trip-loc{ margin-top:0; }
-      .hero-overlay .cat-pills{ margin-top:8px; }
-
-      .hero-cover{
-        position:relative; height:220px; border-radius:0; overflow:hidden;
-        background:#e5e7eb; background-size:cover; background-position:center;
-      }
-
-      /* Mobile: show cover, hide text block; white page background */
-      @media (max-width: 640px){
-        body{ background:#ffffff; }
-        .hero-cover{
-          display:block;
-          margin:0;
-          /* full-bleed across the viewport */
-          width:100vw;
-          margin-left:calc(50% - 50vw);
-          margin-right:calc(50% - 50vw);
-          border-radius:0;
-        }
-        .hero-text{ display:none; }
-        .trip-hero{ margin-top: 10px; padding-top: 0; }
-      }
-
-      /* Desktop: keep existing text hero, hide cover */
-      @media (min-width: 641px){
-        .hero-cover{ display:none; }
-        .hero-text{ display:block; }
-      }
     </style>
     
     <!-- Google tag (gtag.js) -->
@@ -285,24 +244,15 @@
 
   <!-- Summary hero (dynamic) -->
   <section class="trip-hero">
-    <!-- Mobile cover with overlay card -->
-    <div class="hero-cover" id="hero-cover" aria-label="Trip cover">
-      <div class="hero-overlay">
-        <h1 class="trip-title" id="trip-title-ov">Loading…</h1>
-        <p class="trip-sub" id="trip-sub-ov"></p>
-        <div class="trip-loc"><a id="trip-loc-ov" href="#" target="_blank" rel="noopener">—</a></div>
-        <div class="cat-pills" id="cat-pills-ov"></div>
-      </div>
-    </div>
-
-    <!-- Desktop text hero -->
-    <div class="hero-text">
+    <div>
       <h1 class="trip-title" id="trip-title">Loading…</h1>
       <p class="trip-sub" id="trip-sub"></p>
       <div class="trip-loc"><a id="trip-loc" href="#" target="_blank" rel="noopener">—</a></div>
       <div class="trip-meta" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
         <span class="meta-pill" id="meta-destination">—</span>
         <span class="meta-pill" id="meta-dates"></span>
+        <!-- <button class="btn" id="btn-copy">Copy Link</button>
+        <button class="btn" id="btn-share">Share</button> -->
         <a class="btn btn-primary" href="troddrapp://shared_itinerary/<ID>" id="btn-save">Open in App</a>
       </div>
       <div class="cat-pills" id="cat-pills"></div>
@@ -318,6 +268,12 @@
   <!-- Page layout: sidebar + content (dynamic) -->
   <main class="page">
     <aside class="sidebar">
+      <div class="stop-card" style="padding:14px">
+        <h3 style="margin:6px 0 4px">Trip Details</h3>
+        <div class="stop-meta"><span id="detail-createdby">👤 Shared itinerary</span></div>
+        <div class="stop-meta"><span id="detail-base">📍 Destination: <span id="detail-destination">—</span></span></div>
+      </div>
+      <div style="height:14px"></div>
       <div id="quick-actions" class="stop-card" style="padding:14px">
         <h3 style="margin:6px 0 10px">Quick Actions</h3>
         <div class="stop-actions">
@@ -703,9 +659,9 @@
       }
     }
 
-    function renderCategoryPills(meta, items, elId='cat-pills'){
-      const el = document.getElementById(elId); 
-      if (!el) return '';
+    function renderCategoryPills(meta, items){
+      const el = document.getElementById('cat-pills'); 
+      if (!el) return;
       const counts = { eat:0, stay:0, play:0 };
       (items || []).forEach(it => {
         const c = String(it.category || '').toLowerCase();
@@ -718,36 +674,23 @@
       if (counts.stay) pills.push(`<span class="cat-pill pill-stay">${counts.stay} Stay</span>`);
       if (counts.play) pills.push(`<span class="cat-pill pill-play">${counts.play} Play</span>`);
       el.innerHTML = pills.join('');
-      return el.innerHTML;
     }
 
     async function render(items, meta){
       // Header/meta
       const slugMap = await primeSlugMap(items);
       titleEl.textContent = meta.title || 'Itinerary';
-      // Set mobile overlay title too
-      const titleOv = document.getElementById('trip-title-ov');
-      if (titleOv) titleOv.textContent = meta.title || 'Itinerary';
 
       // Subtitle = date range
       const range = fmtRange(meta.start_date, meta.end_date);
       subEl.textContent = range || '';
-      // Overlay duplicates for mobile
-      const subOv = document.getElementById('trip-sub-ov');
-      if (subOv) subOv.textContent = range || '';
 
       // Location link (also keep meta/side detail up to date)
       const locA = document.getElementById('trip-loc');
-      const q = meta.destination || '';
       if (locA){
+        const q = meta.destination || '';
         locA.textContent = q || '—';
         locA.href = q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : '#';
-      }
-      // Overlay duplicates for mobile
-      const locAov = document.getElementById('trip-loc-ov');
-      if (locAov){
-        locAov.textContent = q || '—';
-        locAov.href = q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : '#';
       }
       destMeta.textContent = meta.destination || '—';
       destDetail.textContent = meta.destination || '—';
@@ -756,16 +699,7 @@
       datesMeta.textContent = range ? `${range}` : '';
 
       // Category pills (Eat/Stay/Play)
-      renderCategoryPills(meta, items, 'cat-pills');
-      renderCategoryPills(meta, items, 'cat-pills-ov');
-
-      // Choose a cover image (first item image fallback)
-      const coverEl = document.getElementById('hero-cover');
-      if (coverEl){
-        const firstWithImage = (items || []).find(x => x && x.image);
-        const coverUrl = firstWithImage?.image || 'https://images.unsplash.com/photo-1502920917128-1aa500764b8a?q=80&w=1600&auto=format&fit=crop';
-        coverEl.style.backgroundImage = `url('${coverUrl}')`;
-      }
+      renderCategoryPills(meta, items);
 
       // Show who shared it (if provided by RPC)
       const createdByEl = document.getElementById('detail-createdby');
