@@ -137,7 +137,7 @@
         .hero-cover{
           display:block;
           margin:0;
-          width:100vw;
+          width:100%;
           margin-left:calc(50% - 50vw);
           margin-right:calc(50% - 50vw);
           border-radius:0;
@@ -162,7 +162,14 @@
       /* Mobile: show cover, hide text block; white page background */
       @media (max-width: 640px){
         body{ background:#ffffff; }
-        .hero-cover{ display:block; margin:10px 16px 0; }
+        .hero-cover{
+          display:block;
+          margin:0;
+          width:100vw;
+          margin-left:calc(50% - 50vw);
+          margin-right:calc(50% - 50vw);
+          border-radius:0;
+        }
         .hero-text{ display:none; }
         .trip-hero{ margin-top: 10px; padding-top: 0; }
       }
@@ -261,14 +268,17 @@
       }
       .day-section .btn-mini:hover{ background:#f7f8fb; border-color:#cdd6e1; }
     </style>
-    <style id="page-bg-fix">
-      /* Always keep page background white (no media query) */
-      html, body { background-color:#ffffff !important; }
-      /* Neutralize any global pseudo-element backgrounds */
-      body::before, body::after { background: transparent !important; }
-      /* Keep sections white but do NOT override hero image */
-      .page, .trip-hero, .hero-text, .mapCard, .footer, .section-container { background-color:#ffffff !important; }
-      .hero-cover{ background-color: transparent !important; } /* hero uses background-image */
+    <style id="mobile-bg-fix">
+      /* Force white background on small screens and neutralize any global dark theme */
+      @media (max-width: 820px){
+        html, body { background:#ffffff !important; }
+        /* In case the global CSS draws background via pseudo elements */
+        body::before, body::after { background: transparent !important; }
+        /* Keep all main sections white as well */
+        .page, .trip-hero, .hero-text, .hero-cover, .mapCard, .footer, .section-container { background:#ffffff !important; }
+        /* Prevent horizontal overflow that can expose the page background */
+        .hero-cover{ width:100% !important; margin:0 !important; }
+      }
     </style>
 </head>
 <body>
@@ -645,16 +655,6 @@
       let sum = 0; for (let i=1;i<pts.length;i++){ sum += haversineKm(pts[i-1], pts[i]); }
       return Math.round(sum);
     }
-    function renderStats(meta, allItems){
-      const el = document.getElementById('stats-row'); if(!el) return;
-      const tripLen = (meta.start_date && meta.end_date) ? Math.max(1, Math.round((new Date(meta.end_date)-new Date(meta.start_date))/86400000)+1) : null;
-      const stops = (allItems||[]).length;
-      const km = computeDistanceKm(allItems);
-      el.innerHTML = `
-        <div class="stat"><div class="num">${tripLen ?? '—'}</div><div class="lbl">Days</div></div>
-        <div class="stat"><div class="num">${stops}</div><div class="lbl">Stops</div></div>
-      `;
-    }
 
     // Resolve listing slugs for items that don't include .slug
     async function primeSlugMap(items){
@@ -665,7 +665,7 @@
           .filter(Boolean)));
         if (!ids.length) return {};
         const { data, error } = await supa
-          .from('places')
+          .from('places') 
           .select('id, slug')
           .in('id', ids);
         if (error || !data) return {};
@@ -755,7 +755,6 @@
       destMeta.textContent = meta.destination || '—';
       if (destDetail) destDetail.textContent = meta.destination || '—';
 
-      renderStats(meta, items);
       datesMeta.textContent = range ? `${range}` : '';
 
       // Category pills (Eat/Stay/Play)
