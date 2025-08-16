@@ -3,9 +3,6 @@
 <head>
   <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ffffff">
-    <link rel="preconnect" href="https://rprpwudhplodaqmmwqkf.supabase.co" crossorigin>
-    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
     <meta name="description" content="TRODDR - Jamaica-first travel guide and trip planner. Discover where to eat, stay, and play like a local. Get authentic Caribbean travel experiences.">
     <meta name="keywords" content="Jamaica travel, Caribbean guide, local experiences, trip planner, authentic travel, Jamaica restaurants, local attractions">
     
@@ -370,14 +367,6 @@
         .page, .trip-hero, .hero-text, .mapCard, .section-container { background:#ffffff !important; }
         /* Prevent horizontal overflow that can expose the page background */
         .hero-cover{ width:100% !important; margin:0 !important; }
-      }
-    </style>
-    <style>
-      /* Better keyboard focus */
-      .btn:focus-visible, .btn-mini:focus-visible, .day-pill:focus-visible, a:focus-visible {
-        outline: 2px solid #0077cc;
-        outline-offset: 2px;
-        border-radius: 8px;
       }
     </style>
 </head>
@@ -841,13 +830,8 @@
       async function doShare(e){
         e.preventDefault();
         try {
-          if (navigator.share){
-            await navigator.share(shareData);
-            try { gtag('event','share_itinerary',{ method: 'web-share', location: 'itinerary_header' }); } catch(e){}
-            return;
-          }
+          if (navigator.share){ await navigator.share(shareData); return; }
           await navigator.clipboard.writeText(url); alert('Link copied!');
-          try { gtag('event','share_itinerary',{ method: 'copy-link', location: 'itinerary_header' }); } catch(e){}
         } catch {}
       }
       if (btn) btn.addEventListener('click', doShare);
@@ -855,7 +839,6 @@
       if (stickyOpen){
         stickyOpen.addEventListener('click', (e)=>{
           e.preventDefault();
-          try { gtag('event','open_in_app', { location: 'sticky_footer', target: 'shared_itinerary' }); } catch(e){}
           const deep = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
           window.location.href = deep;
         });
@@ -991,7 +974,7 @@
               <div class="stop-meta"><span>${item.town || item.parish || item.location || ''}</span></div>
               <div class="stop-actions">
                 ${viewHref ? `<a class="btn-mini" href="${viewHref}">View</a>` : ''}
-                <a class="btn-mini" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + (item.town||''))}">Directions</a>
+                <a class="btn-mini" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + (item.town||''))}">Directions</a>
               </div>
             </div>`;
           stopWrap.appendChild(place);
@@ -1007,7 +990,6 @@
           e.preventDefault();
           const sec = document.querySelector(`#day-${i+1}`);
           if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          try { gtag('event','view_trip_day', { index: i+1, label: t.textContent.trim() }); } catch(e){}
           if (daysData[i] && mapTarget) mountMapPreview(daysData[i], mapTarget);
         });
       });
@@ -1121,7 +1103,6 @@
         }
         if (saveBtn){
           saveBtn.addEventListener('click', () => {
-            try { gtag('event','open_in_app', { location: 'itinerary_header', target: 'shared_itinerary' }); } catch(e){}
             const deep = saveBtn.dataset.deep || `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
             window.location.href = deep;
           });
