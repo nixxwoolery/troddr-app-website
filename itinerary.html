@@ -77,6 +77,10 @@
         gap:12px;
         align-items:center;
       }
+      .trip-meta .meta-spacer{ flex:1; }
+      @media (min-width:821px){
+        .trip-meta{ flex-wrap: nowrap; }
+      }
       .trip-meta .meta-pill{
         display:inline-flex;
         align-items:center;
@@ -392,7 +396,8 @@
       <div class="trip-meta" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
         <span class="meta-pill" id="meta-destination">—</span>
         <span class="meta-pill" id="meta-dates"></span>
-        <a class="btn btn-primary" href="troddrapp://shared_itinerary/<ID>" id="btn-save" aria-label="Open this itinerary in the TRODDR app">Open in App</a>
+        <div class="meta-spacer"></div>
+        <button type="button" class="btn btn-primary" id="btn-save" aria-label="Open this itinerary in the TRODDR app">Open in App</button>
         <a class="btn btn-outline" href="#" id="btn-share" aria-label="Share this itinerary">Share</a>
       </div>
       <div class="cat-pills" id="cat-pills"></div>
@@ -480,7 +485,7 @@
 
   <div class="sticky-cta" id="sticky-cta" role="region" aria-label="Quick actions">
     <a href="#" class="cta-btn outline" id="sticky-share">Share</a>
-    <a href="#" class="cta-btn primary" id="sticky-open">Open in App</a>
+    <button type="button" class="cta-btn primary" id="sticky-open">Open in App</button>
   </div>
 
   <!-- Public env for static hosting: safe to expose anon key (RLS protects data) -->
@@ -1013,7 +1018,8 @@
       debug('parsed identifier', { ident, looksUuid });
       if (dbg) dbg({ phase: 'ident', ident, looksUuid });
       if (saveBtn && ident) {
-        saveBtn.setAttribute('href', `troddrapp://shared_itinerary/${encodeURIComponent(ident)}`);
+        // Store deep link for use in the click handler
+        saveBtn.dataset.deep = `troddrapp://shared_itinerary/${encodeURIComponent(ident)}`;
       }
       if (!ident){
         errorBox.classList.remove('hidden');
@@ -1078,9 +1084,8 @@
           });
         }
         if (saveBtn){
-          saveBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const deep = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
+          saveBtn.addEventListener('click', () => {
+            const deep = saveBtn.dataset.deep || `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
             window.location.href = deep;
           });
         }
