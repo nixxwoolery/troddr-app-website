@@ -51,15 +51,6 @@
         width:100% !important;
       }
 
-      /* On ≥1024px: make the header a 2-col grid and show the map */
-      @media (min-width: 1024px){
-        .trip-hero{
-          grid-template-columns: 1.15fr 0.85fr;  /* text | map */
-          align-items: stretch;
-        }
-        .hero-map{ display:block; }
-      }
-
       /* Reuse the rounded border for the preview map too */
       #hero-map .leaflet-container{ border-radius:12px; }
 
@@ -111,8 +102,20 @@
         margin-right:6px;
       }
       /* Modern hero layout */
-      .trip-hero{display:grid;grid-template-columns:1fr;gap:18px;align-items:start}
-      @media (max-width: 900px){.trip-hero{grid-template-columns:1fr;gap:12px}}
+      .trip-hero{
+        display: grid;
+        gap: 18px;
+        align-items: start;
+      }
+      /* Responsive hero grid columns */
+      @media (max-width:1023px){
+        .trip-hero{ grid-template-columns:1fr; }
+      }
+      @media (min-width:1024px){
+        .trip-hero{ grid-template-columns:1.15fr 0.85fr; align-items:stretch; }
+        .hero-map{ display:block; }
+      }
+      @media (max-width: 900px){.trip-hero{gap:12px}}
       .trip-title{font-size:clamp(26px,3.6vw,44px);font-weight:800;margin:0}
       .trip-sub{color:#6b7280;margin:.35rem 0 0}
 
@@ -123,7 +126,7 @@
       .trip-loc a::before{ content:"📍"; margin-right:6px; }
 
       .cat-pills{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
-      .cat-pill{ padding:8px 14px; border-radius:10px; font-weight:700; color:#fff; }
+      .cat-pill{ padding:8px 14px; border-radius:8px; font-weight:700; color:#fff; }
       .pill-eat{  background:#007E94; }
       .pill-stay{ background:#c3D600; color:#0b1220; }
       .pill-play{ background:#77c7ac; }
@@ -243,9 +246,9 @@
         .trip-loc{ margin-top: 6px; }
         .trip-loc a{ font-size: 14px; font-weight: 700; }
 
-        /* category pills */
-        .cat-pills{ margin-top: 10px; gap: 8px; }
-        .cat-pill{ border-radius: 5px; padding: 7px 12px; }
+            /* category pills */
+            .cat-pills{ margin-top: 10px; gap: 8px; }
+            .cat-pill{ border-radius: 8px; padding: 7px 12px; }
 
         /* stats grid sizing */
         .stats{ margin-top: 12px; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -287,7 +290,7 @@
       }
 
       .day-section .stop-body{ padding: 16px 18px 18px; }
-      .day-section .stop-name{ font-size: clamp(18px,2.2vw,24px); font-weight: 700; margin: 0; }
+      .day-section .stop-name{ font-size: clamp(18px,2.2vw,24px); font-weight: 600; margin: 0; }
       .day-section .stop-meta{ color:#6b7280; margin-top:6px; }
 
       .day-section .stop-actions{ display:flex; gap:10px; margin-top:12px; }
@@ -301,6 +304,13 @@
       }
       .day-section .btn-mini:hover{ background:#f7f8fb; border-color:#cdd6e1; }
       .day-section{ padding-top:8px; }
+</style>
+    <!-- Bottom breathing room -->
+    <style>
+      body{ padding-bottom:24px; }
+      @media (max-width:820px){
+        body{ padding-bottom: 90px; } /* leaves space for sticky CTA */
+      }
     </style>
     <style id="mobile-bg-fix">
       /* Force white background on small screens and neutralize any global dark theme */
