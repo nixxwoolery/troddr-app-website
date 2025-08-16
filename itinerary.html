@@ -50,6 +50,9 @@
         height:100% !important;
         width:100% !important;
       }
+      /* Allow message centering when no markers */
+      #hero-map{ display:block; }
+      .hero-map.empty{ display:flex; align-items:center; justify-content:center; color:#6b7280; }
 
       /* Reuse the rounded border for the preview map too */
       #hero-map .leaflet-container{ border-radius:12px; }
@@ -672,12 +675,14 @@
       // Reset container each time (simple + robust)
       el.innerHTML = '';
       if (!coords.length){
+        el.classList.add('empty');
         el.style.display = 'flex';
         el.style.alignItems = 'center';
         el.style.justifyContent = 'center';
         el.textContent = 'Map preview unavailable';
         return;
       }
+      el.classList.remove('empty');
 
       const map = L.map(el, { zoomControl: false });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -741,6 +746,39 @@
         data.forEach(r => { if (r && r.id && r.slug) map[r.id] = r.slug; });
         return map;
       }catch(e){ return {}; }
+    }
+
+    // Pull in coordinates for items that are missing lat/lng (fallback join on places)
+    async function hydrateCoords(items){
+      try{
+        const needs = (items || []).filter(it => {
+          const lat = Number(it.latitude ?? it.lat ?? it.Latitude ?? it.Lat);
+          const lng = Number(it.longitude ?? it.lng ?? it.Longitude ?? it.Lng ?? it.lon);
+          return !(Number.isFinite(lat) && Number.isFinite(lng));
+        });
+        const ids = Array.from(new Set(needs.map(it => it.place_id || it.id).filter(Boolean)));
+        if (!ids.length) return items;
+
+        const { data, error } = await supa
+          .from('places')
+          .select('id, latitude, longitude, lat, lng, town, parish')
+          .in('id', ids);
+        if (error || !data) return items;
+
+        const byId = Object.fromEntries(data.map(r => [r.id, r]));
+        items.forEach(it => {
+          const key = it.place_id || it.id;
+          const m = byId[key];
+          if (!m) return;
+          const lat = Number(it.latitude ?? it.lat ?? m.latitude ?? m.lat);
+          const lng = Number(it.longitude ?? it.lng ?? m.longitude ?? m.lng);
+          if (Number.isFinite(lat)) it.latitude = lat;
+          if (Number.isFinite(lng)) it.longitude = lng;
+          if (!it.town && m.town) it.town = m.town;
+          if (!it.parish && m.parish) it.parish = m.parish;
+        });
+      }catch(e){ /* ignore */ }
+      return items;
     }
     function listingHrefFor(item, slugMap){
       const s = item?.slug || item?.place_slug || slugMap[item?.place_id || item?.id];
@@ -1016,7 +1054,8 @@
 
         if (error || !data){ throw error || new Error('Not found'); }
         if (dbg) dbg({ phase: 'render', items: Array.isArray(data.items) ? data.items.length : 0, metaTitle: data.title });
-        await render(data.items || [], data);
+        const itemsHydrated = await hydrateCoords(data.items || []);
+        await render(itemsHydrated, data);
         setupItineraryShare(ident, data);
 
         // Clear any prior error UI or title from earlier attempts
