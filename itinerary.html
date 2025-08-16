@@ -327,8 +327,8 @@
         body{ padding-bottom: 0 !important; }
       }
       /* Also remove any final section spacing */
-      .day-section:last-of-type{ margin-bottom: 0; }
-      .days-root{ padding-bottom: 0; }
+      .day-section:last-of-type{ margin-bottom: 30px; }
+      .days-root{ padding-bottom: 30px; }
     </style>
     <style id="mobile-bg-fix"></style>
     <style>
@@ -798,7 +798,9 @@
         const needs = (items || []).filter(it => {
           const lat = Number(it.latitude ?? it.lat ?? it.Latitude ?? it.Lat);
           const lng = Number(it.longitude ?? it.lng ?? it.Longitude ?? it.Lng ?? it.lon);
-          return !(Number.isFinite(lat) && Number.isFinite(lng));
+          const missingCoords = !(Number.isFinite(lat) && Number.isFinite(lng));
+          const missingAddressBits = !(it.address && (it.town || it.parish));
+          return missingCoords || missingAddressBits;
         });
         const ids = Array.from(new Set(needs.map(it => it.place_id || it.id).filter(Boolean)));
         if (!ids.length) return items;
@@ -977,7 +979,7 @@
           const cat = (item.category||'').toLowerCase();
           const badge = cat ? `<span class="badge ${cat}">${cat.toUpperCase()}</span>` : '';
           const cover = item.image ? `style="background-image:url('${item.image}')" ` : '';
-          const displayAddr = [item.address, item.town, item.parish].filter(Boolean).join(', ');
+          const displayAddr = [item.address, item.town, item.parish].filter(Boolean).join(', ') || (item.location || '');
           const hasLat = Number.isFinite(Number(item.latitude));
           const hasLng = Number.isFinite(Number(item.longitude));
           const dirQuery = (hasLat && hasLng)
