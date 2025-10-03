@@ -1079,7 +1079,7 @@ let __mapsActiveTrigger;
     function setOpenInApp(slug){
       const link = document.getElementById('open-in-app');
       if (!link) return;
-      link.href = 'troddrapp://listing/' + encodeURIComponent(slug);
+      link.href = 'troddrapp://detailedListing/' + encodeURIComponent(slug);
       link.addEventListener('click', ()=> track('open_in_app', { slug }), { passive:true });
     }
 
