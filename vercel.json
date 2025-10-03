@@ -3,7 +3,7 @@
       { "source": "/itinerary", "destination": "/itinerary.html" },
       { "source": "/itinerary/(.*)", "destination": "/itinerary.html" },
   
-      { "source": "/listings/(.*)", "destination": "/listing.html" }
+      { "source": "/listings/:slug", "destination": "/api/listing-og?slug=:slug" }
     ],
     "headers": [
       {
