@@ -23,7 +23,19 @@ export default async function handler(req, res) {
 
   const title = `${place.name} — TRODDR`;
   const desc = place.description || `Discover ${place.name} on TRODDR.`;
-  const img = (place.image && place.image[0]) || '/images/og-default.jpg';
+  let img = '/images/og-default.jpg';
+  if (place.image) {
+    try {
+      const parsed = typeof place.image === 'string' ? JSON.parse(place.image) : place.image;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        img = parsed[0];
+      }
+    } catch {
+      if (Array.isArray(place.image) && place.image.length > 0) {
+        img = place.image[0];
+      }
+    }
+  }
   const url = `https://troddr.com/listings/${slug}`;
 
   res.setHeader('Content-Type', 'text/html');
