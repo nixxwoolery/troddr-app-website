@@ -1097,17 +1097,29 @@ let __mapsActiveTrigger;
     }
 
     async function main(){
-      if (!slug){ set('listing-title','Listing'); set('listing-sub',''); return; }
+      if (!slug){
+        set('listing-title','Listing');
+        set('listing-sub','');
+        document.title = 'Listing — TRODDR';
+        return;
+      }
+
       showSkeleton();
       setOpenInApp(slug);
       set('listing-title', titleCaseSlug(slug));
       set('listing-sub','Web view');
+      document.title = `${titleCaseSlug(slug)} — TRODDR`;
 
       const { data: place, error } = await fetchPlaceBySlug(slug);
-      if (error || !place){ document.getElementById('overview').textContent = "We couldn't load this listing right now."; return; }
+      if (error || !place){
+        document.getElementById('overview').textContent = "We couldn't load this listing right now.";
+        return;
+      }
 
       set('listing-title', place.name || titleCaseSlug(slug));
       set('listing-sub', [place.town, place.parish].filter(Boolean).join(', '));
+      document.title = `${place.name || titleCaseSlug(slug)} — TRODDR`;
+
       setupOverview(place.description || '—');
       renderDetails(place);
       setImages(place);
