@@ -202,9 +202,18 @@
     grid-template-columns:1fr !important;
     height:400px;         /* increased height on mobile */
     min-height:400px;
-    overflow:hidden;
+    /* Carousel scroll and snap behavior */
+    scroll-snap-type: x mandatory;
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
-  .hero.mcarousel .col{height:100%}
+  .hero.mcarousel .col{
+    height:100%;
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+  }
   .hero-dots{
     position:absolute;
     left:50%;
@@ -811,6 +820,16 @@
 
       update();
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const heroCarousel = document.querySelector(".hero.mcarousel");
+      if (heroCarousel) {
+        heroCarousel.style.scrollSnapType = "x mandatory";
+        Array.from(heroCarousel.children).forEach(item => {
+          item.style.scrollSnapAlign = "start";
+        });
+      }
+    });
 
     function setupLightbox(){
       const lb = document.getElementById('lightbox');
