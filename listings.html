@@ -576,10 +576,12 @@
     }
     function injectOG(place, slug){
       try{
-        const url = location.origin + '/listings/' + encodeURIComponent(slug);
         const title = `${place.name || titleCaseSlug(slug)} — TRODDR`;
-        const desc = (place.description && String(place.description).slice(0, 200)) || `${[place.town, place.parish].filter(Boolean).join(', ')} • TRODDR`;
-        const img = (window.__gallery && window.__gallery[0]) || '/images/troddr_og_fallback.jpg';
+        const desc = place.description || `Discover ${place.name || titleCaseSlug(slug)} on TRODDR.`;
+        const img = (place.image && place.image[0]) || '/images/og-default.jpg';
+        const url = `${window.location.origin}/listings/${slug}`;
+
+        document.title = title;
 
         // Open Graph
         upsertMeta('property','og:title', title);
@@ -593,6 +595,8 @@
         upsertMeta('name','twitter:title', title);
         upsertMeta('name','twitter:description', desc);
         upsertMeta('name','twitter:image', img);
+
+        upsertMeta('name', 'description', desc);
 
         // Canonical
         let link = document.head.querySelector('link[rel="canonical"]');
