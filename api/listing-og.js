@@ -44,6 +44,7 @@ export default async function handler(req, res) {
     <html lang="en">
     <head>
       <title>${title}</title>
+      <meta name="title" content="${title}" />
       <meta property="og:title" content="${title}" />
       <meta property="og:description" content="${desc}" />
       <meta property="og:type" content="website" />
@@ -58,7 +59,7 @@ export default async function handler(req, res) {
     <body>
       <script>
         // Redirect real users to your static listings.html
-        window.location.href = "/listings.html?slug=${slug}";
+        window.location.href = "/listings/" + ${JSON.stringify(slug)};
       </script>
     </body>
     </html>
