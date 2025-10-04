@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/images/troddr_logo.png">
   <link rel="icon" type="image/png" href="/images/troddr_logo.png">
@@ -75,6 +76,56 @@
     .wrap section.hero{
       padding-top:0 !important;
       margin-block-start:0 !important;
+    }
+
+    .openingHours {
+      margin-top: 6px;
+      padding: 8px 12px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background: #fafafa;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .openingRow {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+
+    .openingRow .day {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .openingRow .time {
+      color: #555;
+    }
+
+    .openingRow.today {
+      background: #eaf6ff;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .openingRow.today .day,
+    .openingRow.today .time {
+      color: #007bff;
+    }
+
+    .toggleHours {
+      display: block;
+      margin: 6px auto;
+      background: none;
+      border: none;
+      color: #007bff;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .allHours.hidden {
+      display: none;
     }
 
     /* Desktop-only photo count badge for hero (last image) */
@@ -712,8 +763,12 @@
       const el = document.getElementById('infoList');
       el.innerHTML = info.map(([k,v])=>{
         const val = asList(v);
-        const vHtml = k==='Website' ? `<a href="${val}" target="_blank" rel="noopener">${val}</a>`
-          : k==='Phone' ? `<a href="tel:${val}">${val}</a>`
+        const vHtml = k === 'Website'
+          ? `<a href="${val}" target="_blank" rel="noopener">${val}</a>`
+          : k === 'Phone'
+          ? `<a href="tel:${val}">${val}</a>`
+          : k === 'Opening Hours'
+          ? renderOpeningHours(val)
           : `<span class="v">${val}</span>`;
         const icon = ({
           'Type':'🏷️','Meal Service':'🍽️','Cuisine':'🍜','Price Range':'💵','Ambiance':'🎨','Opening Hours':'⏰','Address':'📍','Phone':'📞','Website':'🌐'
@@ -721,6 +776,57 @@
         return `<div class="infoRow"><div class="icon">${icon}</div><div class="kv"><div class="k">${k}</div>${vHtml}</div></div>`;
       }).join('');
     }
+
+    function renderOpeningHours(hours) {
+        const todayIndex = new Date().getDay(); // 0=Sun, 6=Sat
+        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+        // Normalize: string fallback
+        if (typeof hours === 'string') {
+          return `<div class="openingHours"><span>${hours}</span></div>`;
+        }
+
+        if (typeof hours === 'object') {
+          const today = daysOfWeek[todayIndex];
+          const todayTime = hours[today] || "Closed";
+
+          return `
+            <div class="openingHours">
+              <div class="openingRow today">
+                <span class="day">${today}</span>
+                <span class="time">${todayTime}</span>
+              </div>
+              <button class="toggleHours" onclick="toggleHours()">View All</button>
+              <div id="allHours" class="allHours hidden">
+                ${daysOfWeek.map((day, idx) => {
+                  const time = hours[day] || "Closed";
+                  return `
+                    <div class="openingRow ${idx === todayIndex ? "today" : ""}">
+                      <span class="day">${day}</span>
+                      <span class="time">${time}</span>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+          `;
+        }
+
+        return `<div class="openingHours"><span>${hours}</span></div>`;
+      }
+
+      // Toggle function
+      function toggleHours() {
+        const all = document.getElementById("allHours");
+        const btn = document.querySelector(".toggleHours");
+        if (all.classList.contains("hidden")) {
+          all.classList.remove("hidden");
+          btn.textContent = "Hide";
+        } else {
+          all.classList.add("hidden");
+          btn.textContent = "View All";
+        }
+      }
 
     function setupOverview(desc){
       const o = document.getElementById('overview');
