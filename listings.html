@@ -104,7 +104,14 @@
     }
 
     .openingRow.today {
+      /* background: #eaf6ff;
+      border-radius: 6px; */
       font-weight: 600;
+    }
+
+    .openingRow.today .day,
+    .openingRow.today .time {
+      color: #007bff;
     }
 
     .toggleHours {
@@ -809,32 +816,34 @@
       const today = daysOfWeek[todayIndex];
       const todayTime = hoursObj[today] || "Closed";
 
+      // Wrap the button and allHours in a parent container for reliable targeting
       return `
         <div class="openingHours">
           <div class="openingRow today">
             <span class="day">${today}</span>
             <span class="time">${todayTime}</span>
           </div>
-          <button class="toggleHours" onclick="toggleHours('${uid}')">View All</button>
-          <div id="${uid}" class="allHours hidden">
-            ${daysOfWeek.map((day, idx) => {
-              const time = hoursObj[day] || "Closed";
-              return `
-                <div class="openingRow ${idx === todayIndex ? "today" : ""}">
-                  <span class="day">${day}</span>
-                  <span class="time">${time}</span>
-                </div>
-              `;
-            }).join("")}
+          <div class="allHoursContainer">
+            <button class="toggleHours" data-target="${uid}" onclick="toggleHours('${uid}', this)">View All</button>
+            <div id="${uid}" class="allHours hidden">
+              ${daysOfWeek.map((day, idx) => {
+                const time = hoursObj[day] || "Closed";
+                return `
+                  <div class="openingRow ${idx === todayIndex ? "today" : ""}">
+                    <span class="day">${day}</span>
+                    <span class="time">${time}</span>
+                  </div>
+                `;
+              }).join("")}
+            </div>
           </div>
         </div>
       `;
     }
 
-    function toggleHours(id) {
+    function toggleHours(id, btn) {
       const all = document.getElementById(id);
       if (!all) return;
-      const btn = all.previousElementSibling;
       if (all.classList.contains("hidden")) {
         all.classList.remove("hidden");
         if (btn) btn.textContent = "Hide";
