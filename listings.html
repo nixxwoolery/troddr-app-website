@@ -796,42 +796,61 @@
     }
 
     function renderOpeningHours(hours) {
-        const todayIndex = new Date().getDay(); // 0=Sun, 6=Sat
-        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const todayIndex = new Date().getDay(); // 0=Sun
+      const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-        // Normalize: string fallback
-        if (typeof hours === 'string') {
-          return `<div class="openingHours"><span>${hours}</span></div>`;
-        }
+      // Case 1: hours is already an object → use existing logic
+      if (typeof hours === 'object') {
+        const today = daysOfWeek[todayIndex];
+        const todayTime = hours[today] || "Closed";
 
-        if (typeof hours === 'object') {
-          const today = daysOfWeek[todayIndex];
-          const todayTime = hours[today] || "Closed";
-
-          return `
-            <div class="openingHours">
-              <div class="openingRow today">
-                <span class="day">${today}</span>
-                <span class="time">${todayTime}</span>
-              </div>
-              <button class="toggleHours" onclick="toggleHours()">View All</button>
-              <div id="allHours" class="allHours hidden">
-                ${daysOfWeek.map((day, idx) => {
-                  const time = hours[day] || "Closed";
-                  return `
-                    <div class="openingRow ${idx === todayIndex ? "today" : ""}">
-                      <span class="day">${day}</span>
-                      <span class="time">${time}</span>
-                    </div>
-                  `;
-                }).join("")}
-              </div>
+        return `
+          <div class="openingHours">
+            <div class="openingRow today">
+              <span class="day">${today}</span>
+              <span class="time">${todayTime}</span>
             </div>
-          `;
-        }
-
-        return `<div class="openingHours"><span>${hours}</span></div>`;
+            <button class="toggleHours" onclick="toggleHours()">View All</button>
+            <div id="allHours" class="allHours hidden">
+              ${daysOfWeek.map((day, idx) => {
+                const time = hours[day] || "Closed";
+                return `
+                  <div class="openingRow ${idx === todayIndex ? "today" : ""}">
+                    <span class="day">${day}</span>
+                    <span class="time">${time}</span>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `;
       }
+
+      // Case 2: hours is a string → parse into rows
+      if (typeof hours === 'string') {
+        const rows = hours
+          .split(';')
+          .map(s => s.trim())
+          .filter(Boolean)
+          .map(entry => {
+            const [dayPart, ...timePart] = entry.split(' ');
+            const time = timePart.join(' ').trim();
+            const isToday = daysOfWeek[todayIndex].startsWith(dayPart);
+            return `
+              <div class="openingRow ${isToday ? 'today' : ''}">
+                <span class="day">${dayPart}</span>
+                <span class="time">${time}</span>
+              </div>
+            `;
+          })
+          .join('');
+
+        return `<div class="openingHours">${rows}</div>`;
+      }
+
+      // Fallback
+      return `<div class="openingHours"><span>${hours}</span></div>`;
+    }
 
       // Toggle function
       function toggleHours() {
