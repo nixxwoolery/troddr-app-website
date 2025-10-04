@@ -799,71 +799,55 @@
       const todayIndex = new Date().getDay(); // 0=Sun
       const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-      // Case 1: hours is already an object → use existing logic
-      if (typeof hours === 'object') {
-        const today = daysOfWeek[todayIndex];
-        const todayTime = hours[today] || "Closed";
+      // Normalize hours string into {day: time}
+      let hoursObj = {};
+      if (typeof hours === "object") {
+        hoursObj = hours;
+      } else if (typeof hours === "string") {
+        hours.split(";").map(s => s.trim()).filter(Boolean).forEach(entry => {
+          const parts = entry.split(" ");
+          const dayPart = parts[0];
+          const timePart = parts.slice(1).join(" ");
+          hoursObj[dayPart] = timePart;
+        });
+      }
 
-        return `
-          <div class="openingHours">
-            <div class="openingRow today">
-              <span class="day">${today}</span>
-              <span class="time">${todayTime}</span>
-            </div>
-            <button class="toggleHours" onclick="toggleHours()">View All</button>
-            <div id="allHours" class="allHours hidden">
-              ${daysOfWeek.map((day, idx) => {
-                const time = hours[day] || "Closed";
-                return `
-                  <div class="openingRow ${idx === todayIndex ? "today" : ""}">
-                    <span class="day">${day}</span>
-                    <span class="time">${time}</span>
-                  </div>
-                `;
-              }).join("")}
-            </div>
+      const today = daysOfWeek[todayIndex];
+      const todayTime = hoursObj[today] || "Closed";
+
+      return `
+        <div class="openingHours">
+          <div class="openingRow today">
+            <span class="day">${today}</span>
+            <span class="time">${todayTime}</span>
           </div>
-        `;
-      }
-
-      // Case 2: hours is a string → parse into rows
-      if (typeof hours === 'string') {
-        const rows = hours
-          .split(';')
-          .map(s => s.trim())
-          .filter(Boolean)
-          .map(entry => {
-            const [dayPart, ...timePart] = entry.split(' ');
-            const time = timePart.join(' ').trim();
-            const isToday = daysOfWeek[todayIndex].startsWith(dayPart);
-            return `
-              <div class="openingRow ${isToday ? 'today' : ''}">
-                <span class="day">${dayPart}</span>
-                <span class="time">${time}</span>
-              </div>
-            `;
-          })
-          .join('');
-
-        return `<div class="openingHours">${rows}</div>`;
-      }
-
-      // Fallback
-      return `<div class="openingHours"><span>${hours}</span></div>`;
+          <button class="toggleHours" onclick="toggleHours()">View All</button>
+          <div id="allHours" class="allHours hidden">
+            ${daysOfWeek.map((day, idx) => {
+              const time = hoursObj[day] || "Closed";
+              return `
+                <div class="openingRow ${idx === todayIndex ? "today" : ""}">
+                  <span class="day">${day}</span>
+                  <span class="time">${time}</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
     }
 
-      // Toggle function
-      function toggleHours() {
-        const all = document.getElementById("allHours");
-        const btn = document.querySelector(".toggleHours");
-        if (all.classList.contains("hidden")) {
-          all.classList.remove("hidden");
-          btn.textContent = "Hide";
-        } else {
-          all.classList.add("hidden");
-          btn.textContent = "View All";
-        }
+    function toggleHours() {
+      const all = document.getElementById("allHours");
+      const btn = document.querySelector(".toggleHours");
+      if (all.classList.contains("hidden")) {
+        all.classList.remove("hidden");
+        btn.textContent = "Hide";
+      } else {
+        all.classList.add("hidden");
+        btn.textContent = "View All";
       }
+    }
 
     function setupOverview(desc){
       const o = document.getElementById('overview');
