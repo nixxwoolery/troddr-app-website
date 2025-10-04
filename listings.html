@@ -797,26 +797,48 @@
 
     function renderOpeningHours(hours) {
       const uid = "hours-" + Math.random().toString(36).substr(2, 9);
+      const toggleId = `toggle-${uid}`;
       const todayIndex = new Date().getDay(); // 0=Sun
       const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-      // Normalize hours string into {day: time}
       let hoursObj = {};
+
       if (typeof hours === "object") {
         hoursObj = hours;
       } else if (typeof hours === "string") {
         hours.split(";").map(s => s.trim()).filter(Boolean).forEach(entry => {
-          const parts = entry.split(" ");
-          const dayPart = parts[0];
-          const timePart = parts.slice(1).join(" ");
-          hoursObj[dayPart] = timePart;
+          // Split the entry into [dayPart, ...timeParts]
+          const [dayPart, ...timeParts] = entry.split(" ");
+          const timePart = timeParts.join(" ");
+          if (dayPart.includes("-")) {
+            // Handle day range, e.g. Mon-Fri 9am–5pm
+            const [start, end] = dayPart.split("-");
+            const startIdx = daysOfWeek.indexOf(start);
+            const endIdx = daysOfWeek.indexOf(end);
+            if (startIdx >= 0 && endIdx >= 0) {
+              for (let i = startIdx; i <= endIdx; i++) {
+                hoursObj[daysOfWeek[i]] = timePart || "Closed";
+              }
+            }
+          } else {
+            hoursObj[dayPart] = timePart || "Closed";
+          }
         });
       }
 
       const today = daysOfWeek[todayIndex];
       const todayTime = hoursObj[today] || "Closed";
 
-      // Wrap the button and allHours in a parent container for reliable targeting
+      // After DOM is updated, bind event listener with setTimeout
+      setTimeout(() => {
+        const btn = document.getElementById(toggleId);
+        if (btn) {
+          btn.addEventListener("click", function() {
+            toggleHours(uid, btn);
+          });
+        }
+      }, 0);
+
       return `
         <div class="openingHours">
           <div class="openingRow today">
@@ -824,7 +846,7 @@
             <span class="time">${todayTime}</span>
           </div>
           <div class="allHoursContainer">
-            <button class="toggleHours" data-target="${uid}" onclick="toggleHours('${uid}', this)">View All</button>
+            <button class="toggleHours" id="${toggleId}" data-target="${uid}">View All</button>
             <div id="${uid}" class="allHours hidden">
               ${daysOfWeek.map((day, idx) => {
                 const time = hoursObj[day] || "Closed";
