@@ -104,14 +104,7 @@
     }
 
     .openingRow.today {
-      background: #eaf6ff;
-      border-radius: 6px;
       font-weight: 600;
-    }
-
-    .openingRow.today .day,
-    .openingRow.today .time {
-      color: #007bff;
     }
 
     .toggleHours {
@@ -796,6 +789,7 @@
     }
 
     function renderOpeningHours(hours) {
+      const uid = "hours-" + Math.random().toString(36).substr(2, 9);
       const todayIndex = new Date().getDay(); // 0=Sun
       const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -821,8 +815,8 @@
             <span class="day">${today}</span>
             <span class="time">${todayTime}</span>
           </div>
-          <button class="toggleHours" onclick="toggleHours()">View All</button>
-          <div id="allHours" class="allHours hidden">
+          <button class="toggleHours" onclick="toggleHours('${uid}')">View All</button>
+          <div id="${uid}" class="allHours hidden">
             ${daysOfWeek.map((day, idx) => {
               const time = hoursObj[day] || "Closed";
               return `
@@ -837,15 +831,16 @@
       `;
     }
 
-    function toggleHours() {
-      const all = document.getElementById("allHours");
-      const btn = document.querySelector(".toggleHours");
+    function toggleHours(id) {
+      const all = document.getElementById(id);
+      if (!all) return;
+      const btn = all.previousElementSibling;
       if (all.classList.contains("hidden")) {
         all.classList.remove("hidden");
-        btn.textContent = "Hide";
+        if (btn) btn.textContent = "Hide";
       } else {
         all.classList.add("hidden");
-        btn.textContent = "View All";
+        if (btn) btn.textContent = "View All";
       }
     }
 
