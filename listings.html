@@ -207,6 +207,13 @@
       font-size: 14px;
     }
 
+    #openWaze {
+      background: #33ccff; /* Waze blue */
+    }
+    #openWaze:hover {
+      background: #1da1c5;
+    }
+
     /* Cards */
     .card.narrow{max-width:760px;margin:16px 0}
     .mapCard.narrow{max-width:760px;margin:16px 0}
@@ -418,10 +425,21 @@
     <section class="mapCard narrow" style="margin-top:16px">      
       <div class="mapHead">
         <div style="font-weight:500; font-size:18px">Location</div>
-        <!-- <a class="btn btn-outline" id="action-directions" href="#" style="padding:8px 12px">Get Directions</a> -->
       </div>
-      <div class="mapBody" id="mapBody">Map preview unavailable</div>
+      <div class="mapBody" id="mapBody" onclick="handleMapClick()" style="cursor:pointer">
+        <span style="color:#666">Tap to open map</span>
+      </div>
     </section>
+    
+    <div id="mapOptionsModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h3>Open in Maps</h3>
+        <button id="openGoogle">Google Maps</button>
+        <button id="openApple">Apple Maps</button>
+        <button id="openWaze">Waze</button>
+        <button onclick="closeMapModal()">Cancel</button>
+      </div>
+    </div>
   </div>
   <!-- <div class="sticky-cta">
     <a class="btn btn-primary" id="sticky-directions" href="#"><span class="i">📍</span>Directions</a>
@@ -1125,8 +1143,8 @@
       };
     }
 
-let __mapsChooserEl;
-let __mapsActiveTrigger;
+    let __mapsChooserEl;
+    let __mapsActiveTrigger;
     function showMapChooser(btn, place){
       const links = buildMapLinks(place);
       __mapsActiveTrigger = btn; // remember which trigger opened the chooser
@@ -1270,6 +1288,35 @@ let __mapsActiveTrigger;
         d.appendChild(h); d.appendChild(b); wrap.appendChild(d);
       });
     }
+
+    function handleMapClick(){
+      const place = window.currentPlace;
+      if (!place || !place.latitude || !place.longitude) return;
+
+      // store URLs globally so buttons can access them
+      window.googleUrl = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
+      window.appleUrl = `http://maps.apple.com/?ll=${place.latitude},${place.longitude}&q=${encodeURIComponent(place.name||'Location')}`;
+      window.wazeUrl = `https://waze.com/ul?ll=${place.latitude},${place.longitude}&navigate=yes`;
+
+      document.getElementById("mapOptionsModal").style.display = "block";
+    }
+
+    function closeMapModal(){
+      document.getElementById("mapOptionsModal").style.display = "none";
+    }
+
+    document.getElementById("openGoogle").onclick = () => {
+      window.open(window.googleUrl, "_blank");
+      closeMapModal();
+    };
+    document.getElementById("openApple").onclick = () => {
+      window.open(window.appleUrl, "_blank");
+      closeMapModal();
+    };
+    document.getElementById("openWaze").onclick = () => {
+      window.open(window.wazeUrl, "_blank");
+      closeMapModal();
+    };
 
     async function main(){
       if (!slug){
