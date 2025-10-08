@@ -910,7 +910,7 @@
       if (otherGuides && otherGuides.length > 0) {
         $('#read-next').style.display = 'block';
         $('#read-next-scroll').innerHTML = otherGuides.map(g => `
-          <a href="/guides/${g.slug}" class="read-next-card">
+          <a href="https://www.troddr.com/guide.html?slug=${g.slug}" class="read-next-card">
             <img src="${g.image_url || '/images/default-guide.jpg'}" alt="${g.title}" class="read-next-image" />
             <div class="read-next-overlay"></div>
             <div class="read-next-text">${g.title}</div>
