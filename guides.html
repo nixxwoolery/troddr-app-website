@@ -3,91 +3,926 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TRODDR — Listing</title>
+  <title>TRODDR — Guide</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/images/troddr_logo.png">
   <link rel="icon" type="image/png" href="/images/troddr_logo.png">
   <link rel="apple-touch-icon" href="/images/troddr_logo.png">
+  
+  <style>
+    :root{
+      --brand:#0077cc;
+      --bg:#fafafa;
+      --fg:#0b1220;
+      --muted:#6b7280;
+      --card:#ffffff;
+      --line:#e5e7eb;
+      --radius:12px;
+      --gap:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0}
+    body{
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--fg);
+      line-height:1.5;
+    }
+    a{text-decoration:none; color:inherit}
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:0 20px 40px;
+    }
+
+    /* Hero Section */
+    .guide-hero{
+      width:100%;
+      height:400px;
+      background:#e5e7eb;
+      position:relative;
+      margin-bottom:0;
+    }
+    .guide-hero img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    /* Guide Header */
+    .guide-header{
+      background:var(--card);
+      padding:32px 24px;
+      margin-bottom:8px;
+    }
+    .guide-title{
+      font-size:clamp(24px, 3.5vw, 32px);
+      font-weight:800;
+      color:#1a1a1a;
+      margin:0 0 8px;
+      line-height:1.2;
+    }
+    .guide-type{
+      font-size:14px;
+      font-weight:600;
+      color:var(--brand);
+      margin-bottom:12px;
+      display:inline-block;
+    }
+    .guide-description{
+      font-size:15px;
+      color:#4b5563;
+      line-height:1.6;
+      margin:12px 0;
+    }
+    .guide-meta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:12px;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+    .place-count{
+      font-size:12px;
+      font-weight:600;
+      color:#fff;
+      background:#3b82f6;
+      padding:6px 12px;
+      border-radius:8px;
+    }
+    .category-icons{
+      display:flex;
+      gap:8px;
+    }
+    .category-badge{
+      width:32px;
+      height:32px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:16px;
+    }
+
+    /* Section Header */
+    .section-header{
+      padding:24px 24px 16px;
+      margin-bottom:0;
+    }
+    .section-title{
+      font-size:24px;
+      font-weight:700;
+      color:#1a1a1a;
+      margin:0 0 8px;
+    }
+    .section-line{
+      height:3px;
+      width:40px;
+      background:#3b82f6;
+      border-radius:2px;
+    }
+
+    /* Place Cards */
+    .place-card{
+      background:var(--card);
+      margin-bottom:24px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      overflow:hidden;
+    }
+    .place-image-container{
+      position:relative;
+      width:100%;
+      height:260px;
+      background:#e5e7eb;
+    }
+    .place-image{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .place-tag{
+      position:absolute;
+      top:16px;
+      left:16px;
+      background:#fcd34d;
+      color:#92400e;
+      font-weight:700;
+      font-size:12px;
+      padding:6px 12px;
+      border-radius:20px;
+    }
+    .place-content{
+      padding:24px;
+    }
+    .place-name{
+      font-size:22px;
+      font-weight:600;
+      color:#1a1a1a;
+      margin:0 0 12px;
+      line-height:1.3;
+    }
+
+    /* Troddr Badge */
+    .troddr-badge{
+      display:flex;
+      align-items:center;
+      gap:4px;
+      margin:8px 0 12px;
+    }
+    .troddr-badge img{
+      width:16px;
+      height:16px;
+    }
+    .troddr-badge-text{
+      color:var(--brand);
+      font-weight:600;
+      font-size:14px;
+      margin-left:4px;
+    }
+
+    /* Place Meta */
+    .place-meta{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .meta-item{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:14px;
+      color:#6b7280;
+    }
+    .meta-item i{
+      color:var(--brand);
+      font-size:18px;
+    }
+    .price-tag{
+      display:inline-block;
+      color:green;
+      font-weight:500;
+      font-size:14px;
+    }
+    .rating-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:#f3f4f6;
+      padding:4px 8px;
+      border-radius:8px;
+      font-size:12px;
+      font-weight:600;
+      color:#374151;
+    }
+
+    /* Perfect For Tags */
+    .perfect-for{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin:12px 0;
+    }
+    .perfect-for-label{
+      font-weight:600;
+      margin-right:4px;
+    }
+    .perfect-for-tag{
+      background:#f0f4ff;
+      color:#2f6bff;
+      padding:4px 10px;
+      border-radius:12px;
+      font-size:14px;
+    }
+
+    /* Opening Hours */
+    .opening-hours{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:12px 14px;
+      margin:12px 0;
+    }
+    .hours-header{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin-bottom:8px;
+    }
+    .hours-title{
+      font-size:12px;
+      font-weight:800;
+      color:#111827;
+      text-transform:uppercase;
+      letter-spacing:0.6px;
+    }
+    .hours-value{
+      font-size:14px;
+      color:#374151;
+      line-height:1.4;
+    }
+
+    /* Place Description */
+    .place-description{
+      font-size:15px;
+      color:#4b5563;
+      line-height:1.5;
+      margin:16px 0 20px;
+    }
+
+    /* Action Buttons */
+    .place-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .action-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:#eff6ff;
+      color:#3b82f6;
+      font-weight:600;
+      font-size:14px;
+      padding:10px 16px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      transition:background 0.2s;
+    }
+    .action-btn:hover{
+      background:#dbeafe;
+    }
+    .action-btn i{
+      font-size:14px;
+    }
+
+    /* Map Section */
+    .map-section{
+      background:var(--card);
+      border-radius:12px;
+      overflow:hidden;
+      margin:20px 0;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    }
+    .map-header{
+      padding:16px 20px;
+      border-bottom:1px solid var(--line);
+    }
+    .map-title{
+      font-size:18px;
+      font-weight:600;
+      margin:0;
+    }
+    .map-body{
+      height:400px;
+      background:#f8f9fa;
+    }
+    .map-body iframe{
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    /* Read Next */
+    .read-next{
+      background:var(--card);
+      padding:40px 24px;
+      margin-top:20px;
+    }
+    .read-next-title{
+      font-size:22px;
+      font-weight:600;
+      color:#1a1a1a;
+      margin:0 0 18px;
+    }
+    .read-next-scroll{
+      display:flex;
+      gap:16px;
+      overflow-x:auto;
+      padding-bottom:10px;
+      -webkit-overflow-scrolling:touch;
+    }
+    .read-next-card{
+      flex:0 0 300px;
+      height:300px;
+      border-radius:8px;
+      overflow:hidden;
+      position:relative;
+      cursor:pointer;
+      transition:transform 0.2s;
+    }
+    .read-next-card:hover{
+      transform:translateY(-4px);
+    }
+    .read-next-image{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .read-next-overlay{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,0.2);
+    }
+    .read-next-text{
+      position:absolute;
+      bottom:0;
+      left:0;
+      right:0;
+      color:#fff;
+      font-size:14px;
+      font-weight:500;
+      background:rgba(0,0,0,0.4);
+      padding:10px;
+    }
+
+    /* Skeleton Loading */
+    .skeleton{
+      background:linear-gradient(90deg,#f2f4f7,#e9edf2,#f2f4f7);
+      background-size:200% 100%;
+      animation:shimmer 1.2s infinite;
+      color:transparent !important;
+      pointer-events:none;
+    }
+    @keyframes shimmer{
+      0%{background-position:200% 0}
+      100%{background-position:-200% 0}
+    }
+    .skel-line{
+      height:14px;
+      border-radius:7px;
+      margin:8px 0;
+      background:#e5e7eb;
+    }
+    .skel-hero{
+      width:100%;
+      height:400px;
+      background:#f2f2f7;
+    }
+    .skel-card{
+      background:var(--card);
+      padding:24px;
+      margin-bottom:24px;
+    }
+
+    /* Responsive */
+    @media (max-width:768px){
+      .guide-hero{height:300px}
+      .map-body{height:300px}
+      .place-image-container{height:200px}
+    }
+  </style>
+
+  <script>
+    window.env = window.env || {
+      SUPABASE_URL: 'https://rprpwudhplodaqmmwqkf.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk'
+    };
+  </script>
 </head>
 <body>
-    <header class="header" role="banner">
-        <div class="navbar">
-          <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
-          <button class="mobile-menu-btn"
-                  aria-controls="primary-navigation"
-                  aria-expanded="false"
-                  aria-label="Open menu">
-            <span aria-hidden="true">☰</span>
-          </button>
-          <div class="nav-links" id="primary-navigation" role="navigation">
-            <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
-            <a href="about.html" class="nav-item">About</a>
-            <a href="#features" class="nav-item">Features</a>
-            <a href="contact.html" class="nav-item">Contact</a>
-            <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="navbar">
+      <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
+      <button class="mobile-menu-btn" aria-controls="primary-navigation" aria-expanded="false" aria-label="Open menu">
+        <span aria-hidden="true">☰</span>
+      </button>
+      <div class="nav-links" id="primary-navigation" role="navigation">
+        <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
+        <a href="about.html" class="nav-item">About</a>
+        <a href="#features" class="nav-item">Features</a>
+        <a href="contact.html" class="nav-item">Contact</a>
+        <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Image -->
+  <div class="guide-hero" id="guide-hero">
+    <img id="hero-image" alt="" />
+  </div>
+
+  <div class="wrap">
+    <!-- Guide Header -->
+    <div class="guide-header" id="guide-header">
+      <h1 class="guide-title" id="guide-title">Loading…</h1>
+      <span class="guide-type" id="guide-type"></span>
+      <p class="guide-description" id="guide-description"></p>
+      <div class="guide-meta">
+        <span class="place-count" id="place-count"></span>
+        <div class="category-icons" id="category-icons"></div>
+      </div>
+    </div>
+
+    <!-- Places List -->
+    <div id="places-list"></div>
+
+    <!-- Map -->
+    <div class="map-section">
+      <div class="map-header">
+        <h2 class="map-title">Guide Map</h2>
+      </div>
+      <div class="map-body" id="map-body"></div>
+    </div>
+
+    <!-- Read Next -->
+    <div class="read-next" id="read-next" style="display:none">
+      <h2 class="read-next-title">Read Next</h2>
+      <div class="read-next-scroll" id="read-next-scroll"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="section-container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>TRODDR</h3>
+          <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+        </div>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <div class="footer-links">
+            <a href="about.html">About Us</a>
+            <a href="#features">Features</a>
+            <a href="contact.html">Contact</a>
+            <a href="#demo">Join Waitlist</a>
           </div>
         </div>
-    </header>
-
-
-    <footer class="footer">
-        <div class="section-container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>TRODDR</h3>
-                    <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Company</h3>
-                    <div class="footer-links">
-                        <a href="about.html">About Us</a>
-                        <a href="#features">Features</a>
-                        <a href="contact.html">Contact</a>
-                        <a href="#demo">Join Waitlist</a>
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h3>Discover</h3>
-                    <div class="footer-links">
-                        <a href="#">Eat</a>
-                        <a href="#">Stay</a>
-                        <a href="#">Play</a>
-                        <a href="#">Destinations</a>
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h3>Plan</h3>
-                    <div class="footer-links">
-                        <a href="#">Trip Planner</a>
-                        <a href="#">Itineraries</a>
-                        <a href="#">Travel Guides</a>
-                        <a href="#">Local Tips</a>
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h3>Support</h3>
-                    <div class="footer-links">
-                        <a href="#">Help Center</a>
-                        <a href="contact.html">Contact Us</a>
-                        <a href="privacy.html">Privacy Policy</a>
-                        <a href="terms.html">Terms of Service</a>
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h3>Contact</h3>
-                    <div class="footer-links">
-                        <a href="mailto:hello@troddr.com">hello@troddr.com</a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
-            </div>
+        <div class="footer-section">
+          <h3>Support</h3>
+          <div class="footer-links">
+            <a href="#">Help Center</a>
+            <a href="contact.html">Contact Us</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+          </div>
         </div>
-    </footer>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu
+    (function(){
+      const menuBtn = document.querySelector('.mobile-menu-btn');
+      const navLinks = document.querySelector('.nav-links');
+      const closeBtn = document.querySelector('.nav-close-btn');
+      if (!menuBtn || !navLinks) return;
+      menuBtn.addEventListener('click', function(){
+        const isOpen = navLinks.classList.toggle('mobile-open');
+        this.classList.toggle('active', isOpen);
+        this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        document.body.classList.toggle('menu-open', isOpen);
+      });
+      navLinks.addEventListener('click', function(e){
+        const link = e.target.closest('a');
+        if (!link) return;
+        navLinks.classList.remove('mobile-open');
+        menuBtn.classList.remove('active');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open');
+      });
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          navLinks.classList.remove('mobile-open');
+          menuBtn.classList.remove('active');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          document.body.classList.remove('menu-open');
+        });
+      }
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+          navLinks.classList.remove('mobile-open');
+          menuBtn.classList.remove('active');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          document.body.classList.remove('menu-open');
+        }
+      });
+    })();
+  </script>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = window.env.SUPABASE_URL.trim();
+    const SUPABASE_ANON_KEY = window.env.SUPABASE_ANON_KEY.trim();
+    const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+
+    const params = new URLSearchParams(location.search);
+    const pathMatch = location.pathname.match(/\/guides\/([^\/?#]+)/i);
+    const slug = params.get('slug') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
+
+    const $ = (sel) => document.querySelector(sel);
+    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
+
+    // Analytics
+    function track(eventName, params = {}){
+      try {
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', eventName, params);
+        }
+        console.debug('[track]', eventName, params);
+      } catch {}
+    }
+
+    // Helpers
+    const titleCase = (str) => (str || '').replace(/-/g,' ').replace(/\b\w/g, s => s.toUpperCase());
+
+    const CATEGORY_ICONS = {
+      eat: '🍽️',
+      stay: '🛏️',
+      play: '🎯'
+    };
+
+    const CATEGORY_COLORS = {
+      eat: '#007E94',
+      stay: '#C3D600',
+      play: '#77C7AC'
+    };
+
+    // Troddr tier logic
+    const toNum = (v) => {
+      if (v == null) return null;
+      const m = String(v).match(/(\d+(?:\.\d+)?)/);
+      if (!m) return null;
+      const n = parseFloat(m[1]);
+      return isFinite(n) ? n : null;
+    };
+
+    const getTroddrTier = (place) => {
+      const rawTier = place?.troddr_tier ?? place?.tier ?? null;
+      if (rawTier != null) {
+        const m = String(rawTier).match(/^T?([1-3])$/i);
+        if (m) return Number(m[1]);
+      }
+      const candidates = [place?.rating, place?.places_rating, place?.score];
+      let rNum = null;
+      for (const v of candidates) {
+        const n = toNum(v);
+        if (n != null) { rNum = n; break; }
+      }
+      if (rNum == null) return null;
+      if (rNum >= 4.7) return 3;
+      if (rNum >= 4.4) return 2;
+      if (rNum >= 4.0) return 1;
+      return null;
+    };
+
+    function renderTroddrBadge(tier) {
+      if (!tier) return '';
+      const labels = { 1: 'Very good', 2: 'Excellent', 3: 'Exceptional' };
+      const logos = Array(tier).fill('<img src="/images/troddr_logo.png" alt="Troddr" />').join('');
+      return `<div class="troddr-badge">${logos}<span class="troddr-badge-text">${labels[tier]}</span></div>`;
+    }
+
+    // Opening hours parser
+    function parseOpeningHours(raw) {
+      if (!raw || typeof raw !== 'string') return null;
+      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const hoursObj = {};
+      
+      raw.split(";").map(s => s.trim()).filter(Boolean).forEach(entry => {
+        const [dayPart, ...timeParts] = entry.split(" ");
+        const timePart = timeParts.join(" ");
+        
+        if (dayPart.includes("-")) {
+          const [start, end] = dayPart.split("-");
+          const startIdx = days.indexOf(start);
+          const endIdx = days.indexOf(end);
+          if (startIdx >= 0 && endIdx >= 0) {
+            for (let i = startIdx; i <= endIdx; i++) {
+              hoursObj[days[i]] = timePart || "Closed";
+            }
+          }
+        } else {
+          hoursObj[dayPart] = timePart || "Closed";
+        }
+      });
+
+      return hoursObj;
+    }
+
+    function renderOpeningHours(hours) {
+      if (!hours) return '';
+      const parsed = parseOpeningHours(hours);
+      if (!parsed) return `<div class="opening-hours"><div class="hours-value">${hours}</div></div>`;
+      
+      const today = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()];
+      const todayTime = parsed[today] || "Closed";
+      
+      return `
+        <div class="opening-hours">
+          <div class="hours-header">
+            <i class="fas fa-clock"></i>
+            <span class="hours-title">Opening Hours</span>
+          </div>
+          <div class="hours-value">${today}: ${todayTime}</div>
+        </div>
+      `;
+    }
+
+    // Render place card
+    function renderPlaceCard(place) {
+      const tier = getTroddrTier(place);
+      const imageUrl = Array.isArray(place.image) ? place.image[0] : place.image;
+      const placeSlug = place.place_slug || place.slug;
+      const perfectFor = place.perfect_for ? place.perfect_for.split(',').map(p => p.trim()).filter(Boolean) : [];
+
+      return `
+        <div class="place-card">
+          ${imageUrl ? `
+            <div class="place-image-container">
+              <img src="${imageUrl}" alt="${place.name}" class="place-image" />
+              <span class="place-tag">Just Added</span>
+            </div>
+          ` : ''}
+          <div class="place-content">
+            <h3 class="place-name">${place.name}</h3>
+            ${renderTroddrBadge(tier)}
+            
+            <div class="place-meta">
+              ${place.address ? `
+                <div class="meta-item">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>${place.address}</span>
+                </div>
+              ` : ''}
+              
+              ${place.price_range || place.cuisine ? `
+                <div style="display:flex; gap:15px; align-items:center">
+                  ${place.price_range ? `<span class="price-tag">${place.price_range}</span>` : ''}
+                  ${place.cuisine ? `
+                    <div class="meta-item">
+                      <i class="fas fa-utensils"></i>
+                      <span>${place.cuisine}</span>
+                    </div>
+                  ` : ''}
+                </div>
+              ` : ''}
+            </div>
+
+            ${perfectFor.length > 0 ? `
+              <div class="perfect-for">
+                <span class="perfect-for-label">Perfect For</span>
+                ${perfectFor.map(tag => `<span class="perfect-for-tag">${tag}</span>`).join('')}
+              </div>
+            ` : ''}
+
+            ${place.opening_hours ? renderOpeningHours(place.opening_hours) : ''}
+
+            <p class="place-description">${place.custom_blurb?.trim() || place.description || ''}</p>
+
+            <div class="place-actions">
+              <a href="/listings/${placeSlug}" class="action-btn">
+                <span>View More</span>
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render section
+    function renderSection(title) {
+      return `
+        <div class="section-header">
+          <h2 class="section-title">${title}</h2>
+          <div class="section-line"></div>
+        </div>
+      `;
+    }
+
+    // Render map
+    function renderMap(places) {
+      const validPlaces = places.filter(p => p.latitude && p.longitude);
+      if (validPlaces.length === 0) {
+        $('#map-body').innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#6b7280">Map preview unavailable</div>';
+        return;
+      }
+
+      // Calculate center
+      const lats = validPlaces.map(p => Number(p.latitude));
+      const lngs = validPlaces.map(p => Number(p.longitude));
+      const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+      const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+
+      // Create markers param for Google Maps
+      const markers = validPlaces.map(p => 
+        `markers=color:red%7C${p.latitude},${p.longitude}`
+      ).join('&');
+
+      const iframe = document.createElement('iframe');
+      iframe.loading = 'lazy';
+      iframe.referrerPolicy = 'no-referrer-when-downgrade';
+      iframe.src = `https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=${centerLat},${centerLng}&zoom=12&${markers}`;
+      $('#map-body').innerHTML = '';
+      $('#map-body').appendChild(iframe);
+    }
+
+    // Show skeleton
+    function showSkeleton() {
+      $('#guide-title').classList.add('skeleton');
+      $('#guide-type').classList.add('skeleton');
+      $('#guide-description').innerHTML = '<div class="skel-line" style="width:80%"></div><div class="skel-line" style="width:90%"></div><div class="skel-line" style="width:60%"></div>';
+      $('#places-list').innerHTML = '<div class="skel-card"><div class="skel-line" style="width:60%"></div><div class="skel-line" style="width:90%"></div></div>';
+    }
+
+    function hideSkeleton() {
+      $('#guide-title').classList.remove('skeleton');
+      $('#guide-type').classList.remove('skeleton');
+    }
+
+    // OG Tags
+    function upsertMeta(attr, name, content){
+      let sel = `${attr}="${name}"`;
+      let el = document.head.querySelector(`meta[${sel}]`);
+      if (!el){ el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    }
+
+    function injectOG(guide, slug){
+      try{
+        const title = `${guide.title} — TRODDR`;
+        const desc = guide.description || `Discover the best places in ${guide.title} on TRODDR.`;
+        const img = guide.image || '/images/og-default.jpg';
+        const url = `${window.location.origin}/guides/${slug}`;
+
+        document.title = title;
+        upsertMeta('property','og:title', title);
+        upsertMeta('property','og:description', desc);
+        upsertMeta('property','og:type', 'website');
+        upsertMeta('property','og:url', url);
+        upsertMeta('property','og:image', img);
+        upsertMeta('name','twitter:card','summary_large_image');
+        upsertMeta('name','twitter:title', title);
+        upsertMeta('name','twitter:description', desc);
+        upsertMeta('name','twitter:image', img);
+        upsertMeta('name', 'description', desc);
+
+        let link = document.head.querySelector('link[rel="canonical"]');
+        if (!link){
+          link = document.createElement('link');
+          link.setAttribute('rel','canonical');
+          document.head.appendChild(link);
+        }
+        link.setAttribute('href', url);
+      }catch(e){}
+    }
+
+    // Main
+    async function main() {
+      if (!slug) {
+        set('guide-title', 'Guide');
+        document.title = 'Guide — TRODDR';
+        return;
+      }
+
+      showSkeleton();
+      track('guide_viewed', { slug });
+
+      // Fetch guide metadata
+      const { data: guideMeta, error: guideError } = await supa
+        .from('guides')
+        .select('title, type, description, slug, image_url, place_slugs')
+        .eq('slug', slug)
+        .single();
+
+      if (guideError || !guideMeta) {
+        $('#guide-title').textContent = 'Guide not found';
+        $('#guide-description').textContent = 'This guide could not be loaded.';
+        return;
+      }
+
+      // Fetch places
+      const { data: places, error: placesError } = await supa
+        .from('view_guide_details')
+        .select('*')
+        .eq('guide_slug', slug)
+        .order('ordering', { ascending: true });
+
+      const listings = places || [];
+
+      // Set hero image
+      if (guideMeta.image_url) {
+        $('#hero-image').src = guideMeta.image_url;
+        $('#hero-image').alt = guideMeta.title;
+      }
+
+      // Set header
+      set('guide-title', guideMeta.title);
+      set('guide-type', guideMeta.type);
+      set('guide-description', guideMeta.description);
+      set('place-count', `${listings.length} ${listings.length === 1 ? 'Place' : 'Places'}`);
+
+      // Category icons
+      const categories = [...new Set(listings.map(p => p.category).filter(Boolean))];
+      $('#category-icons').innerHTML = categories.map(cat => 
+        `<div class="category-badge" style="background:${CATEGORY_COLORS[cat] || '#999'}">${CATEGORY_ICONS[cat] || '•'}</div>`
+      ).join('');
+
+      // Group places by section
+      const grouped = listings.reduce((acc, place) => {
+        const section = place.section || 'Featured';
+        if (!acc[section]) acc[section] = [];
+        acc[section].push(place);
+        return acc;
+      }, {});
+
+      // Render places
+      let html = '';
+      Object.entries(grouped).forEach(([section, places]) => {
+        if (section !== 'Featured') {
+          html += renderSection(section);
+        }
+        places.forEach(place => {
+          html += renderPlaceCard(place);
+        });
+      });
+      $('#places-list').innerHTML = html;
+
+      // Render map
+      renderMap(listings);
+
+      // Fetch Read Next guides
+      const { data: otherGuides } = await supa
+        .from('guides')
+        .select('slug, title, image_url')
+        .neq('slug', slug)
+        .limit(5);
+
+      if (otherGuides && otherGuides.length > 0) {
+        $('#read-next').style.display = 'block';
+        $('#read-next-scroll').innerHTML = otherGuides.map(g => `
+          <a href="/guides/${g.slug}" class="read-next-card">
+            <img src="${g.image_url || '/images/default-guide.jpg'}" alt="${g.title}" class="read-next-image" />
+            <div class="read-next-overlay"></div>
+            <div class="read-next-text">${g.title}</div>
+          </a>
+        `).join('');
+      }
+
+      injectOG(guideMeta, slug);
+      hideSkeleton();
+    }
+
+    main();
+  </script>
 </body>
 </html>
