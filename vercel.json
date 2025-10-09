@@ -1,18 +1,19 @@
 {
-    "rewrites": [
-      { "source": "/itinerary", "destination": "/itinerary.html" },
-      { "source": "/itinerary/(.*)", "destination": "/itinerary.html" },
-  
-      { "source": "/listings/:slug", "destination": "/api/listing-og?slug=:slug" }
-    ],
-    "headers": [
-      {
-        "source": "/.well-known/apple-app-site-association",
-        "headers": [{ "key": "Content-Type", "value": "application/json" }]
-      },
-      {
-        "source": "/.well-known/assetlinks.json",
-        "headers": [{ "key": "Content-Type", "value": "application/json" }]
-      }
-    ]
-  }
+  "rewrites": [
+    { "source": "/itinerary", "destination": "/itinerary.html" },
+    { "source": "/itinerary/(.*)", "destination": "/itinerary.html" },
+
+    { "source": "/listings/:slug", "destination": "/listing.html?slug=:slug" },
+    { "source": "/guides/:slug", "destination": "/guides.html?slug=:slug" }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+    }
+  ]
+}
