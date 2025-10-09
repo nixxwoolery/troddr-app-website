@@ -382,7 +382,14 @@
         <h1 class="title" id="listing-title">Loading…</h1>
         <div class="sub" id="listing-sub">—</div>
       </div>
-      <a class="cta" id="open-in-app" href="#">Open in App</a>
+      <a class="cta" id="open-in-app"
+         href="https://apps.apple.com/app/idYOUR_APP_ID"
+         onclick="event.preventDefault(); 
+                  const appLink='troddr://listing/' + encodeURIComponent(slug || ''); 
+                  window.location=appLink; 
+                  setTimeout(()=>{ window.location='https://apps.apple.com/app/idYOUR_APP_ID'; }, 1500);">
+         Open in App
+      </a>
     </header>
 
     <!-- Actions row (Directions/Website/Menu/Call/Share) -->
@@ -799,7 +806,7 @@
       const uid = "hours-" + Math.random().toString(36).substr(2, 9);
       const toggleId = `toggle-${uid}`;
       const todayIndex = new Date().getDay(); // 0=Sun
-      const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
       let hoursObj = {};
 
@@ -813,15 +820,21 @@
           if (dayPart.includes("-")) {
             // Handle day range, e.g. Mon-Fri 9am–5pm
             const [start, end] = dayPart.split("-");
-            const startIdx = daysOfWeek.indexOf(start);
-            const endIdx = daysOfWeek.indexOf(end);
+            const startIdx = daysOfWeek.map(d=>d.slice(0,3)).indexOf(start);
+            const endIdx = daysOfWeek.map(d=>d.slice(0,3)).indexOf(end);
             if (startIdx >= 0 && endIdx >= 0) {
               for (let i = startIdx; i <= endIdx; i++) {
                 hoursObj[daysOfWeek[i]] = timePart || "Closed";
               }
             }
           } else {
-            hoursObj[dayPart] = timePart || "Closed";
+            // Accept both full and abbreviated names
+            let dayFull = daysOfWeek.find(d => d === dayPart || d.slice(0,3) === dayPart);
+            if (dayFull) {
+              hoursObj[dayFull] = timePart || "Closed";
+            } else {
+              hoursObj[dayPart] = timePart || "Closed";
+            }
           }
         });
       }
