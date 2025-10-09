@@ -474,7 +474,7 @@
       <div class="map-header">
         <h2 class="map-title">Guide Map</h2>
       </div>
-      <div class="map-body" id="map-body"></div>
+      <div class="map-body" id="mapBody"></div>
     </div>
 
     <!-- Read Next -->
@@ -750,30 +750,47 @@
     }
 
     // Render map
-    function renderMap(places) {
-      const validPlaces = places.filter(p => p.latitude && p.longitude);
-      if (validPlaces.length === 0) {
-        $('#map-body').innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#6b7280">Map preview unavailable</div>';
-        return;
+    // function renderMap(places) {
+    //   const validPlaces = places.filter(p => p.latitude && p.longitude);
+    //   if (validPlaces.length === 0) {
+    //     $('#map-body').innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#6b7280">Map preview unavailable</div>';
+    //     return;
+    //   }
+
+    //   // Calculate center
+    //   const lats = validPlaces.map(p => Number(p.latitude));
+    //   const lngs = validPlaces.map(p => Number(p.longitude));
+    //   const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+    //   const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+
+    //   // Create markers param for Google Maps
+    //   const markers = validPlaces.map(p => 
+    //     `markers=color:red%7C${p.latitude},${p.longitude}`
+    //   ).join('&');
+
+    //   const iframe = document.createElement('iframe');
+    //   iframe.loading = 'lazy';
+    //   iframe.referrerPolicy = 'no-referrer-when-downgrade';
+    //   iframe.src = `https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=${centerLat},${centerLng}&zoom=12&${markers}`;
+    //   $('#map-body').innerHTML = '';
+    //   $('#map-body').appendChild(iframe);
+    // }
+
+    function setMapPreview(place){
+      const body = document.getElementById('mapBody');
+      if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))){
+        const lat = Number(place.latitude), lng = Number(place.longitude);
+        const iframe = document.createElement('iframe');
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer-when-downgrade';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = '0';
+        iframe.src = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+        body.innerHTML=''; body.appendChild(iframe);
+      } else {
+        body.textContent = 'Map preview unavailable';
       }
-
-      // Calculate center
-      const lats = validPlaces.map(p => Number(p.latitude));
-      const lngs = validPlaces.map(p => Number(p.longitude));
-      const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-      const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
-
-      // Create markers param for Google Maps
-      const markers = validPlaces.map(p => 
-        `markers=color:red%7C${p.latitude},${p.longitude}`
-      ).join('&');
-
-      const iframe = document.createElement('iframe');
-      iframe.loading = 'lazy';
-      iframe.referrerPolicy = 'no-referrer-when-downgrade';
-      iframe.src = `https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=${centerLat},${centerLng}&zoom=12&${markers}`;
-      $('#map-body').innerHTML = '';
-      $('#map-body').appendChild(iframe);
     }
 
     // Show skeleton
