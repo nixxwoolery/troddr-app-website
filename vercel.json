@@ -3,7 +3,7 @@
     { "source": "/itinerary", "destination": "/itinerary.html" },
     { "source": "/itinerary/(.*)", "destination": "/itinerary.html" },
 
-    { "source": "/listings/:slug", "destination": "/listing.html?slug=:slug" },
+    { "source": "/listings/:slug", "destination": "/listings.html?slug=:slug" },
     { "source": "/guides/:slug", "destination": "/guides.html?slug=:slug" }
   ],
   "redirects": [
