@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Favicon -->
@@ -64,7 +64,7 @@
     .logo {
         font-size: 30px;
         font-weight: 700;
-        color: var(--primary);
+        color: #0077cc;
         text-decoration: none;
         letter-spacing: -1px;
     }
@@ -512,16 +512,16 @@
   <!-- Header -->
   <header class="header" role="banner">
     <div class="navbar">
-      <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
+      <a href="/" class="logo" aria-label="TRODDR - Home">troddr</a>
       <button class="mobile-menu-btn" aria-controls="primary-navigation" aria-expanded="false" aria-label="Open menu">
         <span aria-hidden="true">☰</span>
       </button>
       <div class="nav-links" id="primary-navigation" role="navigation">
         <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
-        <a href="about.html" class="nav-item">About</a>
-        <a href="#features" class="nav-item">Features</a>
-        <a href="contact.html" class="nav-item">Contact</a>
-        <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+        <a href="/about.html" class="nav-item">About</a>
+        <a href="/#features" class="nav-item">Features</a>
+        <a href="/contact.html" class="nav-item">Contact</a>
+        <a href="/#waitlist" class="nav-cta">Join Waitlist</a>
       </div>
     </div>
   </header>
@@ -987,7 +987,7 @@
       if (otherGuides && otherGuides.length > 0) {
         $('#read-next').style.display = 'block';
         $('#read-next-scroll').innerHTML = otherGuides.map(g => `
-          <a href="https://www.troddr.com/guide.html?slug=${g.slug}" class="read-next-card">
+          <a href="https://www.troddr.com/guides.html?slug=${g.slug}" class="read-next-card">
             <img src="${g.image_url || '/images/default-guide.jpg'}" alt="${g.title}" class="read-next-image" />
             <div class="read-next-overlay"></div>
             <div class="read-next-text">${g.title}</div>
