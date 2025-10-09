@@ -6,6 +6,20 @@
     { "source": "/listings/:slug", "destination": "/listing.html?slug=:slug" },
     { "source": "/guides/:slug", "destination": "/guides.html?slug=:slug" }
   ],
+  "redirects": [
+    {
+      "source": "/listing.html",
+      "destination": "/listings/:slug",
+      "has": [{ "type": "query", "key": "slug" }],
+      "permanent": true
+    },
+    {
+      "source": "/guides.html",
+      "destination": "/guides/:slug",
+      "has": [{ "type": "query", "key": "slug" }],
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/.well-known/apple-app-site-association",
