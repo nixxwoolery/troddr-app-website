@@ -81,39 +81,6 @@
       letter-spacing:-0.02em;
       line-height:1.2;
     }
-    .special-location{
-      margin-bottom:8px;
-      font-size:15px;
-      display:flex;
-      align-items:center;
-      gap:6px;
-    }
-    .special-location a{
-      color:var(--brand);
-      text-decoration:underline;
-      font-weight:600;
-    }
-    .special-partner{
-      display:inline-block;
-      background:#f2f6fb;
-      color:#0077cc;
-      font-weight:600;
-      font-size:13px;
-      padding:6px 14px;
-      border-radius:8px;
-      margin-bottom:12px;
-      margin-right:8px;
-      letter-spacing:0.01em;
-      box-shadow:0 1px 4px rgba(0,119,204,0.07);
-    }
-    .special-days{
-      color:var(--muted);
-      font-size:14px;
-      margin-bottom:8px;
-      margin-top:2px;
-      font-style:italic;
-      display:block;
-    }
     .special-dates{
       display:flex;
       align-items:center;
@@ -259,29 +226,6 @@
     .action-btn-secondary:hover{
       background:#d4e5ff;
     }
-    .floating-share-btn{
-      position:absolute;
-      right:20px;
-      bottom:24px;
-      z-index:3;
-      width:54px;
-      height:54px;
-      border-radius:50%;
-      background:var(--brand);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 4px 16px rgba(0,0,0,0.12), 0 1.5px 4px rgba(0,119,204,0.09);
-      border:none;
-      font-size:22px;
-      cursor:pointer;
-      transition:background 0.18s;
-      outline:none;
-    }
-    .floating-share-btn:hover, .floating-share-btn:focus{
-      background:#005bb5;
-    }
 
     /* Details */
     .details-section{
@@ -415,18 +359,15 @@
 
   <div class="wrap">
     <!-- Title section -->
-    <div class="title-section" style="position:relative">
+    <div class="title-section">
       <div class="special-badge" id="special-badge"></div>
       <h1 class="special-title" id="special-title">Loading...</h1>
-      <div class="special-location" id="special-location" style="display:none"></div>
       <div class="special-dates" id="special-dates"></div>
       <div class="special-time" id="special-time" style="display:none"></div>
-      <div class="special-days" id="special-days" style="display:none"></div>
     </div>
 
     <!-- Main card -->
-    <div class="special-card" style="position:relative">
-      <div class="special-partner" id="special-partner" style="display:none"></div>
+    <div class="special-card">
       <p class="special-description" id="special-description"></p>
       
       <div class="discount-box" id="discount-box" style="display:none">
@@ -440,9 +381,6 @@
         <i class="fas fa-clock"></i>
         <span>Expiring soon!</span>
       </div>
-      <button class="floating-share-btn" id="floating-share-btn" title="Share Special" aria-label="Share Special" style="display:none">
-        <i class="fas fa-share-alt"></i>
-      </button>
     </div>
 
     <!-- Place section -->
@@ -469,6 +407,10 @@
         <i class="fas fa-store"></i>
         View Place
       </a>
+      <button class="action-btn action-btn-secondary" id="share-btn">
+        <i class="fas fa-share-alt"></i>
+        Share Special
+      </button>
       <a class="action-btn action-btn-secondary" id="open-app" href="#">
         <i class="fas fa-mobile-alt"></i>
         Open in App
@@ -843,14 +785,9 @@
 
       // Set hero image and badge
       const place = special.place;
-      let heroImgUrl = null;
       if (place?.image) {
-        heroImgUrl = Array.isArray(place.image) ? place.image[0] : place.image;
-      }
-      if (heroImgUrl) {
-        $('#hero-banner').innerHTML = `<img src="${heroImgUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
-      } else {
-        $('#hero-banner').innerHTML = `<img src="/images/og-default.jpg" alt="Special offer" style="width:100%;height:100%;object-fit:cover;">`;
+        const imageUrl = Array.isArray(place.image) ? place.image[0] : place.image;
+        $('#hero-banner').innerHTML = `<img src="${imageUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
       }
 
       // Hero badge
@@ -866,25 +803,6 @@
       // Title and description
       set('special-title', special.title);
       set('special-description', special.description || 'Enjoy this special offer!');
-
-      // Special location (under title)
-      if (place && place.name) {
-        let locationStr = `<a href="/listings/${place.slug || ''}" target="_blank">${place.name}`;
-        if (place.town) locationStr += `, ${place.town}`;
-        locationStr += `</a>`;
-        $('#special-location').innerHTML = `<i class="fas fa-map-marker-alt" style="color:var(--brand)"></i> ${locationStr}`;
-        $('#special-location').style.display = '';
-      } else {
-        $('#special-location').style.display = 'none';
-      }
-
-      // Partner display (under description, in card)
-      if (special.partner_name) {
-        $('#special-partner').textContent = special.partner_name;
-        $('#special-partner').style.display = 'inline-block';
-      } else {
-        $('#special-partner').style.display = 'none';
-      }
 
       // Dates
       const datesHtml = `
@@ -903,18 +821,6 @@
           <span>${timeRange}</span>
         `;
         $('#special-time').style.display = 'flex';
-      }
-
-      // Recurring days (after time)
-      if (special.recurring_days && special.recurring_days.length > 0) {
-        $('#special-days').textContent =
-          'Available: ' +
-          special.recurring_days
-            .map(day => day.charAt(0).toUpperCase() + day.slice(1))
-            .join(', ');
-        $('#special-days').style.display = 'block';
-      } else {
-        $('#special-days').style.display = 'none';
       }
 
       // Discount box
@@ -978,13 +884,11 @@
         }
       }
 
-      // Share button (floating)
-      const floatShareBtn = $('#floating-share-btn');
-      floatShareBtn.style.display = 'flex';
-      floatShareBtn.onclick = function(e) {
+      // Share button
+      $('#share-btn').addEventListener('click', (e) => {
         e.preventDefault();
         shareSpecial(special);
-      };
+      });
 
       // Open in app
       const openAppLink = $('#open-app');
