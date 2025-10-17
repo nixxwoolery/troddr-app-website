@@ -742,7 +742,7 @@
 
     // Fetch place (table first, then RPC fallback like app)
     async function fetchPlaceBySlug(slug){
-      const sel = await supa.from('places').select('*').eq('slug', slug).maybeSingle();
+      const sel = await supa.from('places').select('*').eq('specials_slug', slug).maybeSingle();
       if (sel.data) return { data: sel.data };
       const tryRPC = async (fn) => { try{ const r = await supa.rpc(fn, { _slug: slug }); if (!r.error && r.data) return { data:r.data }; return { error:r.error || new Error('No data from '+fn) }; } catch(e){ return { error:e }; }};
       const viaPublic = await tryRPC('get_place_public'); if (viaPublic.data) return viaPublic;
