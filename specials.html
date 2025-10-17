@@ -698,16 +698,16 @@
 
     // Main function
     async function main(){
-      if (!specialId){
+      if (!rawParam){
         set('special-title', 'Special not found');
         set('special-description', 'Please check the URL and try again.');
         return;
       }
 
       showSkeleton();
-      track('special_page_viewed', { special_id: specialId });
+      track('special_page_viewed', { special_slug: rawParam });
 
-      // Fetch special - try by id (UUID) or by specials_slug
+      // Fetch special - try by slug first, then fallback by id
       const { data: special, error } = await supa
         .from('specials')
         .select(`
@@ -735,7 +735,7 @@
             address
           )
         `)
-        .or(`id.eq.${rawParam},specials_slug.eq.${rawParam}`)
+        .or(`specials_slug.eq.${rawParam},id.eq.${rawParam}`)
         .eq('active', true)
         .single();
 
