@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TRODDR — On the Radar</title>
+  <title>TRODDR — Special Offer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -409,7 +409,7 @@
       </a>
       <button class="action-btn action-btn-secondary" id="share-btn">
         <i class="fas fa-share-alt"></i>
-        Share
+        Share Special
       </button>
       <a class="action-btn action-btn-secondary" id="open-app" href="#">
         <i class="fas fa-mobile-alt"></i>
@@ -506,15 +506,6 @@
     const pathMatch = location.pathname.match(/\/specials\/([^\/?#]+)/i);
     const rawParam = params.get('id') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
 
-    // // Convert dashes to spaces and capitalize each word for title matching
-    // const formatName = (str) => {
-    //   if (!str) return '';
-    //   return str
-    //     .replace(/-/g, ' ')
-    //     .replace(/\b\w/g, c => c.toUpperCase());
-    // };
-    // const specialTitle = formatName(rawParam);
-
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
 
@@ -596,7 +587,7 @@
         const img = special.place?.image ? 
           (Array.isArray(special.place.image) ? special.place.image[0] : special.place.image) : 
           '/images/og-default.jpg';
-        const url = `${window.location.origin}/specials/${specialId}`;
+        const url = `${window.location.origin}/specials/${rawParam}`;
 
         document.title = title;
         upsertMeta('property','og:title', title);
@@ -692,13 +683,13 @@
       try {
         if (navigator.share) {
           await navigator.share(shareData);
-          track('special_shared', { method: 'web_share', special_id: specialId });
+          track('special_shared', { method: 'web_share', special_id: rawParam });
         } else {
           // Fallback - copy to clipboard
           const text = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
           await navigator.clipboard.writeText(text);
           alert('Link copied to clipboard!');
-          track('special_shared', { method: 'copy_link', special_id: specialId });
+          track('special_shared', { method: 'copy_link', special_id: rawParam });
         }
       } catch (err) {
         console.error('Error sharing:', err);
@@ -707,14 +698,14 @@
 
     // Main function
     async function main(){
-      if (!rawParam){
+      if (!specialId){
         set('special-title', 'Special not found');
         set('special-description', 'Please check the URL and try again.');
         return;
       }
 
       showSkeleton();
-      track('special_page_viewed', { special_id: rawParam });
+      track('special_page_viewed', { special_id: specialId });
 
       // Fetch special - try by id (UUID) or by specials_slug
       const { data: special, error } = await supa
@@ -849,7 +840,7 @@
           viewBtn.style.display = 'inline-flex';
           viewBtn.addEventListener('click', () => {
             track('view_place_from_special', { 
-              special_id: specialId,
+              special_id: rawParam,
               place_slug: place.slug 
             });
           });
@@ -864,10 +855,10 @@
 
       // Open in app
       const openAppLink = $('#open-app');
-      openAppLink.href = `troddr://special/${encodeURIComponent(specialId)}`;
+      openAppLink.href = `troddr://special/${encodeURIComponent(rawParam)}`;
       openAppLink.addEventListener('click', (e) => {
         e.preventDefault();
-        track('open_in_app', { special_id: specialId });
+        track('open_in_app', { special_id: rawParam });
         window.location = openAppLink.href;
         setTimeout(() => {
           window.location = 'https://apps.apple.com/app/idYOUR_APP_ID';
