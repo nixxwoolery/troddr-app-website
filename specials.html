@@ -506,7 +506,7 @@
     const pathMatch = location.pathname.match(/\/specials\/([^\/?#]+)/i);
     const rawParam =
       params.get('id') ||
-      params.get('specials_slug') ||
+      params.get('special_slug') ||
       (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
 
     const $ = (sel) => document.querySelector(sel);
@@ -715,7 +715,7 @@
         .from('specials')
         .select(`
           id,
-          specials_slug,
+          special_slug,
           title,
           description,
           special_type,
@@ -739,7 +739,7 @@
             address
           )
         `)
-        .eq('specials_slug', rawParam)
+        .eq('special_slug', rawParam)
         .eq('active', true)
         .single();
 
@@ -748,7 +748,7 @@
           .from('specials')
           .select(`
             id,
-            specials_slug,
+            special_slug,
             title,
             description,
             special_type,
