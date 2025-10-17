@@ -34,31 +34,28 @@
     .wrap{max-width:1100px;margin:0 auto;padding:0 20px 20px}
 
     /* Hero banner */
-    .hero-image{
-      width:100vw;
-      margin-left:calc(50% - 50vw);
-      margin-right:calc(50% - 50vw);
-      height:300px;
-      background:#f2f6fb;
-      position:relative;
-      margin-bottom:24px;
+    .hero-image-container {
+      position: relative;
+      width: 100%;
+      height: 250px; /* adjust based on design */
+      overflow: hidden;
+      border-radius: 12px;
+      margin-bottom: 16px;
     }
-    .hero-image img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
+    .hero-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
-    .hero-badge{
-      position:absolute;
-      top:20px;
-      left:20px;
-      padding:10px 16px;
-      border-radius:10px;
-      background:rgba(255,255,255,0.95);
-      font-weight:700;
-      font-size:14px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.15);
-      color:#fff;
+    .hero-badge {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background-color: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 14px;
     }
 
     /* Title section */
@@ -352,9 +349,9 @@
     </div>
   </header>
 
-  <!-- Hero banner -->
-  <div class="hero-image" id="hero-banner">
-    <img id="hero-img" src="/images/og-default.jpg" alt="Special hero image" />
+  <!-- Hero image -->
+  <div class="hero-image-container">
+    <img id="hero-image" class="hero-image" src="/images/og-default.jpg" alt="Special image" />
     <div class="hero-badge" id="hero-badge"></div>
   </div>
 
@@ -784,11 +781,11 @@
         return;
       }
 
-      // Set hero image and badge
+      // Set hero image
       const place = special.place;
-      if (place?.image) {
-        const imageUrl = Array.isArray(place.image) ? place.image[0] : place.image;
-        $('#hero-banner').innerHTML = `<img src="${imageUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+      const heroImageEl = document.getElementById('hero-image');
+      if (special.place?.image) {
+        heroImageEl.src = Array.isArray(special.place.image) ? special.place.image[0] : special.place.image;
       }
 
       // Hero badge
