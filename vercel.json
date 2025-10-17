@@ -3,6 +3,9 @@
     { "source": "/itinerary", "destination": "/itinerary.html" },
     { "source": "/itinerary/(.*)", "destination": "/itinerary.html" },
 
+    { "source": "/specials", "destination": "/specials.html" },
+    { "source": "/specials/(.*)", "destination": "/specials.html" },
+
     { "source": "/listings/:slug", "destination": "/listings.html?slug=:slug" },
     { "source": "/guides/:slug", "destination": "/guides.html?slug=:slug" }
   ],
@@ -16,6 +19,12 @@
     {
       "source": "/guides.html",
       "destination": "/guides/:slug",
+      "has": [{ "type": "query", "key": "slug" }],
+      "permanent": true
+    },
+    {
+      "source": "/specials.html",
+      "destination": "/specials/:slug",
       "has": [{ "type": "query", "key": "slug" }],
       "permanent": true
     }
