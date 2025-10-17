@@ -33,41 +33,32 @@
 
     .wrap{max-width:1100px;margin:0 auto;padding:0 20px 20px}
 
-
-    .listing-image-container {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      border-radius: 12px;
-      overflow: hidden;
-      background-color: #f4f4f4;
-      margin-bottom: 16px;
+    /* Hero banner */
+    .hero-image{
+      width:100vw;
+      margin-left:calc(50% - 50vw);
+      margin-right:calc(50% - 50vw);
+      height:300px;
+      background:#f2f6fb;
+      position:relative;
+      margin-bottom:24px;
     }
-
-    .listing-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    .hero-image img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
     }
-
-    .image-overlay {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background-color: rgba(0,0,0,0.35);
-    }
-
-    .listing-badge {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      padding: 6px 12px;
-      border-radius: 6px;
-      background-color: rgba(0,0,0,0.6);
-      color: #fff;
-      font-size: 14px;
+    .hero-badge{
+      position:absolute;
+      top:20px;
+      left:20px;
+      padding:10px 16px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.95);
+      font-weight:700;
+      font-size:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+      color:#fff;
     }
 
     /* Title section */
@@ -363,9 +354,16 @@
 
   <!-- Hero image -->
   <div class="listing-image-container">
-    <img id="hero-image" class="listing-image" src="" alt="Special Image">
+    <img 
+      src="PLACEHOLDER_IMAGE.jpg" 
+      alt="Special Image" 
+      class="listing-image" 
+      id="hero-image"
+    />
     <div class="image-overlay"></div>
-    <div id="hero-badge" class="listing-badge"></div>
+    <!-- <div class="listing-badge" id="hero-badge">
+      Special Type
+    </div> -->
   </div>
 
   <div class="wrap">
@@ -796,18 +794,16 @@
 
       // Set hero image and badge
       const place = special.place;
-      // Use explicit snippet for hero image and badge
-      const heroImageEl = document.getElementById('hero-image');
-      if (special.place?.image) {
-        heroImageEl.src = Array.isArray(special.place.image) 
-          ? special.place.image[0] 
-          : special.place.image;
+      if (place?.image) {
+        const imageUrl = Array.isArray(place.image) ? place.image[0] : place.image;
+        $('#hero-banner').innerHTML = `<img src="${imageUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
       }
 
-      const heroBadgeEl = document.getElementById('hero-badge');
-      if (special.special_type) {
-        heroBadgeEl.textContent = SPECIAL_TYPE_LABELS[special.special_type];
-      }
+      // Hero badge
+      const badgeColor = SPECIAL_TYPE_COLORS[special.special_type];
+      const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type];
+      $('#hero-badge').textContent = badgeLabel;
+      $('#hero-badge').style.backgroundColor = badgeColor;
 
       // Special badge
       $('#special-badge').textContent = badgeLabel;
