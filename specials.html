@@ -504,7 +504,10 @@
 
     const params = new URLSearchParams(location.search);
     const pathMatch = location.pathname.match(/\/specials\/([^\/?#]+)/i);
-    const rawParam = params.get('id') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
+    const rawParam =
+      params.get('id') ||
+      params.get('specials_slug') ||
+      (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
 
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
