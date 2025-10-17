@@ -711,7 +711,7 @@
       track('special_page_viewed', { special_slug: rawParam });
 
       // Fetch special - try by slug first, then fallback by id
-      const { data: special, error } = await supa
+      let { data: special, error } = await supa
         .from('specials')
         .select(`
           id,
@@ -739,10 +739,43 @@
             address
           )
         `)
-        .or(`specials_slug.eq.${rawParam},id.eq.${rawParam}`)
+        .eq('specials_slug', rawParam)
         .eq('active', true)
         .single();
 
+      if (error || !special) {
+        ({ data: special, error } = await supa
+          .from('specials')
+          .select(`
+            id,
+            specials_slug,
+            title,
+            description,
+            special_type,
+            partner_name,
+            start_date,
+            end_date,
+            start_time,
+            end_time,
+            recurring_days,
+            priority,
+            discount_percentage,
+            discount_amount,
+            place:places!specials_place_id_fkey(
+              id,
+              name,
+              slug,
+              town,
+              parish,
+              image,
+              category,
+              address
+            )
+          `)
+          .eq('id', rawParam)
+          .eq('active', true)
+          .single());
+      }
       if (error || !special) {
         set('special-title', 'Special not found');
         set('special-description', 'This special offer may have expired or been removed.');
