@@ -33,26 +33,38 @@
 
     .wrap{max-width:1100px;margin:0 auto;padding:0 20px 20px}
 
-    /* Hero banner */
-    .hero-image-container {
+
+    .listing-image-container {
       position: relative;
       width: 100%;
-      height: 250px; /* adjust based on design */
-      overflow: hidden;
+      aspect-ratio: 16 / 9;
       border-radius: 12px;
+      overflow: hidden;
+      background-color: #f4f4f4;
       margin-bottom: 16px;
     }
-    .hero-image {
+
+    .listing-image {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    .hero-badge {
+
+    .image-overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0,0,0,0.35);
+    }
+
+    .listing-badge {
       position: absolute;
       bottom: 12px;
       left: 12px;
       padding: 6px 12px;
-      border-radius: 8px;
+      border-radius: 6px;
       background-color: rgba(0,0,0,0.6);
       color: #fff;
       font-size: 14px;
@@ -350,9 +362,10 @@
   </header>
 
   <!-- Hero image -->
-  <div class="hero-image-container">
-    <img id="hero-image" class="hero-image" src="/images/og-default.jpg" alt="Special image" />
-    <div class="hero-badge" id="hero-badge"></div>
+  <div class="listing-image-container">
+    <img id="hero-image" class="listing-image" src="" alt="Special Image">
+    <div class="image-overlay"></div>
+    <div id="hero-badge" class="listing-badge"></div>
   </div>
 
   <div class="wrap">
@@ -781,18 +794,20 @@
         return;
       }
 
-      // Set hero image
+      // Set hero image and badge
       const place = special.place;
+      // Use explicit snippet for hero image and badge
       const heroImageEl = document.getElementById('hero-image');
       if (special.place?.image) {
-        heroImageEl.src = Array.isArray(special.place.image) ? special.place.image[0] : special.place.image;
+        heroImageEl.src = Array.isArray(special.place.image) 
+          ? special.place.image[0] 
+          : special.place.image;
       }
 
-      // Hero badge
-      const badgeColor = SPECIAL_TYPE_COLORS[special.special_type];
-      const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type];
-      $('#hero-badge').textContent = badgeLabel;
-      $('#hero-badge').style.backgroundColor = badgeColor;
+      const heroBadgeEl = document.getElementById('hero-badge');
+      if (special.special_type) {
+        heroBadgeEl.textContent = SPECIAL_TYPE_LABELS[special.special_type];
+      }
 
       // Special badge
       $('#special-badge').textContent = badgeLabel;
