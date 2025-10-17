@@ -506,14 +506,14 @@
     const pathMatch = location.pathname.match(/\/specials\/([^\/?#]+)/i);
     const rawParam = params.get('id') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
 
-    // Convert dashes to spaces and capitalize each word for title matching
-    const formatName = (str) => {
-      if (!str) return '';
-      return str
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, c => c.toUpperCase());
-    };
-    const specialTitle = formatName(rawParam);
+    // // Convert dashes to spaces and capitalize each word for title matching
+    // const formatName = (str) => {
+    //   if (!str) return '';
+    //   return str
+    //     .replace(/-/g, ' ')
+    //     .replace(/\b\w/g, c => c.toUpperCase());
+    // };
+    // const specialTitle = formatName(rawParam);
 
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
@@ -716,7 +716,7 @@
       showSkeleton();
       track('special_page_viewed', { special_id: rawParam });
 
-      // Fetch special - try by id (UUID) or by title (ilike)
+      // Fetch special - try by id (UUID) or by specials_slug
       const { data: special, error } = await supa
         .from('specials')
         .select(`
@@ -744,7 +744,7 @@
             address
           )
         `)
-        .or(`id.eq.${rawParam},title.ilike.${specialTitle}`)
+        .or(`id.eq.${rawParam},specials_slug.eq.${rawParam}`)
         .eq('active', true)
         .single();
 
