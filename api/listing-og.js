@@ -24,17 +24,25 @@ export default async function handler(req, res) {
   const title = `${place.name} — TRODDR`;
   const desc = place.description || `Discover ${place.name} on TRODDR.`;
   let img = '/images/og-default.jpg';
+
+  const makeAbsolute = (url) => {
+    if (!url) return '/images/og-default.jpg';
+    return url.startsWith('http') ? url : `https://troddr.com${url}`;
+  };
+
   if (place.image) {
     try {
       const parsed = typeof place.image === 'string' ? JSON.parse(place.image) : place.image;
       if (Array.isArray(parsed) && parsed.length > 0) {
-        img = parsed[0];
+        img = makeAbsolute(parsed[0]);
       }
     } catch {
       if (Array.isArray(place.image) && place.image.length > 0) {
-        img = place.image[0];
+        img = makeAbsolute(place.image[0]);
       }
     }
+  } else {
+    img = makeAbsolute(img);
   }
   const url = `https://troddr.com/listings/${slug}`;
 
