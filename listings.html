@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TRODDR — Listing</title>
+  <title>TRODDR — On the Radar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/images/troddr_logo.png">
   <link rel="icon" type="image/png" href="/images/troddr_logo.png">
@@ -16,8 +17,14 @@
   
   <style>
     :root{
-      --brand:#0077cc; --bg:#ffffff; --fg:#0b1220; --muted:#6b7280; --card:#f8fafc; --line:#e5e7eb;
-      --radius:14px; --gap:14px;
+      --brand:#0077cc;
+      --bg:#ffffff;
+      --fg:#0b1220;
+      --muted:#6b7280;
+      --card:#f8fafc;
+      --line:#e5e7eb;
+      --radius:14px;
+      --gap:14px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -25,324 +32,301 @@
     a{text-decoration:none;color:inherit}
 
     .wrap{max-width:1100px;margin:0 auto;padding:0 20px 20px}
-    /* ensure no extra top padding after sticky header */
-    .header + .wrap{padding-top:0}
 
-    /* Title Row */
-    header.page{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 12px}
-    .titleBlock{min-width:0}
-    .title{
-      font-size:clamp(22px,3.2vw,36px);
-      font-weight:600;
-      margin:0 0 6px;
-      letter-spacing:-0.01em;
-      line-height:1.1;
-    }
-    .sub{color:var(--muted);font-size:14px}
-    .cta{display:inline-flex;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
-    /* #overview{max-width:65ch} */
-    
-    /* HERO — 3-panel collage */
-    .hero{
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0,1fr));
-      align-items:stretch;
-      gap:1px;
-      /* Explicit hero height so the background and the images match */
-      height:600px;
-      min-height:600px;
-      padding-top:1px !important;
-      /* sit flush under the header */
-      margin-top:0 !important;
-      margin-bottom:20px !important;
-      /* full-bleed while page stays centered */
+    /* Hero banner */
+    .hero-image{
       width:100vw;
       margin-left:calc(50% - 50vw);
       margin-right:calc(50% - 50vw);
-    }
-    .hero .col{
+      height:300px;
+      background:#f2f6fb;
       position:relative;
-      height:100%;
+      margin-bottom:24px;
       overflow:hidden;
-      background:#e9ecef;
     }
-    .hero img{
+    .hero-image img{
       width:100%;
       height:100%;
       object-fit:cover;
       display:block;
     }
-    .wrap > .hero,
-    .wrap section.hero{
-      padding-top:0 !important;
-      margin-block-start:0 !important;
+    .hero-badge{
+      position:absolute;
+      top:20px;
+      left:20px;
+      padding:10px 16px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.95);
+      font-weight:700;
+      font-size:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+      color:#fff;
+      z-index:10;
     }
 
-    .openingHours {
-      margin-top: 6px;
-      padding: 8px 12px;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      background: #fafafa;
-      font-size: 14px;
-      line-height: 1.5;
+    /* Title section */
+    .title-section{
+      margin-bottom:24px;
+    }
+    .special-badge{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:6px;
+      font-size:12px;
+      font-weight:600;
+      color:#fff;
+      margin-bottom:12px;
+    }
+    .special-title{
+      font-size:clamp(24px,3.5vw,36px);
+      font-weight:700;
+      margin:0 0 8px;
+      letter-spacing:-0.02em;
+      line-height:1.2;
+    }
+    .special-dates{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-size:15px;
+      margin-bottom:6px;
+    }
+    .special-time{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-size:15px;
+    }
+    
+    /* Main card */
+    .special-card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:24px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom:20px;
+    }
+    .special-description{
+      font-size:16px;
+      line-height:1.6;
+      color:#374151;
+      margin-bottom:20px;
     }
 
-    .openingRow {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 0;
+    /* Discount highlight */
+    .discount-box{
+      background:#e8f5e9;
+      border:2px dashed #2e7d32;
+      border-radius:12px;
+      padding:20px;
+      text-align:center;
+      margin:20px 0;
+    }
+    .discount-amount{
+      font-size:32px;
+      font-weight:700;
+      color:#2e7d32;
+      margin:0;
+    }
+    .discount-label{
+      font-size:14px;
+      color:#2e7d32;
+      font-weight:500;
     }
 
-    .openingRow .day {
-      font-weight: 500;
-      color: #333;
+    /* Place card */
+    .place-section{
+      background:var(--card);
+      border-radius:var(--radius);
+      overflow:hidden;
+      box-shadow:0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom:20px;
+    }
+    .place-header{
+      padding:20px 24px 16px;
+      background:#f8fafc;
+      border-bottom:1px solid var(--line);
+    }
+    .place-header-title{
+      font-size:14px;
+      font-weight:600;
+      color:#666;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+    }
+    .place-content{
+      padding:24px;
+      display:flex;
+      gap:20px;
+    }
+    .place-image{
+      width:120px;
+      height:120px;
+      border-radius:12px;
+      object-fit:cover;
+      flex-shrink:0;
+    }
+    .place-info{
+      flex:1;
+      min-width:0;
+    }
+    .place-name{
+      font-size:20px;
+      font-weight:600;
+      color:#0b1220;
+      margin:0 0 8px;
+    }
+    .place-location{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      color:var(--brand);
+      font-size:14px;
+      margin-bottom:12px;
+    }
+    .place-category{
+      display:inline-block;
+      background:#e6f0ff;
+      color:var(--brand);
+      padding:4px 10px;
+      border-radius:6px;
+      font-size:12px;
+      font-weight:600;
     }
 
-    .openingRow .time {
-      color: #555;
+    /* Action buttons */
+    .actions-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:24px;
+    }
+    .action-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:12px 20px;
+      border-radius:10px;
+      font-weight:600;
+      font-size:14px;
+      transition:all 0.2s ease;
+      cursor:pointer;
+      border:none;
+    }
+    .action-btn-primary{
+      background:var(--brand);
+      color:#fff;
+    }
+    .action-btn-primary:hover{
+      background:#005bb5;
+    }
+    .action-btn-secondary{
+      background:#e6f0ff;
+      color:var(--brand);
+    }
+    .action-btn-secondary:hover{
+      background:#d4e5ff;
     }
 
-    .openingRow.today {
-      /* background: #eaf6ff;
-      border-radius: 6px; */
-      font-weight: 600;
+    /* Details */
+    .details-section{
+      margin-top:24px;
     }
-
-    .openingRow.today .day,
-    .openingRow.today .time {
-      color: #007bff;
+    .detail-row{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      padding:12px 0;
+      border-bottom:1px solid #f3f4f6;
     }
-
-    .toggleHours {
-      display: block;
-      margin: 6px auto;
-      background: none;
-      border: none;
-      color: #007bff;
-      cursor: pointer;
-      font-weight: 500;
+    .detail-row:last-child{
+      border:none;
     }
-
-    .allHours.hidden {
-      display: none;
-    }
-
-    /* Desktop-only photo count badge for hero (last image) */
-    @media (min-width:1024px){
-      .hero .deskCount{
-        position:absolute;
-        right:14px;
-        bottom:14px;
-        background:#fff;
-        border-radius:12px;
-        padding:8px;
-        box-shadow:0 8px 24px rgba(0,0,0,.18);
-        border:1px solid rgba(0,0,0,.06);
-        display:flex;
-        align-items:center;
-        gap:6px;
-        color:#6b7280;          /* icon color */
-        pointer-events:none;    /* allow clicks to pass through for lightbox */
-      }
-      .hero .deskCount svg{
-        display:block;
-        color:#6b7280;
-      }
-      .hero .deskCount .deskCount-num{
-        color:#d23b3b;          /* red number */
-        font-weight:700;
-        font-size:14px;
-        line-height:1;
-      }
-    }
-
-
-    /* Action row */
-    .actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:8px;font-weight:500;font-size:14px;line-height:1;border:1px solid transparent;transition:background .2s ease,border-color .2s ease,box-shadow .2s ease,transform .05s ease-in-out}
-    .btn .i{display:inline-block;margin-right:8px;line-height:0}
-    .btn-primary{background:var(--brand);color:#fff}
-    .btn-outline{background:#fff;border:1px solid var(--line);color:var(--brand)}
-    .btn-outline:hover{background:#f7fbff;border-color:#d7dbe0;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-    .btn:active{transform:translateY(1px)}
-    .btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(0,119,204,.15)}
-    .moreLink{display:none;font-weight:600;font-size:14px;color:var(--brand);margin:6px 0 12px;cursor:pointer}
-    .moreLink:hover{text-decoration:underline}
-    /* .btn-muted{background:#e6f1fb;color:var(--brand)} */
-
-    /* update action buttons */
-    .action-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .action-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #007aff;       /* Primary blue */
-      color: #fff !important;
-      font-weight: 600;
-      padding: 10px 16px;
-      border-radius: 8px;
-      text-decoration: none;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,.15);
-      transition: background 0.2s ease, transform 0.1s ease;
-    }
-
-    .action-btn:hover {
-      background: #005bb5;
-    }
-
-    .action-btn:active {
-      background: #004494;
-      transform: scale(0.97);
-    }
-
-    .action-btn i {
-      font-size: 14px;
-    }
-
-    #openWaze {
-      background: #33ccff; /* Waze blue */
-    }
-    #openWaze:hover {
-      background: #1da1c5;
-    }
-
-    /* Cards */
-    .card.narrow{max-width:760px;margin:16px 0}
-    .mapCard.narrow{max-width:760px;margin:16px 0}
-    @media (max-width: 820px){
-      .card.narrow, .mapCard.narrow{max-width:100%; margin:16px 0}
-    }
-    .card.narrow.dishes{margin:32px 0}
-    .grid{display:grid;gap:16px;grid-template-columns:1fr}
-
-    /* Info list like the app */
-    .infoRow{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:none;position:relative}
-    .infoRow::after{content:"";position:absolute;left:44px;right:0;bottom:0;height:1px;background:linear-gradient(90deg,#e9edf2,transparent)}
-    .infoRow:last-child::after{display:none}
-    .icon{width:32px;height:32px;border-radius:16px;background:#e8f3ff;color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-    .kv{flex:1}
-    .kv .k{font-size:13px;color:#111;font-weight:500;margin-bottom:2px}
-    .kv .v{font-size:14px;color:#555;font-weight:400}
-
-    /* Dishes */
-    .dishes{display:flex;flex-direction:column;gap:10px}
-    .dish{
-      background:#f2f6fb;
-      border:1px solid var(--line);
-      border-left:4px solid #5EB7C3;
+    .detail-icon{
+      width:32px;
+      height:32px;
+      background:#e6f0ff;
+      color:var(--brand);
       border-radius:8px;
-      overflow:hidden}
-    .dishH{display:flex;align-items:center;gap:10px;padding:12px 14px;color:#007E94;font-weight:600;cursor:pointer}
-    .dishBody{display:none;padding:0 14px 14px 14px}
-    .dishBody img{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:8px}
-    .pillRow{display:flex;gap:10px;flex-wrap:wrap}
-
-    /* Map card */
-    .mapCard{border-radius:5px;overflow:hidden;background:#f8f9fa;border:1px solid var(--line)}
-    .mapHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
-    .mapBody{height:420px;display:flex;align-items:center;justify-content:center;color:#8E8E93}
-
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:16px;
     }
-    @media (max-width: 900px){
-      .hero{grid-template-columns:1fr; height:auto; padding:0 !important; margin-top:0 !important;}
-      .hero .col{height:220px}
+    .detail-content{
+      flex:1;
     }
-    @media (max-width: 600px){
-    .mapBody{height:240px}
-  }
-  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:1000}
-  .lightbox.open{display:flex}
-  .lightbox img{max-width:92vw;max-height:85vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
-  .lb-close,.lb-prev,.lb-next{position:absolute;background:rgba(255,255,255,.9);border:none;border-radius:9999px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
-  .lb-close{top:16px;right:16px}
-  .lb-prev{left:12px}
-  .lb-next{right:12px}
-  @media (max-width:600px){.lb-prev,.lb-next{display:none}}
+    .detail-label{
+      font-size:12px;
+      color:#666;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+      margin-bottom:4px;
+    }
+    .detail-value{
+      font-size:15px;
+      color:#0b1220;
+    }
 
-  @media (max-width:640px){
-  .sticky-cta{position:sticky;bottom:0;background:#fff;padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:8px;z-index:500}
-  .sticky-cta .btn{flex:1}
-  }
+    /* Expiring soon badge */
+    .expiring-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:#fff4e5;
+      color:#ef6c00;
+      padding:6px 12px;
+      border-radius:8px;
+      font-size:13px;
+      font-weight:600;
+      margin-top:12px;
+    }
 
-  .skeleton{background:linear-gradient(90deg,#f2f4f7,#e9edf2,#f2f4f7);background-size:200% 100%;animation:shimmer 1.2s infinite;color:transparent !important}
-  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-  .skel-line{height:14px;border-radius:7px;margin:8px 0}
-  .lb-count{
-    position:absolute;
-    left:50%;
-    transform:translateX(-50%);
-    bottom:16px;
-    background:rgba(0,0,0,.6);
-    color:#fff;
-    padding:6px 10px;
-    border-radius:12px;
-    font-size:12px;
-    letter-spacing:.02em;
-  }
+    /* Skeleton loading */
+    .skeleton{
+      background:linear-gradient(90deg,#f2f4f7,#e9edf2,#f2f4f7);
+      background-size:200% 100%;
+      animation:shimmer 1.2s infinite;
+      color:transparent !important;
+    }
+    @keyframes shimmer{
+      0%{background-position:200% 0}
+      100%{background-position:-200% 0}
+    }
+    .skel-line{
+      height:16px;
+      border-radius:8px;
+      margin:8px 0;
+    }
+    .skel-hero{
+      background:#f2f4f7;
+    }
 
-  /* --- Mobile carousel styles for hero --- */
-  .hero.mcarousel{
-    position:relative;
-    grid-template-columns:1fr !important;
-    height:400px;         /* increased height on mobile */
-    min-height:400px;
-    /* Carousel scroll and snap behavior */
-    scroll-snap-type: x mandatory;
-    display: flex;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-  }
-  .hero.mcarousel .col{
-    height:100%;
-    flex: 0 0 100%;
-    scroll-snap-align: start;
-  }
-  .hero-dots{
-    position:absolute;
-    left:50%;
-    transform:translateX(-50%);
-    bottom:10px;
-    display:flex;
-    gap:6px;
-    z-index:2;
-    user-select:none;
-    -webkit-user-select:none;
-  }
-  .hero-dots button{
-    width:8px;
-    height:8px;
-    border-radius:999px;
-    background:rgba(255,255,255,.75);
-    border:none;
-    padding:0;
-    box-shadow:0 1px 2px rgba(0,0,0,.25);
-    cursor:pointer;
-  }
-  .hero-dots button.active{
-    background:#fff;
-    transform:scale(1.2);
-  }
-  /* Map chooser popover */
-  .maps-chooser{position:fixed;inset:auto auto auto auto;z-index:1100;min-width:240px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding:6px;display:none}
-  .maps-chooser.open{display:block}
-  .maps-chooser h4{margin:6px 10px 8px 10px;font-size:13px;color:#6b7280;font-weight:600;letter-spacing:.02em}
-  .maps-chooser a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#0b1220}
-  .maps-chooser a:hover{background:#f7fbff}
-  .maps-chooser .mi{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#eef5ff;font-size:14px}
+    /* Responsive */
+    @media (max-width:768px){
+      .place-content{
+        flex-direction:column;
+      }
+      .place-image{
+        width:100%;
+        height:200px;
+      }
+      .hero-image{
+        height:240px;
+      }
+    }
+
+    /* Color mapping for special types */
+    .type-partnership{background-color:#6A1B9A}
+    .type-local_discount{background-color:#2E7D32}
+    .type-seasonal{background-color:#EF6C00}
+    .type-general{background-color:#1B5E20}
   </style>
+
   <script>
-    // Expose env (same pattern as itinerary page)
     window.env = window.env || {
       SUPABASE_URL: 'https://rprpwudhplodaqmmwqkf.supabase.co',
       SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk'
@@ -365,163 +349,119 @@
       </div>
     </div>
   </header>
+
+  <!-- Hero banner (empty, will be populated by JS) -->
+  <div class="hero-image" id="hero-banner"></div>
+
   <div class="wrap">
-
-    <!-- Collage hero (3 images) -->
-    <section class="hero" id="hero">
-      <div class="col"><img id="img1" alt="" /></div>
-      <div class="col"><img id="img2" alt="" /></div>
-      <div class="col"><img id="img3" alt="" /></div>
-    </section>
-
-    <header class="page">
-      <div class="titleBlock">
-        <h1 class="title" id="listing-title">Loading…</h1>
-        <div class="sub" id="listing-sub">—</div>
-      </div>
-      <a class="cta" id="open-in-app"
-         href="https://apps.apple.com/app/idYOUR_APP_ID"
-         onclick="event.preventDefault(); 
-                  const appLink='troddr://listing/' + encodeURIComponent(slug || ''); 
-                  window.location=appLink; 
-                  setTimeout(()=>{ window.location='https://apps.apple.com/app/idYOUR_APP_ID'; }, 1500);">
-         Open in App
-      </a>
-    </header>
-
-    <!-- Actions row (Directions/Website/Menu/Call/Share) -->
-    <div class="action-bar">
-      <a class="btn action-btn" id="action-directions" href="#">
-        <i class="fas fa-map-marker-alt"></i> Directions
-      </a>
-      <a class="btn action-btn" id="action-website" href="#">
-        <i class="fas fa-globe"></i> Website
-      </a>
-      <a class="btn action-btn" id="action-menu" href="#">
-        <i class="fas fa-utensils"></i> Menu
-      </a>
-      <a class="btn action-btn" id="action-call" href="#">
-        <i class="fas fa-phone"></i> Call
-      </a>
-      <a class="btn action-btn" id="action-share" href="#">
-        <i class="fas fa-share-alt"></i> Share
-      </a>
+    <!-- Title section -->
+    <div class="title-section">
+      <div class="special-badge" id="special-badge"></div>
+      <h1 class="special-title" id="special-title">Loading...</h1>
+      <div class="special-dates" id="special-dates"></div>
+      <div class="special-time" id="special-time" style="display:none"></div>
     </div>
 
-    <!-- Content grid: Info only (map moved to bottom) -->
-    <section class="grid">
-      <div class="card narrow">
-        <div class="sub" style="margin-bottom:6px"></div>
-        <div id="overview" style="margin:6px 0 12px 0;color:#0b1220"></div>
-        <span id="toggleOverview" class="moreLink">Read more</span>
-
-        <div class="infoList" id="infoList"></div>
+    <!-- Place section -->
+    <div class="place-section" id="place-section" style="display:none">
+      <div class="place-header">
+        <h3 class="place-header-title">Available At</h3>
       </div>
-    </section>
-
-    <!-- Dishes -->
-    <div class="card narrow dishes">
-      <div class="sub" style="margin-bottom:8px;font-weight:500;color:#000;font-size:18px">Must‑Try Dishes</div>
-      <div id="dishes" class="dishes"></div>
+      <div class="place-content">
+        <img class="place-image" id="place-image" alt="">
+        <div class="place-info">
+          <h3 class="place-name" id="place-name"></h3>
+          <div class="place-location" id="place-location">
+            <i class="fas fa-map-marker-alt"></i>
+            <span id="place-address"></span>
+          </div>
+          <span class="place-category" id="place-category"></span>
+        </div>
+      </div>
     </div>
 
-    <!-- Location -->
-    <section class="mapCard narrow" style="margin-top:16px">      
-      <div class="mapHead">
-        <div style="font-weight:500; font-size:18px">Location</div>
+    <!-- Main card -->
+    <div class="special-card">
+      <p class="special-description" id="special-description"></p>
+      
+      <div class="discount-box" id="discount-box" style="display:none">
+        <p class="discount-amount" id="discount-amount"></p>
+        <p class="discount-label">Special Offer</p>
       </div>
-      <div class="mapBody" id="mapBody" onclick="handleMapClick()" style="cursor:pointer">
-        <span style="color:#666">Tap to open map</span>
+
+      <div class="details-section" id="details-section"></div>
+      
+      <div id="expiring-badge" class="expiring-badge" style="display:none">
+        <i class="fas fa-clock"></i>
+        <span>Expiring soon!</span>
       </div>
-    </section>
-    
-    <div id="mapOptionsModal" class="modal" style="display:none;">
-      <div class="modal-content">
-        <h3>Open in Maps</h3>
-        <button id="openGoogle">Google Maps</button>
-        <button id="openApple">Apple Maps</button>
-        <button id="openWaze">Waze</button>
-        <button onclick="closeMapModal()">Cancel</button>
-      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-row">
+      <a class="action-btn action-btn-primary" id="view-place" href="#" style="display:none">
+        <i class="fas fa-store"></i>
+        View Place
+      </a>
+      <button class="action-btn action-btn-secondary" id="share-btn">
+        <i class="fas fa-share-alt"></i>
+        Share Special
+      </button>
+      <a class="action-btn action-btn-secondary" id="open-app" href="#">
+        <i class="fas fa-mobile-alt"></i>
+        Open in App
+      </a>
     </div>
   </div>
-  <!-- <div class="sticky-cta">
-    <a class="btn btn-primary" id="sticky-directions" href="#"><span class="i">📍</span>Directions</a>
-    <a class="btn btn-outline" id="sticky-call" href="#"><span class="i">📞</span>Call</a>
-  </div> -->
+
   <!-- Footer -->
   <footer class="footer">
     <div class="section-container">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>TRODDR</h3>
-                <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
-            </div>
-            <div class="footer-section">
-                <h3>Company</h3>
-                <div class="footer-links">
-                    <a href="about.html">About Us</a>
-                    <a href="#features">Features</a>
-                    <a href="contact.html">Contact</a>
-                    <a href="#demo">Join Waitlist</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h3>Discover</h3>
-                <div class="footer-links">
-                    <a href="#">Eat</a>
-                    <a href="#">Stay</a>
-                    <a href="#">Play</a>
-                    <a href="#">Destinations</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h3>Plan</h3>
-                <div class="footer-links">
-                    <a href="#">Trip Planner</a>
-                    <a href="#">Itineraries</a>
-                    <a href="#">Travel Guides</a>
-                    <a href="#">Local Tips</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h3>Support</h3>
-                <div class="footer-links">
-                    <a href="#">Help Center</a>
-                    <a href="contact.html">Contact Us</a>
-                    <a href="privacy.html">Privacy Policy</a>
-                    <a href="terms.html">Terms of Service</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h3>Contact</h3>
-                <div class="footer-links">
-                    <a href="mailto:hello@troddr.com">hello@troddr.com</a>
-                </div>
-            </div>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>TRODDR</h3>
+          <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
         </div>
-        <div class="footer-bottom">
-            <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <div class="footer-links">
+            <a href="about.html">About Us</a>
+            <a href="#features">Features</a>
+            <a href="contact.html">Contact</a>
+            <a href="#demo">Join Waitlist</a>
+          </div>
         </div>
+        <div class="footer-section">
+          <h3>Support</h3>
+          <div class="footer-links">
+            <a href="#">Help Center</a>
+            <a href="contact.html">Contact Us</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
+      </div>
     </div>
-</footer>
+  </footer>
+
   <script>
+    // Mobile menu
     (function(){
       const menuBtn  = document.querySelector('.mobile-menu-btn');
       const navLinks = document.querySelector('.nav-links');
       const closeBtn = document.querySelector('.nav-close-btn');
-  
       if (!menuBtn || !navLinks) return;
-  
-      // Toggle menu open/close
+      
       menuBtn.addEventListener('click', function(){
         const isOpen = navLinks.classList.toggle('mobile-open');
         this.classList.toggle('active', isOpen);
         this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         document.body.classList.toggle('menu-open', isOpen);
       });
-  
-      // Close when a nav link is clicked
+      
       navLinks.addEventListener('click', function(e){
         const link = e.target.closest('a');
         if (!link) return;
@@ -530,8 +470,7 @@
         menuBtn.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('menu-open');
       });
-  
-      // Close when the explicit close button is clicked
+      
       if (closeBtn) {
         closeBtn.addEventListener('click', () => {
           navLinks.classList.remove('mobile-open');
@@ -540,8 +479,7 @@
           document.body.classList.remove('menu-open');
         });
       }
-  
-      // Close on Escape
+      
       document.addEventListener('keydown', function(e){
         if (e.key === 'Escape') {
           navLinks.classList.remove('mobile-open');
@@ -551,182 +489,125 @@
         }
       });
     })();
-  
-    // Optional: waitlist handler (safe if form absent)
-    (function(){
-      const form = document.getElementById('waitlist-form');
-      const success = document.getElementById('waitlist-success');
-      if (!form) return;
-  
-      form.addEventListener('submit', function(e){
-        e.preventDefault();
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData);
-        const base = form.action.replace('/post?', '/post-json?');
-        const url = base + '&' + params.toString() + '&c=?';
-        fetch(url, { method: 'GET', mode: 'no-cors' })
-          .then(function(){
-            form.style.display = 'none';
-            if (success) success.style.display = 'block';
-            try { gtag('event', 'waitlist_signup', { method: 'mailchimp' }); } catch(err){}
-          })
-          .catch(function(){ form.submit(); });
-      });
-    })();
   </script>
+
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    const SUPABASE_URL = (window.env?.SUPABASE_URL || window.SUPABASE_URL || '').trim();
-    const SUPABASE_ANON_KEY = (window.env?.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '').trim();
+    const SUPABASE_URL = window.env.SUPABASE_URL.trim();
+    const SUPABASE_ANON_KEY = window.env.SUPABASE_ANON_KEY.trim();
     const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
 
     const params = new URLSearchParams(location.search);
-    const pathMatch = location.pathname.match(/\/listings\/([^\/?#]+)/i);
-    const slug = params.get('slug') || (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
+    const pathMatch = location.pathname.match(/\/specials\/([^\/?#]+)/i);
+    const rawParam =
+      params.get('id') ||
+      params.get('special_slug') ||
+      (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
 
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
 
-    /** Basic analytics shim (gtag if present) */
+    // Analytics
     function track(eventName, params = {}){
       try {
         if (typeof window.gtag === 'function') {
           window.gtag('event', eventName, params);
         }
-        // Debug fallback
         console.debug('[track]', eventName, params);
       } catch {}
     }
 
-    /** Copy text to clipboard with fallback */
-    async function copyToClipboard(text){
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(text);
-          return true;
-        }
-      } catch {}
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.left = '-1000px';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        const ok = document.execCommand('copy');
-        ta.remove();
-        return ok;
-      } catch {
-        return false;
-      }
-    }
-
-    // Helpers
-    const titleCaseSlug = (str) => (str || '').replace(/-/g,' ').replace(/\b\w/g, s => s.toUpperCase());
-    const asList = (v) => {
-      if (v == null) return '';
-      if (Array.isArray(v)) return v.filter(Boolean).join(', ');
-      if (typeof v === 'object') { try { const a = Array.isArray(v) ? v : Object.values(v); return a.filter(Boolean).join(', ');} catch {} }
-      const s = String(v);
-      if (!s) return '';
-      try { const parsed = JSON.parse(s); if (Array.isArray(parsed)) return parsed.filter(Boolean).join(', '); } catch {}
-      return s;
+    // Special type mappings
+    const SPECIAL_TYPE_COLORS = {
+      partnership: '#6A1B9A',
+      local_discount: '#2E7D32',
+      seasonal: '#EF6C00',
+      general: '#1B5E20',
     };
-    const normalizeImages = (img) => {
-      try {
-        if (Array.isArray(img)) return img.filter(Boolean);
-        if (typeof img === 'string') { const s = img.trim(); if (!s) return []; if (s.startsWith('[')) { const a = JSON.parse(s); return Array.isArray(a) ? a.filter(Boolean) : []; } return [s]; }
-        if (img && typeof img === 'object') { const a = JSON.parse(JSON.stringify(img)); return Array.isArray(a) ? a.filter(Boolean) : []; }
-      } catch {}
-      return [];
+
+    const SPECIAL_TYPE_LABELS = {
+      partnership: 'Partnership',
+      local_discount: 'Local Discount',
+      seasonal: 'Seasonal',
+      general: 'Special Offer',
     };
-    function showSkeleton(){
-      const t = document.getElementById('listing-title');
-      const s = document.getElementById('listing-sub');
-      const o = document.getElementById('overview');
-      t && t.classList.add('skeleton');
-      s && s.classList.add('skeleton');
-      if (o){
-        o.classList.add('skeleton');
-        o.innerHTML = '<div class="skel-line" style="width:80%"></div><div class="skel-line" style="width:90%"></div><div class="skel-line" style="width:60%"></div>';
-      }
-      const info = document.getElementById('infoList');
-      if (info){
-        info.innerHTML = '';
-        for (let i=0;i<3;i++){
-          info.innerHTML += '<div class="infoRow"><div class="icon skeleton" style="border-radius:16px"></div><div class="kv"><div class="skel-line" style="width:30%"></div><div class="skel-line" style="width:70%"></div></div></div>';
-        }
-      }
-    }
-    function hideSkeleton(){
-      const t = document.getElementById('listing-title');
-      const s = document.getElementById('listing-sub');
-      const o = document.getElementById('overview');
-      t && t.classList.remove('skeleton');
-      s && s.classList.remove('skeleton');
-      o && o.classList.remove('skeleton');
-    }
 
-    function injectSchema(place, slug){
-      try{
-        const schema = {
-          '@context':'https://schema.org',
-          '@type': (place.cuisine || place.meal_type || place.meal_service) ? 'Restaurant' : 'Place',
-          name: place.name || slug,
-          url: location.origin + '/listings/' + encodeURIComponent(slug),
-          telephone: place.phone_number || place.phone || undefined,
-          priceRange: place.price_range || place.price || undefined,
-          servesCuisine: Array.isArray(place.cuisine) ? place.cuisine : (place.cuisine ? [String(place.cuisine)] : undefined),
-          address: {
-            '@type':'PostalAddress',
-            streetAddress: place.address || undefined,
-            addressLocality: place.town || undefined,
-            addressRegion: place.parish || undefined,
-            addressCountry: 'JM'
-          },
-          geo: (Number(place.latitude) && Number(place.longitude)) ? { '@type':'GeoCoordinates', latitude:Number(place.latitude), longitude:Number(place.longitude) } : undefined,
-          image: (window.__gallery && window.__gallery.length) ? window.__gallery : undefined
-        };
-        const el = document.createElement('script');
-        el.type = 'application/ld+json';
-        el.textContent = JSON.stringify(schema, null, 2);
-        document.head.appendChild(el);
-      }catch(e){}
-    }
+    // Date formatting
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    };
 
+    const formatTime = (timeString) => {
+      if (!timeString) return '';
+      const [hours, minutes] = timeString.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    };
+
+    const formatTimeRange = (startTime, endTime) => {
+      if (!startTime && !endTime) return null;
+      if (startTime && endTime) {
+        return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+      }
+      if (startTime) {
+        return `Starting at ${formatTime(startTime)}`;
+      }
+      if (endTime) {
+        return `Until ${formatTime(endTime)}`;
+      }
+      return null;
+    };
+
+    const isExpiringSoon = (endDate) => {
+      const end = new Date(endDate);
+      const now = new Date();
+      const daysUntilExpiry = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
+    };
+
+    // Meta tags
     function upsertMeta(attr, name, content){
       let sel = `${attr}="${name}"`;
       let el = document.head.querySelector(`meta[${sel}]`);
       if (!el){ el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
       el.setAttribute('content', content);
     }
-    function injectOG(place, slug){
+
+    function injectOG(special){
       try{
-        const title = `${place.name || titleCaseSlug(slug)} — TRODDR`;
-        const desc = place.description || `Discover ${place.name || titleCaseSlug(slug)} on TRODDR.`;
-        const img = (place.image && place.image[0]) || '/images/og-default.jpg';
-        const url = `${window.location.origin}/listings/${slug}`;
+        const title = `${special.title} — TRODDR`;
+        const desc = special.description || `Check out this special offer on TRODDR!`;
+        let img = 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&q=80';
+
+        if (special.image_urls && Array.isArray(special.image_urls) && special.image_urls.length > 0) {
+          img = special.image_urls[0];
+        }
+        else if (special.place?.image) {
+          img = Array.isArray(special.place.image)
+            ? special.place.image[0]
+            : special.place.image;
+        }
+        const url = `${window.location.origin}/specials/${rawParam}`;
 
         document.title = title;
-
-        // Open Graph
         upsertMeta('property','og:title', title);
         upsertMeta('property','og:description', desc);
         upsertMeta('property','og:type', 'website');
         upsertMeta('property','og:url', url);
         upsertMeta('property','og:image', img);
-
-        // Twitter
         upsertMeta('name','twitter:card','summary_large_image');
         upsertMeta('name','twitter:title', title);
         upsertMeta('name','twitter:description', desc);
         upsertMeta('name','twitter:image', img);
-
         upsertMeta('name', 'description', desc);
 
-        // Canonical
         let link = document.head.querySelector('link[rel="canonical"]');
         if (!link){
           link = document.createElement('link');
@@ -734,675 +615,343 @@
           document.head.appendChild(link);
         }
         link.setAttribute('href', url);
-      }catch(e){}
-    }
-
-    // Fetch place (table first, then RPC fallback like app)
-    async function fetchPlaceBySlug(slug){
-      const sel = await supa.from('places').select('*').eq('specials_slug', slug).maybeSingle();
-      if (sel.data) return { data: sel.data };
-      const tryRPC = async (fn) => { try{ const r = await supa.rpc(fn, { _slug: slug }); if (!r.error && r.data) return { data:r.data }; return { error:r.error || new Error('No data from '+fn) }; } catch(e){ return { error:e }; }};
-      const viaPublic = await tryRPC('get_place_public'); if (viaPublic.data) return viaPublic;
-      const viaBySlug = await tryRPC('get_place_by_slug'); if (viaBySlug.data) return viaBySlug;
-      return { error: sel.error || viaPublic.error || viaBySlug.error || new Error('Not found') };
-    }
-
-    // Dishes helpers
-    const parseDishNames = (listing) => {
-      const raw = listing?.recommended_dishes;
-      if (!raw) return [];
-      if (Array.isArray(raw)) return raw.filter(Boolean);
-      if (typeof raw === 'string'){
-        try { const j = JSON.parse(raw); if (Array.isArray(j)) { if (j.length && typeof j[0]==='string') return j; if (j[0]?.dish_name) return j.map(d=>d.dish_name); } } catch{}
-        return raw.split(',').map(s=>s.trim()).filter(Boolean);
+      }catch(e){
+        console.error('Error injecting OG tags', e);
       }
-      return [];
-    };
-    async function fetchDishDetails(name, slug, id){
-      try{
-        const { data, error } = await supa
-          .from('recommended_dishes')
-          .select('dish_name,dish_description,dish_image_url')
-          .or(`place_slug.eq.${slug},place_id.eq.${id}`)
-          .ilike('dish_name', name);
-        if (!error && data && data.length) return data[0];
-      }catch(e){ /* ignore */ }
-      return null;
     }
 
-    function renderDetails(place){
-      const info = [
-        ['Address', [place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ')],
-        ['Price Range', place.price_range || place.price],
-        ['Cuisine', asList(place.cuisine)],
-        ['Type', place.type],
-        ['Meal Service', place.meal_type || place.meal_service],
-        ['Ambiance', asList(place.ambiance)],
-        ['Opening Hours', place.opening_hours || place.hours],
-        ['Phone', place.phone_number || place.phone],
-        ['Website', place.website],
-      ].filter(([,v]) => v && String(v).trim() !== '');
-      const el = document.getElementById('infoList');
-      el.innerHTML = info.map(([k,v])=>{
-        const val = asList(v);
-        const vHtml = k === 'Website'
-          ? `<a href="${val}" target="_blank" rel="noopener">${val}</a>`
-          : k === 'Phone'
-          ? `<a href="tel:${val}">${val}</a>`
-          : k === 'Opening Hours'
-          ? renderOpeningHours(val)
-          : `<span class="v">${val}</span>`;
-        const icon = ({
-          'Type':'🏷️','Meal Service':'🍽️','Cuisine':'🍜','Price Range':'💵','Ambiance':'🎨','Opening Hours':'⏰','Address':'📍','Phone':'📞','Website':'🌐'
-        })[k] || '•';
-        return `<div class="infoRow"><div class="icon">${icon}</div><div class="kv"><div class="k">${k}</div>${vHtml}</div></div>`;
-      }).join('');
+    // Show skeleton
+    function showSkeleton(){
+      const titleEl = $('#special-title');
+      const descEl = $('#special-description');
+      const heroEl = $('#hero-banner');
+      
+      if (titleEl) titleEl.classList.add('skeleton');
+      if (descEl) {
+        descEl.classList.add('skeleton');
+        descEl.innerHTML = '<div class="skel-line" style="width:80%"></div><div class="skel-line" style="width:90%"></div><div class="skel-line" style="width:60%"></div>';
+      }
+      if (heroEl) {
+        heroEl.classList.add('skel-hero');
+        heroEl.innerHTML = '';
+      }
     }
 
-    function renderOpeningHours(hours) {
-      const uid = "hours-" + Math.random().toString(36).substr(2, 9);
-      const toggleId = `toggle-${uid}`;
-      const todayIndex = new Date().getDay(); // 0=Sun
-      const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    function hideSkeleton(){
+      const titleEl = $('#special-title');
+      const descEl = $('#special-description');
+      const heroEl = $('#hero-banner');
+      
+      if (titleEl) titleEl.classList.remove('skeleton');
+      if (descEl) descEl.classList.remove('skeleton');
+      if (heroEl) heroEl.classList.remove('skel-hero');
+    }
 
-      let hoursObj = {};
-
-      if (typeof hours === "object") {
-        hoursObj = hours;
-      } else if (typeof hours === "string") {
-        hours.split(";").map(s => s.trim()).filter(Boolean).forEach(entry => {
-          // Split the entry into [dayPart, ...timeParts]
-          const [dayPart, ...timeParts] = entry.split(" ");
-          const timePart = timeParts.join(" ");
-          if (dayPart.includes("-")) {
-            // Handle day range, e.g. Mon-Fri 9am–5pm
-            const [start, end] = dayPart.split("-");
-            const startIdx = daysOfWeek.map(d=>d.slice(0,3)).indexOf(start);
-            const endIdx = daysOfWeek.map(d=>d.slice(0,3)).indexOf(end);
-            if (startIdx >= 0 && endIdx >= 0) {
-              for (let i = startIdx; i <= endIdx; i++) {
-                hoursObj[daysOfWeek[i]] = timePart || "Closed";
-              }
-            }
-          } else {
-            // Accept both full and abbreviated names
-            let dayFull = daysOfWeek.find(d => d === dayPart || d.slice(0,3) === dayPart);
-            if (dayFull) {
-              hoursObj[dayFull] = timePart || "Closed";
-            } else {
-              hoursObj[dayPart] = timePart || "Closed";
-            }
-          }
+    // Render details
+    function renderDetails(special){
+      const details = [];
+      
+      if (special.partner_name) {
+        details.push({
+          icon: 'fa-handshake',
+          label: 'Partner',
+          value: special.partner_name
         });
       }
 
-      const today = daysOfWeek[todayIndex];
-      const todayTime = hoursObj[today] || "Closed";
-
-      // After DOM is updated, bind event listener with setTimeout
-      setTimeout(() => {
-        const btn = document.getElementById(toggleId);
-        if (btn) {
-          btn.addEventListener("click", function() {
-            toggleHours(uid, btn);
+      if (special.recurring_days && special.recurring_days.length > 0) {
+        const startDate = new Date(special.start_date);
+        const endDate = new Date(special.end_date);
+        const isSingleDay = (
+          startDate.getFullYear() === endDate.getFullYear() &&
+          startDate.getMonth() === endDate.getMonth() &&
+          startDate.getDate() === endDate.getDate()
+        );
+        
+        if (!isSingleDay) {
+          details.push({
+            icon: 'fa-redo',
+            label: 'Available Days',
+            value: special.recurring_days.map(day => 
+              day.charAt(0).toUpperCase() + day.slice(1)
+            ).join(', ')
           });
         }
-      }, 0);
+      }
 
-      return `
-        <div class="openingHours">
-          <div class="openingRow today">
-            <span class="day">${today}</span>
-            <span class="time">${todayTime}</span>
+      if (details.length === 0) return;
+
+      const html = details.map(detail => `
+        <div class="detail-row">
+          <div class="detail-icon">
+            <i class="fas ${detail.icon}"></i>
           </div>
-          <div class="allHoursContainer">
-            <button class="toggleHours" id="${toggleId}" data-target="${uid}">View All</button>
-            <div id="${uid}" class="allHours hidden">
-              ${daysOfWeek.map((day, idx) => {
-                const time = hoursObj[day] || "Closed";
-                return `
-                  <div class="openingRow ${idx === todayIndex ? "today" : ""}">
-                    <span class="day">${day}</span>
-                    <span class="time">${time}</span>
-                  </div>
-                `;
-              }).join("")}
-            </div>
+          <div class="detail-content">
+            <div class="detail-label">${detail.label}</div>
+            <div class="detail-value">${detail.value}</div>
           </div>
         </div>
-      `;
+      `).join('');
+
+      const detailsSection = $('#details-section');
+      if (detailsSection) detailsSection.innerHTML = html;
     }
 
-    function toggleHours(id, btn) {
-      const all = document.getElementById(id);
-      if (!all) return;
-      if (all.classList.contains("hidden")) {
-        all.classList.remove("hidden");
-        if (btn) btn.textContent = "Hide";
-      } else {
-        all.classList.add("hidden");
-        if (btn) btn.textContent = "View All";
-      }
-    }
-
-    function setupOverview(desc){
-      const o = document.getElementById('overview');
-      const b = document.getElementById('toggleOverview');
-      if (!desc){ o.textContent='—'; b.style.display='none'; return; }
-      const LIMIT = 420; // longer snippet on web before expand
-      if (desc.length <= LIMIT){ o.textContent = desc; b.style.display='none'; return; }
-      let expanded = false;
-      const update = () => { o.textContent = expanded ? desc : `${desc.slice(0, LIMIT)}…`; b.textContent = expanded ? 'Read less' : 'Read more'; };
-      b.style.display='inline';
-      b.onclick = () => { expanded = !expanded; update(); };
-      update();
-    }
-
-    function setImages(place){
-      const qs = new URLSearchParams(location.search);
-      const provided = [qs.get('img1'), qs.get('img2'), qs.get('img3')].filter(Boolean);
-      let imgs = provided.length ? provided : normalizeImages(place.image);
-      imgs = (imgs || []).filter(Boolean);
-
-      // Fallbacks (three distinct stock images). Only used when there are truly no images.
-      if (!imgs.length){
-        imgs = [
-          'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=1400&q=80&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80&auto=format&fit=crop'
-        ];
-      }
-
-      // Expose full gallery for the lightbox
-      window.__gallery = imgs.slice();
-
-      const hero = document.getElementById('hero');
-      if (!hero) return;
-      const cols = hero.querySelectorAll('.col'); // up to 3 placeholders in markup
-      const visibleCount = Math.min(imgs.length, cols.length); // show 1..3, no repeats
-
-      // Set the grid columns to match how many we will actually show
-      hero.style.gridTemplateColumns = `repeat(${Math.max(1, visibleCount)}, minmax(0,1fr))`;
-
-      cols.forEach((col, idx) => {
-        const imgEl = col.querySelector('img');
-        if (idx < visibleCount){
-          col.style.display = '';
-          col.hidden = false;
-          if (imgEl){
-            imgEl.src = imgs[idx];
-            imgEl.alt = place.name || '';
-            // retain index for lightbox
-            col.dataset.index = String(idx);
-            imgEl.dataset.index = String(idx);
-          }
-        } else {
-          // Hide extra columns entirely (no duplicates)
-          col.style.display = 'none';
-          col.hidden = true;
-        }
-      });
-
-      // Desktop-only count badge (show on the LAST visible image)
-      try{
-        const total = (window.__gallery || []).length;
-        // Remove any existing badges
-        hero.querySelectorAll('.deskCount').forEach(n => n.remove());
-        if (total > 1){
-          const shownCols = [...hero.querySelectorAll('.col')].filter(c => c.style.display !== 'none' && !c.hidden);
-          const lastCol = shownCols[shownCols.length - 1] || hero.querySelector('.col:last-child');
-          if (lastCol){
-            const badge = document.createElement('div');
-            badge.className = 'deskCount';
-            badge.setAttribute('aria-label', `${total} photos`);
-            badge.innerHTML = `
-              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="18">
-                <rect x="4" y="6" width="14" height="10" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"></rect>
-                <rect x="7" y="3" width="14" height="10" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"></rect>
-              </svg>
-              <span class="deskCount-num">${total}</span>
-            `;
-            lastCol.appendChild(badge);
-          }
-        }
-      } catch(e){}
-    }
-
-    // Enable swipeable hero for mobile
-    function setupMobileCarousel(){
-      const hero = document.getElementById('hero');
-      const gallery = (window.__gallery || []).filter(Boolean);
-      if (!hero || gallery.length < 2) return;
-      const isMobile = window.matchMedia('(max-width: 900px)').matches;
-      if (!isMobile) return;
-
-      // Use first column and hide the rest; swap image source on swipe
-      hero.classList.add('mcarousel');
-      const cols = hero.querySelectorAll('.col');
-      cols.forEach((c, i) => { if (i > 0) { c.style.display = 'none'; c.hidden = true; } else { c.style.display = ''; c.hidden = false; } });
-
-      const img = document.getElementById('img1');
-      if (!img) return;
-
-      // Dots / indicators
-      let dots = document.getElementById('hero-dots');
-      if (!dots){
-        dots = document.createElement('div');
-        dots.id = 'hero-dots';
-        dots.className = 'hero-dots';
-        hero.appendChild(dots);
-      }
-      dots.innerHTML = '';
-      gallery.forEach((_, i) => {
-        const b = document.createElement('button');
-        b.setAttribute('aria-label', `Go to image ${i+1}`);
-        b.addEventListener('click', () => { idx = i; update(); });
-        dots.appendChild(b);
-      });
-
-      let idx = 0;
-      const setActive = () => {
-        [...dots.children].forEach((el, i) => el.classList.toggle('active', i === idx));
-      };
-      const update = () => {
-        img.src = gallery[idx];
-        img.dataset.index = String(idx); // so lightbox opens at correct slide
-        setActive();
-      };
-
-      // Touch swipe handlers
-      let startX = 0, deltaX = 0;
-      img.addEventListener('touchstart', (e) => {
-        startX = e.changedTouches[0].clientX;
-        deltaX = 0;
-      }, { passive: true });
-      img.addEventListener('touchmove', (e) => {
-        deltaX = e.changedTouches[0].clientX - startX;
-      }, { passive: true });
-      img.addEventListener('touchend', () => {
-        if (Math.abs(deltaX) > 40) {
-          if (deltaX < 0) idx = (idx + 1) % gallery.length;
-          else idx = (idx - 1 + gallery.length) % gallery.length;
-          update();
-        }
-      }, { passive: true });
-
-      update();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const heroCarousel = document.querySelector(".hero.mcarousel");
-      if (heroCarousel) {
-        heroCarousel.style.scrollSnapType = "x mandatory";
-        Array.from(heroCarousel.children).forEach(item => {
-          item.style.scrollSnapAlign = "start";
-        });
-      }
-    });
-
-    function setupLightbox(){
-      const lb = document.getElementById('lightbox');
-      const img = document.getElementById('lb-img');
-      const closeBtn = document.querySelector('.lb-close');
-      const prevBtn = document.querySelector('.lb-prev');
-      const nextBtn = document.querySelector('.lb-next');
-      const countEl = document.getElementById('lb-count');
-      if (!lb || !img) return;
-
-      let idx = 0;
-      const gallery = () => (window.__gallery || []);
-      const total = () => gallery().length;
-
-      const updateCount = () => {
-        if (!countEl) return;
-        const n = total();
-        if (n > 1) {
-          countEl.textContent = `${idx + 1} / ${n}`;
-          countEl.style.display = '';
-        } else {
-          countEl.style.display = 'none';
-        }
-      };
-
-      const open = (i) => {
-        const g = gallery();
-        if (!g.length) return;
-        idx = Math.max(0, Math.min(i, g.length - 1));
-        img.src = g[idx] || '';
-        lb.classList.add('open');
-        lb.setAttribute('aria-hidden','false');
-        updateCount();
-      };
-
-      const close = () => {
-        lb.classList.remove('open');
-        lb.setAttribute('aria-hidden','true');
-      };
-
-      const prev = () => {
-        const g = gallery();
-        if (!g.length) return;
-        idx = (idx - 1 + g.length) % g.length;
-        img.src = g[idx];
-        updateCount();
-      };
-
-      const next = () => {
-        const g = gallery();
-        if (!g.length) return;
-        idx = (idx + 1) % g.length;
-        img.src = g[idx];
-        updateCount();
-      };
-
-      // Bind hero container (works for collage and mobile carousel)
-      const heroEl = document.getElementById('hero');
-      if (heroEl){
-        heroEl.style.cursor = 'zoom-in';
-        heroEl.addEventListener('click', (evt) => {
-          const imgEl = evt.target && evt.target.closest('img');
-          if (!imgEl || !heroEl.contains(imgEl)) return;
-          const i = Number(imgEl.dataset.index || 0);
-          open(i);
-        }, true);
-      }
-
-      // Controls
-      closeBtn && closeBtn.addEventListener('click', close);
-      prevBtn  && prevBtn.addEventListener('click', prev);
-      nextBtn  && nextBtn.addEventListener('click', next);
-
-      // Click on backdrop closes; click on image goes next
-      lb.addEventListener('click', (e) => {
-        if (e.target === lb) close();
-      });
-      img.addEventListener('click', () => next());
-
-      // Keyboard support
-      document.addEventListener('keydown', (e) => {
-        if (!lb.classList.contains('open')) return;
-        if (e.key === 'Escape')       return close();
-        if (e.key === 'ArrowLeft')    return prev();
-        if (e.key === 'ArrowRight')   return next();
-      });
-
-      // Touch swipe on image (mobile)
-      let tX = 0;
-      img.addEventListener('touchstart', (e) => {
-        tX = e.changedTouches[0].clientX;
-      }, { passive: true });
-      img.addEventListener('touchend', (e) => {
-        const dx = e.changedTouches[0].clientX - tX;
-        if (Math.abs(dx) > 30) {
-          if (dx < 0) next();
-          else prev();
-        }
-      }, { passive: true });
-    }
-
-    function setupWebShare(place, slug){
-      const btn = document.getElementById('action-share');
-      if (!btn) return;
-      const url = location.origin + '/listings/' + encodeURIComponent(slug);
+    // Share functionality
+    async function shareSpecial(special){
       const shareData = {
-        title: place.name || 'TRODDR',
-        text: `Check out ${place.name || titleCaseSlug(slug)} in ${[place.town, place.parish].filter(Boolean).join(', ')} on TRODDR!`,
-        url
+        title: special.title,
+        text: special.description || `Check out this special offer${special.place ? ' at ' + special.place.name : ''}!`,
+        url: window.location.href
       };
-      const doShare = async (e) => {
-        e.preventDefault();
-        try{
-          if (navigator.share) {
-            await navigator.share(shareData);
-            track('share', { method: 'web_share', slug });
-            return;
-          }
-          // Fallback: copy to clipboard
-          const copied = await copyToClipboard(url);
-          alert(copied ? 'Link copied to clipboard!' : 'Unable to copy link. You can copy it from the address bar.');
-          track('share', { method: 'copy_link', slug });
-        } catch(err){
-          // user canceled or unsupported
+
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+          track('special_shared', { method: 'web_share', special_id: rawParam });
+        } else {
+          const text = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
+          await navigator.clipboard.writeText(text);
+          alert('Link copied to clipboard!');
+          track('special_shared', { method: 'copy_link', special_id: rawParam });
         }
-      };
-      btn.addEventListener('click', doShare);
-      btn.addEventListener('touchend', doShare, { passive: false });
-    }
-
-    // --- Map chooser helpers ---
-    function buildMapLinks(place){
-      const hasLL = Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude));
-      const lat = Number(place.latitude), lng = Number(place.longitude);
-      const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
-      return {
-        apple: hasLL ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://maps.apple.com/?q=${encodeURIComponent(q)}`,
-        google: hasLL ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,
-        waze: hasLL ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes` : `https://www.waze.com/ul?q=${encodeURIComponent(q)}&navigate=yes`,
-        osm: hasLL ? `https://www.openstreetmap.org/directions?to=${lat},${lng}` : `https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`
-      };
-    }
-
-    let __mapsChooserEl;
-    let __mapsActiveTrigger;
-    function showMapChooser(btn, place){
-      const links = buildMapLinks(place);
-      __mapsActiveTrigger = btn; // remember which trigger opened the chooser
-      if (!__mapsChooserEl){
-        __mapsChooserEl = document.createElement('div');
-        __mapsChooserEl.className = 'maps-chooser';
-        __mapsChooserEl.innerHTML = `
-          <h4>Open with</h4>
-          <a target="_blank" rel="noopener" data-k="apple"><span class="mi"></span><span>Apple Maps</span></a>
-          <a target="_blank" rel="noopener" data-k="google"><span class="mi">🗺️</span><span>Google Maps</span></a>
-          <a target="_blank" rel="noopener" data-k="waze"><span class="mi">🚗</span><span>Waze</span></a>
-        `;
-        document.body.appendChild(__mapsChooserEl);
-        // close behavior
-        document.addEventListener('click', (e)=>{
-          if (!__mapsChooserEl.classList.contains('open')) return;
-          const inside = __mapsChooserEl.contains(e.target);
-          const onBtn = __mapsActiveTrigger && __mapsActiveTrigger.contains(e.target);
-          if (!inside && !onBtn) __mapsChooserEl.classList.remove('open');
-        });
-        document.addEventListener('keydown', (e)=>{
-          if (e.key === 'Escape') __mapsChooserEl.classList.remove('open');
-        });
-      }
-      [...__mapsChooserEl.querySelectorAll('a[data-k]')].forEach(a=>{
-        const k = a.getAttribute('data-k');
-        a.href = links[k];
-      });
-      // Track provider selection
-      [...__mapsChooserEl.querySelectorAll('a[data-k]')].forEach(a => {
-        a.onclick = () => {
-          const k = a.getAttribute('data-k');
-          track('directions_provider', { provider: k, slug: (place.slug || '') });
-          __mapsChooserEl.classList.remove('open');
-        };
-      });
-      const r = btn.getBoundingClientRect();
-      // position below button with viewport clamping
-      __mapsChooserEl.style.top = `${Math.min(window.scrollY + r.bottom + 8, window.scrollY + window.innerHeight - 10)}px`;
-      const desiredLeft = window.scrollX + r.left;
-      __mapsChooserEl.style.left = `${Math.min(desiredLeft, window.scrollX + window.innerWidth - (__mapsChooserEl.offsetWidth || 260) - 8)}px`;
-      __mapsChooserEl.classList.add('open');
-    }
-
-    function setActions(place){
-      const dirA = document.getElementById('action-directions');
-      const mapBtn = document.getElementById('mapDirections');
-      const stickDir = document.getElementById('sticky-directions');
-      const stickCall = document.getElementById('sticky-call');
-      const mkMapsUrl = () => {
-        if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))){
-          return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`;
-        }
-        const q = [place.name, place.address, [place.town, place.parish].filter(Boolean).join(', ')].filter(Boolean).join(', ');
-        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
-      };
-      const url = mkMapsUrl();
-      if (dirA) dirA.href = url;
-      if (mapBtn) mapBtn.href = url;
-      if (stickDir) stickDir.href = url;
-
-      // Map chooser handlers for directions buttons (click + touch)
-      const openChooser = (e)=>{ e.preventDefault(); e.stopPropagation(); showMapChooser(e.currentTarget, place); track('directions_open', { slug: place.slug || '', source: e.currentTarget.id }); };
-      if (dirA){
-        dirA.addEventListener('click', openChooser, true);
-        dirA.addEventListener('touchend', openChooser, { passive:false, capture:true });
-      }
-      if (mapBtn){
-        mapBtn.addEventListener('click', openChooser, true);
-        mapBtn.addEventListener('touchend', openChooser, { passive:false, capture:true });
-      }
-
-      const webA = document.getElementById('action-website'); if (webA) { if (place.website) webA.href = place.website; else webA.style.display='none'; }
-      const menuA = document.getElementById('action-menu'); if (menuA) { if (place.menu_link) menuA.href = place.menu_link; else menuA.style.display='none'; }
-      const call = place.phone_number || place.phone;
-      const callA = document.getElementById('action-call'); if (callA) { if (call) callA.href = 'tel:'+call; else callA.style.display='none'; }
-      if (stickCall) { if (call) stickCall.href = 'tel:'+call; else stickCall.style.display='none'; }
-
-      // Track Website/Menu/Call clicks
-      if (webA)  webA.addEventListener('click', ()=> track('click_website', { slug: place.slug || '' }), { passive:true });
-      if (menuA) menuA.addEventListener('click', ()=> track('click_menu', { slug: place.slug || '' }), { passive:true });
-      if (callA) callA.addEventListener('click', ()=> track('click_call', { slug: place.slug || '' }), { passive:true });
-    }
-
-    function setMapPreview(place){
-      const body = document.getElementById('mapBody');
-      if (Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude))){
-        const lat = Number(place.latitude), lng = Number(place.longitude);
-        const iframe = document.createElement('iframe');
-        iframe.loading = 'lazy';
-        iframe.referrerPolicy = 'no-referrer-when-downgrade';
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.border = '0';
-        iframe.src = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
-        body.innerHTML=''; body.appendChild(iframe);
-      } else {
-        body.textContent = 'Map preview unavailable';
+      } catch (err) {
+        console.error('Error sharing:', err);
       }
     }
 
-    function setOpenInApp(slug){
-      const link = document.getElementById('open-in-app');
-      if (!link) return;
-      link.href = 'troddrapp://detailedListing/' + encodeURIComponent(slug);
-      link.addEventListener('click', ()=> track('open_in_app', { slug }), { passive:true });
-    }
-
-    async function renderDishes(listing){
-      const wrap = document.getElementById('dishes');
-      const card = document.querySelector('.card.narrow.dishes');
-      if (!wrap){ if (card) card.style.display = 'none'; return; }
-
-      wrap.innerHTML = '';
-      const names = parseDishNames(listing);
-
-      // If no dishes, hide the entire card section
-      if (!names.length){
-        if (card) card.style.display = 'none';
-        return;
-      }
-
-      // Ensure the card is visible when we DO have dishes
-      if (card) card.style.display = '';
-
-      const cache = {};
-      for (const name of names){
-        cache[name] = await fetchDishDetails(name, listing.slug, listing.id);
-      }
-
-      names.forEach((name, idx)=>{
-        const d = document.createElement('div'); d.className='dish';
-        const h = document.createElement('div'); h.className='dishH'; h.innerHTML = `🍽️ <span style="flex:1">${name}</span><span id="chev${idx}">›</span>`;
-        const b = document.createElement('div'); b.className='dishBody';
-        const det = cache[name];
-        if (det){
-          if (det.dish_image_url){ const img = document.createElement('img'); img.src = det.dish_image_url; img.alt = name; b.appendChild(img); }
-          if (det.dish_description){ const p = document.createElement('div'); p.style.marginTop='8px'; p.style.color='#007E94'; p.textContent = det.dish_description; b.appendChild(p); }
-        }
-        h.onclick = () => { const open = b.style.display === 'block'; b.style.display = open ? 'none' : 'block'; document.getElementById('chev'+idx).textContent = open ? '›' : '˅'; };
-        d.appendChild(h); d.appendChild(b); wrap.appendChild(d);
-      });
-    }
-
-    function handleMapClick(){
-      const place = window.currentPlace;
-      if (!place || !place.latitude || !place.longitude) return;
-
-      // store URLs globally so buttons can access them
-      window.googleUrl = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
-      window.appleUrl = `http://maps.apple.com/?ll=${place.latitude},${place.longitude}&q=${encodeURIComponent(place.name||'Location')}`;
-      window.wazeUrl = `https://waze.com/ul?ll=${place.latitude},${place.longitude}&navigate=yes`;
-
-      document.getElementById("mapOptionsModal").style.display = "block";
-    }
-
-    function closeMapModal(){
-      document.getElementById("mapOptionsModal").style.display = "none";
-    }
-
-    document.getElementById("openGoogle").onclick = () => {
-      window.open(window.googleUrl, "_blank");
-      closeMapModal();
-    };
-    document.getElementById("openApple").onclick = () => {
-      window.open(window.appleUrl, "_blank");
-      closeMapModal();
-    };
-    document.getElementById("openWaze").onclick = () => {
-      window.open(window.wazeUrl, "_blank");
-      closeMapModal();
-    };
-
+    // Main function
     async function main(){
-      if (!slug){
-        set('listing-title','Listing');
-        set('listing-sub','');
-        document.title = 'Listing — TRODDR';
+      console.log('[Specials] Starting main()');
+      console.log('[Specials] rawParam:', rawParam);
+
+      if (!rawParam){
+        set('special-title', 'Special not found');
+        set('special-description', 'Please check the URL and try again.');
         return;
       }
 
       showSkeleton();
-      setOpenInApp(slug);
-      set('listing-title', titleCaseSlug(slug));
-      set('listing-sub','Web view');
-      document.title = `${titleCaseSlug(slug)} — TRODDR`;
+      track('special_page_viewed', { special_slug: rawParam });
 
-      const { data: place, error } = await fetchPlaceBySlug(slug);
-      if (error || !place){
-        document.getElementById('overview').textContent = "We couldn't load this listing right now.";
+      // Fetch special
+      console.log('[Specials] Fetching special...');
+      let { data: special, error } = await supa
+        .from('specials')
+        .select(`
+          id,
+          special_slug,
+          title,
+          description,
+          image_urls,
+          special_type,
+          partner_name,
+          start_date,
+          end_date,
+          start_time,
+          end_time,
+          recurring_days,
+          priority,
+          discount_percentage,
+          discount_amount,
+          place:places!specials_place_id_fkey(
+            id,
+            name,
+            slug,
+            town,
+            parish,
+            image,
+            category,
+            address
+          )
+        `)
+        .eq('special_slug', rawParam)
+        .eq('active', true)
+        .maybeSingle();
+
+      console.log('[Specials] Query result:', { hasData: !!special, error: error?.message });
+
+      if (error || !special) {
+        console.error('[Specials] Error fetching special:', error);
+        set('special-title', 'Special not found');
+        set('special-description', 'This special offer may have expired or been removed.');
+        hideSkeleton();
         return;
       }
 
-      set('listing-title', place.name || titleCaseSlug(slug));
-      set('listing-sub', [place.town, place.parish].filter(Boolean).join(', '));
-      document.title = `${place.name || titleCaseSlug(slug)} — TRODDR`;
+      console.log('[Specials] Special found:', special.title);
 
-      setupOverview(place.description || '—');
-      renderDetails(place);
-      setImages(place);
-      setupMobileCarousel();
-      setupLightbox();
-      setActions(place);
-      setupWebShare(place, slug);
-      injectOG(place, slug);
-      setMapPreview(place);
-      renderDishes(place);
-      injectSchema(place, slug);
+      // Set hero image with badge
+      const place = special.place;
+      let heroImageUrl = 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&q=80';
+      
+      if (special.image_urls && Array.isArray(special.image_urls) && special.image_urls.length > 0) {
+        heroImageUrl = special.image_urls[0];
+      } else if (place?.image) {
+        heroImageUrl = Array.isArray(place.image) ? place.image[0] : place.image;
+      }
+
+      // Build hero section
+      const heroBanner = $('#hero-banner');
+      if (heroBanner) {
+        heroBanner.innerHTML = '';
+        
+        const heroImg = document.createElement('img');
+        heroImg.src = heroImageUrl;
+        heroImg.alt = special.title || 'Special offer';
+        heroBanner.appendChild(heroImg);
+
+        // Hero badge
+        const badgeColor = SPECIAL_TYPE_COLORS[special.special_type] || SPECIAL_TYPE_COLORS.general;
+        const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type] || SPECIAL_TYPE_LABELS.general;
+        
+        const badge = document.createElement('div');
+        badge.className = 'hero-badge';
+        badge.textContent = badgeLabel;
+        badge.style.backgroundColor = badgeColor;
+        heroBanner.appendChild(badge);
+      }
+
+      // Special badge in title section
+      const specialBadge = $('#special-badge');
+      if (specialBadge) {
+        const badgeColor = SPECIAL_TYPE_COLORS[special.special_type] || SPECIAL_TYPE_COLORS.general;
+        const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type] || SPECIAL_TYPE_LABELS.general;
+        specialBadge.textContent = badgeLabel;
+        specialBadge.className = `special-badge type-${special.special_type}`;
+      }
+
+      // Title and description
+      set('special-title', special.title);
+      set('special-description', special.description || 'Enjoy this special offer!');
+
+      // Dates
+      const datesEl = $('#special-dates');
+      if (datesEl) {
+        datesEl.innerHTML = `
+          <i class="fas fa-calendar"></i>
+          <span>${formatDate(special.start_date) === formatDate(special.end_date)
+            ? formatDate(special.start_date)
+            : `${formatDate(special.start_date)} - ${formatDate(special.end_date)}`}</span>
+        `;
+      }
+
+      // Times
+      const timeRange = formatTimeRange(special.start_time, special.end_time);
+      const timeEl = $('#special-time');
+      if (timeEl && timeRange) {
+        timeEl.innerHTML = `
+          <i class="fas fa-clock"></i>
+          <span>${timeRange}</span>
+        `;
+        timeEl.style.display = 'flex';
+      }
+
+      // Discount box
+      const discountBox = $('#discount-box');
+      const discountAmount = $('#discount-amount');
+      if (special.discount_percentage || special.discount_amount) {
+        if (discountBox) discountBox.style.display = 'block';
+        if (discountAmount) {
+          if (special.discount_percentage) {
+            discountAmount.textContent = `${special.discount_percentage}% OFF`;
+          } else {
+            discountAmount.textContent = `$${special.discount_amount} OFF`;
+          }
+        }
+      }
+
+      // Expiring soon
+      const expiringBadge = $('#expiring-badge');
+      if (expiringBadge && isExpiringSoon(special.end_date)) {
+        expiringBadge.style.display = 'inline-flex';
+      }
+
+      // Details
+      renderDetails(special);
+
+      // Place section
+      if (place) {
+        const placeSection = $('#place-section');
+        if (placeSection) placeSection.style.display = 'block';
+        
+        const imageUrl = place.image ? 
+          (Array.isArray(place.image) ? place.image[0] : place.image) :
+          null;
+        
+        const placeImage = $('#place-image');
+        if (placeImage) {
+          if (imageUrl) {
+            placeImage.src = imageUrl;
+            placeImage.alt = place.name;
+          } else {
+            placeImage.style.display = 'none';
+          }
+        }
+        
+        set('place-name', place.name);
+        set('place-address', [place.address, place.town, place.parish].filter(Boolean).join(', '));
+        
+        // Category
+        const categoryEmojis = {
+          eat: '🍽️',
+          stay: '🛏️',
+          play: '🎯'
+        };
+        const categoryText = place.category ? 
+          `${categoryEmojis[place.category] || ''} ${place.category.charAt(0).toUpperCase() + place.category.slice(1)}` : 
+          '';
+        set('place-category', categoryText);
+
+        // View place button
+        if (place.slug) {
+          const viewBtn = $('#view-place');
+          if (viewBtn) {
+            viewBtn.href = `/listings/${place.slug}`;
+            viewBtn.style.display = 'inline-flex';
+            viewBtn.addEventListener('click', () => {
+              track('view_place_from_special', { 
+                special_id: rawParam,
+                place_slug: place.slug 
+              });
+            });
+          }
+        }
+      }
+
+      // Share button
+      const shareBtn = $('#share-btn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          shareSpecial(special);
+        });
+      }
+
+      // Open in app
+      const openAppLink = $('#open-app');
+      if (openAppLink) {
+        openAppLink.href = `troddr://special/${encodeURIComponent(rawParam)}`;
+        openAppLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          track('open_in_app', { special_id: rawParam });
+          window.location = openAppLink.href;
+          setTimeout(() => {
+            window.location = 'https://apps.apple.com/app/idYOUR_APP_ID';
+          }, 1500);
+        });
+      }
+
+      injectOG(special);
       hideSkeleton();
+      console.log('[Specials] Page render complete!');
     }
 
-    main();
+    main().catch(err => {
+      console.error('[Specials] Fatal error:', err);
+      set('special-title', 'Error loading special');
+      set('special-description', 'Something went wrong. Please try again.');
+    });
   </script>
-  <div id="lightbox" class="lightbox" aria-hidden="true">
-    <button class="lb-close" aria-label="Close">×</button>
-    <button class="lb-prev" aria-label="Previous">‹</button>
-    <img id="lb-img" alt="Gallery image" />
-    <button class="lb-next" aria-label="Next">›</button>
-    <div class="lb-count" id="lb-count"></div>
-  </div>
 </body>
 </html>
