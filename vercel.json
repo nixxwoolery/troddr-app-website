@@ -18,14 +18,14 @@
     },
     {
       "source": "/guides.html",
-      "destination": "/guides/: ",
+      "destination": "/guides/:slug",
       "has": [{ "type": "query", "key": "slug" }],
       "permanent": true
     },
     {
       "source": "/specials.html",
       "destination": "/specials/:slug",
-      "has": [{ "type": "query", "key": "slug" }],
+      "has": [{ "type": "query", "key": "special_slug" }],
       "permanent": true
     }
   ],
