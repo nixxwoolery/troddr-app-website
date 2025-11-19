@@ -38,11 +38,12 @@
       width:100vw;
       margin-left:calc(50% - 50vw);
       margin-right:calc(50% - 50vw);
-      height:400px;
+      height:520px; /* increased height for mobile */
       background:#f2f6fb;
       position:relative;
       margin-bottom:24px;
       overflow:hidden;
+      border-radius:0 !important; /* ensure no radius on mobile */
     }
     .hero-image img{
       width:100%;
@@ -68,7 +69,7 @@
     @media (min-width:768px){
       .hero-image{
         height:500px;
-        border-radius:16px;
+        border-radius:16px; /* keep desktop radius */
         margin-bottom:32px;
       }
     }
