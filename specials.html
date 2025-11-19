@@ -817,7 +817,7 @@
         heroImg.alt = special.title || 'Special offer';
         heroBanner.appendChild(heroImg);
 
-        // Hero badge
+        // Hero badge (dynamically created inside heroBanner)
         const badgeColor = SPECIAL_TYPE_COLORS[special.special_type] || SPECIAL_TYPE_COLORS.general;
         const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type] || SPECIAL_TYPE_LABELS.general;
         
@@ -837,6 +837,8 @@
         const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type] || SPECIAL_TYPE_LABELS.general;
         specialBadge.textContent = badgeLabel;
         specialBadge.className = `special-badge type-${special.special_type}`;
+        // Set the background color for special-badge as well
+        specialBadge.style.backgroundColor = badgeColor;
         console.log('[Specials] Special badge updated');
       }
 
