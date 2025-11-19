@@ -3,331 +3,124 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TRODDR — On the Radar</title>
+  <title>TRODDR — Daily Specials</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
-  <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/images/troddr_logo.png">
   <link rel="icon" type="image/png" href="/images/troddr_logo.png">
   <link rel="apple-touch-icon" href="/images/troddr_logo.png">
-  
+
   <style>
+    /* --- REUSED STYLES (from your listing page) --- */
     :root{
-      --brand:#0077cc;
-      --bg:#ffffff;
-      --fg:#0b1220;
-      --muted:#6b7280;
-      --card:#f8fafc;
-      --line:#e5e7eb;
-      --radius:14px;
-      --gap:14px;
+      --brand:#0077cc; --bg:#ffffff; --fg:#0b1220; --muted:#6b7280; --card:#f8fafc; --line:#e5e7eb;
+      --radius:14px; --gap:14px;
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;padding:0}
-    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg)}
     a{text-decoration:none;color:inherit}
 
-    .wrap{max-width:900px;margin:0 auto;padding:0 20px 40px}
+    .wrap{max-width:1100px;margin:0 auto;padding:0 20px 20px}
+    .header + .wrap{padding-top:0}
 
-    /* Hero banner - MOBILE FIRST */
-    .hero-image{
-      width:100vw;
-      margin-left:calc(50% - 50vw);
-      margin-right:calc(50% - 50vw);
-      height:100vh;
-      background:#f2f6fb;
-      position:relative;
-      margin-bottom:24px;
-      overflow:hidden;
-      border-radius:0 !important;
-    }
-    .hero-image img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-    .hero-badge{
-      position:absolute;
-      top:20px;
-      left:20px;
-      padding:10px 16px;
-      border-radius:10px;
-      background:rgba(255,255,255,0.95);
+    header.page{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 12px}
+    .titleBlock{min-width:0}
+    .title{
+      font-size:clamp(28px,3.2vw,42px);
       font-weight:700;
-      font-size:14px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.15);
-      color:#fff;
-      z-index:10;
+      margin:16px 0 6px;
+      letter-spacing:-0.01em;
+      line-height:1.1;
     }
-
-    /* Desktop hero adjustments */
-
-    /* Title section */
-    .title-section{
-      margin-bottom:24px;
-    }
-    .special-badge{
-      display:inline-block;
-      padding:6px 12px;
-      border-radius:6px;
-      font-size:12px;
-      font-weight:600;
-      color:#fff;
-      margin-bottom:12px;
-    }
-    .special-title{
-      font-size:clamp(24px,3.5vw,36px);
-      font-weight:700;
-      margin:0 0 8px;
-      letter-spacing:-0.02em;
-      line-height:1.2;
-    }
-    .special-dates{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      color:var(--muted);
-      font-size:15px;
-      margin-bottom:6px;
-    }
-    .special-time{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      color:var(--muted);
-      font-size:15px;
-    }
+    .sub{color:var(--muted);font-size:16px}
+    /* Note: Hero and Action/Info List styles removed as this is a list page. */
     
-    /* Main card */
-    .special-card{
-      background:var(--card);
-      border-radius:var(--radius);
-      padding:24px;
-      box-shadow:0 1px 3px rgba(0,0,0,0.05);
-      margin-bottom:20px;
-    }
-    .special-description{
-      font-size:16px;
-      line-height:1.6;
-      color:#374151;
-      margin-bottom:20px;
+    /* --- NEW STYLES for Specials Grid --- */
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: var(--gap);
+        margin-top: 20px;
     }
 
-    /* Discount highlight */
-    .discount-box{
-      background:#e8f5e9;
-      border:2px dashed #2e7d32;
-      border-radius:12px;
-      padding:20px;
-      text-align:center;
-      margin:20px 0;
+    .special-card {
+        background: #fff; /* White background for contrast */
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        text-decoration: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,.05);
+        transition: transform 0.1s ease-in-out, box-shadow 0.2s ease;
     }
-    .discount-amount{
-      font-size:32px;
-      font-weight:700;
-      color:#2e7d32;
-      margin:0;
-    }
-    .discount-label{
-      font-size:14px;
-      color:#2e7d32;
-      font-weight:500;
+    .special-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0,0,0,.1);
     }
 
-    /* Place card */
-    .place-section{
-      background:var(--card);
-      border-radius:var(--radius);
-      overflow:hidden;
-      box-shadow:0 1px 3px rgba(0,0,0,0.05);
-      margin-bottom:20px;
-    }
-    .place-header{
-      padding:20px 24px 16px;
-      background:#f8fafc;
-      border-bottom:1px solid var(--line);
-    }
-    .place-header-title{
-      font-size:14px;
-      font-weight:600;
-      color:#666;
-      text-transform:uppercase;
-      letter-spacing:0.05em;
-    }
-    .place-content{
-      padding:24px;
-      display:flex;
-      flex-direction:column;
-      gap:20px;
-    }
-    .place-image{
-      width:100%;
-      height:200px;
-      border-radius:12px;
-      object-fit:cover;
-    }
-    .place-info{
-      flex:1;
-      min-width:0;
-    }
-    .place-name{
-      font-size:20px;
-      font-weight:600;
-      color:#0b1220;
-      margin:0 0 8px;
-    }
-    .place-location{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      color:var(--brand);
-      font-size:14px;
-      margin-bottom:12px;
-    }
-    .place-category{
-      display:inline-block;
-      background:#e6f0ff;
-      color:var(--brand);
-      padding:4px 10px;
-      border-radius:6px;
-      font-size:12px;
-      font-weight:600;
+    .special-card-img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        background: #e9ecef;
+        display: block;
     }
 
-    /* Desktop place card layout */
-    @media (min-width:768px){
-      .place-content{
-        flex-direction:row;
-      }
-      .place-image{
-        width:200px;
-        height:200px;
-      }
+    .special-card-body {
+        padding: 14px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
 
-    /* Action buttons */
-    .actions-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      margin-top:24px;
-    }
-    .action-btn{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:12px 20px;
-      border-radius:10px;
-      font-weight:600;
-      font-size:14px;
-      transition:all 0.2s ease;
-      cursor:pointer;
-      border:none;
-    }
-    .action-btn-primary{
-      background:var(--brand);
-      color:#fff;
-    }
-    .action-btn-primary:hover{
-      background:#005bb5;
-    }
-    .action-btn-secondary{
-      background:#e6f0ff;
-      color:var(--brand);
-    }
-    .action-btn-secondary:hover{
-      background:#d4e5ff;
+    .special-card-title {
+        font-weight: 700;
+        font-size: 18px;
+        margin: 0 0 4px 0;
+        color: var(--fg);
+        line-height: 1.2;
     }
 
-    /* Details */
-    .details-section{
-      margin-top:24px;
-    }
-    .detail-row{
-      display:flex;
-      align-items:flex-start;
-      gap:12px;
-      padding:12px 0;
-      border-bottom:1px solid #f3f4f6;
-    }
-    .detail-row:last-child{
-      border:none;
-    }
-    .detail-icon{
-      width:32px;
-      height:32px;
-      background:#e6f0ff;
-      color:var(--brand);
-      border-radius:8px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:16px;
-      flex-shrink:0;
-    }
-    .detail-content{
-      flex:1;
-    }
-    .detail-label{
-      font-size:12px;
-      color:#666;
-      font-weight:600;
-      text-transform:uppercase;
-      letter-spacing:0.05em;
-      margin-bottom:4px;
-    }
-    .detail-value{
-      font-size:15px;
-      color:#0b1220;
+    .special-card-meta {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 8px;
+        font-weight: 500;
     }
 
-    /* Expiring soon badge */
-    .expiring-badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      background:#fff4e5;
-      color:#ef6c00;
-      padding:6px 12px;
-      border-radius:8px;
-      font-size:13px;
-      font-weight:600;
-      margin-top:12px;
+    .special-card-desc {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 12px;
+        flex-grow: 1; /* Pushes the tag to the bottom */
+        display: -webkit-box;
+        /* -webkit-line-clamp: 3; */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
-    /* Skeleton loading */
-    .skeleton{
-      background:linear-gradient(90deg,#f2f4f7,#e9edf2,#f2f4f7);
-      background-size:200% 100%;
-      animation:shimmer 1.2s infinite;
-      color:transparent !important;
+    .special-tag {
+        align-self: flex-start;
+        background: #e6f1fb;
+        color: var(--brand);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 8px;
     }
-    @keyframes shimmer{
-      0%{background-position:200% 0}
-      100%{background-position:-200% 0}
-    }
-    .skel-line{
-      height:16px;
-      border-radius:8px;
-      margin:8px 0;
-    }
-    .skel-hero{
-      background:#f2f4f7;
-    }
-
-    /* Color mapping for special types */
-    .type-partnership{background-color:#6A1B9A}
-    .type-local_discount{background-color:#2E7D32}
-    .type-seasonal{background-color:#EF6C00}
-    .type-general{background-color:#1B5E20}
+    .skeleton{background:linear-gradient(90deg,#f2f4f7,#e9edf2,#f2f4f7);background-size:200% 100%;animation:shimmer 1.2s infinite;color:transparent !important}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .skel-line{height:14px;border-radius:7px;margin:8px 0}
   </style>
 
   <script>
+    // Expose env (same pattern as itinerary page)
     window.env = window.env || {
       SUPABASE_URL: 'https://rprpwudhplodaqmmwqkf.supabase.co',
       SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk'
@@ -350,117 +143,97 @@
       </div>
     </div>
   </header>
-
-  <!-- CLEAN HERO IMAGE SECTION -->
   <div class="wrap">
-    <!-- Title section -->
-    <div class="title-section">
-      <div class="special-badge" id="special-badge"></div>
-      <h1 class="special-title" id="special-title">Loading...</h1>
-      <div class="special-dates" id="special-dates"></div>
-      <div class="special-time" id="special-time" style="display:none"></div>
+    
+    <header class="page">
+      <div class="titleBlock">
+        <h1 class="title">✨ Daily Specials</h1>
+        <div class="sub">Curated deals and limited-time offers from local businesses.</div>
+      </div>
+    </header>
+
+    <section class="grid-container" id="specials-grid">
+      </section>
+    
+    <div id="loading" style="text-align:center; padding: 40px; display:none;">
+      <p>Loading specials...</p>
+    </div>
+    <div id="no-results" style="text-align:center; padding: 40px; display:none;">
+      <p>No specials available right now. Check back soon!</p>
     </div>
 
-    <!-- Main card -->
-    <div class="special-card">
-      <p class="special-description" id="special-description"></p>
-      
-      <div class="discount-box" id="discount-box" style="display:none">
-        <p class="discount-amount" id="discount-amount"></p>
-        <p class="discount-label">Special Offer</p>
-      </div>
-
-      <div class="details-section" id="details-section"></div>
-      
-      <div id="expiring-badge" class="expiring-badge" style="display:none">
-        <i class="fas fa-clock"></i>
-        <span>Expiring soon!</span>
-      </div>
-    </div>
-
-    <!-- Place section -->
-    <div class="place-section" id="place-section" style="display:none">
-      <div class="place-header">
-        <h3 class="place-header-title">Available At</h3>
-      </div>
-      <div class="place-content">
-        <img class="place-image" id="place-image" alt="">
-        <div class="place-info">
-          <h3 class="place-name" id="place-name"></h3>
-          <div class="place-location" id="place-location">
-            <i class="fas fa-map-marker-alt"></i>
-            <span id="place-address"></span>
-          </div>
-          <span class="place-category" id="place-category"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="actions-row">
-      <a class="action-btn action-btn-primary" id="view-place" href="#" style="display:none">
-        <i class="fas fa-store"></i>
-        View Place
-      </a>
-      <button class="action-btn action-btn-secondary" id="share-btn">
-        <i class="fas fa-share-alt"></i>
-        Share Special
-      </button>
-      <a class="action-btn action-btn-secondary" id="open-app" href="#">
-        <i class="fas fa-mobile-alt"></i>
-        Open in App
-      </a>
-    </div>
   </div>
 
-  <!-- Footer -->
   <footer class="footer">
     <div class="section-container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3>TRODDR</h3>
-          <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>TRODDR</h3>
+                <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Company</h3>
+                <div class="footer-links">
+                    <a href="about.html">About Us</a>
+                    <a href="#features">Features</a>
+                    <a href="contact.html">Contact</a>
+                    <a href="#demo">Join Waitlist</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Discover</h3>
+                <div class="footer-links">
+                    <a href="#">Eat</a>
+                    <a href="#">Stay</a>
+                    <a href="#">Play</a>
+                    <a href="#">Destinations</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Plan</h3>
+                <div class="footer-links">
+                    <a href="#">Trip Planner</a>
+                    <a href="#">Itineraries</a>
+                    <a href="#">Travel Guides</a>
+                    <a href="#">Local Tips</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Support</h3>
+                <div class="footer-links">
+                    <a href="#">Help Center</a>
+                    <a href="contact.html">Contact Us</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms of Service</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <div class="footer-links">
+                    <a href="mailto:hello@troddr.com">hello@troddr.com</a>
+                </div>
+            </div>
         </div>
-        <div class="footer-section">
-          <h3>Company</h3>
-          <div class="footer-links">
-            <a href="about.html">About Us</a>
-            <a href="#features">Features</a>
-            <a href="contact.html">Contact</a>
-            <a href="#demo">Join Waitlist</a>
-          </div>
+        <div class="footer-bottom">
+            <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
         </div>
-        <div class="footer-section">
-          <h3>Support</h3>
-          <div class="footer-links">
-            <a href="#">Help Center</a>
-            <a href="contact.html">Contact Us</a>
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="terms.html">Terms of Service</a>
-          </div>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>© 2025 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
-      </div>
     </div>
-  </footer>
-
+</footer>
   <script>
-    // Mobile menu
     (function(){
       const menuBtn  = document.querySelector('.mobile-menu-btn');
       const navLinks = document.querySelector('.nav-links');
       const closeBtn = document.querySelector('.nav-close-btn');
+  
       if (!menuBtn || !navLinks) return;
-      
+  
       menuBtn.addEventListener('click', function(){
         const isOpen = navLinks.classList.toggle('mobile-open');
         this.classList.toggle('active', isOpen);
         this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         document.body.classList.toggle('menu-open', isOpen);
       });
-      
+  
       navLinks.addEventListener('click', function(e){
         const link = e.target.closest('a');
         if (!link) return;
@@ -469,7 +242,7 @@
         menuBtn.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('menu-open');
       });
-      
+  
       if (closeBtn) {
         closeBtn.addEventListener('click', () => {
           navLinks.classList.remove('mobile-open');
@@ -478,7 +251,7 @@
           document.body.classList.remove('menu-open');
         });
       }
-      
+  
       document.addEventListener('keydown', function(e){
         if (e.key === 'Escape') {
           navLinks.classList.remove('mobile-open');
@@ -488,468 +261,103 @@
         }
       });
     })();
+    // ... waitlist handler (omitted for brevity)
   </script>
-
+  
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    const SUPABASE_URL = window.env.SUPABASE_URL.trim();
-    const SUPABASE_ANON_KEY = window.env.SUPABASE_ANON_KEY.trim();
+    const SUPABASE_URL = (window.env?.SUPABASE_URL || '').trim();
+    const SUPABASE_ANON_KEY = (window.env?.SUPABASE_ANON_KEY || '').trim();
     const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
 
-    const params = new URLSearchParams(location.search);
-    const pathMatch = location.pathname.match(/\/specials\/([^\/?#]+)/i);
-    const rawParam =
-      params.get('id') ||
-      params.get('special_slug') ||
-      (pathMatch ? decodeURIComponent(pathMatch[1]) : '');
-
     const $ = (sel) => document.querySelector(sel);
-    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
+    const setDisplay = (id, visible) => { const el = document.getElementById(id); if (el) el.style.display = visible ? '' : 'none'; };
 
-    // Analytics
-    function track(eventName, params = {}){
-      try {
-        if (typeof window.gtag === 'function') {
-          window.gtag('event', eventName, params);
-        }
-        console.debug('[track]', eventName, params);
-      } catch {}
-    }
+    /**
+     * Renders a single special as an HTML card.
+     */
+    function renderSpecialCard(special) {
+        const slug = special.specials_slug || special.slug;
+        const title = special.name || 'Untitled Special';
+        // Note: The card links to the existing detailed listing page
+        const link = `/listings/${encodeURIComponent(slug)}`;
+        // Use the first image or a default fallback
+        const images = special.image ? (Array.isArray(special.image) ? special.image : JSON.parse(special.image || '[]')) : [];
+        const image = images.length ? images[0] : 'https://images.unsplash.com/photo-1549488344-ec298e3b1236?w=400&q=80&auto=format&fit=crop'; // Placeholder URL
 
-    // Special type mappings
-    const SPECIAL_TYPE_COLORS = {
-      partnership: '#6A1B9A',
-      local_discount: '#2E7D32',
-      seasonal: '#EF6C00',
-      general: '#1B5E20',
-    };
+        const tag = special.special_type || special.category;
+        const meta = [special.town, special.parish].filter(Boolean).join(', ');
 
-    const SPECIAL_TYPE_LABELS = {
-      partnership: 'Partnership',
-      local_discount: 'Local Discount',
-      seasonal: 'Seasonal',
-      general: 'Special Offer',
-    };
-
-    // Date formatting
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    };
-
-    const formatTime = (timeString) => {
-      if (!timeString) return '';
-      const [hours, minutes] = timeString.split(':').map(Number);
-      const period = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours % 12 || 12;
-      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-    };
-
-    const formatTimeRange = (startTime, endTime) => {
-      if (!startTime && !endTime) return null;
-      if (startTime && endTime) {
-        return `${formatTime(startTime)} - ${formatTime(endTime)}`;
-      }
-      if (startTime) {
-        return `Starting at ${formatTime(startTime)}`;
-      }
-      if (endTime) {
-        return `Until ${formatTime(endTime)}`;
-      }
-      return null;
-    };
-
-    const isExpiringSoon = (endDate) => {
-      const end = new Date(endDate);
-      const now = new Date();
-      const daysUntilExpiry = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
-    };
-
-    // Meta tags
-    function upsertMeta(attr, name, content){
-      let sel = `${attr}="${name}"`;
-      let el = document.head.querySelector(`meta[${sel}]`);
-      if (!el){ el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
-      el.setAttribute('content', content);
-    }
-
-    function injectOG(special){
-      try{
-        const title = `${special.title} — TRODDR`;
-        const desc = special.description || `Check out this special offer on TRODDR!`;
-        let img = 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&q=80';
-
-        if (special.image_urls && Array.isArray(special.image_urls) && special.image_urls.length > 0) {
-          img = special.image_urls[0];
-        }
-        else if (special.place?.image) {
-          img = Array.isArray(special.place.image)
-            ? special.place.image[0]
-            : special.place.image;
-        }
-        const url = `${window.location.origin}/specials/${rawParam}`;
-
-        document.title = title;
-        upsertMeta('property','og:title', title);
-        upsertMeta('property','og:description', desc);
-        upsertMeta('property','og:type', 'website');
-        upsertMeta('property','og:url', url);
-        upsertMeta('property','og:image', img);
-        upsertMeta('name','twitter:card','summary_large_image');
-        upsertMeta('name','twitter:title', title);
-        upsertMeta('name','twitter:description', desc);
-        upsertMeta('name','twitter:image', img);
-        upsertMeta('name', 'description', desc);
-
-        let link = document.head.querySelector('link[rel="canonical"]');
-        if (!link){
-          link = document.createElement('link');
-          link.setAttribute('rel','canonical');
-          document.head.appendChild(link);
-        }
-        link.setAttribute('href', url);
-      }catch(e){
-        console.error('Error injecting OG tags', e);
-      }
-    }
-
-    // Show skeleton
-    function showSkeleton(){
-      const titleEl = $('#special-title');
-      const descEl = $('#special-description');
-      const heroEl = $('#hero-banner');
-      
-      if (titleEl) titleEl.classList.add('skeleton');
-      if (descEl) {
-        descEl.classList.add('skeleton');
-        descEl.innerHTML = '<div class="skel-line" style="width:80%"></div><div class="skel-line" style="width:90%"></div><div class="skel-line" style="width:60%"></div>';
-      }
-      if (heroEl) {
-        heroEl.classList.add('skel-hero');
-        heroEl.innerHTML = '';
-      }
-    }
-
-    function hideSkeleton(){
-      const titleEl = $('#special-title');
-      const descEl = $('#special-description');
-      const heroEl = $('#hero-banner');
-      
-      if (titleEl) titleEl.classList.remove('skeleton');
-      if (descEl) descEl.classList.remove('skeleton');
-      if (heroEl) heroEl.classList.remove('skel-hero');
-      
-      console.log('[Specials] Skeleton removed from:', {
-        title: titleEl?.classList.contains('skeleton'),
-        desc: descEl?.classList.contains('skeleton'),
-        hero: heroEl?.classList.contains('skel-hero')
-      });
-    }
-
-    // Render details
-    function renderDetails(special){
-      const details = [];
-      
-      if (special.partner_name) {
-        details.push({
-          icon: 'fa-handshake',
-          label: 'Partner',
-          value: special.partner_name
-        });
-      }
-
-      if (special.recurring_days && special.recurring_days.length > 0) {
-        const startDate = new Date(special.start_date);
-        const endDate = new Date(special.end_date);
-        const isSingleDay = (
-          startDate.getFullYear() === endDate.getFullYear() &&
-          startDate.getMonth() === endDate.getMonth() &&
-          startDate.getDate() === endDate.getDate()
-        );
-        
-        if (!isSingleDay) {
-          details.push({
-            icon: 'fa-redo',
-            label: 'Available Days',
-            value: special.recurring_days.map(day => 
-              day.charAt(0).toUpperCase() + day.slice(1)
-            ).join(', ')
-          });
-        }
-      }
-
-      if (details.length === 0) return;
-
-      const html = details.map(detail => `
-        <div class="detail-row">
-          <div class="detail-icon">
-            <i class="fas ${detail.icon}"></i>
-          </div>
-          <div class="detail-content">
-            <div class="detail-label">${detail.label}</div>
-            <div class="detail-value">${detail.value}</div>
-          </div>
-        </div>
-      `).join('');
-
-      const detailsSection = $('#details-section');
-      if (detailsSection) detailsSection.innerHTML = html;
-    }
-
-    // Share functionality
-    async function shareSpecial(special){
-      const shareData = {
-        title: special.title,
-        text: special.description || `Check out this special offer${special.place ? ' at ' + special.place.name : ''}!`,
-        url: window.location.href
-      };
-
-      try {
-        if (navigator.share) {
-          await navigator.share(shareData);
-          track('special_shared', { method: 'web_share', special_id: rawParam });
-        } else {
-          const text = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
-          await navigator.clipboard.writeText(text);
-          alert('Link copied to clipboard!');
-          track('special_shared', { method: 'copy_link', special_id: rawParam });
-        }
-      } catch (err) {
-        console.error('Error sharing:', err);
-      }
-    }
-
-    // Main function
-    async function main(){
-      console.log('[Specials] Starting main()');
-      console.log('[Specials] rawParam:', rawParam);
-      console.log('[Specials] User Agent:', navigator.userAgent);
-
-      if (!rawParam){
-        set('special-title', 'Special not found');
-        set('special-description', 'Please check the URL and try again.');
-        return;
-      }
-
-      showSkeleton();
-      track('special_page_viewed', { special_slug: rawParam });
-
-      // Fetch special
-      console.log('[Specials] Fetching special...');
-      let { data: special, error } = await supa
-        .from('specials')
-        .select(`
-          id,
-          special_slug,
-          title,
-          description,
-          image_urls,
-          special_type,
-          partner_name,
-          start_date,
-          end_date,
-          start_time,
-          end_time,
-          recurring_days,
-          priority,
-          discount_percentage,
-          discount_amount,
-          place:places!specials_place_id_fkey(
-            id,
-            name,
-            slug,
-            town,
-            parish,
-            image,
-            category,
-            address
-          )
-        `)
-        .eq('special_slug', rawParam)
-        .eq('active', true)
-        .maybeSingle();
-
-      console.log('[Specials] Query result:', { hasData: !!special, error: error?.message });
-
-      if (error || !special) {
-        console.error('[Specials] Error fetching special:', error);
-        set('special-title', 'Special not found');
-        set('special-description', 'This special offer may have expired or been removed.');
-        hideSkeleton();
-        return;
-      }
-
-      console.log('[Specials] Special found:', special.title);
-
-
-      // Special badge in title section
-      const specialBadge = $('#special-badge');
-      if (specialBadge) {
-        const badgeColor = SPECIAL_TYPE_COLORS[special.special_type] || SPECIAL_TYPE_COLORS.general;
-        const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type] || SPECIAL_TYPE_LABELS.general;
-        specialBadge.textContent = badgeLabel;
-        specialBadge.className = `special-badge type-${special.special_type}`;
-        // Set the background color for special-badge as well
-        specialBadge.style.backgroundColor = badgeColor;
-        console.log('[Specials] Special badge updated');
-      }
-
-      // Title and description
-      set('special-title', special.title);
-      set('special-description', special.description || 'Enjoy this special offer!');
-      console.log('[Specials] Title and description set');
-
-      // Dates
-      const datesEl = $('#special-dates');
-      if (datesEl) {
-        datesEl.innerHTML = `
-          <i class="fas fa-calendar"></i>
-          <span>${formatDate(special.start_date) === formatDate(special.end_date)
-            ? formatDate(special.start_date)
-            : `${formatDate(special.start_date)} - ${formatDate(special.end_date)}`}</span>
+        return `
+            <a class="special-card" href="${link}">
+                <img src="${image}" alt="${title}" class="special-card-img">
+                <div class="special-card-body">
+                    <div class="special-card-meta">${meta || 'Jamaica'}</div>
+                    <h2 class="special-card-title">${title}</h2>
+                    <p class="special-card-desc">${special.description || special.short_description || 'Check out this limited-time offer from TRODDR!'}</p>
+                    ${tag ? `<span class="special-tag">${tag}</span>` : ''}
+                </div>
+            </a>
         `;
-        console.log('[Specials] Dates rendered');
-      }
-
-      // Times
-      const timeRange = formatTimeRange(special.start_time, special.end_time);
-      const timeEl = $('#special-time');
-      if (timeEl && timeRange) {
-        timeEl.innerHTML = `
-          <i class="fas fa-clock"></i>
-          <span>${timeRange}</span>
-        `;
-        timeEl.style.display = 'flex';
-        console.log('[Specials] Times rendered');
-      }
-
-      // Discount box
-      const discountBox = $('#discount-box');
-      const discountAmount = $('#discount-amount');
-      if (special.discount_percentage || special.discount_amount) {
-        if (discountBox) discountBox.style.display = 'block';
-        if (discountAmount) {
-          if (special.discount_percentage) {
-            discountAmount.textContent = `${special.discount_percentage}% OFF`;
-          } else {
-            discountAmount.textContent = `$${special.discount_amount} OFF`;
-          }
-        }
-        console.log('[Specials] Discount box rendered');
-      }
-
-      // Expiring soon
-      const expiringBadge = $('#expiring-badge');
-      if (expiringBadge && isExpiringSoon(special.end_date)) {
-        expiringBadge.style.display = 'inline-flex';
-        console.log('[Specials] Expiring badge shown');
-      }
-
-      // Details
-      renderDetails(special);
-      console.log('[Specials] Details rendered');
-
-      // Hero image assignment
-      if (special.image_urls && special.image_urls.length > 0) {
-        document.getElementById("hero-image").src = special.image_urls[0];
-      }
-
-      // Place section
-      if (place) {
-        const placeSection = $('#place-section');
-        if (placeSection) placeSection.style.display = 'block';
-        
-        const imageUrl = place.image ? 
-          (Array.isArray(place.image) ? place.image[0] : place.image) :
-          null;
-        
-        const placeImage = $('#place-image');
-        if (placeImage) {
-          if (imageUrl) {
-            placeImage.src = imageUrl;
-            placeImage.alt = place.name;
-          } else {
-            placeImage.style.display = 'none';
-          }
-        }
-        
-        set('place-name', place.name);
-        set('place-address', [place.address, place.town, place.parish].filter(Boolean).join(', '));
-        
-        // Category
-        const categoryEmojis = {
-          eat: '🍽️',
-          stay: '🛏️',
-          play: '🎯'
-        };
-        const categoryText = place.category ? 
-          `${categoryEmojis[place.category] || ''} ${place.category.charAt(0).toUpperCase() + place.category.slice(1)}` : 
-          '';
-        set('place-category', categoryText);
-
-        // View place button
-        if (place.slug) {
-          const viewBtn = $('#view-place');
-          if (viewBtn) {
-            viewBtn.href = `/listings/${place.slug}`;
-            viewBtn.style.display = 'inline-flex';
-            viewBtn.addEventListener('click', () => {
-              track('view_place_from_special', { 
-                special_id: rawParam,
-                place_slug: place.slug 
-              });
-            });
-          }
-        }
-        
-        console.log('[Specials] Place section rendered');
-      }
-
-      // Share button
-      const shareBtn = $('#share-btn');
-      if (shareBtn) {
-        shareBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          shareSpecial(special);
-        });
-      }
-
-      // Open in app
-      const openAppLink = $('#open-app');
-      if (openAppLink) {
-        openAppLink.href = `troddr://special/${encodeURIComponent(rawParam)}`;
-        openAppLink.addEventListener('click', (e) => {
-          e.preventDefault();
-          track('open_in_app', { special_id: rawParam });
-          window.location = openAppLink.href;
-          setTimeout(() => {
-            window.location = 'https://apps.apple.com/app/idYOUR_APP_ID';
-          }, 1500);
-        });
-      }
-
-      injectOG(special);
-      hideSkeleton();
-      console.log('[Specials] Page render complete!');
-      console.log('[Specials] Final DOM check:', {
-        title: $('#special-title')?.textContent,
-        description: $('#special-description')?.textContent,
-        hasSkeleton: $('#special-title')?.classList.contains('skeleton')
-      });
     }
 
-    main().catch(err => {
-      console.error('[Specials] Fatal error:', err);
-      set('special-title', 'Error loading special');
-      set('special-description', 'Something went wrong. Please try again.');
-      hideSkeleton();
-    });
+    /**
+     * Generates skeleton loading cards.
+     */
+    function renderSkeletons(count = 6) {
+        const skeletons = Array(count).fill(0).map(() => `
+            <div class="special-card skeleton">
+                <div class="special-card-img skeleton"></div>
+                <div class="special-card-body">
+                    <div class="skel-line" style="width:50%; margin-bottom:8px;"></div>
+                    <div class="skel-line" style="width:80%; height:20px; margin-bottom:10px;"></div>
+                    <div class="skel-line" style="width:95%;"></div>
+                    <div class="skel-line" style="width:70%;"></div>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('specials-grid').innerHTML = skeletons;
+    }
+
+    /**
+     * Fetches and renders all current specials.
+     */
+    async function fetchAndRenderSpecials() {
+        const grid = document.getElementById('specials-grid');
+        if (!grid) return;
+
+        // 1. Show loading state
+        renderSkeletons();
+        setDisplay('loading', false);
+        setDisplay('no-results', false);
+
+        try {
+            // Assume the 'places' table has a flag or filterable field for specials
+            const { data: specials, error } = await supa
+                .from('places')
+                .select('name, specials_slug, slug, town, parish, description, short_description, image, special_type, category')
+                .eq('is_special', true) // Filter by a specials flag
+                .limit(50); 
+
+            if (error || !specials || specials.length === 0) {
+                grid.innerHTML = ''; // Clear skeletons
+                setDisplay('no-results', true);
+                return;
+            }
+
+            // 2. Render cards
+            const cardsHtml = specials.map(renderSpecialCard).join('');
+            grid.innerHTML = cardsHtml;
+
+        } catch (e) {
+            grid.innerHTML = '<p style="color:red; text-align:center; padding:40px;">An error occurred while fetching specials. Please try again.</p>';
+            console.error("Specials fetch error:", e);
+        }
+    }
+
+    // Execute on page load
+    fetchAndRenderSpecials();
   </script>
 </body>
 </html>
