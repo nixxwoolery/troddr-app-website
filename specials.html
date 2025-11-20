@@ -16,7 +16,8 @@
   <link rel="apple-touch-icon" href="/images/troddr_logo.png">
   
   <style>
-    :root{
+    /* SCOPED STYLES FOR SPECIALS PAGE - Override global conflicts */
+    .specials-page-wrapper {
       --brand:#0077cc;
       --bg:#ffffff;
       --fg:#0b1220;
@@ -24,244 +25,355 @@
       --card:#f8fafc;
       --line:#e5e7eb;
       --radius:14px;
-      --gap:14px;
+      margin-top: 80px; /* account for fixed header */
+      background: #fff;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;padding:0}
-    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg)}
-    a{text-decoration:none;color:inherit}
 
-    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    /* Override global hero styles */
+    .specials-page-wrapper .hero {
+      display: none !important;
+      min-height: 0 !important;
+      height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .specials-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
 
     /* Title Row */
-    header.page{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin:20px 0 12px;
-    }
-    .titleBlock{min-width:0}
-    .title{
-      font-size:clamp(22px,3.2vw,36px);
-      font-weight:600;
-      margin:0 0 6px;
-      letter-spacing:-0.01em;
-      line-height:1.1;
-    }
-    .sub{color:var(--muted);font-size:14px}
-    .cta{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      background:var(--brand);
-      color:#fff;
-      border-radius:12px;
-      padding:10px 14px;
-      font-weight:700;
+    .specials-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
     }
 
-    /* Special Type Badge */
-    .special-type-badge{
-      display:inline-block;
-      padding:6px 12px;
-      border-radius:6px;
-      font-size:12px;
-      font-weight:600;
-      color:#fff;
-      margin-bottom:12px;
+    .specials-title-block {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .special-type-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+      text-transform: capitalize;
+    }
+
+    .special-type-badge.type-partnership { background-color: #6A1B9A; }
+    .special-type-badge.type-local_discount { background-color: #2E7D32; }
+    .special-type-badge.type-seasonal { background-color: #EF6C00; }
+    .special-type-badge.type-general { background-color: #1B5E20; }
+
+    .specials-title {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 600;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: var(--fg);
+    }
+
+    .specials-dates {
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .specials-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--brand);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .specials-cta:hover {
+      background: #005A99;
+      transform: translateY(-2px);
     }
 
     /* Cards */
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      padding:24px;
-      box-shadow:0 1px 3px rgba(0,0,0,0.05);
-      margin-bottom:20px;
+    .specials-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
     }
-    .card.narrow{max-width:760px;margin:16px 0}
+
+    .specials-card.narrow {
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .specials-description {
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--fg);
+      margin-bottom: 20px;
+    }
+
+    /* Discount box */
+    .specials-discount-box {
+      background: #e8f5e9;
+      border: 2px dashed #2e7d32;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin: 24px 0;
+    }
+
+    .specials-discount-amount {
+      font-size: 36px;
+      font-weight: 700;
+      color: #2e7d32;
+      margin: 0 0 8px;
+    }
+
+    .specials-discount-label {
+      font-size: 15px;
+      color: #2e7d32;
+      font-weight: 600;
+    }
 
     /* Info list */
-    .infoRow{
-      display:flex;
-      align-items:flex-start;
-      gap:12px;
-      padding:10px 0;
-      border-bottom:none;
-      position:relative;
-    }
-    .infoRow::after{
-      content:"";
-      position:absolute;
-      left:44px;
-      right:0;
-      bottom:0;
-      height:1px;
-      background:linear-gradient(90deg,#e9edf2,transparent);
-    }
-    .infoRow:last-child::after{display:none}
-    .icon{
-      width:32px;
-      height:32px;
-      border-radius:16px;
-      background:#e8f3ff;
-      color:var(--brand);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:16px;
-      flex-shrink:0;
-    }
-    .kv{flex:1}
-    .kv .k{
-      font-size:13px;
-      color:#111;
-      font-weight:500;
-      margin-bottom:2px;
-    }
-    .kv .v{
-      font-size:14px;
-      color:#555;
-      font-weight:400;
+    .specials-info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: none;
+      position: relative;
     }
 
-    /* Discount highlight */
-    .discount-box{
-      background:#e8f5e9;
-      border:2px dashed #2e7d32;
-      border-radius:12px;
-      padding:20px;
-      text-align:center;
-      margin:20px 0;
-    }
-    .discount-amount{
-      font-size:32px;
-      font-weight:700;
-      color:#2e7d32;
-      margin:0;
-    }
-    .discount-label{
-      font-size:14px;
-      color:#2e7d32;
-      font-weight:500;
+    .specials-info-row::after {
+      content: "";
+      position: absolute;
+      left: 48px;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, #e9edf2, transparent);
     }
 
-    /* Action buttons */
-    .action-bar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      margin-top:20px;
+    .specials-info-row:last-child::after {
+      display: none;
     }
-    .action-btn{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      background:#007aff;
-      color:#fff !important;
-      font-weight:600;
-      padding:10px 16px;
-      border-radius:8px;
-      text-decoration:none;
-      cursor:pointer;
-      box-shadow:0 2px 4px rgba(0,0,0,.15);
-      transition:background 0.2s ease,transform 0.1s ease;
-    }
-    .action-btn:hover{background:#005bb5}
-    .action-btn:active{transform:scale(0.97)}
-    .action-btn i{font-size:14px}
 
-    /* Place section */
-    .place-section{
-      background:var(--card);
-      border-radius:var(--radius);
-      overflow:hidden;
-      box-shadow:0 1px 3px rgba(0,0,0,0.05);
-      margin-bottom:20px;
+    .specials-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
+      background: #e8f3ff;
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
     }
-    .place-header{
-      padding:20px 24px 16px;
-      background:#f8fafc;
-      border-bottom:1px solid var(--line);
+
+    .specials-kv {
+      flex: 1;
     }
-    .place-header-title{
-      font-size:14px;
-      font-weight:600;
-      color:#666;
-      text-transform:uppercase;
-      letter-spacing:0.05em;
+
+    .specials-kv .k {
+      font-size: 14px;
+      color: #111;
+      font-weight: 600;
+      margin-bottom: 4px;
     }
-    .place-content{
-      padding:24px;
-      display:flex;
-      gap:20px;
-    }
-    .place-image{
-      width:120px;
-      height:120px;
-      border-radius:12px;
-      object-fit:cover;
-      flex-shrink:0;
-    }
-    .place-info{
-      flex:1;
-      min-width:0;
-    }
-    .place-name{
-      font-size:20px;
-      font-weight:600;
-      color:#0b1220;
-      margin:0 0 8px;
-    }
-    .place-location{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      color:var(--brand);
-      font-size:14px;
-      margin-bottom:12px;
-    }
-    .place-category{
-      display:inline-block;
-      background:#e6f0ff;
-      color:var(--brand);
-      padding:4px 10px;
-      border-radius:6px;
-      font-size:12px;
-      font-weight:600;
+
+    .specials-kv .v {
+      font-size: 16px;
+      color: #555;
+      font-weight: 400;
     }
 
     /* Expiring badge */
-    .expiring-badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      background:#fff4e5;
-      color:#ef6c00;
-      padding:6px 12px;
-      border-radius:8px;
-      font-size:13px;
-      font-weight:600;
-      margin-top:12px;
+    .specials-expiring {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff4e5;
+      color: #ef6c00;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 16px;
     }
 
-    /* Responsive */
-    @media (max-width:768px){
-      .place-content{
-        flex-direction:column;
-      }
-      .place-image{
-        width:100%;
-        height:200px;
-      }
+    /* Place section */
+    .specials-place {
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin: 0 auto 20px;
+      max-width: 800px;
     }
 
-    /* Color mapping for special types */
-    .type-partnership{background-color:#6A1B9A}
-    .type-local_discount{background-color:#2E7D32}
-    .type-seasonal{background-color:#EF6C00}
-    .type-general{background-color:#1B5E20}
+    .specials-place-header {
+      padding: 20px 28px 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .specials-place-header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0;
+    }
+
+    .specials-place-content {
+      padding: 28px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .specials-place-image {
+      width: 140px;
+      height: 140px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .specials-place-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .specials-place-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: #0b1220;
+      margin: 0 0 10px;
+    }
+
+    .specials-place-location {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--brand);
+      font-size: 15px;
+      margin-bottom: 14px;
+    }
+
+    .specials-place-category {
+      display: inline-block;
+      background: #e6f0ff;
+      color: var(--brand);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Action buttons */
+    .specials-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 24px auto;
+      max-width: 800px;
+    }
+
+    .specials-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #007aff;
+      color: #fff !important;
+      font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+      transition: all 0.2s ease;
+    }
+
+    .specials-action-btn:hover {
+      background: #005bb5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,.18);
+    }
+
+    .specials-action-btn i {
+      font-size: 16px;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .specials-page-wrapper {
+        margin-top: 60px;
+      }
+
+      .specials-wrap {
+        padding: 24px 16px 40px;
+      }
+
+      .specials-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .specials-cta {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .specials-title {
+        font-size: 28px;
+      }
+
+      .specials-card {
+        padding: 20px;
+      }
+
+      .specials-place-content {
+        flex-direction: column;
+        padding: 20px;
+      }
+
+      .specials-place-image {
+        width: 100%;
+        height: 200px;
+      }
+
+      .specials-actions {
+        flex-direction: column;
+      }
+
+      .specials-action-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   </style>
 
   <script>
@@ -288,63 +400,65 @@
     </div>
   </header>
 
-  <div class="wrap">
-    <!-- Title section -->
-    <header class="page">
-      <div class="titleBlock">
-        <div class="special-type-badge" id="special-type-badge" style="display:none"></div>
-        <h1 class="title" id="special-title">Loading...</h1>
-        <div class="sub" id="special-dates"></div>
-      </div>
-      <a class="cta" id="open-in-app" href="#">Open in App</a>
-    </header>
+  <div class="specials-page-wrapper">
+    <div class="specials-wrap">
+      <!-- Title section -->
+      <header class="specials-header">
+        <div class="specials-title-block">
+          <div class="special-type-badge" id="special-type-badge" style="display:none"></div>
+          <h1 class="specials-title" id="special-title">Loading...</h1>
+          <div class="specials-dates" id="special-dates"></div>
+        </div>
+        <a class="specials-cta" id="open-in-app" href="#">Open in App</a>
+      </header>
 
-    <!-- Main content -->
-    <div class="card narrow">
-      <p id="special-description"></p>
-      
-      <!-- Discount box -->
-      <div class="discount-box" id="discount-box" style="display:none">
-        <p class="discount-amount" id="discount-amount"></p>
-        <p class="discount-label">Special Offer</p>
-      </div>
+      <!-- Main content -->
+      <div class="specials-card narrow">
+        <p class="specials-description" id="special-description"></p>
+        
+        <!-- Discount box -->
+        <div class="specials-discount-box" id="discount-box" style="display:none">
+          <p class="specials-discount-amount" id="discount-amount"></p>
+          <p class="specials-discount-label">Special Offer</p>
+        </div>
 
-      <!-- Info list -->
-      <div id="infoList"></div>
-      
-      <!-- Expiring badge -->
-      <div id="expiring-badge" class="expiring-badge" style="display:none">
-        <i class="fas fa-clock"></i>
-        <span>Expiring soon!</span>
-      </div>
-    </div>
-
-    <!-- Place section -->
-    <div class="place-section" id="place-section" style="display:none">
-      <div class="place-header">
-        <h3 class="place-header-title">Available At</h3>
-      </div>
-      <div class="place-content">
-        <img class="place-image" id="place-image" alt="">
-        <div class="place-info">
-          <h3 class="place-name" id="place-name"></h3>
-          <div class="place-location">
-            <i class="fas fa-map-marker-alt"></i>
-            <span id="place-address"></span>
-          </div>
-          <span class="place-category" id="place-category"></span>
+        <!-- Info list -->
+        <div id="infoList"></div>
+        
+        <!-- Expiring badge -->
+        <div id="expiring-badge" class="specials-expiring" style="display:none">
+          <i class="fas fa-clock"></i>
+          <span>Expiring soon!</span>
         </div>
       </div>
-    </div>
 
-    <!-- Actions -->
-    <div class="action-bar">
-      <a class="action-btn" id="view-place" href="#" style="display:none">
-        <i class="fas fa-store"></i> View Place
-      </a>
-      <button class="action-btn" id="share-btn">
-        <i class="fas fa-share-alt"></i> Share
-      </button>
+      <!-- Place section -->
+      <div class="specials-place" id="place-section" style="display:none">
+        <div class="specials-place-header">
+          <h3 class="specials-place-header-title">Available At</h3>
+        </div>
+        <div class="specials-place-content">
+          <img class="specials-place-image" id="place-image" alt="">
+          <div class="specials-place-info">
+            <h3 class="specials-place-name" id="place-name"></h3>
+            <div class="specials-place-location">
+              <i class="fas fa-map-marker-alt"></i>
+              <span id="place-address"></span>
+            </div>
+            <span class="specials-place-category" id="place-category"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="specials-actions">
+        <a class="specials-action-btn" id="view-place" href="#" style="display:none">
+          <i class="fas fa-store"></i> View Place
+        </a>
+        <button class="specials-action-btn" id="share-btn">
+          <i class="fas fa-share-alt"></i> Share
+        </button>
+      </div>
     </div>
   </div>
 
@@ -382,7 +496,7 @@
   </footer>
 
   <script>
-    // Mobile menu
+    // Mobile menu (from your global scripts)
     (function(){
       const menuBtn = document.querySelector('.mobile-menu-btn');
       const navLinks = document.querySelector('.nav-links');
@@ -439,9 +553,9 @@
     const $ = (sel) => document.querySelector(sel);
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text ?? ''; };
 
-    console.log('=== SPECIALS PAGE DEBUG ===');
+    console.log('=== SPECIALS PAGE ===');
     console.log('URL:', window.location.href);
-    console.log('Slug extracted:', slug);
+    console.log('Slug:', slug);
 
     // Analytics
     function track(eventName, params = {}){
@@ -584,9 +698,9 @@
       if (!el) return;
 
       el.innerHTML = info.map(([k, v, icon]) => `
-        <div class="infoRow">
-          <div class="icon">${icon}</div>
-          <div class="kv">
+        <div class="specials-info-row">
+          <div class="specials-icon">${icon}</div>
+          <div class="specials-kv">
             <div class="k">${k}</div>
             <div class="v">${v}</div>
           </div>
@@ -617,19 +731,16 @@
     }
 
     async function main(){
-      console.log('[Specials] Starting main()');
-
       if (!slug){
         set('special-title', 'Special not found');
         set('special-description', 'Please check the URL and try again.');
-        console.error('[Specials] No slug found in URL');
+        console.error('No slug found');
         return;
       }
 
       track('special_page_viewed', { special_slug: slug });
 
-      // Fetch special
-      console.log('[Specials] Fetching special with slug:', slug);
+      console.log('Fetching special:', slug);
       
       const { data: special, error } = await supa
         .from('specials')
@@ -663,35 +774,29 @@
         .eq('active', true)
         .maybeSingle();
 
-      console.log('[Specials] Query result:');
-      console.log('  - Found:', !!special);
-      console.log('  - Error:', error);
-      console.log('  - Data:', special);
+      console.log('Result:', { found: !!special, error: error?.message });
 
       if (error || !special) {
-        console.error('[Specials] Error fetching special:', error);
+        console.error('Error:', error);
         set('special-title', 'Special not found');
         set('special-description', 'This special offer may have expired or been removed.');
         return;
       }
 
-      console.log('[Specials] Successfully loaded special:', special.title);
+      console.log('✅ Loaded:', special.title);
 
-      // Special type badge
+      // Type badge
       const typeBadge = $('#special-type-badge');
       if (typeBadge) {
-        const badgeColor = SPECIAL_TYPE_COLORS[special.special_type] || SPECIAL_TYPE_COLORS.general;
-        const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type] || SPECIAL_TYPE_LABELS.general;
+        const badgeLabel = SPECIAL_TYPE_LABELS[special.special_type] || 'Special Offer';
         typeBadge.textContent = badgeLabel;
         typeBadge.className = `special-type-badge type-${special.special_type}`;
         typeBadge.style.display = 'inline-block';
-        console.log('[Specials] Badge set:', badgeLabel);
       }
 
       // Title and description
       set('special-title', special.title);
       set('special-description', special.description || 'Enjoy this special offer!');
-      console.log('[Specials] Title and description set');
 
       // Dates
       const datesEl = $('#special-dates');
@@ -700,7 +805,6 @@
           ? formatDate(special.start_date)
           : `${formatDate(special.start_date)} - ${formatDate(special.end_date)}`;
         datesEl.textContent = dateText;
-        console.log('[Specials] Dates set:', dateText);
       }
 
       // Discount box
@@ -713,25 +817,20 @@
             ? `${special.discount_percentage}% OFF`
             : `$${special.discount_amount} OFF`;
         }
-        console.log('[Specials] Discount displayed');
       }
 
       // Details
       renderDetails(special);
-      console.log('[Specials] Details rendered');
 
       // Expiring soon
       if (isExpiringSoon(special.end_date)) {
         const expiringBadge = $('#expiring-badge');
         if (expiringBadge) expiringBadge.style.display = 'inline-flex';
-        console.log('[Specials] Expiring badge shown');
       }
 
       // Place section
       const place = special.place;
       if (place) {
-        console.log('[Specials] Place data:', place);
-        
         const placeSection = $('#place-section');
         if (placeSection) placeSection.style.display = 'block';
         
@@ -743,7 +842,6 @@
         if (placeImage && imageUrl) {
           placeImage.src = imageUrl;
           placeImage.alt = place.name;
-          console.log('[Specials] Place image set:', imageUrl);
         }
         
         set('place-name', place.name);
@@ -769,8 +867,6 @@
             });
           }
         }
-        
-        console.log('[Specials] Place section complete');
       }
 
       // Share button
@@ -797,11 +893,11 @@
       }
 
       injectOG(special);
-      console.log('[Specials] ✅ Page render complete!');
+      console.log('✅ Page complete!');
     }
 
     main().catch(err => {
-      console.error('[Specials] ❌ Fatal error:', err);
+      console.error('❌ Fatal error:', err);
       set('special-title', 'Error loading special');
       set('special-description', 'Something went wrong. Please try again.');
     });
