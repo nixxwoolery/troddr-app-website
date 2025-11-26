@@ -634,10 +634,9 @@
     // 1. SUPABASE INITIALIZATION
     // ================================
     //
-    // TODO: Replace with your own Supabase project URL + anon key
-    // (You can get these from Supabase -> Project Settings -> API)
-    const SUPABASE_URL = 'https://YOUR-SUPABASE-PROJECT.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    // Load values from build-injected environment variables
+    const SUPABASE_URL = window._env?.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = window._env?.SUPABASE_ANON_KEY;
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // URL of the Supabase Edge Function (or simple backend) that talks to PostHog.
