@@ -1,7 +1,4 @@
 {
-  "build": {
-    "output": "static"
-  },
   "rewrites": [
     { "source": "/itinerary", "destination": "/itinerary.html" },
     { "source": "/itinerary/(.*)", "destination": "/itinerary.html" },
