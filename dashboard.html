@@ -1,0 +1,1013 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Troddr Business Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+
+  <!-- Chart.js for simple line charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --troddr-blue: #0A7AFF;
+      --bg: #f5f7fb;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-subtle: #e5e7eb;
+      --danger: #ef4444;
+      --success: #16a34a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .card-flat {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* HEADER / BRAND */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 20% 20%, #38bdf8, #0a7aff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-text span:first-child {
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .brand-text span:last-child {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .logout-btn {
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      padding: 6px 14px;
+      font-size: 13px;
+      background: #fff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .logout-btn span {
+      font-size: 14px;
+    }
+
+    .logout-btn:hover {
+      background: #f3f4f6;
+    }
+
+    /* LOGIN LAYOUT */
+    #login-view {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 0 16px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 28px 24px 24px;
+    }
+
+    .login-header {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 4px 0 4px;
+    }
+
+    .login-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .field input:focus {
+      border-color: var(--troddr-blue);
+      box-shadow: 0 0 0 1px rgba(10, 122, 255, 0.15);
+    }
+
+    .primary-btn {
+      width: 100%;
+      border-radius: 999px;
+      border: none;
+      padding: 11px 16px;
+      background: var(--troddr-blue);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .primary-btn[disabled] {
+      opacity: 0.7;
+      cursor: default;
+    }
+
+    .helper-text {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .error-text {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--danger);
+    }
+
+    /* DASHBOARD LAYOUT */
+    #dashboard-view {
+      display: none; /* Shown after login */
+      padding-bottom: 32px;
+    }
+
+    .dashboard-header {
+      margin-bottom: 18px;
+    }
+
+    .dashboard-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .business-name {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .listing-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .date-range-toggle {
+      display: inline-flex;
+      background: #e5f1ff;
+      border-radius: 999px;
+      padding: 2px;
+      gap: 4px;
+    }
+
+    .date-range-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      background: transparent;
+      color: #1f2933;
+    }
+
+    .date-range-btn.active {
+      background: #ffffff;
+      color: var(--troddr-blue);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+    }
+
+    .date-caption {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* METRIC GRID */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        align-items: flex-start;
+      }
+
+      .page {
+        padding: 12px;
+      }
+
+      .metrics-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .metric-card {
+      padding: 16px 14px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .metric-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .metric-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #dbeafe;
+      color: #1d4ed8;
+      background: #eff6ff;
+      white-space: nowrap;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .metric-change {
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .metric-change.positive {
+      color: var(--success);
+    }
+
+    .metric-change.negative {
+      color: var(--danger);
+    }
+
+    .metric-change span.arrow {
+      font-size: 14px;
+    }
+
+    .metric-chart {
+      margin-top: 8px;
+      height: 70px;
+    }
+
+    .metric-chart canvas {
+      width: 100% !important;
+      height: 70px !important;
+    }
+
+    /* FOOTER NOTE */
+    .footer-note {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* GENERIC STATES */
+    .pill-muted {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(10, 122, 255, 0.12), transparent),
+                  radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.08), transparent);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+
+    .loading-overlay.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 3px solid rgba(209, 213, 219, 0.9);
+      border-top-color: var(--troddr-blue);
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- GLOBAL LOADING OVERLAY -->
+  <div id="loading-overlay" class="loading-overlay" aria-hidden="true">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view">
+    <div class="page">
+      <div class="login-card card">
+        <div class="login-header">
+          <div class="brand">
+            <div class="brand-logo">T</div>
+            <div class="brand-text">
+              <span>Troddr</span>
+              <span>Business Portal</span>
+            </div>
+          </div>
+          <h1 class="login-title">Sign in to your dashboard</h1>
+          <p class="login-subtitle">
+            Use the email and password shared with you to see how your Troddr listing is performing.
+          </p>
+        </div>
+
+        <form id="login-form">
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="email" required />
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" required />
+          </div>
+
+          <button type="submit" class="primary-btn" id="login-button">
+            <span id="login-btn-label">Sign in</span>
+          </button>
+
+          <p class="helper-text">
+            Your dashboard is read-only – you can't break anything here.
+            If you can't sign in, contact Troddr support.
+          </p>
+
+          <p class="error-text" id="login-error" style="display:none;"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboard-view">
+    <div class="page">
+      <header class="header">
+        <div class="brand">
+          <div class="brand-logo">T</div>
+          <div class="brand-text">
+            <span>Troddr</span>
+            <span>Business Dashboard</span>
+          </div>
+        </div>
+        <button id="logout-button" class="logout-btn" type="button">
+          <span>Sign out</span>
+        </button>
+      </header>
+
+      <section class="dashboard-header card-flat" style="padding:14px 16px 12px; margin-bottom:18px;">
+        <div class="dashboard-header-top">
+          <div>
+            <div class="listing-label">Listing performance</div>
+            <div class="business-name" id="business-name">Your Business</div>
+            <div class="listing-label" id="listing-label"></div>
+          </div>
+
+          <div>
+            <div class="date-range-toggle" aria-label="Date range selector">
+              <button class="date-range-btn active" data-range="7">Last 7 days</button>
+              <button class="date-range-btn" data-range="30">Last 30 days</button>
+              <button class="date-range-btn" data-range="90">Last 90 days</button>
+            </div>
+          </div>
+        </div>
+        <div class="date-caption" id="date-caption">
+          Loading date range…
+        </div>
+      </section>
+
+      <!-- METRICS -->
+      <section class="metrics-grid" aria-label="Listing metrics">
+        <!-- Profile Views -->
+        <article class="metric-card card" data-metric-key="listing_viewed">
+          <div class="metric-header">
+            <div>
+              <div class="metric-title">Profile Views</div>
+              <div class="metric-value" id="metric-value-listing_viewed">–</div>
+            </div>
+            <span class="metric-tag">Visibility</span>
+          </div>
+          <div class="metric-change" id="metric-change-listing_viewed">
+            <span>—</span>
+          </div>
+          <div class="metric-chart">
+            <canvas id="metric-chart-listing_viewed" aria-label="Profile Views trend"></canvas>
+          </div>
+        </article>
+
+        <!-- Favorites -->
+        <article class="metric-card card" data-metric-key="listing_favorited">
+          <div class="metric-header">
+            <div>
+              <div class="metric-title">Favorites</div>
+              <div class="metric-value" id="metric-value-listing_favorited">–</div>
+            </div>
+            <span class="metric-tag">Saved</span>
+          </div>
+          <div class="metric-change" id="metric-change-listing_favorited">
+            <span>—</span>
+          </div>
+          <div class="metric-chart">
+            <canvas id="metric-chart-listing_favorited" aria-label="Favorites trend"></canvas>
+          </div>
+        </article>
+
+        <!-- Direction Clicks -->
+        <article class="metric-card card" data-metric-key="directions_clicked">
+          <div class="metric-header">
+            <div>
+              <div class="metric-title">Direction Clicks</div>
+              <div class="metric-value" id="metric-value-directions_clicked">–</div>
+            </div>
+            <span class="metric-tag">Visits</span>
+          </div>
+          <div class="metric-change" id="metric-change-directions_clicked">
+            <span>—</span>
+          </div>
+          <div class="metric-chart">
+            <canvas id="metric-chart-directions_clicked" aria-label="Directions trend"></canvas>
+          </div>
+        </article>
+
+        <!-- Call Clicks -->
+        <article class="metric-card card" data-metric-key="call_clicked">
+          <div class="metric-header">
+            <div>
+              <div class="metric-title">Call Clicks</div>
+              <div class="metric-value" id="metric-value-call_clicked">–</div>
+            </div>
+            <span class="metric-tag">Leads</span>
+          </div>
+          <div class="metric-change" id="metric-change-call_clicked">
+            <span>—</span>
+          </div>
+          <div class="metric-chart">
+            <canvas id="metric-chart-call_clicked" aria-label="Calls trend"></canvas>
+          </div>
+        </article>
+
+        <!-- Website Clicks -->
+        <article class="metric-card card" data-metric-key="website_clicked">
+          <div class="metric-header">
+            <div>
+              <div class="metric-title">Website Clicks</div>
+              <div class="metric-value" id="metric-value-website_clicked">–</div>
+            </div>
+            <span class="metric-tag">Interest</span>
+          </div>
+          <div class="metric-change" id="metric-change-website_clicked">
+            <span>—</span>
+          </div>
+          <div class="metric-chart">
+            <canvas id="metric-chart-website_clicked" aria-label="Website visits trend"></canvas>
+          </div>
+        </article>
+
+        <!-- Booking Clicks -->
+        <article class="metric-card card" data-metric-key="booking_clicked">
+          <div class="metric-header">
+            <div>
+              <div class="metric-title">Booking Clicks</div>
+              <div class="metric-value" id="metric-value-booking_clicked">–</div>
+            </div>
+            <span class="metric-tag">Conversions</span>
+          </div>
+          <div class="metric-change" id="metric-change-booking_clicked">
+            <span>—</span>
+          </div>
+          <div class="metric-chart">
+            <canvas id="metric-chart-booking_clicked" aria-label="Bookings trend"></canvas>
+          </div>
+        </article>
+      </section>
+
+      <div class="footer-note">
+        Data powered by Troddr &amp; PostHog. Times are approximate and may be delayed slightly.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ================================
+    // 1. SUPABASE INITIALIZATION
+    // ================================
+    //
+    // TODO: Replace with your own Supabase project URL + anon key
+    // (You can get these from Supabase -> Project Settings -> API)
+    const SUPABASE_URL = 'https://YOUR-SUPABASE-PROJECT.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // URL of the Supabase Edge Function (or simple backend) that talks to PostHog.
+    // We'll give you example code for this function below in the written instructions.
+    const METRICS_FUNCTION_URL = 'https://YOUR-SUPABASE-PROJECT.supabase.co/functions/v1/listing-metrics';
+
+    // ================================
+    // 2. SIMPLE STATE
+    // ================================
+    const loginView = document.getElementById('login-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const loadingOverlay = document.getElementById('loading-overlay');
+
+    const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-button');
+    const loginBtnLabel = document.getElementById('login-btn-label');
+    const loginError = document.getElementById('login-error');
+
+    const logoutButton = document.getElementById('logout-button');
+    const businessNameEl = document.getElementById('business-name');
+    const listingLabelEl = document.getElementById('listing-label');
+    const dateCaptionEl = document.getElementById('date-caption');
+
+    const rangeButtons = Array.from(document.querySelectorAll('.date-range-btn'));
+
+    // Chart instances keyed by event name
+    const chartsByMetric = {};
+
+    // We'll cache business data + current date range
+    let currentBusiness = null;
+    let currentRangeDays = 7;
+
+    function showOverlay(show) {
+      loadingOverlay.classList.toggle('show', !!show);
+    }
+
+    function setActiveView(isLoggedIn) {
+      if (isLoggedIn) {
+        loginView.style.display = 'none';
+        dashboardView.style.display = 'block';
+      } else {
+        dashboardView.style.display = 'none';
+        loginView.style.display = 'flex';
+      }
+    }
+
+    // ================================
+    // 3. LOGIN HANDLER (SUPABASE AUTH)
+    // ================================
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginError.style.display = 'none';
+      loginError.textContent = '';
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) return;
+
+      loginButton.disabled = true;
+      loginBtnLabel.textContent = 'Signing in…';
+      showOverlay(true);
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        const user = data.user;
+        if (!user) {
+          throw new Error('Unable to get user session.');
+        }
+
+        await loadBusinessAndMetrics(user);
+      } catch (err) {
+        console.error('Login error:', err);
+        loginError.textContent = err.message || 'Unable to sign in. Please try again.';
+        loginError.style.display = 'block';
+        setActiveView(false);
+      } finally {
+        loginButton.disabled = false;
+        loginBtnLabel.textContent = 'Sign in';
+        showOverlay(false);
+      }
+    });
+
+    // ================================
+    // 4. LOGOUT HANDLER
+    // ================================
+    logoutButton.addEventListener('click', async () => {
+      showOverlay(true);
+      await supabase.auth.signOut();
+      currentBusiness = null;
+      setActiveView(false);
+      showOverlay(false);
+    });
+
+    // ================================
+    // 5. ON LOAD – CHECK EXISTING SESSION
+    // ================================
+    (async function init() {
+      showOverlay(true);
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
+
+      if (session?.user) {
+        // Already logged in
+        await loadBusinessAndMetrics(session.user);
+      } else {
+        setActiveView(false);
+      }
+      showOverlay(false);
+    })();
+
+    // ================================
+    // 6. LOAD BUSINESS DETAILS
+    // ================================
+    async function loadBusinessAndMetrics(user) {
+      showOverlay(true);
+
+      // Load business profile
+      const { data: business, error } = await supabase
+        .from('businesses')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error || !business) {
+        alert("No business profile found. Contact Troddr support.");
+        setActiveView(false);
+        showOverlay(false);
+        return;
+      }
+
+      currentBusiness = business;
+      setActiveView(true);
+
+      // ADMIN MODE → load all listings
+      if (business.is_admin) {
+        await loadListings();
+      } else {
+        // BUSINESS OWNER → show only their listing
+        listingSelector.innerHTML = "";
+        const opt = document.createElement("option");
+        opt.value = business.listing_id;
+        opt.textContent = business.name;
+        listingSelector.appendChild(opt);
+      }
+
+      businessNameEl.textContent = business.name;
+      listingLabelEl.textContent = `Listing ID: ${business.listing_id}`;
+
+      listingSelector.value = business.listing_id;
+
+      currentRangeDays = 7;
+      updateRangeButtons();
+      await loadMetricsForRange(currentRangeDays);
+
+      showOverlay(false);
+    }
+
+    // ================================
+    // 7. DATE RANGE BUTTONS
+    // ================================
+    function updateRangeButtons() {
+      rangeButtons.forEach((btn) => {
+        const range = parseInt(btn.dataset.range, 10);
+        btn.classList.toggle('active', range === currentRangeDays);
+      });
+    }
+
+    rangeButtons.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const range = parseInt(btn.dataset.range, 10);
+        if (range === currentRangeDays) return;
+        currentRangeDays = range;
+        updateRangeButtons();
+        await loadMetricsForRange(currentRangeDays);
+      });
+    });
+
+    function formatDateRangeCaption(days) {
+      const now = new Date();
+      const end = new Date(now);
+      const start = new Date(now);
+      start.setDate(start.getDate() - days + 1);
+
+      const options = { month: 'short', day: 'numeric' };
+      return `${start.toLocaleDateString(undefined, options)} – ${end.toLocaleDateString(undefined, options)}`;
+    }
+
+    // ================================
+    // 8. METRICS LOADING (CALL EDGE FUNCTION)
+    // ================================
+    async function loadMetricsForRange(days) {
+      if (!currentBusiness || !currentBusiness.listing_id) {
+        return;
+      }
+
+      showOverlay(true);
+      dateCaptionEl.textContent = `Last ${days} days • ${formatDateRangeCaption(days)}`;
+
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+
+        if (!accessToken) {
+          throw new Error('Missing session token.');
+        }
+
+        // Call your Supabase Edge Function which will:
+        //  - Use the PostHog API (server-side)
+        //  - Aggregate counts & time series for each event
+        const url = new URL(METRICS_FUNCTION_URL);
+        url.searchParams.set('listing_id', currentBusiness.listing_id);
+        url.searchParams.set('days', String(days));
+
+        const res = await fetch(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // so the function can verify the user if needed
+          },
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || 'Failed to fetch metrics.');
+        }
+
+        const payload = await res.json();
+        applyMetricsPayload(payload);
+      } catch (err) {
+        console.error('Error loading metrics:', err);
+        alert('Sorry, we could not load your metrics. Please try again or contact Troddr.');
+      } finally {
+        showOverlay(false);
+      }
+    }
+
+    // ================================
+    // 9. UPDATE UI WITH METRICS
+    // ================================
+    function applyMetricsPayload(payload) {
+      // Expected shape:
+      // {
+      //   range_days: 7,
+      //   start_date: "2025-11-20",
+      //   end_date: "2025-11-26",
+      //   metrics: [
+      //     {
+      //       event: "listing_viewed",
+      //       total: 120,
+      //       previous_total: 80,
+      //       series: [
+      //         { date: "2025-11-20", value: 10 },
+      //         ...
+      //       ]
+      //     },
+      //     ...
+      //   ]
+      // }
+
+      if (!payload || !Array.isArray(payload.metrics)) return;
+
+      payload.metrics.forEach((m) => {
+        const { event, total, previous_total, series } = m;
+        const valueEl = document.getElementById(`metric-value-${event}`);
+        const changeEl = document.getElementById(`metric-change-${event}`);
+        const canvas = document.getElementById(`metric-chart-${event}`);
+
+        if (!valueEl || !changeEl || !canvas) {
+          return;
+        }
+
+        // Large number
+        valueEl.textContent = typeof total === 'number' ? total : '0';
+
+        // Percentage vs previous period
+        const prev = previous_total || 0;
+        let pctChange = '—';
+        let cls = 'metric-change';
+
+        if (prev === 0 && total > 0) {
+          pctChange = '+100% vs last period';
+          cls += ' positive';
+        } else if (prev === 0 && total === 0) {
+          pctChange = 'No change vs last period';
+        } else if (prev > 0) {
+          const diff = total - prev;
+          const pct = (diff / prev) * 100;
+          const rounded = Math.round(pct);
+          if (rounded > 0) {
+            pctChange = `▲ ${rounded}% vs last period`;
+            cls += ' positive';
+          } else if (rounded < 0) {
+            pctChange = `▼ ${Math.abs(rounded)}% vs last period`;
+            cls += ' negative';
+          } else {
+            pctChange = 'No change vs last period';
+          }
+        }
+
+        changeEl.className = cls;
+        changeEl.innerHTML = `<span>${pctChange}</span>`;
+
+        // Line chart
+        const labels = series?.map((p) => p.date) ?? [];
+        const values = series?.map((p) => p.value) ?? [];
+
+        if (!chartsByMetric[event]) {
+          chartsByMetric[event] = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: '',
+                  data: values,
+                  tension: 0.35,
+                  borderWidth: 2,
+                  pointRadius: 0,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  mode: 'index',
+                  intersect: false,
+                  callbacks: {
+                    label: (ctx) => `${ctx.parsed.y} events`,
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    font: { size: 10 },
+                    maxTicksLimit: 6,
+                  },
+                  grid: { display: false },
+                },
+                y: {
+                  ticks: {
+                    font: { size: 10 },
+                    maxTicksLimit: 4,
+                    precision: 0,
+                  },
+                  grid: {
+                    color: 'rgba(148, 163, 184, 0.25)',
+                  },
+                },
+              },
+            },
+          });
+        } else {
+          const chart = chartsByMetric[event];
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = values;
+          chart.update();
+        }
+      });
+    }
+  </script>
+</body>
+</html>
