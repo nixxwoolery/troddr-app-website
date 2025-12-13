@@ -1,6 +1,4 @@
 {
-  "buildCommand": null,
-  "outputDirectory": ".",
   "rewrites": [
     { "source": "/itinerary", "destination": "/itinerary.html" },
     { "source": "/itinerary/(.*)", "destination": "/itinerary.html" },
