@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Request deletion of your TRODDR account and associated data." />
+  <title>Delete Account | TRODDR</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="images/troddr_logo.png">
+
+  <style>
+    /* Page-specific styling */
+    .delete-container {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+    }
+
+    .delete-container h1 {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .delete-container h2 {
+      margin-top: 40px;
+    }
+
+    .delete-container ul {
+      margin: 20px 0;
+      padding-left: 22px;
+    }
+
+    .delete-container hr {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 40px 0;
+    }
+
+    .delete-container .btn-primary {
+      margin-top: 20px;
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 12px;
+
+      background-color: #c0392b; /* Destructive red */
+      color: #ffffff;
+
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+
+      border: none;
+      cursor: pointer;
+
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+
+    /* Hover & focus states */
+    .delete-container .btn-primary:hover,
+    .delete-container .btn-primary:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+      background-color: #a93226;
+    }
+
+    /* Active state */
+    .delete-container .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      background-color: #922b21;
+    }
+
+    @media (max-width: 640px) {
+      .delete-container {
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip to main content -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header (shared with main site) -->
+  <header class="header" role="banner">
+    <div class="navbar">
+      <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
+      <!-- <a href="dashboard.html" class="nav-item desktop-business-login">Business Login</a> -->
+
+      <button class="mobile-menu-btn"
+              aria-controls="primary-navigation"
+              aria-expanded="false"
+              aria-label="Open menu">
+        <span aria-hidden="true">☰</span>
+      </button>
+
+      <div class="nav-links" id="primary-navigation" role="navigation">
+        <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
+        <a href="about.html" class="nav-item">About</a>
+        <a href="index.html#features" class="nav-item">Features</a>
+        <a href="contact.html" class="nav-item">Contact</a>
+        <a href="index.html#waitlist" class="nav-cta">Join Waitlist</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content">
+    <section class="section-container" style="padding: 80px 20px; max-width: 720px;">
+      <div class="delete-container">
+      <h1>Request Account & Data Deletion</h1>
+
+      <p>
+        TRODDR respects your privacy and gives you full control over your data.
+        You may request deletion of your account and associated personal data at any time.
+      </p>
+
+      <ul>
+        <li>Your account will be permanently deleted</li>
+        <li>Your personal data will be removed from our systems</li>
+        <li>This action cannot be undone</li>
+      </ul>
+
+      <hr />
+
+      <h2>Submit a Deletion Request</h2>
+
+      <form id="deleteForm" class="contact-form" novalidate>
+        <div class="contact-field">
+          <label for="email">Email address used for your TRODDR account</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            aria-required="true"
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="contact-field">
+          <label for="reason">Reason for deletion (optional)</label>
+          <textarea
+            id="reason"
+            name="reason"
+            rows="4"
+            placeholder="Optional feedback..."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          Request Account Deletion
+        </button>
+      </form>
+
+      <div id="successMessage" class="form-message success" style="display:none; margin-top:24px;" role="alert" aria-live="polite">
+        <div class="form-message-content">
+          <span class="form-message-icon" aria-hidden="true">✅</span>
+          <h3>Request received</h3>
+          <p>Your account deletion request has been received and will be processed within 7–14 business days.</p>
+        </div>
+      </div>
+
+      <hr />
+
+      <h3>What data will be deleted?</h3>
+      <p>
+        Account profile information, saved places, itineraries, preferences, and
+        activity history will be deleted. Some anonymized analytics data may be retained
+        for legal and operational purposes.
+      </p>
+
+      <p>
+        Prefer email? Send a request to
+        <a href="mailto:privacy@troddr.com">privacy@troddr.com</a>
+        with the subject line <strong>Account Deletion Request</strong>.
+      </p>
+    </div>
+    </section>
+  </main>
+
+  <!-- Footer (shared with main site) -->
+  <footer class="footer" role="contentinfo">
+    <div class="section-container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>TRODDR</h3>
+          <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+        </div>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <nav class="footer-links">
+            <a href="about.html">About Us</a>
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms_and_conditions.html">Terms of Service</a>
+          </nav>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <div class="footer-links">
+            <a href="mailto:hello@troddr.com">hello@troddr.com</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 TRODDR. Made with ❤️ in Jamaica.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    (function(){
+      const menuBtn  = document.querySelector('.mobile-menu-btn');
+      const navLinks = document.querySelector('.nav-links');
+      const closeBtn = document.querySelector('.nav-close-btn');
+
+      if (!menuBtn || !navLinks) return;
+
+      menuBtn.addEventListener('click', function(){
+        const isOpen = navLinks.classList.toggle('mobile-open');
+        this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        document.body.classList.toggle('menu-open', isOpen);
+      });
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          navLinks.classList.remove('mobile-open');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          document.body.classList.remove('menu-open');
+        });
+      }
+    })();
+
+    const form = document.getElementById('deleteForm');
+    const successMessage = document.getElementById('successMessage');
+
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value.trim();
+        if (!email) return;
+
+        // TODO: Connect to backend / email service
+        console.log('Account deletion request:', {
+          email,
+          reason: document.getElementById('reason').value,
+          timestamp: new Date().toISOString(),
+        });
+
+        form.style.display = 'none';
+        successMessage.style.display = 'block';
+      });
+    }
+  </script>
+</body>
+</html>
