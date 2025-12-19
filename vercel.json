@@ -6,7 +6,8 @@
     { "source": "/specials/:slug", "destination": "/specials.html?special_slug=:slug" },
     { "source": "/listings/:slug", "destination": "/listings.html?slug=:slug" },
     { "source": "/guides/:slug", "destination": "/guides.html?slug=:slug" },
-    { "source": "/dashboard", "destination": "/dashboard.html" }
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/reset-password", "destination": "/reset-password.html" }
   ],
   "redirects": [
     {
