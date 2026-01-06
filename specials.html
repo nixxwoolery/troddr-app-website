@@ -885,7 +885,7 @@
       const openAppLink = $('#open-in-app');
       if (openAppLink) {
         // Use correct app scheme + route
-        const deepLink = `troddrapp://special/${encodeURIComponent(slug)}`;
+        const deepLink = `troddrapp://detailedListing/${encodeURIComponent(place.slug)}`;
 
         // Keep href as App Store fallback for accessibility / no-JS
         openAppLink.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
