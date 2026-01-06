@@ -879,21 +879,26 @@
         });
       }
 
-      // Open in app
-      const APPLE_APP_ID = '6751852075';
-
+      // Open in app (Safari-safe, deep link with App Store fallback, no duplicate handlers)
       const openAppLink = $('#open-in-app');
-      if (openAppLink) {
-        // Use correct app scheme + route
+      if (openAppLink && place?.slug) {
+        const APPLE_APP_ID = '6751852075';
         const deepLink = `troddrapp://detailedListing/${encodeURIComponent(place.slug)}`;
 
         // Keep href as App Store fallback for accessibility / no-JS
         openAppLink.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
 
+        // Remove any existing handlers to avoid Safari conflicts
+        openAppLink.onclick = null;
+
         openAppLink.addEventListener('click', (e) => {
           e.preventDefault();
 
-          track('open_in_app', { special_slug: slug });
+          track('open_in_app', {
+            source: 'special_web',
+            special_slug: slug,
+            place_slug: place.slug,
+          });
 
           // Attempt to open the app
           window.location.href = deepLink;
