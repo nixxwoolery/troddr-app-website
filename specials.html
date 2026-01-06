@@ -880,15 +880,23 @@
       }
 
       // Open in app
+      const APPLE_APP_ID = '6751852075';
+
       const openAppLink = $('#open-in-app');
       if (openAppLink) {
         openAppLink.href = `troddr://special/${encodeURIComponent(slug)}`;
+
         openAppLink.addEventListener('click', (e) => {
           e.preventDefault();
+
           track('open_in_app', { special_slug: slug });
-          window.location = openAppLink.href;
+
+          // Attempt to open the app
+          window.location.href = openAppLink.href;
+
+          // Fallback to App Store if app is not installed
           setTimeout(() => {
-            window.location = 'https://apps.apple.com/app/idYOUR_APP_ID';
+            window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
           }, 1500);
         });
       }
