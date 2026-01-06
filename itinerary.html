@@ -1147,5 +1147,38 @@
 
     main();
   </script>
+  <script>
+    (function () {
+      const APPLE_APP_ID = '6751852075';
+  
+      const stickyOpen = document.getElementById('sticky-open');
+      if (!stickyOpen) return;
+  
+      stickyOpen.addEventListener('click', (e) => {
+        e.preventDefault();
+  
+        // Build deep link (adjust path if needed)
+        const deepLink = slug
+          ? `troddr://listing/${encodeURIComponent(slug)}`
+          : `troddr://`;
+  
+        // Optional analytics
+        try {
+          gtag('event', 'open_in_app', {
+            location: 'sticky_footer',
+            target: 'listing'
+          });
+        } catch (e) {}
+  
+        // Attempt to open app
+        window.location.href = deepLink;
+  
+        // Fallback to App Store
+        setTimeout(() => {
+          window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+        }, 1500);
+      });
+    })();
+  </script>
 </body>
 </html>
