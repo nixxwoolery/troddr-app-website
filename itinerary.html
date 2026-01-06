@@ -859,9 +859,24 @@
       if (stickyOpen){
         stickyOpen.addEventListener('click', (e)=>{
           e.preventDefault();
-          try { gtag('event','open_in_app', { location: 'sticky_footer', target: 'shared_itinerary' }); } catch(e){}
-          const deep = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
-          window.location.href = deep;
+
+          try {
+            gtag('event','open_in_app', {
+              location: 'sticky_footer',
+              target: 'shared_itinerary'
+            });
+          } catch(e){}
+
+          const APPLE_APP_ID = '6751852075';
+          const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
+
+          // Attempt to open the app
+          window.location.href = deepLink;
+
+          // Fallback to App Store if app is not installed
+          setTimeout(() => {
+            window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+          }, 1500);
         });
       }
     }
@@ -1130,10 +1145,26 @@
           });
         }
         if (saveBtn){
-          saveBtn.addEventListener('click', () => {
-            try { gtag('event','open_in_app', { location: 'itinerary_header', target: 'shared_itinerary' }); } catch(e){}
-            const deep = saveBtn.dataset.deep || `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
-            window.location.href = deep;
+          saveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            try {
+              gtag('event','open_in_app', {
+                location: 'itinerary_header',
+                target: 'shared_itinerary'
+              });
+            } catch(e){}
+
+            const APPLE_APP_ID = '6751852075';
+            const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
+
+            // Attempt to open the app
+            window.location.href = deepLink;
+
+            // Fallback to App Store if app is not installed
+            setTimeout(() => {
+              window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+            }, 1500);
           });
         }
       }catch(e){
@@ -1147,74 +1178,5 @@
 
     main();
   </script>
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('open-in-app');
-    if (!btn) return;
-
-    const APPLE_APP_ID = '6751852075';
-
-    btn.addEventListener('click', (event) => {
-      event.preventDefault();
-
-      // Get token from URL (adjust if you store it differently)
-      const params = new URLSearchParams(window.location.search);
-      const token =
-        params.get('token') ||
-        params.get('id') ||
-        window.location.pathname.split('/').pop();
-
-      if (!token) {
-        // Safety fallback
-        window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
-        return;
-      }
-
-      const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(token)}`;
-
-      // Attempt to open app
-      window.location.href = deepLink;
-
-      // App Store fallback
-      setTimeout(() => {
-        window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
-      }, 1500);
-    });
-  });
-</script><script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('open-in-app');
-    if (!btn) return;
-
-    const APPLE_APP_ID = '6751852075';
-
-    btn.addEventListener('click', (event) => {
-      event.preventDefault();
-
-      // Get token from URL (adjust if you store it differently)
-      const params = new URLSearchParams(window.location.search);
-      const token =
-        params.get('token') ||
-        params.get('id') ||
-        window.location.pathname.split('/').pop();
-
-      if (!token) {
-        // Safety fallback
-        window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
-        return;
-      }
-
-      const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(token)}`;
-
-      // Attempt to open app
-      window.location.href = deepLink;
-
-      // App Store fallback
-      setTimeout(() => {
-        window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
-      }, 1500);
-    });
-  });
-</script>
 </body>
 </html>
