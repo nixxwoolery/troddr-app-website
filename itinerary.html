@@ -863,36 +863,8 @@
       }
       if (btn) btn.addEventListener('click', doShare);
       if (stickyShare) stickyShare.addEventListener('click', doShare);
-
-    function wireItineraryOpenInApp(token){
-      if (!token) return;
-
-      const APPLE_APP_ID = '6751852075';
-      const headerLink = document.getElementById('btn-open-app');
-      const stickyBtn  = document.getElementById('sticky-open');
-
-      const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(token))}`;
-
-      const handler = (e) => {
-        e.preventDefault();
-
-        try {
-          gtag('event','open_in_app', {
-            page: 'itinerary',
-            token
-          });
-        } catch {}
-
-        window.location.href = deepLink;
-
-        setTimeout(() => {
-          window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
-        }, 1500);
-      };
-
-      if (headerLink) headerLink.addEventListener('click', handler);
-      if (stickyBtn)  stickyBtn.addEventListener('click', handler);
     }
+
     // Canonical open-in-app handler (header + sticky)
     function wireItineraryOpenInApp(token){
       if (!token) return;
@@ -901,30 +873,38 @@
       const headerLink = document.getElementById('btn-open-app');
       const stickyBtn  = document.getElementById('sticky-open');
 
+      if (!headerLink && !stickyBtn) {
+        console.warn('[itinerary] No Open in App buttons found');
+        return;
+      }
+
       const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(token))}`;
 
       const handler = (e) => {
         e.preventDefault();
 
         try {
-          gtag('event','open_in_app', {
-            page: 'itinerary',
-            token
-          });
+          gtag('event','open_in_app', { page: 'itinerary', token });
         } catch {}
 
-        // Attempt to open the app
+        // Attempt to open app
         window.location.href = deepLink;
 
-        // Fallback to App Store
+        // App Store fallback
         setTimeout(() => {
           window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
         }, 1500);
       };
 
-      if (headerLink) headerLink.addEventListener('click', handler);
-      if (stickyBtn)  stickyBtn.addEventListener('click', handler);
-    }
+      if (headerLink) {
+        headerLink.onclick = null;
+        headerLink.addEventListener('click', handler);
+      }
+
+      if (stickyBtn) {
+        stickyBtn.onclick = null;
+        stickyBtn.addEventListener('click', handler);
+      }
     }
 
     function renderCategoryPills(meta, items, elId='cat-pills'){
@@ -1174,7 +1154,11 @@
         const itemsHydrated = await hydrateCoords(data.items || []);
         await render(itemsHydrated, data);
         setupItineraryShare(ident, data);
-        wireItineraryOpenInApp(ident);
+
+        // Delay binding so DOM + overlays exist
+        requestAnimationFrame(() => {
+          wireItineraryOpenInApp(ident);
+        });
 
         // Clear any prior error UI or title from earlier attempts
         if (errorBox) errorBox.classList.add('hidden');
