@@ -428,7 +428,14 @@
         <span class="meta-pill" id="meta-dates"></span>
         <div class="cat-pills" id="cat-pills"></div>
       </div>
-      <button type="button" class="btn btn-primary" id="btn-save" aria-label="Open this itinerary in the TRODDR app">Open in App</button>
+      <a
+        class="btn btn-primary"
+        id="btn-open-app"
+        href="https://apps.apple.com/app/id6751852075"
+        aria-label="Open this itinerary in the TRODDR app"
+      >
+        Open in App
+      </a>
       <a class="btn btn-outline" href="#" id="btn-share" aria-label="Share this itinerary">Share</a>
       <div class="stats" id="stats-row"></div>
     </div>
@@ -617,7 +624,7 @@
     const datesMeta = $('#meta-dates');
     const destDetail = $('#detail-destination');
     const copyBtn = $('#btn-copy');
-    const saveBtn = $('#btn-save');
+    // const saveBtn = $('#btn-save');
     const errorBox = $('#error-box');
     const errorDetail = $('#error-detail');
     const debug = (...args) => { try { console.debug('[itinerary]', ...args); } catch {} };
@@ -840,7 +847,7 @@
       const shareData = { title: meta.title || 'TRODDR Itinerary', text, url };
       const btn = document.getElementById('btn-share');
       const stickyShare = document.getElementById('sticky-share');
-      const stickyOpen = document.getElementById('sticky-open');
+      // const stickyOpen = document.getElementById('sticky-open');
 
       async function doShare(e){
         e.preventDefault();
@@ -856,29 +863,38 @@
       }
       if (btn) btn.addEventListener('click', doShare);
       if (stickyShare) stickyShare.addEventListener('click', doShare);
-      if (stickyOpen){
-        stickyOpen.addEventListener('click', (e)=>{
-          e.preventDefault();
+    // Canonical open-in-app handler (header + sticky)
+    function wireItineraryOpenInApp(token){
+      if (!token) return;
 
-          try {
-            gtag('event','open_in_app', {
-              location: 'sticky_footer',
-              target: 'shared_itinerary'
-            });
-          } catch(e){}
+      const APPLE_APP_ID = '6751852075';
+      const headerLink = document.getElementById('btn-open-app');
+      const stickyBtn  = document.getElementById('sticky-open');
 
-          const APPLE_APP_ID = '6751852075';
-          const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
+      const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(token))}`;
 
-          // Attempt to open the app
-          window.location.href = deepLink;
+      const handler = (e) => {
+        e.preventDefault();
 
-          // Fallback to App Store if app is not installed
-          setTimeout(() => {
-            window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
-          }, 1500);
-        });
-      }
+        try {
+          gtag('event','open_in_app', {
+            page: 'itinerary',
+            token
+          });
+        } catch {}
+
+        // Attempt to open the app
+        window.location.href = deepLink;
+
+        // Fallback to App Store
+        setTimeout(() => {
+          window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+        }, 1500);
+      };
+
+      if (headerLink) headerLink.addEventListener('click', handler);
+      if (stickyBtn)  stickyBtn.addEventListener('click', handler);
+    }
     }
 
     function renderCategoryPills(meta, items, elId='cat-pills'){
@@ -1128,6 +1144,7 @@
         const itemsHydrated = await hydrateCoords(data.items || []);
         await render(itemsHydrated, data);
         setupItineraryShare(ident, data);
+        wireItineraryOpenInApp(ident);
 
         // Clear any prior error UI or title from earlier attempts
         if (errorBox) errorBox.classList.add('hidden');
@@ -1142,29 +1159,6 @@
         if (copyBtn){
           copyBtn.addEventListener('click', async () => {
             try{ await navigator.clipboard.writeText(location.href); copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent='Copy Link', 1600);}catch(e){ alert('Copy failed'); }
-          });
-        }
-        if (saveBtn){
-          saveBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-
-            try {
-              gtag('event','open_in_app', {
-                location: 'itinerary_header',
-                target: 'shared_itinerary'
-              });
-            } catch(e){}
-
-            const APPLE_APP_ID = '6751852075';
-            const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(ident))}`;
-
-            // Attempt to open the app
-            window.location.href = deepLink;
-
-            // Fallback to App Store if app is not installed
-            setTimeout(() => {
-              window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
-            }, 1500);
           });
         }
       }catch(e){
