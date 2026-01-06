@@ -840,33 +840,30 @@
       return s ? `/listings.html?slug=${encodeURIComponent(s)}` : '';
     }
 
-    function setupItineraryShare(ident, meta){
-      const url = location.href.split('#')[0];
-      const range = (meta.start_date && meta.end_date) ? `${new Date(meta.start_date).toDateString()} to ${new Date(meta.end_date).toDateString()}` : '';
-      const text = `I'm going to ${meta.destination || 'Jamaica'} ${range ? 'from ' + range + ' ' : ''}with ${ (meta.items_count ?? '') } stops! Check out my trip plans!`;
-      const shareData = { title: meta.title || 'TRODDR Itinerary', text, url };
-      const btn = document.getElementById('btn-share');
-      const stickyShare = document.getElementById('sticky-share');
-      // const stickyOpen = document.getElementById('sticky-open');
+function setupItineraryShare(ident, meta){
+  const url = location.href.split('#')[0];
+  const range = (meta.start_date && meta.end_date) ? `${new Date(meta.start_date).toDateString()} to ${new Date(meta.end_date).toDateString()}` : '';
+  const text = `I'm going to ${meta.destination || 'Jamaica'} ${range ? 'from ' + range + ' ' : ''}with ${ (meta.items_count ?? '') } stops! Check out my trip plans!`;
+  const shareData = { title: meta.title || 'TRODDR Itinerary', text, url };
+  const btn = document.getElementById('btn-share');
+  const stickyShare = document.getElementById('sticky-share');
+  // const stickyOpen = document.getElementById('sticky-open');
 
-      async function doShare(e){
-        e.preventDefault();
-        try {
-          if (navigator.share){
-            await navigator.share(shareData);
-            try { gtag('event','share_itinerary',{ method: 'web-share', location: 'itinerary_header' }); } catch(e){}
-            return;
-          }
-          await navigator.clipboard.writeText(url); alert('Link copied!');
-          try { gtag('event','share_itinerary',{ method: 'copy-link', location: 'itinerary_header' }); } catch(e){}
-        } catch {}
+  async function doShare(e){
+    e.preventDefault();
+    try {
+      if (navigator.share){
+        await navigator.share(shareData);
+        try { gtag('event','share_itinerary',{ method: 'web-share', location: 'itinerary_header' }); } catch(e){}
+        return;
       }
-      if (btn) btn.addEventListener('click', doShare);
-      if (stickyShare) stickyShare.addEventListener('click', doShare);
-    }
-    requestAnimationFrame(() => {
-      wireItineraryOpenInApp(ident);
-    });
+      await navigator.clipboard.writeText(url); alert('Link copied!');
+      try { gtag('event','share_itinerary',{ method: 'copy-link', location: 'itinerary_header' }); } catch(e){}
+    } catch {}
+  }
+  if (btn) btn.addEventListener('click', doShare);
+  if (stickyShare) stickyShare.addEventListener('click', doShare);
+}
 
     // Canonical open-in-app handler (header + sticky)
     function wireItineraryOpenInApp(token) {
@@ -1151,8 +1148,7 @@
         const itemsHydrated = await hydrateCoords(data.items || []);
         await render(itemsHydrated, data);
         setupItineraryShare(ident, data);
-
-        // Delay binding so DOM + overlays exist
+        // Bind Open-in-App AFTER data + DOM are ready (Safari-safe)
         requestAnimationFrame(() => {
           wireItineraryOpenInApp(ident);
         });
