@@ -379,13 +379,19 @@
         <h1 class="title" id="listing-title">Loading…</h1>
         <div class="sub" id="listing-sub">—</div>
       </div>
-      <a class="cta" id="open-in-app"
-         href="https://apps.apple.com/app/idYOUR_APP_ID"
-         onclick="event.preventDefault(); 
-                  const appLink='troddr://listing/' + encodeURIComponent(slug || ''); 
-                  window.location=appLink; 
-                  setTimeout(()=>{ window.location='https://apps.apple.com/app/idYOUR_APP_ID'; }, 1500);">
-         Open in App
+      <a
+        class="cta"
+        id="open-in-app"
+        href="https://apps.apple.com/app/id6751852075"
+        onclick="event.preventDefault();
+                const slugValue = slug || '';
+                const appLink = 'troddr://listing/' + encodeURIComponent(slugValue);
+                window.location.href = appLink;
+                setTimeout(() => {
+                  window.location.href = 'https://apps.apple.com/app/id6751852075';
+                }, 1500);"
+      >
+        Open in App
       </a>
     </header>
 
