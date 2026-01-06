@@ -1300,9 +1300,27 @@
 
     function setOpenInApp(slug){
       const link = document.getElementById('open-in-app');
-      if (!link) return;
-      link.href = 'troddrapp://detailedListing/' + encodeURIComponent(slug);
-      link.addEventListener('click', ()=> track('open_in_app', { slug }), { passive:true });
+      if (!link || !slug) return;
+
+      const APPLE_APP_ID = '6751852075';
+      const deepLink = 'troddrapp://detailedListing/' + encodeURIComponent(slug);
+
+      // Keep href as App Store fallback for accessibility / no-JS
+      link.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        track('open_in_app', { slug });
+
+        // Attempt to open the app
+        window.location.href = deepLink;
+
+        // Fallback to App Store if app is not installed
+        setTimeout(() => {
+          window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+        }, 1500);
+      });
     }
 
     async function renderDishes(listing){
