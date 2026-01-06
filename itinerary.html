@@ -863,6 +863,36 @@
       }
       if (btn) btn.addEventListener('click', doShare);
       if (stickyShare) stickyShare.addEventListener('click', doShare);
+
+    function wireItineraryOpenInApp(token){
+      if (!token) return;
+
+      const APPLE_APP_ID = '6751852075';
+      const headerLink = document.getElementById('btn-open-app');
+      const stickyBtn  = document.getElementById('sticky-open');
+
+      const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(token))}`;
+
+      const handler = (e) => {
+        e.preventDefault();
+
+        try {
+          gtag('event','open_in_app', {
+            page: 'itinerary',
+            token
+          });
+        } catch {}
+
+        window.location.href = deepLink;
+
+        setTimeout(() => {
+          window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+        }, 1500);
+      };
+
+      if (headerLink) headerLink.addEventListener('click', handler);
+      if (stickyBtn)  stickyBtn.addEventListener('click', handler);
+    }
     // Canonical open-in-app handler (header + sticky)
     function wireItineraryOpenInApp(token){
       if (!token) return;
