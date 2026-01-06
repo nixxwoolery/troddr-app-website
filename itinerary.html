@@ -864,46 +864,43 @@
       if (btn) btn.addEventListener('click', doShare);
       if (stickyShare) stickyShare.addEventListener('click', doShare);
     }
+    requestAnimationFrame(() => {
+      wireItineraryOpenInApp(ident);
+    });
 
     // Canonical open-in-app handler (header + sticky)
-    function wireItineraryOpenInApp(token){
+    function wireItineraryOpenInApp(token) {
       if (!token) return;
 
       const APPLE_APP_ID = '6751852075';
-      const headerLink = document.getElementById('btn-open-app');
-      const stickyBtn  = document.getElementById('sticky-open');
+      const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(token)}`;
 
-      if (!headerLink && !stickyBtn) {
-        console.warn('[itinerary] No Open in App buttons found');
-        return;
-      }
-
-      const deepLink = `troddrapp://shared_itinerary/${encodeURIComponent(String(token))}`;
+      const headerBtn = document.getElementById('btn-open-app');
+      const stickyBtn = document.getElementById('sticky-open');
 
       const handler = (e) => {
         e.preventDefault();
 
+        // analytics-safe
         try {
-          gtag('event','open_in_app', { page: 'itinerary', token });
+          gtag?.('event', 'open_in_app', { page: 'itinerary', token });
         } catch {}
 
-        // Attempt to open app
-        window.location.href = deepLink;
+        // MUST use location.replace for Safari reliability
+        window.location.replace(deepLink);
 
-        // App Store fallback
+        // Fallback
         setTimeout(() => {
-          window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+          window.location.replace(`https://apps.apple.com/app/id${APPLE_APP_ID}`);
         }, 1500);
       };
 
-      if (headerLink) {
-        headerLink.onclick = null;
-        headerLink.addEventListener('click', handler);
+      if (headerBtn) {
+        headerBtn.onclick = handler;
       }
 
       if (stickyBtn) {
-        stickyBtn.onclick = null;
-        stickyBtn.addEventListener('click', handler);
+        stickyBtn.onclick = handler;
       }
     }
 
