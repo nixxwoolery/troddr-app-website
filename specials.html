@@ -884,7 +884,11 @@
 
       const openAppLink = $('#open-in-app');
       if (openAppLink) {
-        openAppLink.href = `troddr://special/${encodeURIComponent(slug)}`;
+        // Use correct app scheme + route
+        const deepLink = `troddrapp://special/${encodeURIComponent(slug)}`;
+
+        // Keep href as App Store fallback for accessibility / no-JS
+        openAppLink.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
 
         openAppLink.addEventListener('click', (e) => {
           e.preventDefault();
@@ -892,7 +896,7 @@
           track('open_in_app', { special_slug: slug });
 
           // Attempt to open the app
-          window.location.href = openAppLink.href;
+          window.location.href = deepLink;
 
           // Fallback to App Store if app is not installed
           setTimeout(() => {
