@@ -384,18 +384,6 @@
         class="cta"
         id="open-in-app"
         href="https://apps.apple.com/app/id6751852075"
-        onclick="event.preventDefault();
-          const tokenValue = window.token || '';
-          const appLink = 'troddrapp://shared_itinerary/' + encodeURIComponent(tokenValue);
-    
-          // Try to open the app
-          window.location.href = appLink;
-    
-          // Fallback to App Store
-          setTimeout(function () {
-            window.location.href = 'https://apps.apple.com/app/id6751852075';
-          }, 1500);
-        "
       >
         Open in App
       </a>
@@ -1305,18 +1293,24 @@
       const APPLE_APP_ID = '6751852075';
       const deepLink = 'troddrapp://detailedListing/' + encodeURIComponent(slug);
 
-      // Keep href as App Store fallback for accessibility / no-JS
+      // App Store fallback for accessibility / no-JS
       link.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+
+      // Prevent duplicate handlers
+      link.onclick = null;
 
       link.addEventListener('click', (e) => {
         e.preventDefault();
 
-        track('open_in_app', { slug });
+        track('open_in_app', {
+          source: 'listing_web',
+          slug
+        });
 
         // Attempt to open the app
         window.location.href = deepLink;
 
-        // Fallback to App Store if app is not installed
+        // Fallback if app is not installed
         setTimeout(() => {
           window.location.href = `https://apps.apple.com/app/id${APPLE_APP_ID}`;
         }, 1500);
