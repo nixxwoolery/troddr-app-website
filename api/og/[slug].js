@@ -31,9 +31,12 @@ export const config = {
   
   async function fetchPlace(slug) {
     try {
+      // Select all potential image fields
+      const fields = 'name,description,town,parish,image,image_url,images,photo,photos,thumbnail';
+      
       // Try specials_slug first (matches your listings.html code)
       let res = await fetch(
-        `${SUPABASE_URL}/rest/v1/places?specials_slug=eq.${encodeURIComponent(slug)}&select=name,description,town,parish,image`,
+        `${SUPABASE_URL}/rest/v1/places?specials_slug=eq.${encodeURIComponent(slug)}&select=${fields}`,
         {
           headers: {
             'apikey': SUPABASE_ANON_KEY,
@@ -46,7 +49,7 @@ export const config = {
   
       // Fallback to slug field
       res = await fetch(
-        `${SUPABASE_URL}/rest/v1/places?slug=eq.${encodeURIComponent(slug)}&select=name,description,town,parish,image`,
+        `${SUPABASE_URL}/rest/v1/places?slug=eq.${encodeURIComponent(slug)}&select=${fields}`,
         {
           headers: {
             'apikey': SUPABASE_ANON_KEY,
@@ -62,19 +65,67 @@ export const config = {
     }
   }
   
-  function getFirstImage(imageField) {
+  function getFirstImage(place) {
+    if (!place) return null;
+    
+    // Check all potential image fields
+    const imageFields = [
+      place.image,
+      place.image_url,
+      place.images,
+      place.photo,
+      place.photos,
+      place.thumbnail,
+    ];
+    
+    for (const field of imageFields) {
+      const img = extractImageUrl(field);
+      if (img) return img;
+    }
+    
+    return null;
+  }
+  
+  function extractImageUrl(imageField) {
     if (!imageField) return null;
-    if (Array.isArray(imageField)) return imageField[0] || null;
+    
+    // Already a URL string
     if (typeof imageField === 'string') {
       const trimmed = imageField.trim();
+      if (!trimmed) return null;
+      
+      // JSON array string like '["url1", "url2"]'
       if (trimmed.startsWith('[')) {
         try {
           const parsed = JSON.parse(trimmed);
-          if (Array.isArray(parsed)) return parsed[0] || null;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed[0] || null;
+          }
         } catch {}
       }
-      return trimmed || null;
+      
+      // Plain URL string
+      if (trimmed.startsWith('http')) {
+        return trimmed;
+      }
+      
+      // Relative URL
+      return trimmed;
     }
+    
+    // Array of URLs
+    if (Array.isArray(imageField)) {
+      const first = imageField.find(img => img && typeof img === 'string');
+      return first || null;
+    }
+    
+    // Object with url property
+    if (typeof imageField === 'object' && imageField !== null) {
+      if (imageField.url) return imageField.url;
+      if (imageField.src) return imageField.src;
+      if (imageField.href) return imageField.href;
+    }
+    
     return null;
   }
   
@@ -120,6 +171,14 @@ export const config = {
     // ============================================
     const place = await fetchPlace(decodedSlug);
     
+    // Debug logging (check Vercel Functions logs)
+    console.log('OG Debug:', {
+      slug: decodedSlug,
+      found: !!place,
+      imageField: place?.image,
+      imageUrlField: place?.image_url,
+    });
+    
     const baseUrl = url.origin;
     const name = place?.name || decodedSlug.replace(/-/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
     const location = [place?.town, place?.parish].filter(Boolean).join(', ');
@@ -129,12 +188,14 @@ export const config = {
       ? place.description.substring(0, 200) 
       : `Check out ${name}${location ? ` in ${location}` : ''} on TRODDR!`;
     
-    let image = getFirstImage(place?.image);
+    let image = getFirstImage(place);
     if (!image) {
       image = `${baseUrl}/images/og-default.jpg`;
     } else if (!image.startsWith('http')) {
       image = `${baseUrl}${image.startsWith('/') ? '' : '/'}${image}`;
     }
+    
+    console.log('OG Image:', image);
     
     const canonical = `${baseUrl}/listings/${encodeURIComponent(decodedSlug)}`;
     
