@@ -130,19 +130,23 @@ export const config = {
         id: tripId,
         found: !!itinerary,
         title: itinerary?.title,
+        name: itinerary?.name,
+        trip_name: itinerary?.trip_name,
         destination: itinerary?.destination,
         imageField: itinerary?.cover_image || itinerary?.image,
         extractedImage: getImageUrl(itinerary),
         allFields: itinerary ? Object.keys(itinerary) : [],
+        rawData: itinerary,
       }, null, 2), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
     
     const baseUrl = 'https://troddr.com';
-    const title = itinerary?.title || 'My Jamaica Trip';
-    const destination = itinerary?.destination || 'Jamaica';
-    const placeCount = itinerary?.place_count || itinerary?.slugs?.length || '';
+    // Try multiple possible title field names
+    const title = itinerary?.title || itinerary?.name || itinerary?.trip_name || itinerary?.itinerary_name || 'My Jamaica Trip';
+    const destination = itinerary?.destination || itinerary?.location || 'Jamaica';
+    const placeCount = itinerary?.place_count || itinerary?.places_count || (Array.isArray(itinerary?.slugs) ? itinerary.slugs.length : '') || '';
     
     const ogTitle = `${title} | TRODDR Itinerary`;
     let description = itinerary?.description;
