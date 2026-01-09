@@ -1,3 +1,5 @@
+// api/og/itinerary/[id].js
+
 export const config = {
     runtime: 'edge',
   };
@@ -16,44 +18,51 @@ export const config = {
     return BOT_PATTERNS.some(pattern => pattern.test(userAgent));
   }
   
-  async function fetchItinerary(id) {
-    if (!id) return null;
-    try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/itineraries?id=eq.${encodeURIComponent(id)}&select=*`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
-      const data = await res.json();
-      return data?.[0] || null;
-    } catch (e) {
-      console.error('Fetch error:', e);
-      return null;
-    }
-  }
-  
-  async function lookupShareToken(token) {
+  async function fetchItineraryByToken(token) {
     if (!token) return null;
-    try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/itinerary_shares?token=eq.${encodeURIComponent(token)}&select=itinerary_id`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
-      const data = await res.json();
-      return data?.[0]?.itinerary_id || null;
-    } catch (e) {
-      console.error('Share token lookup error:', e);
-      return null;
+    
+    const tryRpc = async (t) => {
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/rpc/get_shared_itinerary`,
+          {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ _token: t }),
+          }
+        );
+        const data = await res.json();
+        // RPC returns object with items array if successful, or error
+        if (data && !data.error && (data.title || data.items)) return data;
+        return null;
+      } catch (e) {
+        return null;
+      }
+    };
+  
+    // 1. Try token as-is
+    let result = await tryRpc(token);
+    if (result) return result;
+  
+    // 2. If token has dashes, try without them
+    if (token.includes('-')) {
+      const tokenNoDash = token.replace(/-/g, '');
+      result = await tryRpc(tokenNoDash);
+      if (result) return result;
     }
+  
+    // 3. If token is 32 hex chars (no dashes), try with UUID dashes
+    if (/^[0-9a-fA-F]{32}$/.test(token)) {
+      const tokenDashed = token.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5');
+      result = await tryRpc(tokenDashed);
+      if (result) return result;
+    }
+  
+    return null;
   }
   
   function makeAbsolute(url) {
@@ -122,46 +131,61 @@ export const config = {
       }
     }
     
-    // Bots → lookup share token and return OG meta tags
-    // Step 1: Look up the share token to get the actual itinerary_id
-    const itineraryId = await lookupShareToken(decodedToken);
-    
-    // Step 2: Fetch the itinerary using the resolved id
-    const itinerary = itineraryId ? await fetchItinerary(itineraryId) : null;
+    // Bots → use RPC to get itinerary data (same as itinerary.html)
+    const itinerary = await fetchItineraryByToken(decodedToken);
     
     if (debugMode) {
+      // Show what formats we would try
+      const tokenFormats = [decodedToken];
+      if (decodedToken.includes('-')) {
+        tokenFormats.push(decodedToken.replace(/-/g, ''));
+      }
+      if (/^[0-9a-fA-F]{32}$/.test(decodedToken)) {
+        tokenFormats.push(decodedToken.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5'));
+      }
+      
       return new Response(JSON.stringify({
         token: decodedToken,
-        shareTokenFound: !!itineraryId,
-        resolvedItineraryId: itineraryId,
-        itineraryFound: !!itinerary,
+        tokenFormatsTried: tokenFormats,
+        found: !!itinerary,
         title: itinerary?.title,
-        name: itinerary?.name,
         destination: itinerary?.destination,
-        imageField: itinerary?.cover_image || itinerary?.image,
-        extractedImage: getImageUrl(itinerary),
+        itemsCount: itinerary?.items?.length || 0,
+        start_date: itinerary?.start_date,
+        end_date: itinerary?.end_date,
         allFields: itinerary ? Object.keys(itinerary) : [],
-        rawData: itinerary,
       }, null, 2), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
     
     const baseUrl = 'https://troddr.com';
-    const title = itinerary?.title || itinerary?.name || itinerary?.trip_name || 'My Jamaica Trip';
-    const destination = itinerary?.destination || itinerary?.location || 'Jamaica';
-    const placeCount = itinerary?.place_count || itinerary?.places_count || (Array.isArray(itinerary?.slugs) ? itinerary.slugs.length : '') || '';
+    const title = itinerary?.title || 'My Jamaica Trip';
+    const destination = itinerary?.destination || 'Jamaica';
+    const itemsCount = itinerary?.items?.length || itinerary?.items_count || '';
+    
+    // Format date range like itinerary.html does
+    const fmtDate = (iso) => {
+      if (!iso) return '';
+      try { return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch { return ''; }
+    };
+    const dateRange = (itinerary?.start_date && itinerary?.end_date) 
+      ? `(${fmtDate(itinerary.start_date)}–${fmtDate(itinerary.end_date)})` 
+      : '';
     
     const ogTitle = `${title} | TRODDR Itinerary`;
-    let description = itinerary?.description;
-    if (!description) {
+    
+    // Build description like the share text in itinerary.html
+    let description;
+    if (itemsCount) {
+      description = `I'm going to ${destination} ${dateRange} with ${itemsCount} stops! Check out my trip plans on TRODDR!`;
+    } else {
       description = `Check out this ${destination} itinerary on TRODDR!`;
-      if (placeCount) {
-        description = `Explore ${placeCount} amazing places in ${destination} with this TRODDR itinerary!`;
-      }
     }
     
-    const image = getImageUrl(itinerary) || `${baseUrl}/images/og-default.jpg`;
+    // Get image from first item if available
+    const firstItemWithImage = itinerary?.items?.find(item => item?.image);
+    const image = firstItemWithImage?.image || `${baseUrl}/images/og-default.jpg`;
     const canonical = `${baseUrl}/itinerary/${encodeURIComponent(decodedToken)}`;
     
     const html = `<!DOCTYPE html>
