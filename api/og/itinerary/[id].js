@@ -17,9 +17,9 @@ export const config = {
   }
   
   async function fetchItinerary(id) {
+    if (!id) return null;
     try {
-      // Fetch by ID or share_id
-      let res = await fetch(
+      const res = await fetch(
         `${SUPABASE_URL}/rest/v1/itineraries?id=eq.${encodeURIComponent(id)}&select=*`,
         {
           headers: {
@@ -28,12 +28,19 @@ export const config = {
           },
         }
       );
-      let data = await res.json();
-      if (data && data.length > 0) return data[0];
+      const data = await res.json();
+      return data?.[0] || null;
+    } catch (e) {
+      console.error('Fetch error:', e);
+      return null;
+    }
+  }
   
-      // Try share_id
-      res = await fetch(
-        `${SUPABASE_URL}/rest/v1/itineraries?share_id=eq.${encodeURIComponent(id)}&select=*`,
+  async function lookupShareToken(token) {
+    if (!token) return null;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/itinerary_shares?token=eq.${encodeURIComponent(token)}&select=itinerary_id`,
         {
           headers: {
             'apikey': SUPABASE_ANON_KEY,
@@ -41,10 +48,10 @@ export const config = {
           },
         }
       );
-      data = await res.json();
-      return data?.[0] || null;
+      const data = await res.json();
+      return data?.[0]?.itinerary_id || null;
     } catch (e) {
-      console.error('Fetch error:', e);
+      console.error('Share token lookup error:', e);
       return null;
     }
   }
@@ -94,44 +101,42 @@ export const config = {
     const url = new URL(request.url);
     const userAgent = request.headers.get('user-agent') || '';
     
+    // Extract token from path: /itinerary/[token] or /api/og/itinerary/[token]
     const pathParts = url.pathname.split('/');
-    const id = pathParts[pathParts.length - 1] || '';
-    const decodedId = decodeURIComponent(id);
-    
-    // Also check for tripId in query params
-    const tripId = url.searchParams.get('tripId') || decodedId;
+    const token = pathParts[pathParts.length - 1] || '';
+    const decodedToken = decodeURIComponent(token);
     
     const debugMode = url.searchParams.get('debug') === '1';
     
-    // Regular users → serve itinerary.html
+    // Regular users → serve itinerary.html with the token
     if (!isBot(userAgent) && !debugMode) {
       try {
-        const queryParams = new URLSearchParams();
-        if (tripId) queryParams.set('tripId', tripId);
-        const destination = url.searchParams.get('destination');
-        if (destination) queryParams.set('destination', destination);
-        
-        const htmlResponse = await fetch(`${url.origin}/itinerary.html?${queryParams.toString()}`);
+        const htmlResponse = await fetch(`${url.origin}/itinerary.html?tripId=${encodeURIComponent(decodedToken)}`);
         const html = await htmlResponse.text();
         return new Response(html, {
           status: 200,
           headers: { 'Content-Type': 'text/html; charset=utf-8' },
         });
       } catch (e) {
-        return Response.redirect(`${url.origin}/itinerary.html?tripId=${encodeURIComponent(tripId)}`, 302);
+        return Response.redirect(`${url.origin}/itinerary.html?tripId=${encodeURIComponent(decodedToken)}`, 302);
       }
     }
     
-    // Bots → return OG meta tags
-    const itinerary = tripId ? await fetchItinerary(tripId) : null;
+    // Bots → lookup share token and return OG meta tags
+    // Step 1: Look up the share token to get the actual itinerary_id
+    const itineraryId = await lookupShareToken(decodedToken);
+    
+    // Step 2: Fetch the itinerary using the resolved id
+    const itinerary = itineraryId ? await fetchItinerary(itineraryId) : null;
     
     if (debugMode) {
       return new Response(JSON.stringify({
-        id: tripId,
-        found: !!itinerary,
+        token: decodedToken,
+        shareTokenFound: !!itineraryId,
+        resolvedItineraryId: itineraryId,
+        itineraryFound: !!itinerary,
         title: itinerary?.title,
         name: itinerary?.name,
-        trip_name: itinerary?.trip_name,
         destination: itinerary?.destination,
         imageField: itinerary?.cover_image || itinerary?.image,
         extractedImage: getImageUrl(itinerary),
@@ -143,8 +148,7 @@ export const config = {
     }
     
     const baseUrl = 'https://troddr.com';
-    // Try multiple possible title field names
-    const title = itinerary?.title || itinerary?.name || itinerary?.trip_name || itinerary?.itinerary_name || 'My Jamaica Trip';
+    const title = itinerary?.title || itinerary?.name || itinerary?.trip_name || 'My Jamaica Trip';
     const destination = itinerary?.destination || itinerary?.location || 'Jamaica';
     const placeCount = itinerary?.place_count || itinerary?.places_count || (Array.isArray(itinerary?.slugs) ? itinerary.slugs.length : '') || '';
     
@@ -158,9 +162,7 @@ export const config = {
     }
     
     const image = getImageUrl(itinerary) || `${baseUrl}/images/og-default.jpg`;
-    const canonical = tripId 
-      ? `${baseUrl}/itinerary?tripId=${encodeURIComponent(tripId)}`
-      : `${baseUrl}/itinerary`;
+    const canonical = `${baseUrl}/itinerary/${encodeURIComponent(decodedToken)}`;
     
     const html = `<!DOCTYPE html>
   <html lang="en">
