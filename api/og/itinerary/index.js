@@ -21,7 +21,8 @@ export const config = {
   async function fetchItinerary(id) {
     if (!id) return null;
     try {
-      let res = await fetch(
+      // Fetch the itinerary by id
+      const res = await fetch(
         `${SUPABASE_URL}/rest/v1/itineraries?id=eq.${encodeURIComponent(id)}&select=*`,
         {
           headers: {
@@ -30,19 +31,7 @@ export const config = {
           },
         }
       );
-      let data = await res.json();
-      if (data && data.length > 0) return data[0];
-  
-      res = await fetch(
-        `${SUPABASE_URL}/rest/v1/itineraries?share_id=eq.${encodeURIComponent(id)}&select=*`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
-      data = await res.json();
+      const data = await res.json();
       return data?.[0] || null;
     } catch (e) {
       console.error('Fetch error:', e);
@@ -127,11 +116,37 @@ export const config = {
     }
     
     // Bots → return OG meta tags
-    const itinerary = tripId ? await fetchItinerary(tripId) : null;
+    // First lookup share token to get itinerary_id
+    let shareData = null;
+    let itineraryId = tripId;
+    
+    if (tripId) {
+      try {
+        const shareRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/itinerary_shares?token=eq.${encodeURIComponent(tripId)}&select=itinerary_id`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+          }
+        );
+        shareData = await shareRes.json();
+        if (shareData && shareData.length > 0 && shareData[0].itinerary_id) {
+          itineraryId = shareData[0].itinerary_id;
+        }
+      } catch (e) {
+        console.error('Share token lookup error:', e);
+      }
+    }
+    
+    const itinerary = itineraryId ? await fetchItinerary(itineraryId) : null;
     
     if (debugMode) {
       return new Response(JSON.stringify({
         tripId,
+        shareTokenFound: shareData && shareData.length > 0,
+        resolvedItineraryId: itineraryId,
         found: !!itinerary,
         title: itinerary?.title,
         name: itinerary?.name,
