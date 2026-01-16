@@ -1,17 +1,52 @@
 {
   "rewrites": [
-  { "source": "/itinerary", "destination": "/api/og/itinerary/index" },
-  { "source": "/itinerary/:id", "destination": "/api/og/itinerary/:id" },
+    { "source": "/itinerary", "destination": "/api/og/itinerary/index" },
+    { "source": "/itinerary/:id", "destination": "/api/og/itinerary/:id" },
 
-  { "source": "/specials", "destination": "/specials.html" },
-  { "source": "/specials/:slug", "destination": "/specials.html" },
+    { "source": "/specials", "destination": "/specials.html" },
+    
+    {
+      "source": "/specials/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|Googlebot)"
+        }
+      ],
+      "destination": "/api/og/specials/:slug"
+    },
+    { "source": "/specials/:slug", "destination": "/specials.html" },
 
-  { "source": "/listings/:slug", "destination": "/listings.html" },
-  { "source": "/guides/:slug", "destination": "/guides.html" },
+    {
+      "source": "/listings/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|Googlebot)"
+        }
+      ],
+      "destination": "/api/og/:slug"
+    },
+    { "source": "/listings/:slug", "destination": "/listings.html" },
 
-  { "source": "/dashboard", "destination": "/dashboard.html" },
-  { "source": "/reset-password", "destination": "/reset-password.html" }
-],
+    {
+      "source": "/guides/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|Googlebot)"
+        }
+      ],
+      "destination": "/api/og/guides/:slug"
+    },
+    { "source": "/guides/:slug", "destination": "/guides.html" },
+
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/reset-password", "destination": "/reset-password.html" }
+  ],
   "redirects": [
     {
       "source": "/listings.html",
