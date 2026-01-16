@@ -57,6 +57,21 @@
         "destination": "/itinerary.html"
       },
   
+      {
+        "source": "/events/:slug",
+        "has": [
+          {
+            "type": "header",
+            "key": "user-agent",
+            "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+          }
+        ],
+        "destination": "/api/og/events/:slug"
+      },
+      {
+        "source": "/events/:slug",
+        "destination": "/events.html"
+      },
       { "source": "/dashboard", "destination": "/dashboard.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" }
     ],
