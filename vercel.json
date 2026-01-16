@@ -40,6 +40,22 @@
         "destination": "/api/og/specials/:slug"
       },
       { "source": "/specials/:slug", "destination": "/specials.html" },
+
+      {
+        "source": "/itinerary/:token",
+        "has": [
+          {
+            "type": "header",
+            "key": "user-agent",
+            "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+          }
+        ],
+        "destination": "/api/og/itinerary/:token"
+      },
+      {
+        "source": "/itinerary/:token",
+        "destination": "/itinerary.html"
+      },
   
       { "source": "/dashboard", "destination": "/dashboard.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" }
