@@ -19,7 +19,7 @@
           {
             "type": "header",
             "key": "user-agent",
-            "value": "(facebookexternalhit|Twitterbot|Slackbot|WhatsApp|TelegramBot|Discordbot|LinkedInBot|Pinterest)"
+            "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
           }
         ],
         "destination": "/api/og/guides/:slug"
