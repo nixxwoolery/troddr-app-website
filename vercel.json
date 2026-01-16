@@ -13,7 +13,21 @@
       },
       { "source": "/listings/:slug", "destination": "/listings.html" },
   
-      { "source": "/guides/:slug", "destination": "/guides.html" },
+      {
+        "source": "/guides/:slug",
+        "has": [
+          {
+            "type": "header",
+            "key": "user-agent",
+            "value": "(facebookexternalhit|Twitterbot|Slackbot|WhatsApp|TelegramBot|Discordbot|LinkedInBot|Pinterest)"
+          }
+        ],
+        "destination": "/api/og/guides/:slug"
+      },
+      {
+        "source": "/guides/:slug",
+        "destination": "/guides.html"
+      },
       {
         "source": "/specials/:slug",
         "has": [
