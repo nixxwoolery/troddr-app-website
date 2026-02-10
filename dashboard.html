@@ -667,21 +667,21 @@
     const chartsByMetric = {};
 
     // We'll cache business data + current date range
-    let currentBusiness = null;
-    let currentRangeDays = 7;
+let currentBusiness = null;
+let currentRangeDays = 7;
+
+// FORCE dashboard visible immediately
+loginView.style.display = 'none';
+dashboardView.style.display = 'block';
 
     function showOverlay(show) {
       loadingOverlay.classList.toggle('show', !!show);
     }
 
-    function setActiveView(isLoggedIn) {
-      if (isLoggedIn) {
-        loginView.style.display = 'none';
-        dashboardView.style.display = 'block';
-      } else {
-        dashboardView.style.display = 'none';
-        loginView.style.display = 'flex';
-      }
+    function setActiveView() {
+      // TEMP: permanently show dashboard for local work
+      loginView.style.display = 'none';
+      dashboardView.style.display = 'block';
     }
 
     // ================================
