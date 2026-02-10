@@ -688,6 +688,9 @@
     // 3. LOGIN HANDLER (SUPABASE AUTH)
     // ================================
     loginForm.addEventListener('submit', async (e) => {
+      // TEMP: bypass auth for local dashboard work
+      return;
+
       e.preventDefault();
       loginError.style.display = 'none';
       loginError.textContent = '';
@@ -744,17 +747,23 @@
     // 5. ON LOAD – CHECK EXISTING SESSION
     // ================================
     (async function init() {
-      showOverlay(true);
-      const { data } = await supabase.auth.getSession();
-      const session = data?.session;
+      // TEMP: bypass auth + load dashboard directly
 
-      if (session?.user) {
-        // Already logged in
-        await loadBusinessAndMetrics(session.user);
-      } else {
-        setActiveView(false);
-      }
-      showOverlay(false);
+      currentBusiness = {
+        id: 'demo-business',
+        name: 'Demo Business',
+        listing_id: 'demo-listing',
+        is_admin: false,
+      };
+
+      setActiveView(true);
+
+      businessNameEl.textContent = currentBusiness.name;
+      listingLabelEl.textContent = `Listing ID: ${currentBusiness.listing_id}`;
+
+      currentRangeDays = 7;
+      updateRangeButtons();
+      dateCaptionEl.textContent = `Last 7 days • ${formatDateRangeCaption(7)}`;
     })();
 
     // ================================
