@@ -1294,7 +1294,7 @@ window.trackAppStoreClick = function(platform) {
     });
     
     // Show coming soon message since app isn't released yet
-    showNotification(`The TRODDR app is coming to ${platform === 'ios' ? 'iOS' : 'Android'} in early 2025! Join our waitlist to be notified.`, 'info');
+    // showNotification(`The TRODDR app is coming to ${platform === 'ios' ? 'iOS' : 'Android'} in early 2025! Join our waitlist to be notified.`, 'info');
     
     // Prevent actual navigation for now
     return false;
