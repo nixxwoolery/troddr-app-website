@@ -3,67 +3,131 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="TRODDR - TRODDR is Jamaica's curated travel guide — locally vetted restaurants, hidden beaches, boutique stays, and trip planning in one free app. Download on iOS & Android.
-    ">
-    <meta name="keywords" content="Jamaica travel, Caribbean guide, local experiences, trip planner, authentic travel, Jamaica restaurants, local attractions">
-    
+    <meta name="description" content="Skip the tourist traps. TRODDR is Jamaica's curated travel guide — locally vetted restaurants, hidden beaches, boutique stays, and trip planning in one free app. Download on iOS & Android.">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://troddr.com/">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="TRODDR: Jamaica Travel Guide & Trip Planner | Discover Like a Local">
-    <meta property="og:description" content="Discover authentic Caribbean experiences with local recommendations for where to eat, stay, and play in Jamaica.">
+    <meta property="og:description" content="Skip the tourist traps. TRODDR is Jamaica's curated travel guide — locally vetted restaurants, hidden beaches, boutique stays, and trip planning in one free app.">
     <meta property="og:image" content="https://troddr.com/images/og-image.jpg">
     <meta property="og:url" content="https://troddr.com">
-    
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="TRODDR - Jamaica's Insider Travel Guide — Eat, Stay & Explore Like a Local">
-    <meta name="twitter:description" content="Discover authentic Caribbean experiences with local recommendations for where to eat, stay, and play in Jamaica.">
+    <meta name="twitter:title" content="TRODDR: Jamaica Travel Guide & Trip Planner | Discover Like a Local">
+    <meta name="twitter:description" content="Skip the tourist traps. TRODDR is Jamaica's curated travel guide — locally vetted restaurants, hidden beaches, boutique stays, and trip planning in one free app.">
     <meta name="twitter:image" content="https://troddr.com/images/twitter-image.jpg">
-    
-    <title>TRODDR - Jamaica's Insider Travel Guide — Eat, Stay & Explore Like a Local</title>
+
+    <title>TRODDR: Jamaica Travel Guide & Trip Planner | Discover Like a Local</title>
 
     <!-- Preload critical resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="images/troddr_logo.png">
     <link rel="icon" type="image/png" href="images/troddr_logo.png">
     <link rel="apple-touch-icon" href="images/troddr_logo.png">
-    
+
     <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-N0L5H68MFR"></script>
     <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-N0L5H68MFR');
     </script>
 
-    <!-- Structured Data -->
+    <!-- Structured Data: WebApplication -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
+        "@type": "MobileApplication",
         "name": "TRODDR",
-        "description": "Jamaica-first travel guide and trip planner for authentic Caribbean experiences",
+        "description": "Jamaica's curated travel guide and trip planner — locally vetted restaurants, hidden beaches, luxury retreats, boutique stays, and things to do across Jamaica.",
         "url": "https://troddr.com",
         "applicationCategory": "TravelApplication",
-        "operatingSystem": "iOS, Android, Web",
+        "operatingSystem": "iOS, Android",
         "offers": {
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "USD"
         },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5",
+            "ratingCount": "1"
+        },
         "publisher": {
             "@type": "Organization",
             "name": "TRODDR Ltd",
-            "url": "https://troddr.com"
+            "url": "https://troddr.com",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://troddr.com/images/troddr_logo.png"
+            },
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "email": "hello@troddr.com",
+                "contactType": "customer support"
+            }
         }
+    }
+    </script>
+
+    <!-- Structured Data: FAQPage -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "What is the best time to visit Jamaica?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "The best time to visit Jamaica is November through mid-December and January through April — the dry season, with warm temperatures, low humidity, and minimal rain. Peak season runs December to April, so book accommodation early. Summer (June–August) is hot and humid but sees far fewer tourists and lower prices, which many locals prefer."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What are the best things to do in Jamaica beyond the resorts?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Jamaica rewards those who venture past the all-inclusive. Top experiences include hiking to Blue Mountain Peak at sunrise, rafting down the Rio Grande, swimming in the luminous lagoon in Falmouth, exploring YS Falls in St Elizabeth, eating escovitch fish in Port Royal, and catching a local dancehall session in Kingston. TRODDR maps all of these with insider tips."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Where should I eat in Jamaica like a local?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Skip the hotel buffet. Jamaica's real food scene is at roadside jerk centres, fish fry spots along the Hellshire and Middle Quarters routes, and family-run eateries in every parish. Kingston has the most diverse restaurant scene — from traditional Jamaican breakfast spots to Chinese-Jamaican cook shops and modern Caribbean fine dining. TRODDR curates the best local restaurants across the island."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Is Jamaica safe for tourists?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Jamaica is a welcoming country and millions of visitors travel safely every year. Like any destination, knowing where to go and getting local guidance makes a significant difference. TRODDR's recommendations are curated with this in mind — every spot is a place locals are comfortable bringing visitors to."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What is TRODDR and how does it work?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "TRODDR is a Jamaica travel guide and trip planning app available free on iOS and Android. It curates local recommendations for restaurants, hotels, beaches, and things to do across Jamaica — spanning luxury retreats like GoldenEye and Rockhouse to hidden boutique gems, all handpicked by locals. You can browse by category or location, save places to a personal list, and build a day-by-day itinerary for your trip."
+                }
+            }
+        ]
     }
     </script>
 </head>
@@ -74,10 +138,6 @@
     <header class="header" role="banner">
         <div class="navbar">
             <a href="index.html" class="logo" aria-label="TRODDR - Home">troddr</a>
-            <!-- <a href="dashboard.html" class="nav-item desktop-business-login">Business Login</a> -->
-            <!-- <button class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false">
-                ☰
-            </button> -->
             <button class="mobile-menu-btn"
                     aria-controls="primary-navigation"
                     aria-expanded="false"
@@ -89,26 +149,25 @@
                 <a href="about.html" class="nav-item">About</a>
                 <a href="#features" class="nav-item">Features</a>
                 <a href="contact.html" class="nav-item">Contact</a>
-                <a href="#demo" class="nav-cta">Download the App</a>            </div>
+                <a href="#demo" class="nav-cta">Download the App</a>
+            </div>
         </div>
     </header>
 
     <main id="main-content">
+
         <!-- Hero Section -->
         <section class="hero" aria-labelledby="hero-title">
             <div class="hero-container">
                 <div class="hero-text">
-                    <h1 id="hero-title">Jamaica's Insider Travel Guide — Eat, Stay & Explore Like a Local</h1>
-                    <p class="hero-subtitle">TRODDR is a curated Jamaica travel app with local recommendations for the best restaurants, hidden beaches, boutique hotels, and things to do across the island — from Kingston to Negril. Plan your trip, build your itinerary, and explore Jamaica the way locals do.</p>
+                    <h1 id="hero-title">Jamaica's Insider Travel Guide — Eat, Stay &amp; Explore Like a Local</h1>
+                    <p class="hero-subtitle">TRODDR is a curated Jamaica travel app with local recommendations for the best restaurants, hidden beaches, luxury retreats, and things to do across the island — from iconic properties like GoldenEye and Rockhouse to neighbourhood gems only locals know. Plan your trip, build your itinerary, and experience Jamaica at its best.</p>
                     <div class="download-buttons">
                         <a href="https://apps.apple.com/us/app/troddr/id6751852075" target="_blank" rel="noopener" class="btn-store btn-appstore">
-                            <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-     alt="Download on the App Store" />
+                            <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" />
                         </a>
-                    
                         <a href="https://play.google.com/store/apps/details?id=com.troddr.app" target="_blank" rel="noopener" class="btn-store btn-playstore">
-                            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-                                 alt="Get it on Google Play" />
+                            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" />
                         </a>
                     </div>
                 </div>
@@ -148,7 +207,8 @@
             </div>
         </section>
 
-        <!-- Founder Story Section
+        <!-- Founder Story Section -->
+        <!--
         <section id="founder" class="story-section" aria-labelledby="founder-title">
             <div class="section-container">
                 <h2 id="founder-title" class="section-title">A Message from Our Founder</h2>
@@ -158,145 +218,65 @@
                     <p>It was never about ticking off tourist checklists. It has always been about those experiences that make a trip unforgettable. The kind of spots you only find out about from someone who's already been there, loved it, and can't wait to share it. Places you'll still be talking about long after you're home.</p>
                     <p>That's why I created TRODDR, to make sure you get those recommendations too. Like you're exploring with a friend showing you around, not following a guidebook.</p>
                     <div class="story-cta">
-                        <a href="about.html" class="story-link" aria-label="Read our complete founding story">
-                            Read Our Full Story
-                        </a>
+                        <a href="about.html" class="story-link" aria-label="Read our complete founding story">Read Our Full Story</a>
                     </div>
                 </div>
             </div>
-        </section> -->
+        </section>
+        -->
 
         <!-- About TRODDR Section -->
         <section id="about-troddr" class="about-app" aria-labelledby="about-title">
             <div class="section-container">
-                <h2 id="about-title" class="section-title">About TRODDR</h2>
+                <h2 id="about-title" class="section-title">Your Jamaica Travel Guide, Built by Locals</h2>
                 <div class="about-grid">
                     <div class="about-copy">
-                        <p>TRODDR is your insider guide to the Caribbean, starting in Jamaica. We connect you with the kind of places locals love and seasoned travelers can't stop talking about, from family-run eateries and hidden beaches to unforgettable cultural experiences.</p>
-                        <p>Our platform makes trip planning effortless. With TRODDR you can:</p>
+                        <p>TRODDR is a Jamaica travel guide and trip planning app built on one simple idea: the best recommendations come from people who actually live here.</p>
+                        <p>We curate the places worth your time — full stop. That means celebrated luxury retreats like GoldenEye, Strawberry Hill, Rockhouse, and The Cliff sit alongside brilliant neighbourhood restaurants, boutique guesthouses, and off-the-map experiences that never make it into the guidebooks. The only filter is quality. If locals and seasoned Jamaica travellers keep coming back to it, it's on TRODDR.</p>
+                        <p>No pay-to-play listings. No algorithm. Just an honest, curated view of Jamaica from people who know it best.</p>
+                        <p>With TRODDR you can:</p>
                         <ul class="about-points" role="list">
                             <li role="listitem">
                                 <span class="dot" aria-hidden="true">✓</span>
-                                <span><strong>Discover</strong> curated recommendations for where to eat, stay, and play.</span>
+                                <span><strong>Discover</strong> curated restaurants, beaches, hotels, and experiences across Jamaica — from Kingston to Montego Bay to Portland.</span>
                             </li>
                             <li role="listitem">
                                 <span class="dot" aria-hidden="true">✓</span>
-                                <span><strong>Plan</strong> your trip with personalized itineraries and interactive maps.</span>
+                                <span><strong>Plan</strong> your Jamaica itinerary with our trip planner. Save places, build day-by-day schedules, and share with anyone travelling with you.</span>
                             </li>
                             <li role="listitem">
                                 <span class="dot" aria-hidden="true">✓</span>
-                                <span><strong>Explore</strong> confidently with trusted, first-hand tips, no guesswork.</span>
+                                <span><strong>Explore</strong> confidently with trusted, local tips — things to do in Jamaica that you won't find in any guidebook.</span>
                             </li>
                         </ul>
-                        <p>Whether you're chasing the perfect plate of seafood, a boutique stay, or an off-the-beaten-path adventure, TRODDR puts it all at your fingertips.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Waitlist Section
-        <section id="waitlist" class="waitlist-section" aria-labelledby="waitlist-title">
-            <div class="waitlist-container">
-                <h2 id="waitlist-title">Download the TRODDR App</h2>
-                <p id="waitlist-description" class="sr-only">Join our waitlist to be notified when the TRODDR app launches</p>
-                <form
-                    action="https://troddr.us3.list-manage.com/subscribe/post?u=c6544ab875bface2c27a11eeb&amp;id=f079a28ace&amp;f_id=00d74ee2f0"
-                    method="post"
-                    id="waitlist-form"
-                    name="mc-embedded-subscribe-form"
-                    target="_blank"
-                    novalidate
-                    aria-labelledby="waitlist-title"
-                    >
-                    <div class="form-group">
-                        <label for="mc-fname" class="sr-only">First name</label>
-                        <input type="text" id="mc-fname" name="FNAME" placeholder="First name" required aria-required="true" autocomplete="given-name" />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="mc-lname" class="sr-only">Last name</label>
-                        <input type="text" id="mc-lname" name="LNAME" placeholder="Last name" required aria-required="true" autocomplete="family-name" />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="mc-email" class="sr-only">Email</label>
-                        <input type="email" id="mc-email" name="EMAIL" placeholder="Your email" required aria-required="true" autocomplete="email" />
-                    </div>
-
-                    Mailchimp honeypot (leave exactly as-is) -->
-                    <!-- <div aria-hidden="true" style="position:absolute; left:-5000px;">
-                        <input type="text" name="b_c6544ab875bface2c27a11eeb_f079a28ace" tabindex="-1" value="" />
-                    </div>
-
-                    <div class="download-buttons">
-                        <a href="https://apps.apple.com/us/app/troddr/id6751852075"
-                           target="_blank"
-                           rel="noopener"
-                           class="btn-store btn-appstore">
-                           <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-                           alt="Download on the App Store" />
-                        </a>
-                    
-                        <a href="https://play.google.com/store/apps/details?id=com.troddr.app"
-                           target="_blank"
-                           rel="noopener"
-                           class="btn-store btn-playstore">
-                            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-                                 alt="Get it on Google Play" />
-                        </a>
-                    </div>
-                </form>
-                <div id="waitlist-success" class="form-message success" style="display:none;" role="alert" aria-live="polite">
-                    <div class="form-message-content">
-                      <span class="form-message-icon" aria-hidden="true">✅</span>
-                      <h3>You're in! 🎉</h3>
-                      <p>Thanks for joining the TRODDR beta test. Here’s your access:</p>
-                      <p><strong>TestFlight:</strong> <a id="testflight-link" href="https://testflight.apple.com/join/XXXXXXXX" target="_blank" rel="noopener">Join TRODDR Beta</a></p>
-                      <p>Open on your iPhone, accept the invite, and install the TRODDR app. We’ve also emailed you these details.</p>
-                      <hr class="divider" />
-                    </div>
-                  </div>
-            </div>
-        </section> -->
-
         <!-- Solution Section -->
         <section id="solution" class="solution-section" aria-labelledby="solution-title">
             <div class="section-container">
-                <h2 id="solution-title" class="section-title">Three Ways to Explore</h2>
-                <p class="section-subtitle">TRODDR combines local expertise with smart planning tools to create your perfect Jamaican adventure.</p>
-                
+                <h2 id="solution-title" class="section-title">Eat, Stay &amp; Play in Jamaica — Curated by Locals</h2>
+                <p class="section-subtitle">From the best local restaurants in Kingston to luxury retreats on the north coast and hidden beaches across the island — TRODDR covers every part of your Jamaica trip.</p>
+
                 <div class="solution-grid" role="list">
                     <article class="solution-card" role="listitem" tabindex="0">
                         <div class="solution-number" aria-hidden="true">1</div>
-                        <h3>Eat Like a Local</h3>
-                        <ul class="solution-features" role="list">
-                            <li>Authentic food spots</li>
-                            <li>Hidden food gems off the beaten path</li>
-                            <li>Fine dining experiences with local flair</li>
-                            <li>Street food discoveries</li>
-                        </ul>
+                        <h3>Best Local Restaurants &amp; Food Experiences in Jamaica</h3>
+                        <p>From roadside jerk pits and escovitch fish stands to waterfront seafood restaurants and fine dining with a Jamaican twist — TRODDR guides you to where locals actually eat. Discover Kingston street food, Negril beachside restaurants, and hole-in-the-wall spots that don't show up on Google Maps.</p>
                     </article>
-                    
+
                     <article class="solution-card" role="listitem" tabindex="0">
                         <div class="solution-number" aria-hidden="true">2</div>
-                        <h3>Stay in Special Places</h3>
-                        <ul class="solution-features" role="list">
-                            <li>Beautiful boutique hotels</li>
-                            <li>Eco-lodges in stunning natural settings</li>
-                            <li>Beachfront villas for ultimate relaxation</li>
-                            <li>Historic properties with cultural significance</li>
-                        </ul>
+                        <h3>The Best Places to Stay in Jamaica — Luxury Retreats to Hidden Boutique Gems</h3>
+                        <p>From iconic luxury properties — GoldenEye on the north coast, Strawberry Hill above Kingston, Rockhouse perched on the cliffs of Negril — to intimate boutique stays and guesthouses that locals swear by, TRODDR curates Jamaica's most worth-it accommodation. Every property earns its place on character, experience, and value — whatever that looks like at your price point.</p>
                     </article>
-                    
+
                     <article class="solution-card" role="listitem" tabindex="0">
                         <div class="solution-number" aria-hidden="true">3</div>
-                        <h3>Play Beyond the Brochure</h3>
-                        <ul class="solution-features" role="list">
-                            <li>Blue Mountain hikes and coffee tours</li>
-                            <li>White sand beaches and swimming holes</li>
-                            <li>Waterfalls, rafting, and river lymes</li>
-                            <li>ATV rides through jungle trails</li>
-                        </ul>
+                        <h3>Things to Do in Jamaica Beyond the Tourist Trail</h3>
+                        <p>Hike the Blue Mountains at sunrise. Raft down the Rio Grande. Swim in the luminous lagoon in Falmouth. Find secret waterfalls, ATV trails through jungle, river lymes, and cultural experiences that don't make it into the brochures. This is Jamaica for people who actually want to explore it.</p>
                     </article>
                 </div>
             </div>
@@ -305,27 +285,71 @@
         <!-- Features Section -->
         <section id="features" class="features-section" aria-labelledby="features-title">
             <div class="section-container">
-                <h2 id="features-title" class="section-title">Everything You Need to Explore</h2>
-                <p class="section-subtitle">TRODDR's powerful platform makes discovering and planning authentic Jamaican experiences effortless.</p>
-                
+                <h2 id="features-title" class="section-title">How TRODDR Works — Your Jamaica Trip Planner &amp; Discovery App</h2>
+                <p class="section-subtitle">Jamaica travel planning in three steps — discover local gems, build your itinerary, and explore with confidence.</p>
+
                 <div class="features-grid" role="list">
                     <article class="feature-card" role="listitem" tabindex="0">
                         <span class="feature-icon" aria-hidden="true">✨</span>
-                        <h3>Locally Curated</h3>
-                        <p>Handpicked by Jamaicans who live it, love it, and know where the real magic happens.</p>
+                        <h3>Locally Curated Jamaica Recommendations</h3>
+                        <p>Every listing on TRODDR is handpicked by Jamaicans who know the island. No fake reviews, no pay-to-play placements — just the places worth your time, from celebrated luxury properties to neighbourhood spots you'd never find on your own.</p>
                     </article>
-                    
+
                     <article class="feature-card" role="listitem" tabindex="0">
                         <span class="feature-icon" aria-hidden="true">📅</span>
-                        <h3>Plan Your Way</h3>
-                        <p>Curate your trip with our trip planner. Add epic stops and create an itinerary that's all yours.</p>
+                        <h3>Jamaica Itinerary Builder &amp; Trip Planner</h3>
+                        <p>Save the places you want to visit, organise them into a day-by-day Jamaica itinerary, and share your trip plan with anyone travelling with you. Planning a Jamaica trip has never been this easy.</p>
                     </article>
-                    
+
                     <article class="feature-card" role="listitem" tabindex="0">
                         <span class="feature-icon" aria-hidden="true">🗺️</span>
-                        <h3>Find the Hidden</h3>
-                        <p>Uncover tucked-away beaches, off-menu eats, and underground vibes you won't find on any travel app.</p>
+                        <h3>Find Hidden Gems &amp; Off-the-Beaten-Path Experiences</h3>
+                        <p>Tucked-away beaches, underground events, secret food spots, local rum bars — TRODDR surfaces the Jamaica that doesn't show up in tourist guides. The island that locals know and love.</p>
                     </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="faq-section" aria-labelledby="faq-title">
+            <div class="section-container">
+                <h2 id="faq-title" class="section-title">Jamaica Travel — Frequently Asked Questions</h2>
+
+                <div class="faq-grid">
+                    <details class="faq-item">
+                        <summary class="faq-question">What is the best time to visit Jamaica?</summary>
+                        <div class="faq-answer">
+                            <p>The best time to visit Jamaica is November through mid-December and January through April — the dry season, with warm temperatures, low humidity, and minimal rain. Peak season runs December to April, so book accommodation early. Summer (June–August) is hot and humid but sees far fewer tourists and lower prices, which many locals prefer.</p>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary class="faq-question">What are the best things to do in Jamaica beyond the resorts?</summary>
+                        <div class="faq-answer">
+                            <p>Jamaica rewards those who venture past the all-inclusive. Top experiences include hiking to Blue Mountain Peak at sunrise, rafting down the Rio Grande, swimming in the luminous lagoon in Falmouth, exploring YS Falls in St Elizabeth, eating escovitch fish in Port Royal, and catching a local dancehall session in Kingston. TRODDR maps all of these with insider tips.</p>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary class="faq-question">Where should I eat in Jamaica like a local?</summary>
+                        <div class="faq-answer">
+                            <p>Skip the hotel buffet. Jamaica's real food scene is at roadside jerk centres, fish fry spots along the Hellshire and Middle Quarters routes, and family-run eateries in every parish. Kingston has the most diverse restaurant scene — from traditional Jamaican breakfast spots to Chinese-Jamaican cook shops and modern Caribbean fine dining. TRODDR curates the best local restaurants across the island.</p>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary class="faq-question">Is Jamaica safe for tourists?</summary>
+                        <div class="faq-answer">
+                            <p>Jamaica is a welcoming country and millions of visitors travel safely every year. Like any destination, knowing where to go and getting local guidance makes a significant difference. TRODDR's recommendations are curated with this in mind — every spot is a place locals are comfortable bringing visitors to.</p>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary class="faq-question">What is TRODDR and how does it work?</summary>
+                        <div class="faq-answer">
+                            <p>TRODDR is a Jamaica travel guide and trip planning app available free on iOS and Android. It curates local recommendations for restaurants, hotels, beaches, and things to do across Jamaica — spanning luxury retreats like GoldenEye and Rockhouse to hidden boutique gems, all handpicked by locals. Browse by category or location, save places to a personal list, and build a day-by-day itinerary for your trip.</p>
+                        </div>
+                    </details>
                 </div>
             </div>
         </section>
@@ -333,17 +357,14 @@
         <!-- CTA Section -->
         <section id="demo" class="cta-section" aria-labelledby="cta-title">
             <div class="section-container">
-                <h2 id="cta-title">Ready to Explore Jamaica Like a Local?</h2>
-                <p>Skip the guesswork. Download the app for handpicked local gems and planning that takes minutes.</p>
+                <h2 id="cta-title">Download Jamaica's Most Curated Travel Guide — Free on iOS &amp; Android</h2>
+                <p>Whether you're after a clifftop suite at Rockhouse, the best jerk chicken in Kingston, or a secret waterfall in Portland — TRODDR has it, vetted and ready. Curated recommendations, a built-in itinerary planner, and local knowledge you won't find anywhere else. Free to download. No ads. No sponsored listings.</p>
                 <div class="download-buttons">
                     <a href="https://apps.apple.com/us/app/troddr/id6751852075" target="_blank" rel="noopener" class="btn-store btn-appstore">
-                        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-     alt="Download on the App Store" />
+                        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" />
                     </a>
-                
                     <a href="https://play.google.com/store/apps/details?id=com.troddr.app" target="_blank" rel="noopener" class="btn-store btn-playstore">
-                        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-                             alt="Get it on Google Play" />
+                        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" />
                     </a>
                 </div>
             </div>
@@ -354,38 +375,39 @@
             <div class="section-container">
                 <h2 id="contact-title" class="section-title">Get in Touch</h2>
                 <p class="section-subtitle">Questions, partnerships, press, or just want to say hi?<br> We'd love to hear from you.</p>
-            
+
                 <form id="contact-form" class="contact-form" novalidate aria-labelledby="contact-title">
                     <div class="contact-grid">
                         <div class="contact-field">
                             <label for="contact-name">Name</label>
-                            <input id="contact-name" name="name" type="text" placeholder="Your name" required 
+                            <input id="contact-name" name="name" type="text" placeholder="Your name" required
                                    aria-required="true" autocomplete="name">
                             <span class="error-message" role="alert" aria-live="polite"></span>
                         </div>
                         <div class="contact-field">
                             <label for="contact-email">Email</label>
-                            <input id="contact-email" name="email" type="email" placeholder="you@example.com" required 
+                            <input id="contact-email" name="email" type="email" placeholder="you@example.com" required
                                    aria-required="true" autocomplete="email">
                             <span class="error-message" role="alert" aria-live="polite"></span>
                         </div>
                     </div>
-            
+
                     <div class="contact-field">
                         <label for="contact-message">Message</label>
-                        <textarea id="contact-message" name="message" rows="5" placeholder="How can we help?" required 
+                        <textarea id="contact-message" name="message" rows="5" placeholder="How can we help?" required
                                   aria-required="true"></textarea>
                         <span class="error-message" role="alert" aria-live="polite"></span>
                     </div>
-            
+
                     <button type="submit" class="contact-submit">
                         <span class="btn-text">Send Message</span>
                     </button>
                 </form>
             </div>
         </section>
+
     </main>
-    
+
     <!-- Social Ticker -->
     <section class="ticker-section" aria-label="Follow us on social media">
         <div class="ticker-row">
@@ -397,7 +419,6 @@
                         <span class="ticker-sep">•</span>
                         <span class="ticker-item">Instagram</span>
                         <span class="ticker-sep">•</span>
-                        <!-- Duplicate for smooth loop -->
                         <span class="ticker-item">📣 Let's get social</span>
                         <span class="ticker-item">Follow <a class="social-link" href="#" title="Follow TRODDR on Instagram">@troddr</a></span>
                         <span class="ticker-sep">•</span>
@@ -425,7 +446,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h3>TRODDR</h3>
-                    <p>Your ultimate Jamaican travel companion. Discover authentic experiences, plan perfect trips, and explore the island like a local.</p>
+                    <p>Jamaica's curated travel guide — luxury retreats, local restaurants, hidden beaches, and everything worth doing across the island. Built by locals, for travellers who want the real Jamaica.</p>
                 </div>
                 <div class="footer-section">
                     <h3>Company</h3>
@@ -439,19 +460,19 @@
                 <div class="footer-section">
                     <h3>Discover</h3>
                     <nav class="footer-links" aria-label="Discovery links">
-                        <a href="#" aria-label="Discover places to eat">Eat</a>
-                        <a href="#" aria-label="Discover places to stay">Stay</a>
-                        <a href="#" aria-label="Discover things to do">Play</a>
-                        <a href="#" aria-label="Explore destinations">Destinations</a>
+                        <a href="#" aria-label="Discover places to eat in Jamaica">Eat</a>
+                        <a href="#" aria-label="Discover places to stay in Jamaica">Stay</a>
+                        <a href="#" aria-label="Discover things to do in Jamaica">Play</a>
+                        <a href="#" aria-label="Explore Jamaica destinations">Destinations</a>
                     </nav>
                 </div>
                 <div class="footer-section">
                     <h3>Plan</h3>
                     <nav class="footer-links" aria-label="Planning tools">
-                        <a href="#" aria-label="Trip planning tool">Trip Planner</a>
-                        <a href="#" aria-label="Sample itineraries">Itineraries</a>
-                        <a href="#" aria-label="Travel guides">Travel Guides</a>
-                        <a href="#" aria-label="Local travel tips">Local Tips</a>
+                        <a href="#" aria-label="Jamaica trip planning tool">Trip Planner</a>
+                        <a href="#" aria-label="Jamaica itinerary ideas">Itineraries</a>
+                        <a href="#" aria-label="Jamaica travel guides">Travel Guides</a>
+                        <a href="#" aria-label="Local Jamaica travel tips">Local Tips</a>
                     </nav>
                 </div>
                 <div class="footer-section">
@@ -474,7 +495,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>© 2026 TRODDR. Made with ❤️ in Jamaica. Explore authentic experiences across the Caribbean.</p>
+                <p>© 2026 TRODDR. Made with ❤️ in Jamaica. Jamaica's curated travel guide — eat, stay &amp; explore like a local.</p>
             </div>
         </div>
     </footer>
@@ -501,18 +522,16 @@
           const menuBtn  = document.querySelector('.mobile-menu-btn');
           const navLinks = document.querySelector('.nav-links');
           const closeBtn = document.querySelector('.nav-close-btn');
-      
+
           if (!menuBtn || !navLinks) return;
-      
-          // Toggle menu open/close
+
           menuBtn.addEventListener('click', function(){
             const isOpen = navLinks.classList.toggle('mobile-open');
             this.classList.toggle('active', isOpen);
             this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             document.body.classList.toggle('menu-open', isOpen);
           });
-      
-          // Close when a nav link is clicked
+
           navLinks.addEventListener('click', function(e){
             const link = e.target.closest('a');
             if (!link) return;
@@ -521,8 +540,7 @@
             menuBtn.setAttribute('aria-expanded', 'false');
             document.body.classList.remove('menu-open');
           });
-      
-          // ✅ Close when the explicit close button is clicked
+
           if (closeBtn) {
             closeBtn.addEventListener('click', () => {
               navLinks.classList.remove('mobile-open');
@@ -531,8 +549,7 @@
               document.body.classList.remove('menu-open');
             });
           }
-      
-          // Close on Escape key
+
           document.addEventListener('keydown', function(e){
             if (e.key === 'Escape') {
               navLinks.classList.remove('mobile-open');
@@ -542,34 +559,6 @@
             }
           });
         })();
-        (function(){
-            const form = document.getElementById('waitlist-form');
-            const success = document.getElementById('waitlist-success');
-            if (!form) return;
-
-            form.addEventListener('submit', function(e){
-                e.preventDefault();
-
-                const formData = new FormData(form);
-                const params = new URLSearchParams(formData);
-
-                // Build Mailchimp JSON endpoint from the normal action
-                const base = form.action.replace('/post?', '/post-json?');
-                const url = base + '&' + params.toString() + '&c=?';
-
-                // Fire request; assume success for UX and still let Mailchimp process
-                fetch(url, { method: 'GET', mode: 'no-cors' })
-                .then(function(){
-                    form.style.display = 'none';
-                    if (success) success.style.display = 'block';
-                    try { gtag('event', 'waitlist_signup', { method: 'mailchimp' }); } catch(err){}
-                })
-                .catch(function(){
-                    // Fallback: submit normally if fetch fails
-                    form.submit();
-                });
-            });
-        })();
-      </script>
+    </script>
 </body>
 </html>
