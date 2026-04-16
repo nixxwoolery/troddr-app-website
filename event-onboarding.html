@@ -834,6 +834,75 @@
 
     <div class="form-card">
       <div id="vendors-list"></div>
+      <template id="vendor-template">
+        <div class="repeater-item">
+          <button type="button" class="remove-btn" onclick="removeVendor(this)" title="Remove vendor">×</button>
+          <div class="field-row">
+            <div class="field-group">
+              <label>Vendor Name <span class="req">*</span></label>
+              <input type="text" name="vendor_name" placeholder="e.g. Scotchie's Jerk Centre" />
+            </div>
+            <div class="field-group">
+              <label>Category <span class="req">*</span></label>
+              <select name="vendor_category">
+                <option value="">Select...</option>
+                <optgroup label="Food">
+                  <option value="restaurant" ${d.category==='restaurant'?'selected':''}>Restaurant / Kitchen</option>
+                  <option value="street-food" ${d.category==='street-food'?'selected':''}>Street Food</option>
+
+                  <option value="jerk" ${d.category==='jerk'?'selected':''}>Jerk / Caribbean Grill</option>
+                  <option value="grill" ${d.category==='grill'?'selected':''}>Grill / BBQ</option>
+                  <option value="seafood" ${d.category==='seafood'?'selected':''}>Seafood</option>
+
+                  <option value="ital" ${d.category==='ital'?'selected':''}>Ital / Vegan</option>
+                  <option value="international" ${d.category==='international'?'selected':''}>International Cuisine</option>
+
+                  <option value="breakfast" ${d.category==='breakfast'?'selected':''}>Breakfast / Brunch</option>
+
+                  <option value="dessert" ${d.category==='dessert'?'selected':''}>Desserts & Sweets</option>
+                  <option value="ice-cream" ${d.category==='ice-cream'?'selected':''}>Ice Cream / Frozen</option>
+
+                  <option value="snacks" ${d.category==='snacks'?'selected':''}>Snacks</option>
+                </optgroup>
+                <optgroup label="Drinks">
+                  <option value="bar" ${d.category==='bar'?'selected':''}>Bar</option>
+                  <option value="cocktail" ${d.category==='cocktail'?'selected':''}>Cocktail Bar</option>
+                  <option value="wine" ${d.category==='wine'?'selected':''}>Wine / Champagne</option>
+                  <option value="beer" ${d.category==='beer'?'selected':''}>Beer</option>
+                  <option value="juice" ${d.category==='juice'?'selected':''}>Juice / Smoothies</option>
+                  <option value="coffee" ${d.category==='coffee'?'selected':''}>Coffee / Tea</option>
+                  <option value="water" ${d.category==='water'?'selected':''}>Water / Hydration</option>
+                </optgroup>
+                <optgroup label="Experiences">
+                  <option value="cooking" ${d.category==='cooking'?'selected':''}>Cooking Demo</option>
+                  <option value="workshop" ${d.category==='workshop'?'selected':''}>Workshop</option>
+                  <option value="sampling" ${d.category==='sampling'?'selected':''}>Sampling / Tasting</option>
+                  <option value="kids" ${d.category==='kids'?'selected':''}>Kids / Family</option>
+                  <option value="wellness" ${d.category==='wellness'?'selected':''}>Wellness / Health</option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option value="retail" ${d.category==='retail'?'selected':''}>Retail / Merch</option>
+                  <option value="other" ${d.category==='other'?'selected':''}>Other</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Short Description</label>
+            <input type="text" name="vendor_description" placeholder="e.g. Authentic jerk chicken, pork, and festival" />
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label>Instagram</label>
+              <input type="text" name="vendor_instagram" placeholder="@handle" />
+            </div>
+            <div class="field-group">
+              <label>Website</label>
+              <input type="url" name="vendor_website" placeholder="https://" />
+            </div>
+          </div>
+        </div>
+      </template>
       <button class="add-btn" onclick="addVendor()"><span class="plus">＋</span> Add Vendor</button>
     </div>
 
