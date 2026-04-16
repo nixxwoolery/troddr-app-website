@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR — Event Partner Intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  /* ═══════════════════════════════════════════════════════
+     CONFIGURATION — swap these 3 values before deploying
+     ═══════════════════════════════════════════════════════ */
+
+  const SUPABASE_URL    = 'https://YOUR_PROJECT_ID.supabase.co';
+  const SUPABASE_ANON   = 'YOUR_ANON_KEY_HERE';
+  const STORAGE_BUCKET  = 'partner-intake-assets';   // create in Supabase Storage, set public
+  const TABLE           = 'event_partner_submissions';
+
+  /*
+  ── SQL TO RUN IN SUPABASE SQL EDITOR ─────────────────────
+
+  create table event_partner_submissions (
+    id                        uuid default gen_random_uuid() primary key,
+    token                     text unique not null,
+    status                    text default 'draft',
+    contact_name              text,
+    contact_email             text,
+    contact_phone             text,
+    event_name                text,
+    event_description         text,
+    event_start_date          text,
+    event_end_date            text,
+    gates_open                text,
+    estimated_attendance      text,
+    venue_name                text,
+    venue_address             text,
+    venue_lat                 text,
+    venue_lng                 text,
+    website                   text,
+    instagram                 text,
+    facebook                  text,
+    twitter                   text,
+    logo_url                  text,
+    hero_url                  text,
+    gallery_urls              jsonb,
+    performers                jsonb,
+    vendors                   jsonb,
+    floor_plan_url            text,
+    floor_plan_annotated_url  text,
+    placement_notes           text,
+    stage_count               text,
+    stage_names               text,
+    sponsors                  jsonb,
+    tickets                   jsonb,
+    ticketing_platform        text,
+    tickets_url               text,
+    parking_info              text,
+    parking_map_url           text,
+    accessibility_info        text,
+    reentry_policy            text,
+    prohibited_items          text,
+    age_restriction           text,
+    faqs                      jsonb,
+    promos                    jsonb,
+    additional_notes          text,
+    submitted_at              timestamptz,
+    created_at                timestamptz default now(),
+    updated_at                timestamptz default now()
+  );
+
+  ─────────────────────────────────────────────────────── */
+</script>
+
+<style>
+  :root {
+    --blue:        #0077CC;
+    --blue-dark:   #005fa3;
+    --blue-light:  #e8f4ff;
+    --blue-mid:    #cce5f6;
+    --gold:        #C3D600;
+    --gold-hover:  #a8b800;
+    --black:       #111111;
+    --grey-dark:   #333333;
+    --grey-mid:    #666666;
+    --grey-light:  #999999;
+    --border:      #e8e8e8;
+    --border-focus:#0077CC;
+    --bg:          #ffffff;
+    --bg-soft:     #f8f9fa;
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
+    --shadow:      0 4px 16px rgba(0,0,0,0.08);
+    --shadow-md:   0 8px 32px rgba(0,0,0,0.1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--black); color: #fff;
+    padding: 13px 20px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s; z-index: 9999;
+    max-width: 320px; line-height: 1.5;
+    box-shadow: var(--shadow-md);
+  }
+  #toast.show  { opacity: 1; }
+  #toast.error { background: #c0392b; }
+  #toast.ok    { background: #1a7f4e; }
+
+  /* ── LOADING OVERLAY ── */
+  #loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(255,255,255,0.9);
+    z-index: 9000;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+  }
+  #loading-overlay.show { display: flex; }
+  .spinner {
+    width: 38px; height: 38px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--grey-mid); font-weight: 500; }
+
+  /* ── EDIT BANNER ── */
+  #edit-banner {
+    display: none;
+    background: var(--blue-light);
+    border-bottom: 1px solid var(--blue-mid);
+    padding: 11px 24px;
+    text-align: center;
+    font-size: 13px; color: var(--blue-dark); font-weight: 500;
+  }
+
+  /* ── NAVBAR — matches troddr.com ── */
+  .header {
+    position: sticky; top: 0; z-index: 200;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .navbar {
+    max-width: 1160px; margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex; align-items: center; gap: 32px;
+  }
+  .logo {
+    font-size: 22px; font-weight: 700;
+    color: var(--blue); text-decoration: none;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+  .nav-badge {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px;
+    border: 1px solid var(--blue-mid);
+    margin-left: auto;
+  }
+
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--blue);
+    padding: 60px 24px 64px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .page-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(0,0,0,0.08) 0%, transparent 50%);
+  }
+  .hero-inner { position: relative; max-width: 640px; margin: 0 auto; }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.95);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .page-hero h1 {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700; color: #fff;
+    line-height: 1.15; margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+  .page-hero h1 span { color: var(--gold); }
+  .page-hero p {
+    color: rgba(255,255,255,0.78);
+    font-size: 15px; font-weight: 300;
+    line-height: 1.7; max-width: 500px; margin: 0 auto;
+  }
+
+  /* ── PROGRESS STEPPER ── */
+  .progress-outer {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 64px; z-index: 100;
+  }
+  .progress-inner {
+    max-width: 860px; margin: 0 auto;
+    padding: 0 16px;
+    display: flex; align-items: stretch;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .progress-inner::-webkit-scrollbar { display: none; }
+
+  .step-tab {
+    flex: 1; min-width: 86px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px;
+    padding: 14px 6px; cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s; user-select: none;
+  }
+  .step-tab:hover { background: var(--bg-soft); }
+  .step-tab.active { border-bottom-color: var(--blue); }
+  .step-tab.done   { border-bottom-color: var(--gold); cursor: pointer; }
+
+  .step-dot {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--grey-light);
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .step-tab.active .step-dot { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .step-tab.done   .step-dot { background: var(--gold); border-color: var(--gold); color: #fff; }
+  .step-tab.done   .step-dot::after { content: '✓'; font-size: 11px; }
+  .step-tab.done   .step-dot span   { display: none; }
+
+  .step-lbl {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--grey-light);
+    text-align: center; white-space: nowrap; transition: color 0.2s;
+  }
+  .step-tab.active .step-lbl { color: var(--blue); }
+  .step-tab.done   .step-lbl { color: var(--gold-hover); }
+
+  /* ── FORM LAYOUT ── */
+  .form-page {
+    max-width: 720px; margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  .form-section { display: none; }
+  .form-section.active { display: block; animation: fadeUp 0.28s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header { margin-bottom: 36px; }
+  .step-label-tag {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--blue);
+    margin-bottom: 8px; display: block;
+  }
+  .section-header h2 {
+    font-size: 26px; font-weight: 700;
+    color: var(--black); line-height: 1.2;
+    letter-spacing: -0.3px;
+  }
+  .section-header p {
+    color: var(--grey-mid); font-size: 14px; font-weight: 300;
+    line-height: 1.65; margin-top: 8px;
+  }
+
+  /* ── CARD WRAPPER ── */
+  .form-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .card-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--grey-mid);
+    margin-bottom: 20px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── FIELDS ── */
+  .field-group { margin-bottom: 18px; }
+  .field-group:last-child { margin-bottom: 0; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+
+  label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    color: var(--grey-dark); margin-bottom: 6px;
+  }
+  label .req { color: var(--blue); margin-left: 2px; }
+  label .hint {
+    font-weight: 400; color: var(--grey-light);
+    font-size: 11px; margin-left: 6px;
+  }
+
+  input[type=text], input[type=email], input[type=tel],
+  input[type=url], input[type=date], input[type=number],
+  select, textarea {
+    width: 100%;
+    background: var(--bg-soft);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 13px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 400;
+    color: var(--black);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    /* -webkit-appearance: none; */
+  }
+  input:hover, select:hover, textarea:hover { border-color: #ccc; }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--blue);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(0,119,204,0.1);
+  }
+  textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 5L10 1' stroke='%230077CC' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 13px center;
+    padding-right: 36px;
+  }
+
+  /* ── FILE UPLOAD ── */
+  .file-drop {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-soft);
+    padding: 24px 20px; text-align: center;
+    cursor: pointer; transition: all 0.2s; position: relative;
+  }
+  .file-drop:hover, .file-drop.drag-over {
+    border-color: var(--blue);
+    background: var(--blue-light);
+  }
+  .file-drop input[type=file] {
+    position: absolute; inset: 0; opacity: 0;
+    cursor: pointer; width: 100%; height: 100%;
+  }
+  .file-drop-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+  .upload-label { font-size: 13px; color: var(--grey-mid); font-weight: 400; }
+  .upload-label strong { color: var(--blue); font-weight: 600; }
+  .upload-sub { font-size: 11px; color: var(--grey-light); margin-top: 3px; }
+  .file-name { display: none; margin-top: 8px; font-size: 12px; color: var(--blue); font-weight: 600; }
+  .file-uploaded { display: none; margin-top: 8px; font-size: 11px; color: #1a7f4e; font-weight: 600; }
+
+  /* ── REPEATER ── */
+  .repeater-item {
+    background: var(--bg-soft);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px; margin-bottom: 12px; position: relative;
+  }
+  .repeater-item:last-child { margin-bottom: 0; }
+  .remove-btn {
+    position: absolute; top: 14px; right: 14px;
+    background: #fff; border: 1px solid var(--border);
+    color: var(--grey-light); font-size: 14px;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    padding: 0; line-height: 1;
+  }
+  .remove-btn:hover { border-color: #e74c3c; color: #e74c3c; background: #fef2f2; }
+
+  .add-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #fff; border: 1.5px dashed var(--blue-mid);
+    color: var(--blue); font-family: 'Poppins', sans-serif;
+    font-size: 12px; font-weight: 600;
+    padding: 9px 18px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.2s; margin-top: 12px;
+  }
+  .add-btn:hover { background: var(--blue-light); border-color: var(--blue); }
+  .add-btn .plus { font-size: 16px; font-weight: 400; }
+
+  /* ── TIER PILLS ── */
+  .tier-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .tier-group.tier-full {
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 4px;
+  }
+
+  /* removed full-width spanning for tighter grid */
+  .tier-group.tier-full .tier-pill:first-child {
+    grid-column: auto;
+  }
+  .tier-pill {
+    position: relative;
+  }
+  .tier-pill input[type=radio] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .tier-pill label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--grey-dark);
+    transition: all 0.2s ease;
+    min-height: 54px;
+  }
+  .tier-pill label small {
+    margin-top: 3px;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--grey-light);
+  }
+  .tier-pill label:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+  .tier-pill input:checked + label {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    transform: translateY(-1px);
+  }
+  .tier-pill.gold input:checked + label {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #111;
+  }
+
+  /* Premium Presenting tier polish */
+  .tier-pill:first-child label {
+    border-color: var(--blue);
+  }
+  .tier-pill:first-child input:checked + label {
+    box-shadow: 0 8px 22px rgba(0,119,204,0.25);
+  }
+
+  /* ── CHECKBOX ── */
+  .checkbox-wrap { display: flex; align-items: flex-start; gap: 10px; }
+  .checkbox-wrap input[type=checkbox] {
+    width: 17px; height: 17px; flex-shrink: 0;
+    margin-top: 2px; accent-color: var(--blue); cursor: pointer;
+  }
+  .checkbox-wrap label {
+    font-size: 13px; font-weight: 400;
+    color: var(--grey-mid); cursor: pointer; line-height: 1.55;
+  }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    background: var(--blue-light);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 12px 16px; margin-bottom: 20px;
+    font-size: 13px; font-weight: 300;
+    color: var(--grey-dark); line-height: 1.6;
+  }
+  .info-box strong { color: var(--blue); font-weight: 600; }
+
+  /* ── SECTION DIVIDER ── */
+  .section-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 28px 0 20px;
+  }
+  .section-divider::before,
+  .section-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .section-divider span {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--grey-light);
+    white-space: nowrap;
+  }
+
+  /* ── NAV BUTTONS ── */
+  .form-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 40px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .btn-back {
+    background: #fff; border: 1.5px solid var(--border);
+    color: var(--grey-mid); font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 500;
+    padding: 11px 22px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-back:hover { border-color: var(--blue); color: var(--blue); }
+
+  .btn-next {
+    background: var(--blue); border: none;
+    color: #fff; font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 600;
+    padding: 12px 28px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-next:hover { background: var(--blue-dark); }
+  .btn-next .arrow { transition: transform 0.15s; display: inline-block; }
+  .btn-next:hover .arrow { transform: translateX(3px); }
+
+  .btn-submit {
+    background: var(--blue); border: none;
+    color: #fff; font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 600;
+    padding: 12px 28px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-submit:hover { background: var(--blue-dark); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── SUCCESS SCREEN ── */
+  #success-screen { display: none; text-align: center; padding: 72px 24px; }
+  .success-check {
+    width: 68px; height: 68px; border-radius: 50%;
+    background: var(--blue-light); border: 2px solid var(--blue-mid);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 28px;
+  }
+  #success-screen h2 {
+    font-size: 28px; font-weight: 700; color: var(--black);
+    letter-spacing: -0.3px; margin-bottom: 12px;
+  }
+  #success-screen .sub {
+    color: var(--grey-mid); font-size: 14px; font-weight: 300;
+    line-height: 1.7; max-width: 460px; margin: 0 auto 28px;
+  }
+  .edit-link-card {
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px;
+    max-width: 480px; margin: 0 auto; text-align: left;
+  }
+  .edit-link-card p {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--blue); margin-bottom: 10px;
+  }
+  .edit-link-card .link-row {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .edit-link-card input {
+    flex: 1; font-size: 12px; font-family: monospace;
+    background: #fff; border-radius: var(--radius-sm);
+  }
+  .copy-btn {
+    background: var(--blue); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 10px 16px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: 'Poppins', sans-serif; white-space: nowrap;
+    transition: background 0.15s; flex-shrink: 0;
+  }
+  .copy-btn:hover { background: var(--blue-dark); }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    background: #111; color: rgba(255,255,255,0.5);
+    text-align: center; padding: 24px;
+    font-size: 12px; font-weight: 300;
+    border-top: 1px solid var(--border);
+  }
+  .page-footer a { color: var(--blue); text-decoration: none; }
+  .page-footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Loading…</div>
+</div>
+
+<div id="edit-banner">
+  ✏️ You're editing an existing submission. Make changes and click Submit to save.
+</div>
+
+<!-- NAVBAR -->
+<header class="header">
+  <nav class="navbar">
+    <a href="https://troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Partner Intake</span>
+  </nav>
+</header>
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Event Partnership</span>
+    <h1>Let's Build Something <span>Extraordinary</span></h1>
+    <p>Submit your event details and we'll build your official TRODDR EventHub experience — complete with interactive maps, performer profiles, ticketing, and On the Radar promotions.</p>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-outer" id="progress-outer">
+  <div class="progress-inner" id="progressSteps">
+    <div class="step-tab active" data-step="1" onclick="goToStep(1)">
+      <div class="step-dot"><span>1</span></div>
+      <div class="step-lbl">Essentials</div>
+    </div>
+    <div class="step-tab" data-step="2" onclick="goToStep(2)">
+      <div class="step-dot"><span>2</span></div>
+      <div class="step-lbl">Performers</div>
+    </div>
+    <div class="step-tab" data-step="3" onclick="goToStep(3)">
+      <div class="step-dot"><span>3</span></div>
+      <div class="step-lbl">Vendors</div>
+    </div>
+    <div class="step-tab" data-step="4" onclick="goToStep(4)">
+      <div class="step-dot"><span>4</span></div>
+      <div class="step-lbl">Venue Map</div>
+    </div>
+    <div class="step-tab" data-step="5" onclick="goToStep(5)">
+      <div class="step-dot"><span>5</span></div>
+      <div class="step-lbl">Sponsors</div>
+    </div>
+    <div class="step-tab" data-step="6" onclick="goToStep(6)">
+      <div class="step-dot"><span>6</span></div>
+      <div class="step-lbl">Tickets</div>
+    </div>
+    <div class="step-tab" data-step="7" onclick="goToStep(7)">
+      <div class="step-dot"><span>7</span></div>
+      <div class="step-lbl">Logistics</div>
+    </div>
+    <div class="step-tab" data-step="8" onclick="goToStep(8)">
+      <div class="step-dot"><span>8</span></div>
+      <div class="step-lbl">On the Radar</div>
+    </div>
+  </div>
+</div>
+
+<div class="form-page">
+
+  <!-- ─── 1: ESSENTIALS ─── -->
+  <div class="form-section active" id="section-1">
+    <div class="section-header">
+      <span class="step-label-tag">Step 1 of 8</span>
+      <h2>Event Essentials</h2>
+      <p>This powers your EventHub listing, in-app discovery, and all partner comms from our team.</p>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Contact Information</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Contact Name <span class="req">*</span></label>
+          <input type="text" id="contact_name" placeholder="Primary contact at your org" />
+        </div>
+        <div class="field-group">
+          <label>Contact Email <span class="req">*</span></label>
+          <input type="email" id="contact_email" placeholder="name@yourorg.com" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Contact Phone</label>
+        <input type="tel" id="contact_phone" placeholder="+1 (876) 000-0000" />
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Event Details</div>
+      <div class="field-group">
+        <label>Event Name <span class="req">*</span></label>
+        <input type="text" id="event_name" placeholder="e.g. Reggae Sumfest 2026" />
+      </div>
+      <div class="field-group">
+        <label>Event Description <span class="req">*</span></label>
+        <textarea id="event_description" placeholder="What makes this event unmissable? (100–300 words)"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Start Date <span class="req">*</span></label>
+          <input type="date" id="event_start_date" />
+        </div>
+        <div class="field-group">
+          <label>End Date <span class="req">*</span></label>
+          <input type="date" id="event_end_date" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Gates Open Time</label>
+          <input type="text" id="gates_open" placeholder="e.g. 4:00 PM" />
+        </div>
+        <div class="field-group">
+          <label>Estimated Attendance</label>
+          <select id="estimated_attendance">
+            <option value="">Select range</option>
+            <option>Under 500</option>
+            <option>500–2,000</option>
+            <option>2,000–10,000</option>
+            <option>10,000–50,000</option>
+            <option>50,000+</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Venue</div>
+      <div class="field-group">
+        <label>Venue Name <span class="req">*</span></label>
+        <input type="text" id="venue_name" placeholder="e.g. Catherine Hall Entertainment Complex" />
+      </div>
+      <div class="field-group">
+        <label>Venue Address <span class="req">*</span></label>
+        <input type="text" id="venue_address" placeholder="Full address including parish" />
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Latitude <span class="hint">Optional</span></label>
+          <input type="text" id="venue_lat" placeholder="e.g. 18.4762" />
+        </div>
+        <div class="field-group">
+          <label>Longitude <span class="hint">Optional</span></label>
+          <input type="text" id="venue_lng" placeholder="e.g. -77.9235" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Online Presence</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Official Website</label>
+          <input type="url" id="website" placeholder="https://" />
+        </div>
+        <div class="field-group">
+          <label>Instagram</label>
+          <input type="text" id="instagram" placeholder="@yourhandle" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Facebook</label>
+          <input type="url" id="facebook" placeholder="https://facebook.com/..." />
+        </div>
+        <div class="field-group">
+          <label>Twitter / X</label>
+          <input type="text" id="twitter" placeholder="@yourhandle" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Event Assets</div>
+      <div class="field-group">
+        <label>Event Logo <span class="req">*</span> <span class="hint">PNG or SVG with transparent background preferred</span></label>
+        <div class="file-drop" id="drop-logo">
+          <input type="file" accept=".png,.svg,.jpg" onchange="handleFile(this,'logo','logo')" />
+          <span class="file-drop-icon">🖼️</span>
+          <div class="upload-label"><strong>Click to upload</strong> or drag and drop</div>
+          <div class="upload-sub">PNG, SVG, JPG — max 5MB</div>
+          <div class="file-name" id="fname-logo"></div>
+          <div class="file-uploaded" id="fup-logo">✓ Previously uploaded — upload a new file to replace</div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Hero / Banner Image <span class="req">*</span> <span class="hint">Min 1920×640px recommended</span></label>
+        <div class="file-drop" id="drop-hero">
+          <input type="file" accept=".jpg,.jpeg,.png,.webp" onchange="handleFile(this,'hero','hero')" />
+          <span class="file-drop-icon">📸</span>
+          <div class="upload-label"><strong>Click to upload</strong> or drag and drop</div>
+          <div class="upload-sub">JPG, PNG, WEBP — max 10MB</div>
+          <div class="file-name" id="fname-hero"></div>
+          <div class="file-uploaded" id="fup-hero">✓ Previously uploaded — upload a new file to replace</div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <label>Gallery Images <span class="hint">Up to 5 supporting images</span></label>
+        <div class="file-drop" id="drop-gallery">
+          <input type="file" accept=".jpg,.jpeg,.png,.webp" multiple onchange="handleFileMultiple(this,'gallery','gallery')" />
+          <span class="file-drop-icon">🗂️</span>
+          <div class="upload-label"><strong>Click to upload</strong> or drag and drop</div>
+          <div class="upload-sub">JPG, PNG, WEBP — max 10MB each</div>
+          <div class="file-name" id="fname-gallery"></div>
+          <div class="file-uploaded" id="fup-gallery">✓ Previously uploaded</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-nav">
+      <div></div>
+      <button class="btn-next" onclick="nextStep()">Lineup & Artists <span class="arrow">→</span></button>
+    </div>
+  </div>
+
+  <!-- ─── 2: PERFORMERS ─── -->
+  <div class="form-section" id="section-2">
+    <div class="section-header">
+      <span class="step-label-tag">Step 2 of 8</span>
+      <h2>Performers &amp; Acts</h2>
+      <p>Add every artist and act on the bill. Stage assignments and set times can be filled in now or updated later once the schedule is locked.</p>
+    </div>
+
+    <div class="form-card">
+      <div id="performers-list"></div>
+      <button class="add-btn" onclick="addPerformer()"><span class="plus">＋</span> Add Performer</button>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Food &amp; Bar Vendors <span class="arrow">→</span></button>
+    </div>
+  </div>
+
+  <!-- ─── 3: VENDORS ─── -->
+  <div class="form-section" id="section-3">
+    <div class="section-header">
+      <span class="step-label-tag">Step 3 of 8</span>
+      <h2>Food &amp; Bar Vendors</h2>
+      <p>Add every food stall, bar, and beverage vendor. Each gets its own profile card in the EventHub vendor directory.</p>
+    </div>
+
+    <div class="form-card">
+      <div id="vendors-list"></div>
+      <button class="add-btn" onclick="addVendor()"><span class="plus">＋</span> Add Vendor</button>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Venue Map <span class="arrow">→</span></button>
+    </div>
+  </div>
+
+  <!-- ─── 4: VENUE MAP ─── -->
+  <div class="form-section" id="section-4">
+    <div class="section-header">
+      <span class="step-label-tag">Step 4 of 8</span>
+      <h2>Venue Map &amp; Floor Plan</h2>
+      <p>Your floor plan powers the interactive MapTab — patrons can tap vendor pins and navigate the venue in-app.</p>
+    </div>
+
+    <div class="info-box">
+      <strong>Best format:</strong> Clean JPG or PNG at 2000×2000px or wider. SVG also accepted. Upload an annotated version with vendor positions marked if you have one.
+    </div>
+
+    <div class="form-card">
+      <div class="field-group">
+        <label>Floor Plan <span class="req">*</span></label>
+        <div class="file-drop" id="drop-floorplan">
+          <input type="file" accept=".jpg,.jpeg,.png,.svg,.pdf" onchange="handleFile(this,'floor_plan','floor_plan')" />
+          <span class="file-drop-icon">🗺️</span>
+          <div class="upload-label"><strong>Click to upload</strong> or drag and drop</div>
+          <div class="upload-sub">JPG, PNG, SVG, PDF — max 20MB</div>
+          <div class="file-name" id="fname-floor_plan"></div>
+          <div class="file-uploaded" id="fup-floor_plan">✓ Previously uploaded</div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <label>Annotated Map <span class="hint">Optional — with booth numbers / names marked</span></label>
+        <div class="file-drop" id="drop-floorplan-ann" style="padding:16px">
+          <input type="file" accept=".jpg,.jpeg,.png,.pdf" onchange="handleFile(this,'floor_plan_annotated','floor_plan_annotated')" />
+          <div class="upload-label" style="font-size:13px"><strong>Upload annotated map</strong></div>
+          <div class="file-name" id="fname-floor_plan_annotated"></div>
+          <div class="file-uploaded" id="fup-floor_plan_annotated">✓ Previously uploaded</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Placement Details</div>
+      <div class="field-group">
+        <label>Vendor &amp; Stage Placement Notes</label>
+        <textarea id="placement_notes" placeholder="e.g. Main Stage at the north end. Scotchie's at Booth 12, east row. Bar is centre-west..."></textarea>
+      </div>
+      <div class="field-row" style="margin-bottom:0">
+        <div class="field-group" style="margin-bottom:0">
+          <label>Number of Stages / Areas</label>
+          <input type="number" id="stage_count" placeholder="e.g. 3" min="1" />
+        </div>
+        <div class="field-group" style="margin-bottom:0">
+          <label>Stage / Area Names</label>
+          <input type="text" id="stage_names" placeholder="e.g. Main Stage, Beach Stage, Singjay Village" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Sponsors <span class="arrow">→</span></button>
+    </div>
+  </div>
+
+  <!-- ─── 5: SPONSORS ─── -->
+  <div class="form-section" id="section-5">
+    <div class="section-header">
+      <span class="step-label-tag">Step 5 of 8</span>
+      <h2>Sponsors</h2>
+      <p>Each sponsor gets a profile in the SponsorsTab with their logo and link, grouped by tier.</p>
+    </div>
+
+    <div class="form-card">
+      <div id="sponsors-list"></div>
+      <button class="add-btn" onclick="addSponsor()"><span class="plus">＋</span> Add Sponsor</button>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Tickets <span class="arrow">→</span></button>
+    </div>
+  </div>
+
+  <!-- ─── 6: TICKETS ─── -->
+  <div class="form-section" id="section-6">
+    <div class="section-header">
+      <span class="step-label-tag">Step 6 of 8</span>
+      <h2>Ticketing</h2>
+      <p>All ticket categories appear in the TicketsTab with direct links to your purchase flow.</p>
+    </div>
+
+    <div class="form-card">
+      <div id="tickets-list"></div>
+      <button class="add-btn" onclick="addTicket()"><span class="plus">＋</span> Add Ticket Category</button>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Ticketing Platform</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Platform</label>
+          <select id="ticketing_platform">
+            <option value="">Select...</option>
+            <option>Ticketmaster</option>
+            <option>Eventbrite</option>
+            <option>Online Tickets JA</option>
+            <option>TicketSource</option>
+            <option>Direct / Own Website</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>General Tickets URL</label>
+          <input type="url" id="tickets_url" placeholder="https://" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Logistics <span class="arrow">→</span></button>
+    </div>
+  </div>
+
+  <!-- ─── 7: LOGISTICS ─── -->
+  <div class="form-section" id="section-7">
+    <div class="section-header">
+      <span class="step-label-tag">Step 7 of 8</span>
+      <h2>Logistics &amp; Info</h2>
+      <p>Powers the InfoTab — everything patrons need before they arrive.</p>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Parking</div>
+      <div class="field-group">
+        <label>Parking Options</label>
+        <textarea id="parking_info" placeholder="Available lots, street parking, shuttle pickup points, costs..." style="min-height:80px"></textarea>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <label>Parking Map <span class="hint">Optional</span></label>
+        <div class="file-drop" id="drop-parking" style="padding:16px">
+          <input type="file" accept=".jpg,.jpeg,.png,.pdf" onchange="handleFile(this,'parking_map','parking_map')" />
+          <div class="upload-label" style="font-size:13px"><strong>Upload parking map</strong></div>
+          <div class="file-name" id="fname-parking_map"></div>
+          <div class="file-uploaded" id="fup-parking_map">✓ Previously uploaded</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Accessibility</div>
+      <div class="field-group" style="margin-bottom:0">
+        <label>Accessibility Information</label>
+        <textarea id="accessibility_info" placeholder="Wheelchair access, accessible parking, medical facilities, viewing areas..." style="min-height:80px"></textarea>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Policies</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Re-Entry Policy</label>
+          <input type="text" id="reentry_policy" placeholder="e.g. No re-entry / Re-entry with wristband" />
+        </div>
+        <div class="field-group">
+          <label>Age Restriction</label>
+          <input type="text" id="age_restriction" placeholder="e.g. 18+ after 10PM / All ages" />
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <label>Prohibited Items</label>
+        <textarea id="prohibited_items" placeholder="List items not permitted on venue grounds..." style="min-height:70px"></textarea>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">FAQs</div>
+      <div id="faqs-list"></div>
+      <button class="add-btn" onclick="addFaq()"><span class="plus">＋</span> Add FAQ</button>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">On the Radar <span class="arrow">→</span></button>
+    </div>
+  </div>
+
+  <!-- ─── 8: ON THE RADAR ─── -->
+  <div class="form-section" id="section-8">
+    <div class="section-header">
+      <span class="step-label-tag">Step 8 of 8</span>
+      <h2>On the Radar Promotions</h2>
+      <p>TRODDR's curated specials feed. Drive pre-event awareness with early-bird offers, lineup drops, sponsor activations, and TRODDR-exclusive deals.</p>
+    </div>
+
+    <div class="info-box">
+      <strong>Tip:</strong> On the Radar posts go live before and during your event. The more specific the better — include dates, offer codes, and a clear call to action.
+    </div>
+
+    <div class="form-card">
+      <div id="promos-list"></div>
+      <button class="add-btn" onclick="addPromo()"><span class="plus">＋</span> Add Promotion</button>
+    </div>
+
+    <div class="form-card">
+      <div class="card-title">Anything Else?</div>
+      <div class="field-group" style="margin-bottom:0">
+        <label>Additional Notes</label>
+        <textarea id="additional_notes" placeholder="Brand guidelines, restricted dates, preferred tone, special requests..."></textarea>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="checkbox-wrap">
+        <input type="checkbox" id="confirm-check" />
+        <label for="confirm-check">I confirm all information submitted is accurate and I am authorised to submit on behalf of this event. TRODDR may use this data to build the official EventHub experience.</label>
+      </div>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-submit" id="submit-btn" onclick="submitForm()">Submit Partnership Brief →</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="success-screen">
+    <div class="success-check">🎉</div>
+    <h2>Brief Received!</h2>
+    <p class="sub">Thanks for submitting your event details. The TRODDR team will review your brief and be in touch within 2–3 business days to confirm your EventHub launch timeline.</p>
+    <p style="font-size:13px;color:var(--blue);font-weight:500;margin-bottom:24px">Save the link below — use it to return and update your submission at any time.</p>
+    <div class="edit-link-card">
+      <p>Your Edit Link</p>
+      <div class="link-row">
+        <input type="text" id="edit-link-input" readonly />
+        <button class="copy-btn" onclick="copyEditLink()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /form-page -->
+
+<footer class="page-footer">
+  <p>© 2026 TRODDR &nbsp;·&nbsp; <a href="https://troddr.com">troddr.com</a> &nbsp;·&nbsp; <a href="mailto:hello@troddr.com">hello@troddr.com</a></p>
+</footer>
+
+<script>
+  /* ═══════════════════════════════════════════════════════
+     SUPABASE INIT
+     ═══════════════════════════════════════════════════════ */
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  let currentStep  = 1;
+  let sessionToken = null;
+  let isEditMode   = false;
+  const stagedFiles  = {};
+  const uploadedUrls = {};
+
+  let perfIdx=0, vendorIdx=0, sponsorIdx=0, ticketIdx=0, faqIdx=0, promoIdx=0;
+
+  /* ═══════════════════════════════════════════════════════
+     STARTUP
+     ═══════════════════════════════════════════════════════ */
+  window.addEventListener('DOMContentLoaded', async () => {
+    addPerformer(); addVendor(); addSponsor();
+    addTicket(); addFaq(); addPromo();
+
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('token');
+    if (token) {
+      isEditMode = true; sessionToken = token;
+      document.getElementById('edit-banner').style.display = 'block';
+      await loadSubmission(token);
+    }
+
+    // drag-over styles
+    document.querySelectorAll('.file-drop').forEach(drop => {
+      drop.addEventListener('dragover',  e => { e.preventDefault(); drop.classList.add('drag-over'); });
+      drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+      drop.addEventListener('drop',      () => drop.classList.remove('drag-over'));
+    });
+  });
+
+  /* ═══════════════════════════════════════════════════════
+     LOAD EXISTING
+     ═══════════════════════════════════════════════════════ */
+  async function loadSubmission(token) {
+    showLoading('Loading your submission…');
+    const { data, error } = await db.from(TABLE).select('*').eq('token', token).single();
+    hideLoading();
+    if (error || !data) { showToast('Could not load submission. Check your link.', 'error'); return; }
+    maxStep = TOTAL_STEPS; // all steps are accessible when editing
+    updateProgress();
+
+    const textFields = [
+      'contact_name','contact_email','contact_phone',
+      'event_name','event_description','event_start_date','event_end_date',
+      'gates_open','estimated_attendance','venue_name','venue_address',
+      'venue_lat','venue_lng','website','instagram','facebook','twitter',
+      'placement_notes','stage_count','stage_names','ticketing_platform',
+      'tickets_url','parking_info','accessibility_info','reentry_policy',
+      'prohibited_items','age_restriction','additional_notes'
+    ];
+    textFields.forEach(f => { const el=document.getElementById(f); if(el&&data[f]) el.value=data[f]; });
+
+    const fileMap = {
+      logo_url:'logo', hero_url:'hero',
+      floor_plan_url:'floor_plan', floor_plan_annotated_url:'floor_plan_annotated',
+      parking_map_url:'parking_map'
+    };
+    Object.entries(fileMap).forEach(([col,key]) => {
+      if (data[col]) { uploadedUrls[key]=data[col]; const el=document.getElementById('fup-'+key); if(el) el.style.display='block'; }
+    });
+    if (data.gallery_urls?.length) { uploadedUrls.gallery=data.gallery_urls; const el=document.getElementById('fup-gallery'); if(el) el.style.display='block'; }
+
+    if (data.performers?.length) { document.getElementById('performers-list').innerHTML=''; perfIdx=0; data.performers.forEach(p=>addPerformer(p)); }
+    if (data.vendors?.length)    { document.getElementById('vendors-list').innerHTML='';    vendorIdx=0; data.vendors.forEach(v=>addVendor(v)); }
+    if (data.sponsors?.length)   { document.getElementById('sponsors-list').innerHTML='';   sponsorIdx=0; data.sponsors.forEach(s=>addSponsor(s)); }
+    if (data.tickets?.length)    { document.getElementById('tickets-list').innerHTML='';    ticketIdx=0; data.tickets.forEach(t=>addTicket(t)); }
+    if (data.faqs?.length)       { document.getElementById('faqs-list').innerHTML='';       faqIdx=0; data.faqs.forEach(f=>addFaq(f)); }
+    if (data.promos?.length)     { document.getElementById('promos-list').innerHTML='';     promoIdx=0; data.promos.forEach(p=>addPromo(p)); }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     FILES
+     ═══════════════════════════════════════════════════════ */
+  function handleFile(input, key) {
+    if (!input.files?.[0]) return;
+    stagedFiles[key] = input.files[0];
+    const n = document.getElementById('fname-'+key);
+    if(n){ n.textContent='📎 '+input.files[0].name; n.style.display='block'; }
+    const u = document.getElementById('fup-'+key);
+    if(u) u.style.display='none';
+  }
+  function handleFileMultiple(input, key) {
+    if (!input.files?.length) return;
+    stagedFiles[key] = Array.from(input.files);
+    const n = document.getElementById('fname-'+key);
+    if(n){ n.textContent='📎 '+stagedFiles[key].map(f=>f.name).join(', '); n.style.display='block'; }
+    const u = document.getElementById('fup-'+key);
+    if(u) u.style.display='none';
+  }
+  async function uploadFile(key, file) {
+    const ext  = file.name.split('.').pop();
+    const path = `${sessionToken}/${key}/${Date.now()}.${ext}`;
+    const { error } = await db.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: true });
+    if (error) throw new Error(`Upload failed for ${key}: ${error.message}`);
+    const { data } = db.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+  }
+  async function uploadAllFiles() {
+    const urls = { ...uploadedUrls };
+    for (const [key, value] of Object.entries(stagedFiles)) {
+      if (Array.isArray(value)) {
+        const results = [];
+        for (let i=0; i<value.length; i++) results.push(await uploadFile(key+'_'+i, value[i]));
+        urls[key] = results;
+      } else {
+        urls[key] = await uploadFile(key, value);
+      }
+    }
+    return urls;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     COLLECT
+     ═══════════════════════════════════════════════════════ */
+  function val(id) { const e=document.getElementById(id); return e?e.value.trim():''; }
+  function collectRepeater(listId, fields) {
+    return Array.from(document.getElementById(listId).querySelectorAll('.repeater-item')).map(item => {
+      const obj={};
+      fields.forEach(({field,sel,type})=>{
+        if(type==='radio'){
+          const c=item.querySelector(`${sel}:checked`);
+          obj[field]=c?c.value:'';
+        } else {
+          const e=item.querySelector(sel);
+          obj[field]=e?e.value.trim():'';
+        }
+      });
+      return obj;
+    }).filter(o=>Object.values(o).some(v=>v));
+  }
+  function collectAllData(fileUrls) {
+    return {
+      token: sessionToken, status:'submitted',
+      submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      contact_name: val('contact_name'), contact_email: val('contact_email'), contact_phone: val('contact_phone'),
+      event_name: val('event_name'), event_description: val('event_description'),
+      event_start_date: val('event_start_date'), event_end_date: val('event_end_date'),
+      gates_open: val('gates_open'), estimated_attendance: val('estimated_attendance'),
+      venue_name: val('venue_name'), venue_address: val('venue_address'),
+      venue_lat: val('venue_lat'), venue_lng: val('venue_lng'),
+      website: val('website'), instagram: val('instagram'), facebook: val('facebook'), twitter: val('twitter'),
+      logo_url: fileUrls.logo||null, hero_url: fileUrls.hero||null, gallery_urls: fileUrls.gallery||null,
+      performers: collectRepeater('performers-list',[
+        {field:'name',sel:'.perf-name'},{field:'stage',sel:'.perf-stage'},
+        {field:'time',sel:'.perf-time'},{field:'genre',sel:'.perf-genre'},{field:'bio',sel:'.perf-bio'}
+      ]),
+      vendors: collectRepeater('vendors-list',[
+        {field:'name',sel:'.vend-name'},{field:'category',sel:'.vend-cat'},
+        {field:'desc',sel:'.vend-desc'},{field:'social',sel:'.vend-social'}
+      ]),
+      floor_plan_url: fileUrls.floor_plan||null,
+      floor_plan_annotated_url: fileUrls.floor_plan_annotated||null,
+      placement_notes: val('placement_notes'), stage_count: val('stage_count'), stage_names: val('stage_names'),
+      sponsors: collectRepeater('sponsors-list',[
+        {field:'name',sel:'.sp-name'},{field:'tier',sel:'.sp-tier',type:'radio'},{field:'website',sel:'.sp-website'}
+      ]),
+      tickets: collectRepeater('tickets-list',[
+        {field:'name',sel:'.tk-name'},{field:'price',sel:'.tk-price'},
+        {field:'dates',sel:'.tk-dates'},{field:'url',sel:'.tk-url'},{field:'inclusions',sel:'.tk-inclusions'}
+      ]),
+      ticketing_platform: val('ticketing_platform'), tickets_url: val('tickets_url'),
+      parking_info: val('parking_info'), parking_map_url: fileUrls.parking_map||null,
+      accessibility_info: val('accessibility_info'), reentry_policy: val('reentry_policy'),
+      prohibited_items: val('prohibited_items'), age_restriction: val('age_restriction'),
+      faqs: collectRepeater('faqs-list',[{field:'question',sel:'.faq-q'},{field:'answer',sel:'.faq-a'}]),
+      promos: collectRepeater('promos-list',[
+        {field:'title',sel:'.promo-title'},{field:'type',sel:'.promo-type'},
+        {field:'date',sel:'.promo-date'},{field:'details',sel:'.promo-detail'},{field:'cta',sel:'.promo-cta'}
+      ]),
+      additional_notes: val('additional_notes'),
+    };
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     SUBMIT
+     ═══════════════════════════════════════════════════════ */
+  async function submitForm() {
+    if (!document.getElementById('confirm-check').checked) {
+      showToast('Please tick the confirmation checkbox.','error'); return;
+    }
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    if (!sessionToken) sessionToken = crypto.randomUUID();
+    try {
+      showLoading('Uploading files…');
+      const fileUrls = await uploadAllFiles();
+      showLoading('Saving your brief…');
+      const { error } = await db.from(TABLE).upsert(collectAllData(fileUrls), { onConflict:'token' });
+      if (error) throw error;
+      hideLoading();
+      document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
+      document.getElementById('progress-outer').style.display='none';
+      document.getElementById('edit-banner').style.display='none';
+      document.getElementById('success-screen').style.display='block';
+      maxStep = TOTAL_STEPS; // ensure all steps are accessible if they come back via token
+      const editUrl = `${location.origin}${location.pathname}?token=${sessionToken}`;
+      document.getElementById('edit-link-input').value = editUrl;
+      window.scrollTo({top:0,behavior:'smooth'});
+    } catch(err) {
+      hideLoading();
+      btn.disabled=false; btn.textContent='Submit Partnership Brief →';
+      showToast('Something went wrong: '+err.message,'error');
+      console.error(err);
+    }
+  }
+
+  function copyEditLink() {
+    const input = document.getElementById('edit-link-input');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(()=>showToast('Link copied!','ok'));
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════ */
+  const TOTAL_STEPS = 8;
+  let maxStep = 1; // furthest step the user has reached
+
+  function updateProgress() {
+    document.querySelectorAll('.step-tab').forEach(tab=>{
+      const s=parseInt(tab.dataset.step);
+      tab.classList.remove('active','done');
+      if(s===currentStep) tab.classList.add('active');
+      else if(s<currentStep) tab.classList.add('done');
+      // Make all visited steps clickable; dim future steps
+      tab.style.opacity = s <= maxStep ? '1' : '0.4';
+      tab.style.pointerEvents = s <= maxStep ? 'auto' : 'none';
+    });
+  }
+  function showSection(step) {
+    document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('section-'+step)?.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  // Allow jumping to any step the user has already visited
+  function goToStep(step) { if(step>maxStep) return; currentStep=step; updateProgress(); showSection(step); }
+  function nextStep()     {
+    if(currentStep<TOTAL_STEPS){
+      currentStep++;
+      if(currentStep>maxStep) maxStep=currentStep;
+      updateProgress();
+      showSection(currentStep);
+    }
+  }
+  function prevStep()     { if(currentStep>1){ currentStep--; updateProgress(); showSection(currentStep); } }
+
+  /* ═══════════════════════════════════════════════════════
+     REPEATERS
+     ═══════════════════════════════════════════════════════ */
+  function addPerformer(d={}) {
+    perfIdx++;
+    document.getElementById('performers-list').insertAdjacentHTML('beforeend',`
+      <div class="repeater-item" id="perf-${perfIdx}">
+        <button type="button" class="remove-btn" onclick="removeItem('perf-${perfIdx}')">✕</button>
+        <div class="field-row">
+          <div class="field-group"><label>Artist / Act Name</label><input type="text" class="perf-name" placeholder="e.g. Buju Banton" value="${d.name||''}" /></div>
+          <div class="field-group"><label>Stage / Area</label><input type="text" class="perf-stage" placeholder="e.g. Main Stage" value="${d.stage||''}" /></div>
+        </div>
+        <div class="field-group"><label>Genre</label><input type="text" class="perf-genre" placeholder="e.g. Dancehall, Roots Reggae" value="${d.genre||''}" /></div>
+        <div class="field-group"><label>Short Bio <span class="hint">Optional</span></label><textarea class="perf-bio" placeholder="50–100 words..." style="min-height:65px">${d.bio||''}</textarea></div>
+        <div class="field-group" style="margin-bottom:0"><label>Scheduled Time <span class="hint">Fill in once schedule is confirmed</span></label><input type="text" class="perf-time" placeholder="e.g. Saturday 10:00 PM" value="${d.time||''}" /></div>
+      </div>`);
+  }
+
+  function addVendor(d={}) {
+    vendorIdx++;
+    const cats=['Jamaican Food','International Food','Desserts & Snacks','Bar / Cocktails','Non-Alcoholic Drinks','Vegan / Plant-Based','Other'];
+    document.getElementById('vendors-list').insertAdjacentHTML('beforeend',`
+      <div class="repeater-item" id="vend-${vendorIdx}">
+        <button type="button" class="remove-btn" onclick="removeItem('vend-${vendorIdx}')">✕</button>
+        <div class="field-row">
+          <div class="field-group"><label>Vendor Name</label><input type="text" class="vend-name" placeholder="e.g. Scotchie's" value="${d.name||''}" /></div>
+          <div class="field-group"><label>Category</label>
+            <select class="vend-cat">${cats.map(c=>`<option${d.category===c?' selected':''}>${c}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group" style="margin-bottom:0"><label>Description</label><input type="text" class="vend-desc" placeholder="What's on offer?" value="${d.desc||''}" /></div>
+          <div class="field-group" style="margin-bottom:0"><label>Instagram / Website</label><input type="text" class="vend-social" placeholder="@handle or URL" value="${d.social||''}" /></div>
+        </div>
+      </div>`);
+  }
+
+  function addSponsor(d={}) {
+    sponsorIdx++;
+    const tiers=['Presenting','Platinum','Gold','Silver','Bronze','Partner'];
+    const tierDescriptions = {
+      presenting: 'Top visibility',
+      platinum: 'Premium placement',
+      gold: 'High exposure',
+      silver: 'Supporting presence',
+      bronze: 'Basic visibility',
+      partner: 'Standard listing'
+    };
+    const tierHtml = tiers.map(t => {
+      const val = t.toLowerCase();
+      return `
+        <div class="tier-pill ${t === 'Gold' ? 'gold' : ''}">
+          <input type="radio" id="sp-${sponsorIdx}-${val}" name="sp-tier-${sponsorIdx}" class="sp-tier" value="${val}" ${d.tier===val?'checked':''}>
+          <label for="sp-${sponsorIdx}-${val}">
+            ${t}
+            <small>${tierDescriptions[val]}</small>
+          </label>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('sponsors-list').insertAdjacentHTML('beforeend',`
+      <div class="repeater-item" id="sp-${sponsorIdx}">
+        <button type="button" class="remove-btn" onclick="removeItem('sp-${sponsorIdx}')">✕</button>
+        <div class="field-group">
+          <label>Sponsor Name</label>
+          <input type="text" class="sp-name" placeholder="e.g. Red Stripe" value="${d.name||''}" />
+        </div>
+        <div class="field-group">
+          <label>Tier</label>
+          <div class="tier-group tier-full">${tierHtml}</div>
+        </div>
+        <div class="field-group" style="margin-bottom:0"><label>Website URL</label><input type="url" class="sp-website" placeholder="https://" value="${d.website||''}" /></div>
+      </div>`);
+  }
+
+  function addTicket(d={}) {
+    ticketIdx++;
+    document.getElementById('tickets-list').insertAdjacentHTML('beforeend',`
+      <div class="repeater-item" id="tk-${ticketIdx}">
+        <button type="button" class="remove-btn" onclick="removeItem('tk-${ticketIdx}')">✕</button>
+        <div class="field-row">
+          <div class="field-group"><label>Ticket Name</label><input type="text" class="tk-name" placeholder="e.g. Weekend Pass — VIP" value="${d.name||''}" /></div>
+          <div class="field-group"><label>Price</label><input type="text" class="tk-price" placeholder="e.g. JMD 8,500 / USD 55" value="${d.price||''}" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field-group"><label>Applicable Dates</label><input type="text" class="tk-dates" placeholder="e.g. All nights" value="${d.dates||''}" /></div>
+          <div class="field-group"><label>Purchase URL</label><input type="url" class="tk-url" placeholder="https://" value="${d.url||''}" /></div>
+        </div>
+        <div class="field-group" style="margin-bottom:0"><label>Inclusions</label><input type="text" class="tk-inclusions" placeholder="What's included?" value="${d.inclusions||''}" /></div>
+      </div>`);
+  }
+
+  function addFaq(d={}) {
+    faqIdx++;
+    document.getElementById('faqs-list').insertAdjacentHTML('beforeend',`
+      <div class="repeater-item" id="faq-${faqIdx}">
+        <button type="button" class="remove-btn" onclick="removeItem('faq-${faqIdx}')">✕</button>
+        <div class="field-group"><label>Question</label><input type="text" class="faq-q" placeholder="e.g. Can I bring my own food?" value="${d.question||''}" /></div>
+        <div class="field-group" style="margin-bottom:0"><label>Answer</label><textarea class="faq-a" style="min-height:60px">${d.answer||''}</textarea></div>
+      </div>`);
+  }
+
+  function addPromo(d={}) {
+    promoIdx++;
+    const types=['Ticket Offer','Lineup Announcement','Sponsor Activation','Exclusive Deal','General Hype'];
+    document.getElementById('promos-list').insertAdjacentHTML('beforeend',`
+      <div class="repeater-item" id="promo-${promoIdx}">
+        <button type="button" class="remove-btn" onclick="removeItem('promo-${promoIdx}')">✕</button>
+        <div class="field-group"><label>Promotion Title</label><input type="text" class="promo-title" placeholder="e.g. Early Bird Tickets — Save 20%" value="${d.title||''}" /></div>
+        <div class="field-row">
+          <div class="field-group"><label>Type</label><select class="promo-type">${types.map(t=>`<option${d.type===t?' selected':''}>${t}</option>`).join('')}</select></div>
+          <div class="field-group"><label>Go Live Date</label><input type="date" class="promo-date" value="${d.date||''}" /></div>
+        </div>
+        <div class="field-group"><label>Details</label><textarea class="promo-detail" style="min-height:70px">${d.details||''}</textarea></div>
+        <div class="field-group" style="margin-bottom:0"><label>CTA Link</label><input type="url" class="promo-cta" placeholder="https://" value="${d.cta||''}" /></div>
+      </div>`);
+  }
+
+  function removeItem(id) { document.getElementById(id)?.remove(); }
+
+  /* ═══════════════════════════════════════════════════════
+     UI HELPERS
+     ═══════════════════════════════════════════════════════ */
+  function showLoading(msg='Loading…') {
+    document.getElementById('loading-text').textContent=msg;
+    document.getElementById('loading-overlay').classList.add('show');
+  }
+  function hideLoading() { document.getElementById('loading-overlay').classList.remove('show'); }
+
+  let toastTimer;
+  function showToast(msg, type='') {
+    const el=document.getElementById('toast');
+    el.textContent=msg;
+    el.className='show'+(type?' '+type:'');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>{ el.className=''; },4000);
+  }
+</script>
+</body>
+</html>

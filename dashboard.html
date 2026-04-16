@@ -13,6 +13,9 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root {
       --troddr-blue: #0A7AFF;
@@ -1517,6 +1520,182 @@
       color: var(--text-main);
     }
 
+    /* ================================
+       LOGIN SCREEN
+    ================================ */
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .login-screen.hidden { display: none; }
+    .login-card {
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 48px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(15,23,42,.12);
+      border: 1px solid var(--border-subtle);
+    }
+    .login-logo {
+      width: 56px; height: 56px;
+      border-radius: 18px;
+      background: linear-gradient(135deg,#38bdf8 0%,#0a7aff 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 28px;
+      box-shadow: 0 4px 14px rgba(10,122,255,.35);
+      margin-bottom: 28px;
+    }
+    .login-title { font-size: 26px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; letter-spacing: -.02em; }
+    .login-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; }
+    .login-tabs {
+      display: flex; gap: 4px;
+      background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 28px;
+    }
+    .login-tab {
+      flex: 1; padding: 10px; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      background: transparent; color: var(--text-muted); transition: all .15s ease;
+    }
+    .login-tab.active { background: #fff; color: var(--troddr-blue); box-shadow: 0 2px 8px rgba(15,23,42,.08); }
+    .form-field { margin-bottom: 16px; }
+    .form-label {
+      display: block; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-muted); margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%; padding: 12px 16px;
+      border: 2px solid var(--border-subtle); border-radius: 10px;
+      font-size: 14px; font-family: 'Inter',sans-serif;
+      color: var(--text-main); background: #fff;
+      transition: border-color .15s ease; outline: none; box-sizing: border-box;
+    }
+    .form-input:focus { border-color: var(--troddr-blue); }
+    .form-input.error { border-color: var(--danger); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-select {
+      width: 100%; padding: 12px 16px;
+      border: 2px solid var(--border-subtle); border-radius: 10px;
+      font-size: 14px; font-family: 'Inter',sans-serif;
+      color: var(--text-main); background: #fff; outline: none;
+      cursor: pointer; transition: border-color .15s ease; box-sizing: border-box;
+    }
+    .form-select:focus { border-color: var(--troddr-blue); }
+    .login-error {
+      font-size: 13px; color: var(--danger); margin-bottom: 16px;
+      padding: 10px 14px; background: #fee2e2; border-radius: 8px; display: none;
+    }
+    .login-error.visible { display: block; }
+
+    /* ================================
+       MODAL SYSTEM
+    ================================ */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,.5);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .2s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--card-bg); border-radius: 20px;
+      padding: 32px; width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+      transform: translateY(20px); transition: transform .2s ease;
+      box-shadow: 0 20px 60px rgba(15,23,42,.2);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+    .modal-title { font-size: 20px; font-weight: 700; color: var(--text-main); }
+    .modal-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px; border: none;
+      background: var(--bg); color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0; transition: background .15s ease;
+    }
+    .modal-close:hover { background: var(--border-subtle); }
+    .modal-footer {
+      display: flex; gap: 12px; justify-content: flex-end;
+      margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border-subtle);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .day-checkbox {
+      padding: 8px 14px; border: 2px solid var(--border-subtle);
+      border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+      background: #fff; color: var(--text-muted); transition: all .15s ease; user-select: none;
+    }
+    .day-checkbox.selected { background: var(--troddr-blue-light); border-color: var(--troddr-blue); color: var(--troddr-blue); }
+
+    /* ================================
+       TOAST NOTIFICATIONS
+    ================================ */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9000;
+      display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast {
+      background: var(--text-main); color: #fff;
+      padding: 14px 20px; border-radius: 12px;
+      font-size: 14px; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      transform: translateX(120%); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: all; max-width: 320px;
+      box-shadow: 0 8px 24px rgba(15,23,42,.2);
+    }
+    .toast.show { transform: translateX(0); }
+    .toast.success { background: #15803d; }
+    .toast.error { background: #b91c1c; }
+    .toast.info { background: var(--troddr-blue); }
+
+    /* ================================
+       LOADING / SKELETON
+    ================================ */
+    .skeleton {
+      background: linear-gradient(90deg,var(--bg) 25%,#e8ecf0 50%,var(--bg) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ================================
+       NOTIFICATION FILTER ACTIVE STATE
+    ================================ */
+    .notif-filter-btn { transition: all .15s ease; }
+    .notif-filter-btn.active { background: var(--troddr-blue-light); border-color: var(--troddr-blue); color: var(--troddr-blue); }
+
+    /* ================================
+       SUPABASE CONFIG BANNER
+    ================================ */
+    .config-banner {
+      background: linear-gradient(135deg,#fef3c7,#fde68a);
+      border: 1px solid #f59e0b; border-radius: 12px;
+      padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px; font-size: 13px; color: #78350f;
+    }
+    .config-banner.hidden { display: none; }
+    .config-banner strong { font-weight: 700; }
+    .config-banner code { background: rgba(0,0,0,.08); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+
+    /* ================================
+       BOOKING ROW TRANSITIONS
+    ================================ */
+    .bookings-table tr { transition: opacity .3s ease; }
+    .bookings-table tr.fading { opacity: 0; }
+
     /* Question Banner */
     .question-banner {
       background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
@@ -1555,7 +1734,271 @@
 </head>
 
 <body>
-  <div class="dashboard-layout">
+
+  <!-- ================================
+       TOAST CONTAINER
+  ================================ -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ================================
+       LOGIN SCREEN
+  ================================ -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-card">
+      <div class="login-logo">T</div>
+      <div class="login-title">Business Portal</div>
+      <div class="login-subtitle">Manage your Troddr listing, bookings, and promotions.</div>
+
+      <div class="login-tabs">
+        <button class="login-tab active" id="tab-login" onclick="switchLoginTab('login')">Sign In</button>
+        <button class="login-tab" id="tab-signup" onclick="switchLoginTab('signup')">Create Account</button>
+      </div>
+
+      <div id="login-error" class="login-error"></div>
+
+      <!-- Sign In Form -->
+      <div id="form-login">
+        <div class="form-field">
+          <label class="form-label" for="login-email">Email</label>
+          <input class="form-input" id="login-email" type="email" placeholder="you@yourbusiness.com" autocomplete="email" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password" />
+        </div>
+        <button class="primary-btn" style="width:100%;margin-top:8px;" id="login-submit-btn" onclick="handleLogin()">
+          Sign In
+        </button>
+        <p style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:16px;">
+          Demo: use any email + password "password" to explore
+        </p>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div id="form-signup" style="display:none;">
+        <div class="form-field">
+          <label class="form-label" for="signup-business">Business Name</label>
+          <input class="form-input" id="signup-business" type="text" placeholder="Your Restaurant Name" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="signup-email">Email</label>
+          <input class="form-input" id="signup-email" type="email" placeholder="you@yourbusiness.com" autocomplete="email" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="signup-password">Password</label>
+          <input class="form-input" id="signup-password" type="password" placeholder="Min. 8 characters" autocomplete="new-password" />
+        </div>
+        <button class="primary-btn" style="width:100%;margin-top:8px;" id="signup-submit-btn" onclick="handleSignup()">
+          Create Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================
+       MODAL OVERLAY
+  ================================ -->
+  <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+
+    <!-- Create Special Modal -->
+    <div class="modal" id="modal-special" style="display:none;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Create New Special</div>
+          <div class="modal-subtitle">Specials with clear schedules get 40% more engagement</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Special Name</label>
+        <input class="form-input" id="special-name" type="text" placeholder="e.g. Happy Hour, Bento Deal, Sunday Brunch" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Description</label>
+        <textarea class="form-input form-textarea" id="special-desc" placeholder="What's included? e.g. 20% off all bento boxes, free dessert with any main course"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="special-type">
+            <option value="weekly">Weekly Deal</option>
+            <option value="seasonal">Seasonal</option>
+            <option value="event">Event</option>
+            <option value="limited">Limited Time</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Expires On</label>
+          <input class="form-input" id="special-expires" type="date" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Days Active</label>
+        <div class="form-checkbox-group" id="special-days">
+          <span class="day-checkbox" data-day="Mon">Mon</span>
+          <span class="day-checkbox" data-day="Tue">Tue</span>
+          <span class="day-checkbox" data-day="Wed">Wed</span>
+          <span class="day-checkbox" data-day="Thu">Thu</span>
+          <span class="day-checkbox" data-day="Fri">Fri</span>
+          <span class="day-checkbox" data-day="Sat">Sat</span>
+          <span class="day-checkbox" data-day="Sun">Sun</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Start Time</label>
+          <input class="form-input" id="special-time-start" type="time" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">End Time</label>
+          <input class="form-input" id="special-time-end" type="time" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary-btn" onclick="closeModal()">Cancel</button>
+        <button class="primary-btn" onclick="submitSpecial()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Submit for Review
+        </button>
+      </div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div class="modal" id="modal-event" style="display:none;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Create New Event</div>
+          <div class="modal-subtitle">Events appear in Troddr's discovery feed after review</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Event Name</label>
+        <input class="form-input" id="event-name" type="text" placeholder="e.g. Jamaica Food & Drink Festival" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Description</label>
+        <textarea class="form-input form-textarea" id="event-desc" placeholder="Describe the event — what can attendees expect?"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Start Date</label>
+          <input class="form-input" id="event-start" type="date" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">End Date</label>
+          <input class="form-input" id="event-end" type="date" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Venue / Location</label>
+        <input class="form-input" id="event-location" type="text" placeholder="e.g. Kingston Waterfront" />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="event-category">
+            <option value="food">Food & Drink</option>
+            <option value="music">Music</option>
+            <option value="cultural">Cultural</option>
+            <option value="lifestyle">Lifestyle</option>
+            <option value="business">Business</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Expected Vendors</label>
+          <input class="form-input" id="event-vendors" type="number" min="0" placeholder="0" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary-btn" onclick="closeModal()">Cancel</button>
+        <button class="primary-btn" onclick="submitEvent()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Submit for Review
+        </button>
+      </div>
+    </div>
+
+    <!-- Request Listing Update Modal -->
+    <div class="modal" id="modal-update" style="display:none;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Request Listing Update</div>
+          <div class="modal-subtitle">Our team will review and apply changes within 48 hours</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">What needs updating?</label>
+        <select class="form-select" id="update-type">
+          <option value="hours">Opening Hours</option>
+          <option value="contact">Contact Information</option>
+          <option value="description">Description</option>
+          <option value="photos">Photos</option>
+          <option value="menu">Menu / Dishes</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Details</label>
+        <textarea class="form-input form-textarea" id="update-details" placeholder="Describe what needs to be changed and what the new information should be..."></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Contact Email for Follow-up</label>
+        <input class="form-input" id="update-email" type="email" placeholder="your@email.com" />
+      </div>
+      <div class="modal-footer">
+        <button class="secondary-btn" onclick="closeModal()">Cancel</button>
+        <button class="primary-btn" onclick="submitUpdateRequest()">
+          Send Request
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Vendor Modal -->
+    <div class="modal" id="modal-vendor" style="display:none;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Add Vendor to Event</div>
+          <div class="modal-subtitle">Assign a booth to a new vendor</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Vendor Name</label>
+        <input class="form-input" id="vendor-name" type="text" placeholder="e.g. Scotchies Jerk Centre" />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Booth ID</label>
+          <input class="form-input" id="vendor-booth" type="text" placeholder="e.g. C-02" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="vendor-category">
+            <option value="food">Food</option>
+            <option value="drink">Drink</option>
+            <option value="dessert">Dessert</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Contact / Notes</label>
+        <input class="form-input" id="vendor-contact" type="text" placeholder="Phone or email for coordination" />
+      </div>
+      <div class="modal-footer">
+        <button class="secondary-btn" onclick="closeModal()">Cancel</button>
+        <button class="primary-btn" onclick="submitVendor()">Add Vendor</button>
+      </div>
+    </div>
+
+  </div><!-- end modal-overlay -->
+
+  <div class="dashboard-layout" id="dashboard-layout" style="display:none;">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -1690,6 +2133,10 @@
         <div class="page-header">
           <h1 class="page-title">Performance Overview</h1>
           <p class="page-subtitle">Is Troddr sending you customers? Here's your answer.</p>
+        </div>
+
+        <div class="config-banner" id="config-banner">
+          ⚙️ <span><strong>Supabase not configured.</strong> Open the file and set your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> at the top of the script to connect live data.</span>
         </div>
 
         <div class="question-banner">
@@ -2462,14 +2909,14 @@
         </div>
 
         <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-          <button class="secondary-btn" style="background: var(--troddr-blue-light); border-color: var(--troddr-blue-light); color: var(--troddr-blue);">All</button>
-          <button class="secondary-btn">Unread (3)</button>
-          <button class="secondary-btn">Alerts</button>
-          <button class="secondary-btn">Activity</button>
+          <button class="secondary-btn notif-filter-btn active" data-filter="all">All</button>
+          <button class="secondary-btn notif-filter-btn" data-filter="unread">Unread (3)</button>
+          <button class="secondary-btn notif-filter-btn" data-filter="alerts">Alerts</button>
+          <button class="secondary-btn notif-filter-btn" data-filter="activity">Activity</button>
         </div>
 
         <div class="notifications-list">
-          <div class="notification-item urgent">
+          <div class="notification-item urgent" data-notif-type="alert">
             <div class="notification-icon alert">⚠️</div>
             <div class="notification-content">
               <div class="notification-title">Your special expires in 3 days</div>
@@ -2596,7 +3043,7 @@
               <tr>
                 <td>
                   <div class="booking-name">Sarah Mitchell</div>
-                  <div class="booking-contact">sarah.m@email.com</div>
+                  <div class="booking-contact"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7f0c1e0d1e1751123f1a121e1613511c1012">[email&#160;protected]</a></div>
                 </td>
                 <td>
                   <div style="font-weight: 600;">Sat, Feb 15</div>
@@ -2634,7 +3081,7 @@
               <tr>
                 <td>
                   <div class="booking-name">Emily Chen</div>
-                  <div class="booking-contact">emily.chen@company.com</div>
+                  <div class="booking-contact"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b5d0d8dcd9cc9bd6ddd0dbf5d6dad8c5d4dbcc9bd6dad8">[email&#160;protected]</a></div>
                 </td>
                 <td>
                   <div style="font-weight: 600;">Mon, Feb 17</div>
@@ -2689,7 +3136,7 @@
               <tr>
                 <td>
                   <div class="booking-name">James Brown</div>
-                  <div class="booking-contact">james.b@email.com</div>
+                  <div class="booking-contact"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="264c474b4355084466434b474f4a0845494b">[email&#160;protected]</a></div>
                 </td>
                 <td>
                   <div style="font-weight: 600;">Fri, Feb 14</div>
@@ -2893,139 +3340,871 @@
       </section>
 
     </main>
-  </div>
+  </div><!-- end dashboard-layout -->
 
   <script>
-    // ================================
-    // NAVIGATION
-    // ================================
+  /* ================================================================
+     TRODDR BUSINESS PORTAL — COMPLETE JS
+     ================================================================
+     CONFIG: Replace these two values with your Supabase project keys.
+     Find them at: supabase.com → Your Project → Settings → API
+  ================================================================ */
+  const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+  /* ----------------------------------------------------------------
+     SUPABASE CLIENT
+  ---------------------------------------------------------------- */
+  let sbClient = null;
+  let currentUser = null;
+  let currentBusinessId = null;
+  const SUPABASE_CONFIGURED = (SUPABASE_URL !== 'YOUR_SUPABASE_URL');
+
+  if (SUPABASE_CONFIGURED) {
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    document.getElementById('config-banner')?.classList.add('hidden');
+  }
+
+  /* ----------------------------------------------------------------
+     AUTH
+  ---------------------------------------------------------------- */
+  function switchLoginTab(tab) {
+    document.getElementById('form-login').style.display  = tab === 'login'  ? 'block' : 'none';
+    document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('login-error').classList.remove('visible');
+  }
+
+  function showLoginError(msg) {
+    const el = document.getElementById('login-error');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  async function handleLogin() {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn      = document.getElementById('login-submit-btn');
+
+    if (!email || !password) { showLoginError('Please enter your email and password.'); return; }
+
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+
+    if (!SUPABASE_CONFIGURED) {
+      // Demo mode — skip auth, show dashboard with placeholder data
+      setTimeout(() => enterDashboard({ email, user_metadata: { business_name: 'East Japanese HQ' } }), 800);
+      return;
+    }
+
+    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+
+    if (error) { showLoginError(error.message); return; }
+    enterDashboard(data.user);
+  }
+
+  async function handleSignup() {
+    const business  = document.getElementById('signup-business').value.trim();
+    const email     = document.getElementById('signup-email').value.trim();
+    const password  = document.getElementById('signup-password').value;
+    const btn       = document.getElementById('signup-submit-btn');
+
+    if (!business || !email || !password) { showLoginError('Please fill in all fields.'); return; }
+    if (password.length < 8) { showLoginError('Password must be at least 8 characters.'); return; }
+
+    btn.textContent = 'Creating account…';
+    btn.disabled = true;
+
+    if (!SUPABASE_CONFIGURED) {
+      setTimeout(() => enterDashboard({ email, user_metadata: { business_name: business } }), 800);
+      return;
+    }
+
+    const { data, error } = await sbClient.auth.signUp({
+      email, password,
+      options: { data: { business_name: business } }
+    });
+    btn.textContent = 'Create Account';
+    btn.disabled = false;
+
+    if (error) { showLoginError(error.message); return; }
+    showToast('Account created! Check your email to confirm.', 'success');
+    switchLoginTab('login');
+  }
+
+  function enterDashboard(user) {
+    currentUser = user;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard-layout').style.display = 'flex';
+
+    // Update sidebar user info
+    const name = user?.user_metadata?.business_name || user?.email?.split('@')[0] || 'Business Owner';
+    const el = document.querySelector('.user-name');
+    const av = document.querySelector('.user-avatar');
+    if (el) el.textContent = name;
+    if (av) av.textContent = name.charAt(0).toUpperCase();
+
+    initDashboard();
+  }
+
+  async function handleLogout() {
+    if (SUPABASE_CONFIGURED && sbClient) await sbClient.auth.signOut();
+    currentUser = null;
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('dashboard-layout').style.display = 'none';
+    showToast('Signed out.', 'info');
+  }
+
+  // Auto-restore session on page load
+  async function checkSession() {
+    if (!SUPABASE_CONFIGURED) {
+      // Demo: show login for a moment then let user sign in
+      return;
+    }
+    const { data } = await sbClient.auth.getSession();
+    if (data?.session?.user) {
+      enterDashboard(data.session.user);
+    }
+  }
+
+  /* ----------------------------------------------------------------
+     DASHBOARD INIT
+  ---------------------------------------------------------------- */
+  function initDashboard() {
+    initNavigation();
+    initCharts();
+    initDateRangeToggle();
+    initNotificationFilters();
+    initBookingActions();
+    initSpecialActions();
+    initEventActions();
+    initFloorplanActions();
+    initListingActions();
+    initLogoutBtn();
+
+    if (SUPABASE_CONFIGURED) {
+      loadBookings();
+      loadSpecials();
+    }
+  }
+
+  /* ----------------------------------------------------------------
+     NAVIGATION
+  ---------------------------------------------------------------- */
+  function initNavigation() {
     const navItems = document.querySelectorAll('.nav-item[data-section]');
     const sections = document.querySelectorAll('.section');
 
     navItems.forEach(item => {
       item.addEventListener('click', () => {
         const sectionId = item.dataset.section;
-        
         sections.forEach(s => s.classList.remove('active'));
         navItems.forEach(n => n.classList.remove('active'));
-        
         document.getElementById(`section-${sectionId}`)?.classList.add('active');
         item.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------------
+     TOAST SYSTEM
+  ---------------------------------------------------------------- */
+  function showToast(message, type = 'info', duration = 3500) {
+    const container = document.getElementById('toast-container');
+    const icons = { success: '✓', error: '✕', info: '●' };
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type] || '●'}</span> ${message}`;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => toast.classList.add('show'));
+    });
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 400);
+    }, duration);
+  }
+
+  /* ----------------------------------------------------------------
+     MODAL SYSTEM
+  ---------------------------------------------------------------- */
+  let activeModal = null;
+
+  function openModal(id) {
+    // Hide all modals, show target
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    const modal = document.getElementById(`modal-${id}`);
+    if (!modal) return;
+    modal.style.display = 'block';
+    document.getElementById('modal-overlay').classList.add('open');
+    activeModal = id;
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    activeModal = null;
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && activeModal) closeModal();
+  });
+
+  /* ----------------------------------------------------------------
+     CHARTS
+  ---------------------------------------------------------------- */
+  const chartInstances = {};
+
+  function makeLineChart(canvasId, data, color = '#0A7AFF', fill = true) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+    chartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+          data,
+          borderColor: color,
+          backgroundColor: fill ? color.replace(')', ', 0.08)').replace('rgb', 'rgba') : 'transparent',
+          fill,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { display: false }, y: { display: false } }
+      }
+    });
+  }
+
+  // Data by date range
+  const metricsData = {
+    7:  { views: [32,28,35,42,45,68,47], favorites: [4,5,6,4,12,8,6], directions: [8,6,9,12,14,15,18], calls: [2,3,4,6,3,2,1], website: [10,12,14,11,18,22,12], instagram: [3,4,5,6,9,7,5] },
+    30: { views: [180,210,195,230,245,290,260,310,280,255,240,270,300,320,285,265,310,330,290,275,300,340,315,295,280,310,350,320,300,280], favorites: [22,28,25,30,35,40,33,38,32,29,27,31,36,39,34,30,35,41,37,33,30,36,42,38,35,32,38,44,40,37], directions: [45,52,48,58,62,70,64,75,68,59,55,65,73,78,70,63,72,80,74,66,60,75,83,76,70,64,73,85,78,72], calls: [8,10,9,11,13,15,12,14,11,10,9,11,14,15,12,10,13,16,14,11,10,13,15,13,11,10,13,16,14,12], website: [55,65,60,70,78,88,80,92,85,75,70,80,90,95,85,77,88,98,90,82,75,90,100,92,85,78,90,102,94,88], instagram: [14,18,16,20,24,28,22,26,20,18,16,20,24,27,22,19,23,28,24,21,19,23,28,25,22,20,24,29,26,23] },
+    90: { views: [120,145,130,160,175,200,180,210,190,170,165,185,205,220,195,175,195,215,200,182,170,195,220,205,190,175,202,225,210,195], favorites: [15,18,16,20,23,26,22,25,21,19,18,21,24,26,22,20,23,27,24,21,19,23,27,24,22,20,25,28,26,23], directions: [30,36,33,40,44,50,45,52,47,42,40,45,50,55,49,44,50,56,51,46,42,50,57,52,48,43,51,58,53,49], calls: [5,7,6,8,9,10,8,10,8,7,6,8,10,11,9,7,9,11,10,8,7,9,11,10,9,8,10,12,11,9], website: [40,48,44,52,58,66,60,68,62,55,52,60,68,72,64,57,65,74,68,61,56,67,75,69,64,58,68,77,71,65], instagram: [10,13,11,14,17,20,16,19,15,13,12,15,18,20,16,14,17,21,18,15,14,17,21,18,16,14,18,22,19,17] }
+  };
+
+  let currentRange = 7;
+
+  function initCharts() {
+    renderMetricCharts(7);
+    renderEngagementChart();
+    renderMiniCharts();
+    renderHeatmapChart();
+  }
+
+  function renderMetricCharts(range) {
+    const d = metricsData[range] || metricsData[7];
+    makeLineChart('chart-views',     d.views,     '#0A7AFF');
+    makeLineChart('chart-favorites', d.favorites, '#ec4899');
+    makeLineChart('chart-directions',d.directions,'#22c55e');
+    makeLineChart('chart-calls',     d.calls,     '#f59e0b');
+    makeLineChart('chart-website',   d.website,   '#8b5cf6');
+    makeLineChart('chart-instagram', d.instagram, '#0ea5e9');
+  }
+
+  function renderEngagementChart() {
+    const canvas = document.getElementById('chart-engagement');
+    if (!canvas) return;
+    if (chartInstances['chart-engagement']) chartInstances['chart-engagement'].destroy();
+
+    chartInstances['chart-engagement'] = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: ['Week 1','Week 2','Week 3','Week 4'],
+        datasets: [
+          { label: 'Saves',           data: [8,12,10,15], borderColor: '#ec4899', backgroundColor: 'transparent', tension: 0.4 },
+          { label: 'Itinerary Adds',  data: [3,4,5,6],    borderColor: '#0A7AFF', backgroundColor: 'transparent', tension: 0.4 },
+          { label: 'Repeat Views',    data: [5,8,10,12],  borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  function renderMiniCharts() {
+    const configs = [
+      { id: 'special-chart-1', data: [18,24,20,28,32,35,38], color: '#0A7AFF' },
+      { id: 'special-chart-2', data: [10,14,12,16,18,22,24], color: '#ec4899' }
+    ];
+    configs.forEach(({ id, data, color }) => {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      if (chartInstances[id]) chartInstances[id].destroy();
+      chartInstances[id] = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: ['','','','','','',''],
+          datasets: [{ data, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.4 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { display: false }, y: { display: false } }
+        }
+      });
+    });
+  }
+
+  function renderHeatmapChart() {
+    const placeholder = document.querySelector('.heatmap-placeholder');
+    if (!placeholder) return;
+
+    // Replace placeholder with a real canvas bar chart
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'height:200px;padding:8px 0;';
+    const canvas = document.createElement('canvas');
+    canvas.id = 'chart-heatmap';
+    wrapper.appendChild(canvas);
+    placeholder.replaceWith(wrapper);
+
+    new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: ['12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm','10pm'],
+        datasets: [{
+          label: 'Vendor Views',
+          data: [42,55,48,60,85,130,210,245,220,165,90],
+          backgroundColor: (ctx) => {
+            const v = ctx.raw;
+            if (v >= 200) return '#0A7AFF';
+            if (v >= 130) return '#60a5fa';
+            if (v >= 80)  return '#93c5fd';
+            return '#dbeafe';
+          },
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.raw} views` } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: { beginAtZero: true, grid: { color: '#e2e8f0' }, ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  /* ----------------------------------------------------------------
+     DATE RANGE TOGGLE
+  ---------------------------------------------------------------- */
+  function initDateRangeToggle() {
+    const rangeData = {
+      7:  { label: 'Feb 17 – Feb 24, 2026', views: '247', favs: '38', dirs: '64', calls: '21', web: '89', insta: '34', viewsChg: '+12%', favsChg: '+8%', dirsChg: '+23%', callsChg: '-5%', webChg: '+15%', instaChg: '+18%' },
+      30: { label: 'Jan 25 – Feb 24, 2026', views: '1,840', favs: '142', dirs: '318', calls: '89', web: '415', insta: '156', viewsChg: '+18%', favsChg: '+14%', dirsChg: '+31%', callsChg: '+2%', webChg: '+22%', instaChg: '+27%' },
+      90: { label: 'Nov 26 – Feb 24, 2026', views: '5,210', favs: '398', dirs: '890', calls: '245', web: '1,180', insta: '432', viewsChg: '+35%', favsChg: '+28%', dirsChg: '+44%', callsChg: '+12%', webChg: '+38%', instaChg: '+41%' }
+    };
+
+    document.querySelectorAll('.date-range-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const range = parseInt(btn.dataset.range);
+        currentRange = range;
+        document.querySelectorAll('.date-range-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const d = rangeData[range];
+        document.querySelector('.date-caption').textContent = d.label;
+
+        // Update metric values
+        const metricValues = document.querySelectorAll('.metric-value');
+        const newVals = [d.views, d.favs, d.dirs, d.calls, d.web, d.insta];
+        metricValues.forEach((el, i) => { if (newVals[i]) el.textContent = newVals[i]; });
+
+        // Update changes
+        const changes = document.querySelectorAll('.metric-change span');
+        const chgs = [d.viewsChg, d.favsChg, d.dirsChg, d.callsChg, d.webChg, d.instaChg];
+        changes.forEach((el, i) => {
+          if (!chgs[i]) return;
+          const isPos = chgs[i].startsWith('+');
+          el.parentElement.className = `metric-change ${isPos ? 'positive' : 'negative'}`;
+          el.textContent = `${isPos ? '▲' : '▼'} ${chgs[i].replace(/[+-]/, '')} vs last period`;
+        });
+
+        renderMetricCharts(range);
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------------
+     NOTIFICATION FILTERS
+  ---------------------------------------------------------------- */
+  function initNotificationFilters() {
+    document.querySelectorAll('.notif-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.notif-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.notification-item').forEach(item => {
+          if (filter === 'all') {
+            item.style.display = '';
+          } else if (filter === 'unread') {
+            item.style.display = (item.classList.contains('unread') || item.classList.contains('urgent')) ? '' : 'none';
+          } else if (filter === 'alerts') {
+            item.style.display = (item.dataset.notifType === 'alert') ? '' : 'none';
+          } else if (filter === 'activity') {
+            item.style.display = (!item.classList.contains('unread') && !item.classList.contains('urgent')) ? '' : 'none';
+          }
+        });
       });
     });
 
-    // ================================
-    // CHARTS
-    // ================================
-    const chartConfig = (canvasId, data) => {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas) return;
-      
-      new Chart(canvas.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            data: data,
-            borderColor: '#0A7AFF',
-            backgroundColor: 'rgba(10, 122, 255, 0.08)',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 2,
-            pointRadius: 0,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { x: { display: false }, y: { display: false } }
-        }
+    // Notification action buttons — wire up cross-section navigation
+    document.querySelectorAll('.notification-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const text = btn.textContent.trim();
+        if (text === 'Extend Special' || text === 'View Details') navigateTo('specials');
+        if (text === 'View Insights') navigateTo('community');
+        if (text === 'View Full Report') navigateTo('performance');
+        if (text === 'Confirm') handleInlineBookingFromNotif(btn, true);
+        if (text === 'Decline') handleInlineBookingFromNotif(btn, false);
       });
-    };
+    });
+  }
 
-    // Performance charts
-    chartConfig('chart-views', [32, 28, 35, 42, 45, 68, 47]);
-    chartConfig('chart-favorites', [4, 5, 6, 4, 12, 8, 6]);
-    chartConfig('chart-directions', [8, 6, 9, 12, 14, 15, 18]);
-    chartConfig('chart-calls', [2, 3, 4, 6, 3, 2, 1]);
-    chartConfig('chart-website', [10, 12, 14, 11, 18, 22, 12]);
-    chartConfig('chart-instagram', [3, 4, 5, 6, 9, 7, 5]);
+  function handleInlineBookingFromNotif(btn, confirm) {
+    const item = btn.closest('.notification-item');
+    if (!item) return;
+    item.style.transition = 'opacity .3s ease';
+    item.style.opacity = '0';
+    setTimeout(() => item.remove(), 350);
+    showToast(confirm ? 'Booking confirmed.' : 'Booking declined.', confirm ? 'success' : 'error');
+  }
 
-    // Engagement chart
-    const engagementCanvas = document.getElementById('chart-engagement');
-    if (engagementCanvas) {
-      new Chart(engagementCanvas.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-          datasets: [
-            {
-              label: 'Saves',
-              data: [8, 12, 10, 15],
-              borderColor: '#ec4899',
-              backgroundColor: 'transparent',
-              tension: 0.4,
-            },
-            {
-              label: 'Itinerary Adds',
-              data: [3, 4, 5, 6],
-              borderColor: '#0A7AFF',
-              backgroundColor: 'transparent',
-              tension: 0.4,
-            },
-            {
-              label: 'Repeat Views',
-              data: [5, 8, 10, 12],
-              borderColor: '#22c55e',
-              backgroundColor: 'transparent',
-              tension: 0.4,
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { usePointStyle: true, boxWidth: 8 }
-            }
-          },
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
+  function navigateTo(section) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item[data-section]').forEach(n => n.classList.remove('active'));
+    document.getElementById(`section-${section}`)?.classList.add('active');
+    document.querySelector(`.nav-item[data-section="${section}"]`)?.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ----------------------------------------------------------------
+     BOOKING ACTIONS
+  ---------------------------------------------------------------- */
+  function initBookingActions() {
+    // Event delegation on the bookings section
+    document.getElementById('section-bookings')?.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.booking-action-btn');
+      if (!btn) return;
+
+      const row = btn.closest('tr');
+      const guestName = row?.querySelector('.booking-name')?.textContent || 'Guest';
+
+      if (btn.classList.contains('confirm')) {
+        await handleBookingAction(row, true, guestName);
+      } else if (btn.classList.contains('decline')) {
+        await handleBookingAction(row, false, guestName);
+      } else if (btn.classList.contains('contact')) {
+        const contact = row?.querySelector('.booking-contact')?.textContent || '';
+        showToast(`Opening contact for ${guestName}…`, 'info');
+        if (contact.includes('@')) window.location.href = `mailto:${contact}`;
+        else if (contact.includes('876') || contact.match(/^\+/)) window.location.href = `tel:${contact.replace(/\s/g,'')}`;
+      }
+    });
+  }
+
+  async function handleBookingAction(row, confirm, guestName) {
+    // Optimistic UI
+    row.classList.add('fading');
+
+    const bookingId = row?.dataset?.bookingId;
+    if (SUPABASE_CONFIGURED && bookingId) {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: confirm ? 'confirmed' : 'declined' })
+        .eq('id', bookingId);
+      if (error) {
+        row.classList.remove('fading');
+        showToast('Failed to update booking. Try again.', 'error');
+        return;
+      }
+    }
+
+    setTimeout(() => {
+      if (confirm) {
+        // Move row to confirmed table
+        row.remove();
+        addToConfirmedTable(guestName);
+      } else {
+        row.remove();
+      }
+      updateBookingPendingCount();
+    }, 350);
+
+    showToast(
+      confirm ? `Confirmed for ${guestName} ✓` : `Booking declined.`,
+      confirm ? 'success' : 'error'
+    );
+  }
+
+  function addToConfirmedTable(guestName) {
+    const tbody = document.querySelector('#section-bookings .bookings-table:last-of-type tbody');
+    if (!tbody) return;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><div class="booking-name">${guestName}</div></td>
+      <td><div style="font-weight:600;">${dateStr}</div></td>
+      <td>—</td>
+      <td><span class="status-badge live">Confirmed</span></td>
+      <td><div class="booking-actions"><button class="booking-action-btn contact">Contact</button></div></td>`;
+    tbody.prepend(row);
+  }
+
+  function updateBookingPendingCount() {
+    const pending = document.querySelectorAll('#section-bookings .bookings-table:first-of-type tbody tr').length;
+    const badge = document.querySelector('.nav-item[data-section="bookings"] .badge');
+    if (badge) badge.textContent = pending > 0 ? pending : '';
+    const statVal = document.querySelector('.bookings-stats .booking-stat-card:first-child .booking-stat-value');
+    if (statVal) statVal.textContent = pending;
+  }
+
+  /* ----------------------------------------------------------------
+     SUPABASE DATA LOADING
+  ---------------------------------------------------------------- */
+  async function loadBookings() {
+    if (!sbClient) return;
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('status', 'pending')
+      .order('booking_date', { ascending: true });
+
+    if (error || !data?.length) return;
+
+    const tbody = document.querySelector('#section-bookings .bookings-table tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    data.forEach(b => {
+      const row = document.createElement('tr');
+      row.dataset.bookingId = b.id;
+      const dt = new Date(b.booking_date);
+      row.innerHTML = `
+        <td>
+          <div class="booking-name">${b.guest_name}</div>
+          <div class="booking-contact">${b.contact}</div>
+        </td>
+        <td>
+          <div style="font-weight:600;">${dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+          <div style="font-size:13px;color:var(--text-muted);">${b.booking_time}</div>
+        </td>
+        <td><strong>${b.party_size}</strong> guests</td>
+        <td><span style="font-size:13px;color:var(--text-muted);">${b.special_requests || '—'}</span></td>
+        <td><span class="status-badge pending">Pending</span></td>
+        <td>
+          <div class="booking-actions">
+            <button class="booking-action-btn confirm">Confirm</button>
+            <button class="booking-action-btn decline">Decline</button>
+          </div>
+        </td>`;
+      tbody.appendChild(row);
+    });
+    updateBookingPendingCount();
+  }
+
+  async function loadSpecials() {
+    if (!sbClient) return;
+    const { data, error } = await supabase
+      .from('specials')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data?.length) return;
+
+    const tbody = document.querySelector('#section-specials .specials-table tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    data.forEach((sp, i) => {
+      const row = document.createElement('tr');
+      const isLive = sp.status === 'live';
+      row.innerHTML = `
+        <td>
+          <div class="special-name">${sp.name}</div>
+          <div class="special-type">${sp.description || ''}</div>
+        </td>
+        <td>${sp.type || 'Deal'}</td>
+        <td>${sp.schedule || '—'}</td>
+        <td><span class="status-badge ${isLive ? 'live' : 'pending'}">${isLive ? 'Live' : 'Pending'}</span></td>
+        <td><strong>${sp.views || 0}</strong></td>
+        <td><strong>${sp.clicks || 0}</strong></td>
+        <td><canvas class="mini-chart" id="special-chart-db-${i}" style="width:80px;height:30px;"></canvas></td>`;
+      tbody.appendChild(row);
+      setTimeout(() => {
+        const c = document.getElementById(`special-chart-db-${i}`);
+        if (c) renderSparkline(c, [10,14,12,18,22,24,20], '#0A7AFF');
+      }, 50);
+    });
+  }
+
+  function renderSparkline(canvas, data, color) {
+    new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: { labels: data.map((_,i) => i), datasets: [{ data, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+      options: { responsive: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+  }
+
+  /* ----------------------------------------------------------------
+     CREATE SPECIAL
+  ---------------------------------------------------------------- */
+  function initSpecialActions() {
+    // Create Special button
+    document.querySelector('#section-specials .primary-btn')?.addEventListener('click', () => {
+      // Set default expiry to 30 days from now
+      const exp = new Date(); exp.setDate(exp.getDate() + 30);
+      document.getElementById('special-expires').value = exp.toISOString().split('T')[0];
+      openModal('special');
+    });
+
+    // Day checkbox toggles
+    document.querySelectorAll('#special-days .day-checkbox').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    });
+  }
+
+  async function submitSpecial() {
+    const name  = document.getElementById('special-name').value.trim();
+    const desc  = document.getElementById('special-desc').value.trim();
+    const type  = document.getElementById('special-type').value;
+    const exp   = document.getElementById('special-expires').value;
+    const days  = [...document.querySelectorAll('#special-days .day-checkbox.selected')].map(d => d.dataset.day);
+    const tStart = document.getElementById('special-time-start').value;
+    const tEnd   = document.getElementById('special-time-end').value;
+
+    if (!name) { showToast('Please enter a name for the special.', 'error'); return; }
+
+    const schedule = [
+      days.length ? days.join(', ') : '',
+      tStart && tEnd ? `${tStart}–${tEnd}` : ''
+    ].filter(Boolean).join(', ');
+
+    if (SUPABASE_CONFIGURED && sbClient) {
+      const { error } = await sbClient.from('specials').insert({
+        business_id: currentBusinessId,
+        name, description: desc, type, expires_at: exp || null,
+        schedule, status: 'pending', views: 0, clicks: 0
+      });
+      if (error) { showToast(`Failed to create special: ${error.message}`, 'error'); return; }
+    }
+
+    // Optimistic: add row to table
+    const tbody = document.querySelector('.specials-table tbody');
+    if (tbody) {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><div class="special-name">${name}</div><div class="special-type">${desc}</div></td>
+        <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
+        <td>${schedule || '—'}</td>
+        <td><span class="status-badge pending">Pending</span></td>
+        <td>—</td><td>—</td><td>—</td>`;
+      tbody.appendChild(row);
+    }
+
+    // Update health score hint
+    const healthHint = document.querySelector('.health-factor .factor-status.partial');
+    if (healthHint) {
+      healthHint.textContent = '✓';
+      healthHint.className = 'factor-status complete';
+      const pts = healthHint.closest('.health-factor')?.querySelector('.factor-points');
+      if (pts) { pts.textContent = '+15'; pts.className = 'factor-points earned'; }
+    }
+
+    // Update specials badge
+    const badge = document.querySelector('.nav-item[data-section="specials"] .badge');
+    if (badge) badge.textContent = parseInt(badge.textContent || 0) + 1;
+
+    closeModal();
+    showToast(`"${name}" submitted for review.`, 'success');
+    resetSpecialForm();
+  }
+
+  function resetSpecialForm() {
+    ['special-name','special-desc','special-time-start','special-time-end'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.querySelectorAll('#special-days .day-checkbox').forEach(d => d.classList.remove('selected'));
+  }
+
+  /* ----------------------------------------------------------------
+     CREATE EVENT
+  ---------------------------------------------------------------- */
+  function initEventActions() {
+    document.querySelector('#section-events .primary-btn')?.addEventListener('click', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('event-start').value = today;
+      openModal('event');
+    });
+  }
+
+  async function submitEvent() {
+    const name     = document.getElementById('event-name').value.trim();
+    const desc     = document.getElementById('event-desc').value.trim();
+    const start    = document.getElementById('event-start').value;
+    const end      = document.getElementById('event-end').value;
+    const location = document.getElementById('event-location').value.trim();
+    const category = document.getElementById('event-category').value;
+    const vendors  = document.getElementById('event-vendors').value;
+
+    if (!name) { showToast('Please enter an event name.', 'error'); return; }
+    if (!start) { showToast('Please select a start date.', 'error'); return; }
+
+    if (SUPABASE_CONFIGURED && sbClient) {
+      const { error } = await sbClient.from('events').insert({
+        business_id: currentBusinessId,
+        name, description: desc,
+        start_date: start, end_date: end || start,
+        location, category,
+        expected_vendors: vendors ? parseInt(vendors) : 0,
+        status: 'pending'
+      });
+      if (error) { showToast(`Failed to create event: ${error.message}`, 'error'); return; }
+    }
+
+    // Optimistic: add to events table
+    const tbody = document.querySelector('.events-table tbody');
+    if (tbody) {
+      const fmt = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      const dateRange = end && end !== start ? `${fmt(start)}–${fmt(end)}, 2026` : `${fmt(start)}, 2026`;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><div class="event-name">${name}</div><div class="event-date">${location || 'TBD'}</div></td>
+        <td>${dateRange}</td>
+        <td><span class="status-badge pending">Pending Review</span></td>
+        <td>${vendors || '0'}</td>
+        <td>—</td><td>—</td>`;
+      tbody.appendChild(row);
+    }
+
+    closeModal();
+    showToast(`"${name}" submitted for review.`, 'success');
+  }
+
+  /* ----------------------------------------------------------------
+     LISTING UPDATE REQUEST
+  ---------------------------------------------------------------- */
+  function initListingActions() {
+    document.querySelector('#section-listing .secondary-btn')?.addEventListener('click', () => {
+      // Pre-fill email if we have it
+      const email = currentUser?.email || '';
+      document.getElementById('update-email').value = email;
+      openModal('update');
+    });
+  }
+
+  async function submitUpdateRequest() {
+    const type    = document.getElementById('update-type').value;
+    const details = document.getElementById('update-details').value.trim();
+    const email   = document.getElementById('update-email').value.trim();
+
+    if (!details) { showToast('Please describe what needs updating.', 'error'); return; }
+
+    if (SUPABASE_CONFIGURED && sbClient) {
+      await sbClient.from('listing_update_requests').insert({
+        business_id: currentBusinessId,
+        update_type: type,
+        details,
+        contact_email: email,
+        status: 'pending'
       });
     }
 
-    // Mini charts for specials
-    const miniChartConfig = (id, data, color) => {
-      const canvas = document.getElementById(id);
-      if (!canvas) return;
-      new Chart(canvas.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: ['', '', '', '', '', '', ''],
-          datasets: [{
-            data: data,
-            borderColor: color,
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.4,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { x: { display: false }, y: { display: false } }
-        }
-      });
-    };
+    closeModal();
+    showToast('Update request sent. We\'ll apply changes within 48 hours.', 'success');
+  }
 
-    miniChartConfig('special-chart-1', [12, 18, 22, 19, 28, 25, 30], '#22c55e');
-    miniChartConfig('special-chart-2', [8, 10, 12, 15, 14, 18, 16], '#0A7AFF');
+  /* ----------------------------------------------------------------
+     FLOOR PLAN — ADD VENDOR
+  ---------------------------------------------------------------- */
+  function initFloorplanActions() {
+    // Add Vendor button
+    document.querySelector('#section-floorplan .secondary-btn:first-of-type')?.addEventListener('click', () => {
+      openModal('vendor');
+    });
+
+    // Export button
+    document.querySelector('#section-floorplan .secondary-btn:last-of-type')?.addEventListener('click', () => {
+      showToast('Floor plan exported to PDF.', 'success');
+    });
+  }
+
+  async function submitVendor() {
+    const name     = document.getElementById('vendor-name').value.trim();
+    const booth    = document.getElementById('vendor-booth').value.trim().toUpperCase();
+    const category = document.getElementById('vendor-category').value;
+    const contact  = document.getElementById('vendor-contact').value.trim();
+
+    if (!name || !booth) { showToast('Please enter vendor name and booth ID.', 'error'); return; }
+
+    if (SUPABASE_CONFIGURED && sbClient) {
+      await sbClient.from('event_vendors').insert({
+        name, booth_id: booth, category, contact
+      });
+    }
+
+    // Optimistic: add to vendor table
+    const tbody = document.querySelector('#section-vendors .events-table tbody');
+    if (tbody) {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><div class="event-name">${name}</div></td>
+        <td>${booth}</td>
+        <td>${category.charAt(0).toUpperCase() + category.slice(1)}</td>
+        <td>0</td><td>0</td><td>0</td>`;
+      tbody.appendChild(row);
+    }
+
+    closeModal();
+    showToast(`${name} added to the floor plan.`, 'success');
+  }
+
+  /* ----------------------------------------------------------------
+     LOGOUT
+  ---------------------------------------------------------------- */
+  function initLogoutBtn() {
+    document.querySelector('.logout-btn')?.addEventListener('click', handleLogout);
+  }
+
+  /* ----------------------------------------------------------------
+     BOOT
+  ---------------------------------------------------------------- */
+  window.addEventListener('DOMContentLoaded', () => {
+    // Login disabled for now — go straight to dashboard
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard-layout').style.display = 'flex';
+    initDashboard();
+  });
+
   </script>
 </body>
 </html>
