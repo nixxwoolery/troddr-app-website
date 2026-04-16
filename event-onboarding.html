@@ -903,7 +903,7 @@
             </div>
           </div>
         </div>
-      </template>
+      
       <button class="add-btn" onclick="addVendor()"><span class="plus">＋</span> Add Vendor</button>
     </div>
 
@@ -1366,9 +1366,17 @@
         {field:'time',sel:'.perf-time'},{field:'genre',sel:'.perf-genre'},{field:'bio',sel:'.perf-bio'}
       ]),
       vendors: collectRepeater('vendors-list',[
-        {field:'name',sel:'.vend-name'},{field:'category',sel:'.vend-cat'},
-        {field:'desc',sel:'.vend-desc'},{field:'social',sel:'.vend-social'}
-      ]),
+        {field:'name',        sel:'.vend-name'},
+        {field:'booth',       sel:'.vend-booth'},
+        {field:'category',    sel:'.vend-cat'},
+        {field:'price_range', sel:'.vend-price'},
+        {field:'items',       sel:'.vend-items'},
+        {field:'desc',        sel:'.vend-desc'},
+        {field:'instagram',   sel:'.vend-instagram'},
+        {field:'website',     sel:'.vend-website'},
+        {field:'accepts_card',sel:'.vend-card'},
+        {field:'dietary',     sel:'.vend-dietary'},
+        ]),
       floor_plan_url: fileUrls.floor_plan||null,
       floor_plan_annotated_url: fileUrls.floor_plan_annotated||null,
       placement_notes: val('placement_notes'), stage_count: val('stage_count'), stage_names: val('stage_names'),
@@ -1484,54 +1492,118 @@
   }
 
   function addVendor(d={}) {
-    vendorIdx++;
-    document.getElementById('vendors-list').insertAdjacentHTML('beforeend',`
-      <div class="repeater-item" id="vend-${vendorIdx}">
-        <button type="button" class="remove-btn" onclick="removeItem('vend-${vendorIdx}')">✕</button>
-        <div class="field-row">
-          <div class="field-group"><label>Vendor Name</label><input type="text" class="vend-name" placeholder="e.g. Scotchie's" value="${d.name||''}" /></div>
-          <div class="field-group"><label>Category</label>
-            <select class="vend-cat">
-              <option value="">Select category</option>
+  vendorIdx++;
+  document.getElementById('vendors-list').insertAdjacentHTML('beforeend',`
+    <div class="repeater-item" id="vend-${vendorIdx}">
+      <button type="button" class="remove-btn" onclick="removeItem('vend-${vendorIdx}')">✕</button>
 
-              <optgroup label="Food">
-                <option value="restaurant" ${d.category==='restaurant'?'selected':''}>Restaurant / Kitchen</option>
-                <option value="street-food" ${d.category==='street-food'?'selected':''}>Street Food</option>
-                <option value="grill" ${d.category==='grill'?'selected':''}>Grill / BBQ</option>
-                <option value="seafood" ${d.category==='seafood'?'selected':''}>Seafood</option>
-                <option value="dessert" ${d.category==='dessert'?'selected':''}>Desserts & Sweets</option>
-                <option value="snacks" ${d.category==='snacks'?'selected':''}>Snacks</option>
-              </optgroup>
-
-              <optgroup label="Drinks">
-                <option value="bar" ${d.category==='bar'?'selected':''}>Bar</option>
-                <option value="cocktails" ${d.category==='cocktails'?'selected':''}>Cocktail Bar</option>
-                <option value="beer" ${d.category==='beer'?'selected':''}>Beer</option>
-                <option value="wine" ${d.category==='wine'?'selected':''}>Wine</option>
-                <option value="juice" ${d.category==='juice'?'selected':''}>Juice / Smoothies</option>
-                <option value="coffee" ${d.category==='coffee'?'selected':''}>Coffee</option>
-              </optgroup>
-
-              <optgroup label="Experiences">
-                <option value="activation" ${d.category==='activation'?'selected':''}>Brand Activation</option>
-                <option value="tasting" ${d.category==='tasting'?'selected':''}>Tasting Experience</option>
-                <option value="interactive" ${d.category==='interactive'?'selected':''}>Interactive Booth</option>
-              </optgroup>
-
-              <optgroup label="Other">
-                <option value="retail" ${d.category==='retail'?'selected':''}>Merchandise / Retail</option>
-                <option value="services" ${d.category==='services'?'selected':''}>Services</option>
-                <option value="other" ${d.category==='other'?'selected':''}>Other</option>
-              </optgroup>
-            </select>
-          </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Vendor Name <span class="req">*</span></label>
+          <input type="text" class="vend-name" placeholder="e.g. Scotchie's Jerk Centre" value="${d.name||''}" />
         </div>
-        <div class="field-row">
-          <div class="field-group" style="margin-bottom:0"><label>Description</label><input type="text" class="vend-desc" placeholder="What's on offer?" value="${d.desc||''}" /></div>
-          <div class="field-group" style="margin-bottom:0"><label>Instagram / Website</label><input type="text" class="vend-social" placeholder="@handle or URL" value="${d.social||''}" /></div>
+        <div class="field-group">
+          <label>Booth / Stall Number</label>
+          <input type="text" class="vend-booth" placeholder="e.g. A-01, Booth 12" value="${d.booth||''}" />
         </div>
-      </div>`);
-  }
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Category <span class="req">*</span></label>
+          <select class="vend-cat">
+            <option value="">Select category</option>
+
+            <optgroup label="Food">
+              <option value="restaurant" ${d.category==='restaurant'?'selected':''}>Restaurant / Kitchen</option>
+              <option value="street-food" ${d.category==='street-food'?'selected':''}>Street Food</option>
+              <option value="jerk" ${d.category==='jerk'?'selected':''}>Jerk / Caribbean Grill</option>
+              <option value="grill" ${d.category==='grill'?'selected':''}>Grill / BBQ</option>
+              <option value="seafood" ${d.category==='seafood'?'selected':''}>Seafood</option>
+              <option value="dessert" ${d.category==='dessert'?'selected':''}>Desserts & Sweets</option>
+              <option value="snacks" ${d.category==='snacks'?'selected':''}>Snacks</option>
+            </optgroup>
+
+            <optgroup label="Drinks">
+              <option value="bar" ${d.category==='bar'?'selected':''}>Bar</option>
+              <option value="cocktails" ${d.category==='cocktails'?'selected':''}>Cocktail Bar</option>
+              <option value="beer" ${d.category==='beer'?'selected':''}>Beer</option>
+              <option value="wine" ${d.category==='wine'?'selected':''}>Wine</option>
+              <option value="juice" ${d.category==='juice'?'selected':''}>Juice / Smoothies</option>
+              <option value="coffee" ${d.category==='coffee'?'selected':''}>Coffee</option>
+            </optgroup>
+
+            <optgroup label="Experiences">
+              <option value="activation" ${d.category==='activation'?'selected':''}>Brand Activation</option>
+              <option value="tasting" ${d.category==='tasting'?'selected':''}>Tasting Experience</option>
+              <option value="interactive" ${d.category==='interactive'?'selected':''}>Interactive Booth</option>
+            </optgroup>
+
+            <optgroup label="Other">
+              <option value="retail" ${d.category==='retail'?'selected':''}>Merchandise / Retail</option>
+              <option value="services" ${d.category==='services'?'selected':''}>Services</option>
+              <option value="other" ${d.category==='other'?'selected':''}>Other</option>
+            </optgroup>
+
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label>Price Range</label>
+          <select class="vend-price">
+            <option value="">Select...</option>
+            <option value="$" ${d.price_range==='$'?'selected':''}>$ — Under JMD 1,000</option>
+            <option value="$$" ${d.price_range==='$$'?'selected':''}>$$ — JMD 1,000–2,500</option>
+            <option value="$$$" ${d.price_range==='$$$'?'selected':''}>$$$ — JMD 2,500+</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Signature Items <span class="hint">Separate with commas</span></label>
+        <input type="text" class="vend-items" placeholder="e.g. Jerk chicken, festival" value="${d.items||''}" />
+      </div>
+
+      <div class="field-group">
+        <label>Description</label>
+        <input type="text" class="vend-desc" placeholder="Short vendor description" value="${d.desc||''}" />
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Instagram</label>
+          <input type="text" class="vend-instagram" placeholder="@handle" value="${d.instagram||''}" />
+        </div>
+        <div class="field-group">
+          <label>Website</label>
+          <input type="url" class="vend-website" placeholder="https://" value="${d.website||''}" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Accepts Card</label>
+          <select class="vend-card">
+            <option value="" ${!d.accepts_card?'selected':''}>Unknown</option>
+            <option value="yes" ${d.accepts_card==='yes'?'selected':''}>Yes</option>
+            <option value="no" ${d.accepts_card==='no'?'selected':''}>Cash only</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label>Dietary</label>
+          <select class="vend-dietary">
+            <option value="" ${!d.dietary?'selected':''}>None</option>
+            <option value="vegetarian" ${d.dietary==='vegetarian'?'selected':''}>Vegetarian</option>
+            <option value="vegan" ${d.dietary==='vegan'?'selected':''}>Vegan</option>
+            <option value="gluten-free" ${d.dietary==='gluten-free'?'selected':''}>Gluten-free</option>
+            <option value="halal" ${d.dietary==='halal'?'selected':''}>Halal</option>
+          </select>
+        </div>
+      </div>
+
+    </div>`);
+}
 
   function addSponsor(d={}) {
     sponsorIdx++;
