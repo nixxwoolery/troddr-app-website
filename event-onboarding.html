@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TRODDR — Event Partner Intake</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 
 <script>
   /* ═══════════════════════════════════════════════════════
@@ -1411,14 +1413,45 @@
 
   function addVendor(d={}) {
     vendorIdx++;
-    const cats=['Jamaican Food','International Food','Desserts & Snacks','Bar / Cocktails','Non-Alcoholic Drinks','Vegan / Plant-Based','Other'];
     document.getElementById('vendors-list').insertAdjacentHTML('beforeend',`
       <div class="repeater-item" id="vend-${vendorIdx}">
         <button type="button" class="remove-btn" onclick="removeItem('vend-${vendorIdx}')">✕</button>
         <div class="field-row">
           <div class="field-group"><label>Vendor Name</label><input type="text" class="vend-name" placeholder="e.g. Scotchie's" value="${d.name||''}" /></div>
           <div class="field-group"><label>Category</label>
-            <select class="vend-cat">${cats.map(c=>`<option${d.category===c?' selected':''}>${c}</option>`).join('')}</select>
+            <select class="vend-cat">
+              <option value="">Select category</option>
+
+              <optgroup label="Food">
+                <option value="restaurant" ${d.category==='restaurant'?'selected':''}>Restaurant / Kitchen</option>
+                <option value="street-food" ${d.category==='street-food'?'selected':''}>Street Food</option>
+                <option value="grill" ${d.category==='grill'?'selected':''}>Grill / BBQ</option>
+                <option value="seafood" ${d.category==='seafood'?'selected':''}>Seafood</option>
+                <option value="dessert" ${d.category==='dessert'?'selected':''}>Desserts & Sweets</option>
+                <option value="snacks" ${d.category==='snacks'?'selected':''}>Snacks</option>
+              </optgroup>
+
+              <optgroup label="Drinks">
+                <option value="bar" ${d.category==='bar'?'selected':''}>Bar</option>
+                <option value="cocktails" ${d.category==='cocktails'?'selected':''}>Cocktail Bar</option>
+                <option value="beer" ${d.category==='beer'?'selected':''}>Beer</option>
+                <option value="wine" ${d.category==='wine'?'selected':''}>Wine</option>
+                <option value="juice" ${d.category==='juice'?'selected':''}>Juice / Smoothies</option>
+                <option value="coffee" ${d.category==='coffee'?'selected':''}>Coffee</option>
+              </optgroup>
+
+              <optgroup label="Experiences">
+                <option value="activation" ${d.category==='activation'?'selected':''}>Brand Activation</option>
+                <option value="tasting" ${d.category==='tasting'?'selected':''}>Tasting Experience</option>
+                <option value="interactive" ${d.category==='interactive'?'selected':''}>Interactive Booth</option>
+              </optgroup>
+
+              <optgroup label="Other">
+                <option value="retail" ${d.category==='retail'?'selected':''}>Merchandise / Retail</option>
+                <option value="services" ${d.category==='services'?'selected':''}>Services</option>
+                <option value="other" ${d.category==='other'?'selected':''}>Other</option>
+              </optgroup>
+            </select>
           </div>
         </div>
         <div class="field-row">
