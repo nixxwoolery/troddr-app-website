@@ -20,7 +20,7 @@
 
 const TRODDR_EMAIL       = 'hello@troddr.com';
 const FORM_BASE_URL = 'https://troddr.com/event-onboarding';// update to your actual URL
-const FROM_EMAIL         = 'TRODDR <partners@troddr.com>';      // must be a verified Resend sender
+const FROM_EMAIL = 'TRODDR <onboarding@resend.dev>';     
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
