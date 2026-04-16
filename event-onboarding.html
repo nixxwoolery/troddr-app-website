@@ -13,64 +13,11 @@
      CONFIGURATION — swap these 3 values before deploying
      ═══════════════════════════════════════════════════════ */
 
-  const SUPABASE_URL    = 'https://YOUR_PROJECT_ID.supabase.co';
-  const SUPABASE_ANON   = 'YOUR_ANON_KEY_HERE';
+  const SUPABASE_URL    = 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
   const STORAGE_BUCKET  = 'partner-intake-assets';   // create in Supabase Storage, set public
   const TABLE           = 'event_partner_submissions';
 
-  /*
-  ── SQL TO RUN IN SUPABASE SQL EDITOR ─────────────────────
-
-  create table event_partner_submissions (
-    id                        uuid default gen_random_uuid() primary key,
-    token                     text unique not null,
-    status                    text default 'draft',
-    contact_name              text,
-    contact_email             text,
-    contact_phone             text,
-    event_name                text,
-    event_description         text,
-    event_start_date          text,
-    event_end_date            text,
-    gates_open                text,
-    estimated_attendance      text,
-    venue_name                text,
-    venue_address             text,
-    venue_lat                 text,
-    venue_lng                 text,
-    website                   text,
-    instagram                 text,
-    facebook                  text,
-    twitter                   text,
-    logo_url                  text,
-    hero_url                  text,
-    gallery_urls              jsonb,
-    performers                jsonb,
-    vendors                   jsonb,
-    floor_plan_url            text,
-    floor_plan_annotated_url  text,
-    placement_notes           text,
-    stage_count               text,
-    stage_names               text,
-    sponsors                  jsonb,
-    tickets                   jsonb,
-    ticketing_platform        text,
-    tickets_url               text,
-    parking_info              text,
-    parking_map_url           text,
-    accessibility_info        text,
-    reentry_policy            text,
-    prohibited_items          text,
-    age_restriction           text,
-    faqs                      jsonb,
-    promos                    jsonb,
-    additional_notes          text,
-    submitted_at              timestamptz,
-    created_at                timestamptz default now(),
-    updated_at                timestamptz default now()
-  );
-
-  ─────────────────────────────────────────────────────── */
 </script>
 
 <style>
@@ -711,8 +658,30 @@
         <input type="text" id="event_name" placeholder="e.g. Reggae Sumfest 2026" />
       </div>
       <div class="field-group">
+        <label>Event Type <span class="req">*</span></label>
+        <select id="event_type">
+            <option value="">Select event type</option>
+            <option value="music">Music</option>
+            <option value="food and drink">Food & Drink</option>
+            <option value="art">Art</option>
+            <option value="sports">Sports</option>
+            <option value="festival">Festival</option>
+            <option value="carnival">Carnival</option>
+            <option value="family">Family</option>
+            <option value="wellness">Wellness</option>
+            <option value="general">General</option>
+          </select>
+    </div>
+      <div class="field-group">
         <label>Event Description <span class="req">*</span></label>
         <textarea id="event_description" placeholder="What makes this event unmissable? (100–300 words)"></textarea>
+      </div>
+      <div class="field-group">
+        <label>
+          Organizer Name <span class="req">*</span>
+          <span class="hint">Displayed publicly on TRODDR</span>
+        </label>
+        <input type="text" id="organizer_name" placeholder="e.g. Downsound Entertainment" />
       </div>
       <div class="field-row">
         <div class="field-group">
@@ -1162,7 +1131,7 @@
 
     const textFields = [
       'contact_name','contact_email','contact_phone',
-      'event_name','event_description','event_start_date','event_end_date',
+      'event_name','event_type','event_description','organizer_name','event_start_date','event_end_date',
       'gates_open','estimated_attendance','venue_name','venue_address',
       'venue_lat','venue_lng','website','instagram','facebook','twitter',
       'placement_notes','stage_count','stage_names','ticketing_platform',
