@@ -73,6 +73,7 @@
         "destination": "/events.html"
       },
       { "source": "/dashboard", "destination": "/dashboard.html" },
+      { "source": "/event-onboarding", "destination": "/event-onboarding.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" }
     ],
   "redirects": [
@@ -92,6 +93,11 @@
       "source": "/specials.html",
       "destination": "/specials/:slug",
       "has": [{ "type": "query", "key": "slug" }],
+      "permanent": true
+    },
+    {
+      "source": "/event-onboarding.html",
+      "destination": "/event-onboarding",
       "permanent": true
     }
   ],

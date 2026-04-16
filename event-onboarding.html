@@ -13,8 +13,8 @@
      CONFIGURATION — swap these 3 values before deploying
      ═══════════════════════════════════════════════════════ */
 
-  const SUPABASE_URL    = 'https://rprpwudhplodaqmmwqkf.supabase.co';
-  const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+  const SUPABASE_URL = (window.__ENV__ && window.__ENV__.SUPABASE_URL) || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
   const STORAGE_BUCKET  = 'partner-intake-assets';   // create in Supabase Storage, set public
   const TABLE           = 'event_partner_submissions';
 
@@ -581,7 +581,7 @@
   <div class="hero-inner">
     <span class="hero-eyebrow">Event Partnership</span>
     <h1>Let's Build Something <span>Extraordinary</span></h1>
-    <p>Submit your event details and we'll build your official TRODDR EventHub experience — complete with interactive maps, performer profiles, ticketing, and On the Radar promotions.</p>
+    <p>Submit your event details to build your official TRODDR EventHub experience, complete with interactive maps, performer profiles, ticketing, and On the Radar promotions.</p>
   </div>
 </div>
 
