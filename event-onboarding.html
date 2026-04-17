@@ -170,6 +170,25 @@
     font-size: 15px; font-weight: 300;
     line-height: 1.7; max-width: 500px; margin: 0 auto;
   }
+  .day-chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    color: var(--grey-mid);
+    transition: all 0.15s;
+    user-select: none;
+  }
+.day-chip:hover { border-color: var(--blue); color: var(--blue); }
+
+.day-chip-selected {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
 
   /* ── PROGRESS STEPPER ── */
   .progress-outer {
@@ -1381,8 +1400,32 @@
       floor_plan_annotated_url: fileUrls.floor_plan_annotated||null,
       placement_notes: val('placement_notes'), stage_count: val('stage_count'), stage_names: val('stage_names'),
       sponsors: collectRepeater('sponsors-list',[
-        {field:'name',sel:'.sp-name'},{field:'tier',sel:'.sp-tier',type:'radio'},{field:'website',sel:'.sp-website'}
-      ]),
+        {field:'name',sel:'.sp-name'},
+        {field:'tier',sel:'.sp-tier',type:'radio'},
+        {field:'brand_color',sel:'.sp-brand-color'},
+        {field:'website',sel:'.sp-website'}
+        ]).map(s => ({
+        ...s,
+        activations: (() => {
+            const spItems = document.getElementById('sponsors-list').querySelectorAll('.repeater-item');
+
+            for (const item of spItems) {
+            if (item.querySelector('.sp-name')?.value?.trim() === s.name) {
+                return Array.from(item.querySelectorAll('[id^="act-"]')).map(row => ({
+                name:          row.querySelector('.act-name')?.value?.trim() || '',
+                zone:          row.querySelector('.act-zone')?.value?.trim() || '',
+                description:   row.querySelector('.act-desc')?.value?.trim() || '',
+                troddr_offer:  row.querySelector('.act-offer')?.value?.trim() || '',
+                start_time:    row.querySelector('.act-start')?.value || null,
+                end_time:      row.querySelector('.act-end')?.value || null,
+                days_active:   Array.from(row.querySelectorAll('.day-chip-selected')).map(c => c.dataset.day),
+                })).filter(a => a.name);
+            }
+            }
+
+            return [];
+        })(),
+        })),
       tickets: collectRepeater('tickets-list',[
         {field:'name',sel:'.tk-name'},{field:'price',sel:'.tk-price'},
         {field:'dates',sel:'.tk-dates'},{field:'url',sel:'.tk-url'},{field:'inclusions',sel:'.tk-inclusions'}
@@ -1607,14 +1650,11 @@
 
   function addSponsor(d={}) {
     sponsorIdx++;
-    const tiers=['Presenting','Platinum','Gold','Silver','Bronze','Partner'];
+    const tiers = ['Presenting','Platinum','Gold','Silver','Bronze','Partner'];
     const tierDescriptions = {
-      presenting: 'Top visibility',
-      platinum: 'Premium placement',
-      gold: 'High exposure',
-      silver: 'Supporting presence',
-      bronze: 'Basic visibility',
-      partner: 'Standard listing'
+      presenting: 'Top visibility', platinum: 'Premium placement',
+      gold: 'High exposure', silver: 'Supporting presence',
+      bronze: 'Basic visibility', partner: 'Standard listing'
     };
     const tierHtml = tiers.map(t => {
       const val = t.toLowerCase();
@@ -1625,23 +1665,135 @@
             ${t}
             <small>${tierDescriptions[val]}</small>
           </label>
-        </div>
-      `;
+        </div>`;
     }).join('');
-    document.getElementById('sponsors-list').insertAdjacentHTML('beforeend',`
+
+    const existingActivations = (d.activations || []).map((a, i) => buildActivationRow(sponsorIdx, i, a)).join('');
+
+    document.getElementById('sponsors-list').insertAdjacentHTML('beforeend', `
       <div class="repeater-item" id="sp-${sponsorIdx}">
         <button type="button" class="remove-btn" onclick="removeItem('sp-${sponsorIdx}')">✕</button>
+
         <div class="field-group">
-          <label>Sponsor Name</label>
-          <input type="text" class="sp-name" placeholder="e.g. Red Stripe" value="${d.name||''}" />
+          <label>Sponsor Name <span class="req">*</span></label>
+          <input type="text" class="sp-name" value="${d.name||''}" />
         </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>Tier</label>
+            <div class="tier-group tier-full">${tierHtml}</div>
+          </div>
+          <div class="field-group">
+            <label>Brand Colour <span class="hint">Hex code e.g. #C8102E</span></label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="color" class="sp-brand-color-picker" value="${d.brand_color||'#0077CC'}"
+                oninput="this.nextElementSibling.value=this.value" />
+              <input type="text" class="sp-brand-color" value="${d.brand_color||''}"
+                oninput="this.previousElementSibling.value=this.value||'#0077CC'" />
+            </div>
+          </div>
+        </div>
+
         <div class="field-group">
-          <label>Tier</label>
-          <div class="tier-group tier-full">${tierHtml}</div>
+          <label>Website URL</label>
+          <input type="url" class="sp-website" value="${d.website||''}" />
         </div>
-        <div class="field-group" style="margin-bottom:0"><label>Website URL</label><input type="url" class="sp-website" placeholder="https://" value="${d.website||''}" /></div>
+
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+          <div class="info-box" style="margin-bottom:12px">
+            <strong>What's an activation?</strong> A physical presence at the event — a booth, bar, charging station, sampling area etc. Each activation gets its own QR code for patron check-ins.
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <label style="margin:0;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--grey-mid)">
+              Activations
+            </label>
+            <button type="button" class="add-btn"
+              style="margin:0;padding:6px 12px;font-size:11px"
+              onclick="addActivationRow(${sponsorIdx})">
+              <span class="plus">＋</span> Add Activation
+            </button>
+          </div>
+
+          <div id="activations-${sponsorIdx}">
+            ${existingActivations}
+          </div>
+        </div>
       </div>`);
+
+    if (!d.activations || d.activations.length === 0) {
+      addActivationRow(sponsorIdx);
+    }
   }
+
+  let activationCounters = {};
+
+  function addActivationRow(sponsorIdx, existingData = {}) {
+    if (!activationCounters[sponsorIdx]) activationCounters[sponsorIdx] = 0;
+    const aIdx = ++activationCounters[sponsorIdx];
+    const html = buildActivationRow(sponsorIdx, aIdx, existingData);
+    document.getElementById(`activations-${sponsorIdx}`).insertAdjacentHTML('beforeend', html);
+  }
+
+  function buildActivationRow(sponsorIdx, aIdx, d = {}) {
+    const rowId = `act-${sponsorIdx}-${aIdx}`;
+
+    const days = ['Friday','Saturday','Sunday','All nights'];
+    const daysHtml = days.map(day => {
+      const selected = Array.isArray(d.days_active) && d.days_active.includes(day);
+      return `<span class="day-chip ${selected?'day-chip-selected':''}"
+        onclick="toggleDayChip(this)"
+        data-day="${day}">${day}</span>`;
+    }).join('');
+
+    return `
+      <div class="repeater-item" id="${rowId}" style="background:#fff;margin-bottom:10px">
+        <button type="button" class="remove-btn" onclick="removeItem('${rowId}')">✕</button>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>Activation Name <span class="req">*</span></label>
+            <input type="text" class="act-name" placeholder="e.g. Beer Garden" value="${d.name||''}" />
+          </div>
+          <div class="field-group">
+            <label>Zone / Location</label>
+            <input type="text" class="act-zone" placeholder="e.g. Zone C" value="${d.zone||''}" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Description</label>
+          <input type="text" class="act-desc" placeholder="e.g. Free samples + JMD 500 drink token" value="${d.description||''}" />
+        </div>
+
+        <div class="field-group">
+          <label>Days Active</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+            ${daysHtml}
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>Opens</label>
+            <input type="time" class="act-start" value="${d.start_time||''}" />
+          </div>
+          <div class="field-group">
+            <label>Closes</label>
+            <input type="time" class="act-end" value="${d.end_time||''}" />
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-bottom:0">
+          <label>TRODDR Exclusive Offer</label>
+          <input type="text" class="act-offer" placeholder="e.g. Free drink token" value="${d.troddr_offer||''}" />
+        </div>
+      </div>`;
+  }
+
+function toggleDayChip(el) {
+  el.classList.toggle('day-chip-selected');
+}
 
   function addTicket(d={}) {
     ticketIdx++;
