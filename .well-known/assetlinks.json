@@ -1,0 +1,12 @@
+[
+    {
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.troddr.app",
+        "sha256_cert_fingerprints": [
+            "EE:07:82:CE:80:8B:CA:D7:B5:2D:26:62:9A:EB:AA:1E:1A:4E:F8:B3:BE:43:53:98:6A:97:8F:01:04:5B:9E:A3"
+        ]
+      }
+    }
+  ]
