@@ -91,6 +91,18 @@
       "permanent": false
     },
     {
+      "source": "/specials/:slug",
+      "missing": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+        }
+      ],
+      "destination": "/app",
+      "permanent": false
+    },
+    {
       "source": "/trip/:id",
       "destination": "/app",
       "permanent": false
