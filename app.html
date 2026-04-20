@@ -122,6 +122,18 @@
 
         var targetUrl = isIOS ? APP_STORE_URL : isAndroid ? PLAY_STORE_URL : '';
 
+        // Capture redirect path for deferred deep linking
+        var params = new URLSearchParams(window.location.search);
+        var redirectPath = params.get('redirect');
+
+        if (redirectPath) {
+        try {
+            localStorage.setItem('troddr_redirect', redirectPath);
+        } catch (e) {
+            console.warn('Could not store redirect path', e);
+        }
+        }
+
         window.addEventListener('DOMContentLoaded', function () {
           var statusEl = document.getElementById('redirect-status');
           if (statusEl) {
