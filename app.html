@@ -8,107 +8,249 @@
       name="description"
       content="Download TRODDR on the App Store or Google Play."
     />
+    <meta name="theme-color" content="#ffffff" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <style>
       :root {
         color-scheme: light;
+
+        --primary: #0077cc;
+        --primary-hover: #005fa3;
+        --bg: #ffffff;
+        --surface: #f8fafb;
+        --ink: #111827;
+        --ink-soft: #4b5563;
+        --ink-muted: #9ca3af;
+        --border: rgba(17, 24, 39, 0.08);
+
+        --font: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
 
       body {
-        margin: 0;
         min-height: 100vh;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f8fafb;
-        color: #111827;
+        min-height: 100dvh;
+        font-family: var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        background-image:
+          radial-gradient(
+            ellipse 80% 60% at 50% 0%,
+            rgba(0, 119, 204, 0.06) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 50% at 50% 100%,
+            rgba(0, 119, 204, 0.035) 0%,
+            transparent 70%
+          );
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 24px;
+        padding: 32px 20px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
 
-      .card {
+      main {
         width: 100%;
-        max-width: 520px;
-        background: #ffffff;
-        border: 1px solid rgba(17, 24, 39, 0.08);
-        border-radius: 24px;
-        padding: 32px 24px;
-        box-shadow: 0 20px 50px rgba(17, 24, 39, 0.08);
+        max-width: 440px;
         text-align: center;
       }
 
-      .logo {
-        width: 72px;
-        height: 72px;
-        border-radius: 20px;
-        object-fit: cover;
-        margin: 0 auto 18px;
-        display: block;
+      .reveal {
+        opacity: 0;
+        transform: translateY(10px);
+        animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+      }
+      .reveal-1 { animation-delay: 0.05s; }
+      .reveal-2 { animation-delay: 0.15s; }
+      .reveal-3 { animation-delay: 0.25s; }
+      .reveal-4 { animation-delay: 0.35s; }
+      .reveal-5 { animation-delay: 0.45s; }
+      .reveal-6 { animation-delay: 0.60s; }
+
+      @keyframes rise {
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .reveal { opacity: 1; transform: none; animation: none; }
+      }
+
+      .wordmark {
+        font-weight: 700;
+        font-size: 22px;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        margin-bottom: 40px;
       }
 
       h1 {
-        margin: 0 0 10px;
-        font-size: 30px;
-        line-height: 1.1;
+        font-weight: 600;
+        font-size: clamp(28px, 6.5vw, 34px);
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+        margin: 0 0 14px;
+        color: var(--ink);
       }
 
-      p {
-        margin: 0;
-        color: #4b5563;
-        font-size: 16px;
-        line-height: 1.6;
+      .lede {
+        margin: 0 auto;
+        max-width: 36ch;
+        color: var(--ink-soft);
+        font-size: 15.5px;
+        line-height: 1.55;
+        font-weight: 400;
       }
+
+      .status-wrap { margin-top: 22px; }
 
       .status {
-        margin-top: 16px;
-        font-size: 14px;
-        color: #6b7280;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--primary);
+        background: rgba(0, 119, 204, 0.08);
+        border-radius: 999px;
+      }
+      .status::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.15);
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .status::before { animation: none; }
       }
 
       .buttons {
         display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 12px;
-        margin-top: 24px;
+        margin-top: 32px;
       }
 
-      .button {
+      .btn-open {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 100%;
-        min-height: 50px;
-        padding: 14px 18px;
-        border-radius: 14px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 15px;
-        transition: transform 0.15s ease, opacity 0.15s ease;
-      }
-
-      .button:hover {
-        transform: translateY(-1px);
-      }
-
-      .button-primary {
-        background: #0077cc;
+        max-width: 320px;
+        min-height: 52px;
+        padding: 14px 22px;
+        border-radius: 12px;
+        background: var(--primary);
         color: #ffffff;
+        text-decoration: none;
+        font-family: var(--font);
+        font-weight: 600;
+        font-size: 15.5px;
+        letter-spacing: 0.005em;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.15) inset,
+          0 10px 24px -12px rgba(0, 119, 204, 0.55);
+        transition:
+          transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1),
+          box-shadow 0.18s ease,
+          background-color 0.18s ease;
+      }
+      .btn-open:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.2) inset,
+          0 16px 30px -14px rgba(0, 119, 204, 0.7);
+      }
+      .btn-open:active { transform: translateY(0); }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        max-width: 320px;
+        margin: 4px 0;
+        color: var(--ink-muted);
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
       }
 
-      .button-secondary {
-        background: #eef2f7;
-        color: #0077cc;
+      .store-badges {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .btn-store {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+        text-decoration: none;
+      }
+      .btn-store:hover {
+        transform: translateY(-1px);
+        opacity: 0.92;
+      }
+      .btn-store img {
+        display: block;
+        height: 48px;
+        width: auto;
+      }
+      .btn-playstore img {
+        height: 56px;
+        margin: -4px 0;
       }
 
       .note {
-        margin-top: 18px;
+        margin-top: 36px;
         font-size: 13px;
-        color: #9ca3af;
+        color: var(--ink-muted);
+        font-weight: 400;
+      }
+      .note .heart { color: #e34b4b; }
+
+      @media (min-width: 480px) {
+        .store-badges {
+          flex-direction: row;
+          justify-content: center;
+          gap: 12px;
+        }
       }
     </style>
+
     <script>
       (function () {
         var APP_STORE_URL = 'https://apps.apple.com/app/troddr/id6751852075';
@@ -122,31 +264,61 @@
 
         var targetUrl = isIOS ? APP_STORE_URL : isAndroid ? PLAY_STORE_URL : '';
 
-        // Capture redirect path for deferred deep linking
         var params = new URLSearchParams(window.location.search);
         var redirectPath = params.get('redirect');
 
         if (redirectPath) {
-        try {
+          try {
             localStorage.setItem('troddr_redirect', redirectPath);
-        } catch (e) {
+          } catch (e) {
             console.warn('Could not store redirect path', e);
+          }
         }
+
+        var deepLink = '';
+        if (redirectPath) {
+          var clean = redirectPath.replace(/^\/+/, '');
+          deepLink = 'troddrapp://' + clean;
         }
+
+        window.__TRODDR_DEEPLINK__ = deepLink;
+        window.__TRODDR_REDIRECT_PATH__ = redirectPath;
 
         window.addEventListener('DOMContentLoaded', function () {
           var statusEl = document.getElementById('redirect-status');
-          if (statusEl) {
-            if (isIOS) {
-              statusEl.textContent = 'Redirecting to the App Store…';
-            } else if (isAndroid) {
-              statusEl.textContent = 'Redirecting to Google Play…';
-            } else {
-              statusEl.textContent = 'Choose your store below.';
+          var deepLink = window.__TRODDR_DEEPLINK__;
+          var redirectPath = window.__TRODDR_REDIRECT_PATH__;
+          var dividerEl = document.getElementById('open-divider');
+
+          if (redirectPath && statusEl) {
+            if (redirectPath.indexOf('/events/') === 0) {
+              statusEl.textContent = 'Opening event in TRODDR';
+            } else if (redirectPath.indexOf('/specials/') === 0) {
+              statusEl.textContent = 'Opening experience in TRODDR';
+            } else if (redirectPath.indexOf('/itinerary/') === 0) {
+              statusEl.textContent = 'Opening your trip in TRODDR';
+            } else if (redirectPath.indexOf('/listings/') === 0) {
+              statusEl.textContent = 'Opening place in TRODDR';
+            } else if (redirectPath.indexOf('/guides/') === 0) {
+              statusEl.textContent = 'Opening guide in TRODDR';
             }
           }
 
-          if (targetUrl) {
+          var openBtn = document.getElementById('open-in-app');
+          if (openBtn && deepLink) {
+            openBtn.style.display = 'inline-flex';
+            openBtn.href = deepLink;
+            if (dividerEl) dividerEl.style.display = 'flex';
+          }
+
+          if (deepLink) {
+            window.location.href = deepLink;
+            if (targetUrl) {
+              window.setTimeout(function () {
+                window.location.replace(targetUrl);
+              }, 1200);
+            }
+          } else if (targetUrl) {
             window.setTimeout(function () {
               window.location.replace(targetUrl);
             }, 250);
@@ -156,37 +328,63 @@
     </script>
   </head>
   <body>
-    <main class="card">
-      <!-- <img
-        class="logo"
-        src="/TRODDR APP LOGO.png"
-        alt="TRODDR logo"
-      /> -->
-      <h1>Get the TRODDR app</h1>
-      <p>
-        Discover where to eat, stay, and explore across Jamaica. <br>If you are not redirected automatically,
-        choose your store below.
+    <main>
+      <div class="wordmark reveal reveal-1">troddr</div>
+
+      <h1 class="reveal reveal-2">Your Jamaica is in the app.</h1>
+
+      <p class="lede reveal reveal-3">
+        This link opens in TRODDR, Jamaica's curated travel guide. Open it below, or download the app for free.
       </p>
-      <div id="redirect-status" class="status">Checking your device…</div>
 
-      <div class="buttons">
-        <a
-          class="button button-primary"
-          href="https://apps.apple.com/app/troddr/id6751852075"
-        >
-          Download on the App Store
-        </a>
-        <a
-          class="button button-secondary"
-          href="https://play.google.com/store/apps/details?id=com.troddr.app"
-        >
-          Get it on Google Play
-        </a>
+      <div class="status-wrap reveal reveal-3">
+        <span id="redirect-status" class="status">Checking your device</span>
       </div>
 
-      <div class="note">
-        Works best from your phone.
+      <div class="buttons reveal reveal-4">
+        <a
+          id="open-in-app"
+          class="btn-open"
+          href="#"
+          style="display:none;"
+        >
+          Open in TRODDR
+        </a>
+
+        <div
+          id="open-divider"
+          class="divider"
+          style="display:none;"
+          aria-hidden="true"
+        >
+          or get the app
+        </div>
+
+        <div class="store-badges">
+          <a
+            class="btn-store btn-appstore"
+            href="https://apps.apple.com/app/troddr/id6751852075"
+          >
+            <img
+              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+              alt="Download on the App Store"
+            />
+          </a>
+          <a
+            class="btn-store btn-playstore"
+            href="https://play.google.com/store/apps/details?id=com.troddr.app"
+          >
+            <img
+              src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+              alt="Get it on Google Play"
+            />
+          </a>
+        </div>
       </div>
+
+      <p class="note reveal reveal-6">
+        Experience Jamaica like a local
+      </p>
     </main>
   </body>
 </html>
