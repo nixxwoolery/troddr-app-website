@@ -1,17 +1,15 @@
 {
   "applinks": {
-    "apps": [],
     "details": [
       {
-        "appID": "LGZSYFY5GQ.com.nixxwoolery.troddrapp",
-        "paths": [
-          "/reset-password",
-          "/reset-password/*",
-          "/listings/*",
-          "/guides/*",
-          "/events/*",
-          "/specials/*",
-          "/itinerary/*"
+        "appIDs": ["LGZSYFY5GQ.com.nixxwoolery.troddrapp"],
+        "components": [
+          { "/": "/events/*" },
+          { "/": "/listings/*" },
+          { "/": "/guides/*" },
+          { "/": "/specials/*" },
+          { "/": "/itinerary/*" },
+          { "/": "/reset-password/*" }
         ]
       }
     ]
