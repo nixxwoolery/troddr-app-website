@@ -74,7 +74,8 @@
       },
       { "source": "/dashboard", "destination": "/dashboard.html" },
       { "source": "/event-onboarding", "destination": "/event-onboarding.html" },
-      { "source": "/reset-password", "destination": "/reset-password.html" }
+      { "source": "/reset-password", "destination": "/reset-password.html" },
+      { "source": "/app", "destination": "/app.html" }
     ],
   "redirects": [
     {
