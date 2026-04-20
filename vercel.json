@@ -87,7 +87,7 @@
           "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
         }
       ],
-      "destination": "/app",
+      "destination": "/app?redirect=/events/:slug",
       "permanent": false
     },
     {
@@ -99,12 +99,12 @@
           "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
         }
       ],
-      "destination": "/app",
+      "destination": "/app?redirect=/specials/:slug",
       "permanent": false
     },
     {
       "source": "/trip/:id",
-      "destination": "/app",
+      "destination": "/app?redirect=/trip/:id",
       "permanent": false
     },
     {
