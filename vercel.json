@@ -79,6 +79,23 @@
     ],
   "redirects": [
     {
+      "source": "/events/:slug",
+      "missing": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+        }
+      ],
+      "destination": "/app",
+      "permanent": false
+    },
+    {
+      "source": "/trip/:id",
+      "destination": "/app",
+      "permanent": false
+    },
+    {
       "source": "/listings.html",
       "destination": "/listings/:slug",
       "has": [{ "type": "query", "key": "slug" }],
