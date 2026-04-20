@@ -108,6 +108,18 @@
       "permanent": false
     },
     {
+      "source": "/itinerary/:token",
+      "missing": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+        }
+      ],
+      "destination": "/app?redirect=/itinerary/:token",
+      "permanent": false
+    },
+    {
       "source": "/listings.html",
       "destination": "/listings/:slug",
       "has": [{ "type": "query", "key": "slug" }],
