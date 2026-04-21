@@ -278,7 +278,8 @@
         var deepLink = '';
         if (redirectPath) {
           var clean = redirectPath.replace(/^\/+/, '');
-          deepLink = 'troddrapp://' + clean;
+
+          deepLink = 'troddrapp://' + clean + window.location.search;
         }
 
         window.__TRODDR_DEEPLINK__ = deepLink;
