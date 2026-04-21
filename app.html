@@ -285,7 +285,7 @@
 
           const token = params.get('token'); // reuse existing params above
 
-          deepLink = `troddrapp://${clean}${token ? `?token=${token}` : ''}`;
+          deepLink = `troddr://${clean}${token ? `?token=${token}` : ''}`;
         }
 
         window.__TRODDR_DEEPLINK__ = deepLink;
