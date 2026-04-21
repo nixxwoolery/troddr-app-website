@@ -334,15 +334,28 @@
             openBtn.addEventListener('click', function (e) {
               e.preventDefault();
 
-              // Attempt to open app
-              window.location.href = deepLink;
+              // Use a transient link click - iOS treats this as a handoff,
+              // not a page navigation
+              var a = document.createElement('a');
+              a.href = deepLink;
+              a.style.display = 'none';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
 
-              // Fallback to store if app is not installed
-              if (targetUrl) {
-                setTimeout(function () {
+              // Fallback to store if the app doesn't open within 1.5s
+              var fallbackTimer = setTimeout(function () {
+                if (!document.hidden && targetUrl) {
                   window.location.href = targetUrl;
-                }, 1500);
-              }
+                }
+              }, 1500);
+
+              // If the app opens, cancel the fallback
+              document.addEventListener('visibilitychange', function () {
+                if (document.hidden) {
+                  clearTimeout(fallbackTimer);
+                }
+              }, { once: true });
             });
           }
 
