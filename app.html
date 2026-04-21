@@ -270,6 +270,10 @@
         if (redirectPath) {
           try {
             localStorage.setItem('troddr_redirect', redirectPath);
+            const token = params.get('token');
+            if (token) {
+              localStorage.setItem('troddr_token', token);
+            }
           } catch (e) {
             console.warn('Could not store redirect path', e);
           }
