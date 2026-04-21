@@ -283,7 +283,10 @@
         if (redirectPath) {
           var clean = redirectPath.replace(/^\/+/, '');
 
-          deepLink = 'troddrapp://' + clean + window.location.search;
+          const params = new URLSearchParams(window.location.search);
+          const token = params.get('token');
+
+          deepLink = `troddrapp://${clean}${token ? `?token=${token}` : ''}`;
         }
 
         window.__TRODDR_DEEPLINK__ = deepLink;
