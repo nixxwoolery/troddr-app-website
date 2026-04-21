@@ -335,7 +335,10 @@
               e.preventDefault();
 
               // Attempt to open app
-              window.location.href = deepLink;
+              var iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = deepLink;
+                document.body.appendChild(iframe);
 
               // Fallback to store if app is not installed
               if (targetUrl) {
