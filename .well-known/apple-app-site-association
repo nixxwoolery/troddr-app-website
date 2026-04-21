@@ -4,7 +4,6 @@
       {
         "appIDs": ["LGZSYFY5GQ.com.nixxwoolery.troddrapp"],
         "components": [
-          { "/": "*" },
           { "/": "/events/*" },
           { "/": "/listings/*" },
           { "/": "/guides/*" },
