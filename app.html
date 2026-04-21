@@ -267,6 +267,20 @@
         var params = new URLSearchParams(window.location.search);
         var redirectPath = params.get('redirect');
 
+        // Fallback: if no explicit redirect param, derive from current path (e.g. /itinerary/:id)
+        if (!redirectPath) {
+          var pathname = window.location.pathname || '';
+          if (
+            pathname.indexOf('/itinerary/') === 0 ||
+            pathname.indexOf('/events/') === 0 ||
+            pathname.indexOf('/listings/') === 0 ||
+            pathname.indexOf('/guides/') === 0 ||
+            pathname.indexOf('/specials/') === 0
+          ) {
+            redirectPath = pathname;
+          }
+        }
+
         if (redirectPath) {
           try {
             localStorage.setItem('troddr_redirect', redirectPath);
@@ -281,11 +295,12 @@
 
         var deepLink = '';
         if (redirectPath) {
-          var clean = redirectPath.replace(/^\/+/, '');
+          // Strip leading slashes and any existing query string from the path
+          var clean = redirectPath.replace(/^\/+/, '').split('?')[0];
 
-          const token = params.get('token'); // reuse existing params above
+          var token = params.get('token');
 
-          deepLink = `troddrapp://${clean}${token ? `?token=${token}` : ''}`;
+          deepLink = 'troddrapp://' + clean + (token ? '?token=' + encodeURIComponent(token) : '');
         }
 
         window.__TRODDR_DEEPLINK__ = deepLink;
