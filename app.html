@@ -294,13 +294,14 @@
         }
 
         var deepLink = '';
-          if (redirectPath) {
-            var clean = redirectPath.replace(/^\/+/, '').split('?')[0];
-            var token = params.get('token');
-            // Use HTTPS URL - iOS routes via Universal Links, Android via App Links
-            // No "address is invalid" alert because it's a real web URL
-            deepLink = 'https://www.troddr.com/' + clean + (token ? '?token=' + encodeURIComponent(token) : '');
-          }
+        if (redirectPath) {
+          // Strip leading slashes and any existing query string from the path
+          var clean = redirectPath.replace(/^\/+/, '').split('?')[0];
+
+          var token = params.get('token');
+
+          deepLink = 'troddrapp://' + clean + (token ? '?token=' + encodeURIComponent(token) : '');
+        }
 
         window.__TRODDR_DEEPLINK__ = deepLink;
         window.__TRODDR_REDIRECT_PATH__ = redirectPath;
