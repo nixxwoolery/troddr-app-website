@@ -4,13 +4,14 @@
       {
         "appIDs": ["LGZSYFY5GQ.com.nixxwoolery.troddrapp"],
         "components": [
-          { "/": "/itinerary/*" },
+          { "/": "*" },
           { "/": "/events/*" },
-          { "/": "/specials/*" },
           { "/": "/listings/*" },
           { "/": "/guides/*" },
+          { "/": "/specials/*" },
+          { "/": "/itinerary/*" },
           { "/": "/trip_view/*" },
-          { "/": "/reset-password" }
+          { "/": "/reset-password/*" }
         ]
       }
     ]
