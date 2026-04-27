@@ -38,7 +38,7 @@ export const config = {
   function makeAbsolute(url) {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    return `https://troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
+    return `https://www.troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
   }
   
   function getImageUrl(guide) {
