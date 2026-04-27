@@ -68,7 +68,7 @@ export const config = {
   function makeAbsolute(url) {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    return `https://troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
+    return `https://www.troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
   }
   
   function getImageUrl(itinerary) {
@@ -159,7 +159,7 @@ export const config = {
       });
     }
     
-    const baseUrl = 'https://troddr.com';
+    const baseUrl = 'https://www.troddr.com';
     const title = itinerary?.title || 'My Jamaica Trip';
     const destination = itinerary?.destination || 'Jamaica';
     const itemsCount = itinerary?.items?.length || itinerary?.items_count || '';

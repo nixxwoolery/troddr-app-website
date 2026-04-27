@@ -118,7 +118,7 @@ export const config = {
       });
     }
     
-    const baseUrl = 'https://troddr.com';
+    const baseUrl = 'https://www.troddr.com';
     const title = guide?.title || decodedSlug.replace(/-/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
     const location = guide?.location || guide?.destination || '';
     
