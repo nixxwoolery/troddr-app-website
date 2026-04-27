@@ -1,12 +1,16 @@
 [
-    {
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "com.troddr.app",
-        "sha256_cert_fingerprints": [
-            "EE:07:82:CE:80:8B:CA:D7:B5:2D:26:62:9A:EB:AA:1E:1A:4E:F8:B3:BE:43:53:98:6A:97:8F:01:04:5B:9E:A3"
-        ]
-      }
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.troddr.app",
+      "sha256_cert_fingerprints": [
+        "EE:07:82:CE:80:8B:CA:D7:B5:2D:26:62:9A:EB:AA:1E:1A:4E:F8:B3:BE:43:53:98:6A:97:8F:01:04:5B:9E:A3",
+        "F2:D1:5B:53:A9:0C:E5:67:79:2A:34:27:1C:F0:8E:A9:68:35:95:A8:DD:75:64:78:09:BD:A7:60:82:E7:C5:E3"
+      ]
     }
-  ]
+  }
+]
