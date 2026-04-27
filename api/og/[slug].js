@@ -65,7 +65,7 @@ async function fetchPlace(slug) {
 function makeAbsolute(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
-  return `https://troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
+  return `https://www.troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
 // Match your original image parsing logic from api/listing-og.js
@@ -154,7 +154,7 @@ export default async function handler(request) {
     });
   }
   
-  const baseUrl = 'https://troddr.com';
+  const baseUrl = 'https://www.troddr.com';
   const name = place?.name || decodedSlug.replace(/-/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
   const location = [place?.town, place?.parish].filter(Boolean).join(', ');
   
