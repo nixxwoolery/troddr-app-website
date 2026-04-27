@@ -52,7 +52,7 @@ export const config = {
   function makeAbsolute(url) {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    return `https://troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
+    return `https://www.troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
   }
   
   function getImageUrl(special) {
@@ -131,7 +131,7 @@ export const config = {
       });
     }
     
-    const baseUrl = 'https://troddr.com';
+    const baseUrl = 'https://www.troddr.com';
     const title = special?.title || special?.name || decodedSlug.replace(/-/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
     const placeName = special?.place_name || special?.restaurant_name || '';
     
