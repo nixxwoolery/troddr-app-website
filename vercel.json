@@ -72,6 +72,10 @@
         "source": "/events/:slug",
         "destination": "/events.html"
       },
+      {
+        "source": "/checkin/:tag",
+        "destination": "/checkin.html"
+      },
       { "source": "/dashboard", "destination": "/dashboard.html" },
       { "source": "/event-onboarding", "destination": "/event-onboarding.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" },
@@ -117,6 +121,11 @@
         }
       ],
       "destination": "/app?redirect=/itinerary/:token",
+      "permanent": false
+    },
+    {
+      "source": "/checkin/:tag",
+      "destination": "/app?redirect=/checkin/:tag",
       "permanent": false
     },
     {
