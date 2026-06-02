@@ -31,6 +31,12 @@ const TRODDR_EMAIL    = 'hello@troddr.com';
 const FROM_EMAIL      = 'TRODDR Bookings <bookings@troddr.com>';
 const PARTNER_URL     = 'https://www.troddr.com/booking';
 const INBOX_URL       = 'https://www.troddr.com/partner/bookings';
+// IATA TIDS — Travel Industry Designator Service identifier. Surfaces in
+// every partner-facing email so hotel reservations desks recognize TRODDR
+// as a registered travel intermediary. Not accreditation (TIDS is the
+// lightweight free tier), but enough to land us in their booking systems
+// as a known referral source.
+const TIDS_NUMBER     = '96232334';
 
 // Email copy per booking_type. eyebrow = the small caps label, request =
 // the human noun used in the subject line and email heading. Add an entry
@@ -230,7 +236,8 @@ function partnerHtml({ booking, place, link, copy, inboxLink }: any) {
       <div style="border-top: 1px solid #e8e8e8; padding-top: 18px;">
         <p style="font-size: 12px; color: #888; margin: 0; line-height: 1.6;">
           <strong>How it works:</strong> click the link to respond. The guest gets a push notification.
-          Payment is collected at the property on arrival — TRODDR doesn't process payment.
+          TRODDR is a lead-referral service — payment is collected by the property on arrival,
+          no commission owed.
         </p>
         ${inboxLink ? `
         <p style="font-size: 13px; color: #555; margin: 16px 0 0;">
@@ -240,6 +247,17 @@ function partnerHtml({ booking, place, link, copy, inboxLink }: any) {
         <p style="font-size: 12px; color: #888; margin: 14px 0 0;">
           Reply directly to this email to contact the guest, or reach TRODDR at
           <a href="mailto:${TRODDR_EMAIL}" style="color: #0077CC;">${TRODDR_EMAIL}</a>.
+        </p>
+
+        <p style="margin: 20px 0 0; text-align: center;">
+          <span style="display: inline-block;
+                       font-family: 'SF Mono', Menlo, Consolas, monospace;
+                       font-size: 10px; letter-spacing: 0.08em;
+                       color: #888; background: #f6f7f9;
+                       border: 1px solid #e8e8e8;
+                       padding: 5px 12px; border-radius: 4px;">
+            IATA&nbsp;TIDS&nbsp;${TIDS_NUMBER}
+          </span>
         </p>
       </div>
     </div>
