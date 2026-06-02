@@ -556,6 +556,17 @@
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
   }
 
+  // places.image is a Postgres text-array literal — "{url1,url2,url3}" — when
+  // a curator set multiple images, or a plain URL when there's only one. We
+  // just want the first image for the property thumbnail; this handles both.
+  function firstImage(s) {
+    if (!s) return null;
+    if (s.startsWith('{') && s.endsWith('}')) {
+      return s.slice(1, -1).split(',')[0].trim().replace(/^"|"$/g, '');
+    }
+    return s;
+  }
+
   // ── Booking-type copy (matches notify-partner-booking edge fn) ─────────
   const TYPE_COPY = {
     day_pass:   { eyebrow: 'Day Pass Request',    request: 'day pass request',     heroPrefix: 'A guest has requested a day pass' },
@@ -595,7 +606,7 @@
       return;
     }
 
-    const { data, error } = await db.rpc('get_day_pass_booking_by_token', { p_token: token });
+    const { data, error } = await db.rpc('get_booking_by_token', { p_token: token });
     if (error || !data || !data.length) {
       hide('view-loading'); show('view-error');
       $('hero-title').textContent = 'Booking not found';
@@ -632,7 +643,8 @@
     // Property
     $('prop-name').textContent = b.place_name;
     $('prop-loc').textContent  = [b.place_town, b.place_parish].filter(Boolean).join(', ') || b.place_address || '';
-    if (b.place_image) $('prop-img').style.backgroundImage = `url('${b.place_image}')`;
+    const img = firstImage(b.place_image);
+    if (img) $('prop-img').style.backgroundImage = `url('${img}')`;
 
     // Summary
     $('sum-date-label').textContent = b.checkout_date ? 'Check-in' : 'Date';
@@ -718,7 +730,7 @@
       }
 
       btn.disabled = true;
-      const { data, error } = await db.rpc('respond_to_day_pass_booking', params);
+      const { data, error } = await db.rpc('respond_to_booking', params);
 
       if (error) {
         btn.disabled = false;

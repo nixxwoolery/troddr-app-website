@@ -412,13 +412,13 @@
       return;
     }
 
-    const [{ data: places, error: placeErr },
+    const [{ data: partners, error: partnerErr },
            { data: bookings, error: bookErr }] = await Promise.all([
-      db.rpc('get_place_by_partner_token',    { p_token: token }),
+      db.rpc('get_partner_by_token',          { p_token: token }),
       db.rpc('get_bookings_by_partner_token', { p_token: token }),
     ]);
 
-    if (placeErr || !places || !places.length) {
+    if (partnerErr || !partners || !partners.length) {
       hide('view-loading'); show('view-error');
       return;
     }
@@ -427,10 +427,10 @@
       return;
     }
 
-    const place = places[0];
+    const place = partners[0];
     allBookings = bookings || [];
 
-    $('hero-title').textContent = `${place.name} — Booking Inbox`;
+    $('hero-title').textContent = `${place.place_name} — Booking Inbox`;
     $('hero-sub').textContent   = allBookings.length === 1
       ? '1 booking'
       : `${allBookings.length} bookings`;
