@@ -78,7 +78,7 @@
       },
       { "source": "/dashboard", "destination": "/dashboard.html" },
       { "source": "/event-onboarding", "destination": "/event-onboarding.html" },
-      { "source": "/day-pass-booking", "destination": "/day-pass-booking.html" },
+      { "source": "/booking", "destination": "/booking.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" },
       { "source": "/app", "destination": "/app.html" }
     ],
@@ -153,8 +153,8 @@
       "permanent": true
     },
     {
-      "source": "/day-pass-booking.html",
-      "destination": "/day-pass-booking",
+      "source": "/booking.html",
+      "destination": "/booking",
       "permanent": true
     }
   ],

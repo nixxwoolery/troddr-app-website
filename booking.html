@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TRODDR — Day Pass Request</title>
+<title>TRODDR — Booking Request</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -364,7 +364,7 @@
 
 <section class="page-hero">
   <div class="hero-inner">
-    <span class="hero-eyebrow">Day Pass Request</span>
+    <span class="hero-eyebrow" id="hero-eyebrow">Booking Request</span>
     <h1 id="hero-title">Loading request…</h1>
     <p id="hero-sub">One moment while we pull up the details.</p>
   </div>
@@ -410,8 +410,12 @@
       <div class="card-title">Booking Request</div>
       <div class="summary-grid">
         <div class="summary-row">
-          <span class="summary-label">Date</span>
+          <span class="summary-label" id="sum-date-label">Date</span>
           <span class="summary-value" id="sum-date"></span>
+        </div>
+        <div class="summary-row hidden" id="sum-checkout-row">
+          <span class="summary-label">Check-out</span>
+          <span class="summary-value" id="sum-checkout"></span>
         </div>
         <div class="summary-row">
           <span class="summary-label">Preferred Time</span>
@@ -552,6 +556,15 @@
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
   }
 
+  // ── Booking-type copy (matches notify-partner-booking edge fn) ─────────
+  const TYPE_COPY = {
+    day_pass:   { eyebrow: 'Day Pass Request',    request: 'day pass request',     heroPrefix: 'A guest has requested a day pass' },
+    restaurant: { eyebrow: 'Reservation Request', request: 'reservation request',  heroPrefix: 'A guest has requested a reservation' },
+    stay:       { eyebrow: 'Stay Request',        request: 'stay request',         heroPrefix: 'A guest has requested a stay' },
+    activity:   { eyebrow: 'Activity Request',    request: 'activity request',     heroPrefix: 'A guest has requested an activity' },
+  };
+  const typeCopy = (t) => TYPE_COPY[t] || TYPE_COPY.day_pass;
+
   // ── Status → final-state copy ───────────────────────────────
   const FINAL_STATES = {
     confirmed:        { icon: '✓', cls: 'success', title: 'Booking Confirmed',
@@ -594,9 +607,14 @@
   }
 
   function render(b) {
-    // Hero
-    $('hero-title').textContent = `Day Pass Request — ${b.place_name}`;
-    $('hero-sub').textContent   = `A guest has requested a day pass for ${fmtDate(b.visit_date)}.`;
+    // Hero — driven by booking_type
+    const tc = typeCopy(b.booking_type);
+    $('hero-eyebrow').textContent = tc.eyebrow;
+    $('hero-title').textContent   = `${tc.eyebrow} — ${b.place_name}`;
+    const dateRange = b.checkout_date
+      ? `${fmtDate(b.visit_date)} → ${fmtDate(b.checkout_date)}`
+      : fmtDate(b.visit_date);
+    $('hero-sub').textContent     = `${tc.heroPrefix} for ${dateRange}.`;
 
     // Already-responded short-circuit
     if (b.status !== 'pending') {
@@ -617,7 +635,12 @@
     if (b.place_image) $('prop-img').style.backgroundImage = `url('${b.place_image}')`;
 
     // Summary
-    $('sum-date').textContent    = fmtDate(b.visit_date);
+    $('sum-date-label').textContent = b.checkout_date ? 'Check-in' : 'Date';
+    $('sum-date').textContent       = fmtDate(b.visit_date);
+    if (b.checkout_date) {
+      $('sum-checkout').textContent = fmtDate(b.checkout_date);
+      show('sum-checkout-row');
+    }
     $('sum-time').textContent    = b.visit_time || 'Any time';
     $('sum-party').textContent   = b.party_size === 1 ? '1 guest' : `${b.party_size} guests`;
     $('sum-guest').textContent   = b.guest_name;

@@ -5,9 +5,10 @@
 // partner an email with a confirm/decline/counter link, then emails
 // hello@troddr.com for internal visibility.
 //
-// v1 handles booking_type = 'day_pass' only. When restaurant/stay/activity
-// types come online, branch on booking_type to vary email copy and the
-// destination URL.
+// All booking types share the same partner page (troddr.com/booking) —
+// it's type-agnostic (loads booking by token, shows summary, three actions).
+// Email copy varies per booking_type via TYPE_COPY below. When a new
+// booking_type ships, add an entry there.
 //
 // Deploy:  supabase functions deploy notify-partner-booking
 //
@@ -28,10 +29,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const TRODDR_EMAIL = 'hello@troddr.com';
 const FROM_EMAIL   = 'TRODDR Bookings <bookings@troddr.com>';
+const PARTNER_URL  = 'https://www.troddr.com/booking';
 
-// One URL per booking_type. Add entries as new types come online.
-const PARTNER_URLS: Record<string, string> = {
-  day_pass: 'https://www.troddr.com/day-pass-booking',
+// Email copy per booking_type. eyebrow = the small caps label, request =
+// the human noun used in the subject line and email heading. Add an entry
+// whenever a new booking_type goes live.
+const TYPE_COPY: Record<string, { eyebrow: string; request: string }> = {
+  day_pass:   { eyebrow: 'Day Pass Request',   request: 'day pass request' },
+  restaurant: { eyebrow: 'Reservation Request', request: 'reservation request' },
+  stay:       { eyebrow: 'Stay Request',        request: 'stay request' },
+  activity:   { eyebrow: 'Activity Request',    request: 'activity request' },
 };
 
 const corsHeaders = {
@@ -54,11 +61,10 @@ Deno.serve(async (req) => {
       return ok({ skipped: true, reason: `status=${booking.status}` });
     }
 
-    // v1 guard: only day_pass bookings get partner emails. Other types
-    // will need their own branding/copy + a partner page route before
-    // this fires for them.
-    const partnerUrl = PARTNER_URLS[booking.booking_type];
-    if (!partnerUrl) {
+    // Reject unknown types so we never email a partner about a record
+    // whose copy we haven't defined yet.
+    const copy = TYPE_COPY[booking.booking_type];
+    if (!copy) {
       return ok({ skipped: true, reason: `unsupported booking_type=${booking.booking_type}` });
     }
 
@@ -84,22 +90,22 @@ Deno.serve(async (req) => {
     const resendKey = Deno.env.get('RESEND_API_KEY');
     if (!resendKey) throw new Error('RESEND_API_KEY not set');
 
-    const link = `${partnerUrl}?token=${booking.token}`;
+    const link = `${PARTNER_URL}?token=${booking.token}`;
 
     // ── EMAIL 1: Partner ─────────────────────────────────────
     await sendEmail(resendKey, {
       from: FROM_EMAIL,
       to: place.bookings_email,
       reply_to: booking.guest_email,
-      subject: `New day pass request — ${place.name} (${fmtDate(booking.visit_date)})`,
-      html: partnerHtml({ booking, place, link }),
+      subject: `New ${copy.request} — ${place.name} (${fmtDate(booking.visit_date)})`,
+      html: partnerHtml({ booking, place, link, copy }),
     });
 
     // ── EMAIL 2: Internal ────────────────────────────────────
     await sendEmail(resendKey, {
       from: FROM_EMAIL,
       to: TRODDR_EMAIL,
-      subject: `[TRODDR] ${booking.booking_type} request → ${place.name}`,
+      subject: `[TRODDR] ${copy.request} → ${place.name}`,
       html: internalHtml({ booking, place, link }),
     });
 
@@ -169,7 +175,7 @@ async function sendInternalMissingInbox(booking: any, place: any) {
 }
 
 // ── Email templates ─────────────────────────────────────────────
-function partnerHtml({ booking, place, link }: any) {
+function partnerHtml({ booking, place, link, copy }: any) {
   const placeLoc = [place.town, place.parish].filter(Boolean).join(', ') || place.address || '';
   const guestContact = [booking.guest_email, booking.guest_phone].filter(Boolean).join(' · ');
 
@@ -177,15 +183,15 @@ function partnerHtml({ booking, place, link }: any) {
   <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #111;">
     <div style="background: #0077CC; padding: 28px 36px; border-radius: 12px 12px 0 0;">
       <p style="color: #fff; font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">troddr</p>
-      <p style="color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin: 6px 0 0;">Day Pass Request</p>
+      <p style="color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin: 6px 0 0;">${esc(copy.eyebrow)}</p>
     </div>
 
     <div style="background: #fff; padding: 36px; border: 1px solid #e8e8e8; border-top: none; border-radius: 0 0 12px 12px;">
       <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 8px; color: #111;">
-        New day pass request
+        New ${esc(copy.request)}
       </h2>
       <p style="font-size: 15px; color: #555; margin: 0 0 24px; line-height: 1.6;">
-        A TRODDR user wants to book a day pass at <strong>${esc(place.name)}</strong>.
+        A TRODDR user has sent a ${esc(copy.request)} for <strong>${esc(place.name)}</strong>.
         ${placeLoc ? `<br><span style="font-size:13px; color:#888;">${esc(placeLoc)}</span>` : ''}
       </p>
 
