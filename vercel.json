@@ -79,6 +79,7 @@
       { "source": "/dashboard", "destination": "/dashboard.html" },
       { "source": "/event-onboarding", "destination": "/event-onboarding.html" },
       { "source": "/booking", "destination": "/booking.html" },
+      { "source": "/partner/bookings", "destination": "/partner-bookings.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" },
       { "source": "/app", "destination": "/app.html" }
     ],
@@ -155,6 +156,11 @@
     {
       "source": "/booking.html",
       "destination": "/booking",
+      "permanent": true
+    },
+    {
+      "source": "/partner-bookings.html",
+      "destination": "/partner/bookings",
       "permanent": true
     }
   ],

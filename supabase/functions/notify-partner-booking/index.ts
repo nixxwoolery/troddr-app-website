@@ -27,9 +27,10 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const TRODDR_EMAIL = 'hello@troddr.com';
-const FROM_EMAIL   = 'TRODDR Bookings <bookings@troddr.com>';
-const PARTNER_URL  = 'https://www.troddr.com/booking';
+const TRODDR_EMAIL    = 'hello@troddr.com';
+const FROM_EMAIL      = 'TRODDR Bookings <bookings@troddr.com>';
+const PARTNER_URL     = 'https://www.troddr.com/booking';
+const INBOX_URL       = 'https://www.troddr.com/partner/bookings';
 
 // Email copy per booking_type. eyebrow = the small caps label, request =
 // the human noun used in the subject line and email heading. Add an entry
@@ -76,7 +77,7 @@ Deno.serve(async (req) => {
 
     const { data: place, error: placeErr } = await supa
       .from('places')
-      .select('id, slug, name, address, town, parish, image, bookings_email, day_pass_price, day_pass_hours, day_pass_notes')
+      .select('id, slug, name, address, town, parish, image, bookings_email, partner_access_token, day_pass_price, day_pass_hours, day_pass_notes')
       .eq('id', booking.place_id)
       .single();
 
@@ -90,7 +91,10 @@ Deno.serve(async (req) => {
     const resendKey = Deno.env.get('RESEND_API_KEY');
     if (!resendKey) throw new Error('RESEND_API_KEY not set');
 
-    const link = `${PARTNER_URL}?token=${booking.token}`;
+    const link      = `${PARTNER_URL}?token=${booking.token}`;
+    const inboxLink = place.partner_access_token
+      ? `${INBOX_URL}?token=${place.partner_access_token}`
+      : null;
 
     // ── EMAIL 1: Partner ─────────────────────────────────────
     await sendEmail(resendKey, {
@@ -98,7 +102,7 @@ Deno.serve(async (req) => {
       to: place.bookings_email,
       reply_to: booking.guest_email,
       subject: `New ${copy.request} — ${place.name} (${fmtDate(booking.visit_date)})`,
-      html: partnerHtml({ booking, place, link, copy }),
+      html: partnerHtml({ booking, place, link, copy, inboxLink }),
     });
 
     // ── EMAIL 2: Internal ────────────────────────────────────
@@ -175,7 +179,7 @@ async function sendInternalMissingInbox(booking: any, place: any) {
 }
 
 // ── Email templates ─────────────────────────────────────────────
-function partnerHtml({ booking, place, link, copy }: any) {
+function partnerHtml({ booking, place, link, copy, inboxLink }: any) {
   const placeLoc = [place.town, place.parish].filter(Boolean).join(', ') || place.address || '';
   const guestContact = [booking.guest_email, booking.guest_phone].filter(Boolean).join(' · ');
 
@@ -228,6 +232,11 @@ function partnerHtml({ booking, place, link, copy }: any) {
           <strong>How it works:</strong> click the link to respond. The guest gets a push notification.
           Payment is collected at the property on arrival — TRODDR doesn't process payment.
         </p>
+        ${inboxLink ? `
+        <p style="font-size: 13px; color: #555; margin: 16px 0 0;">
+          📋 <a href="${esc(inboxLink)}" style="color: #0077CC; font-weight: 600; text-decoration: none;">See all your TRODDR bookings →</a>
+          <br><span style="font-size: 11px; color: #999;">Bookmark this link to manage every request in one place.</span>
+        </p>` : ''}
         <p style="font-size: 12px; color: #888; margin: 14px 0 0;">
           Reply directly to this email to contact the guest, or reach TRODDR at
           <a href="mailto:${TRODDR_EMAIL}" style="color: #0077CC;">${TRODDR_EMAIL}</a>.

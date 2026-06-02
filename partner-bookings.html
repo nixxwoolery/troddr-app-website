@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR — Booking Inbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --blue:        #0077CC;
+    --blue-dark:   #005fa3;
+    --blue-light:  #e8f4ff;
+    --blue-mid:    #cce5f6;
+    --gold:        #C3D600;
+    --green:       #1a7f4e;
+    --green-light: #e6f5ec;
+    --red:         #c0392b;
+    --red-light:   #fdecea;
+    --amber:       #b86e00;
+    --amber-light: #fff4e0;
+    --black:       #111111;
+    --grey-dark:   #333333;
+    --grey-mid:    #666666;
+    --grey-light:  #999999;
+    --border:      #e8e8e8;
+    --bg:          #ffffff;
+    --bg-soft:     #f8f9fa;
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
+    --shadow:      0 4px 16px rgba(0,0,0,0.08);
+    --shadow-md:   0 8px 32px rgba(0,0,0,0.1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky; top: 0; z-index: 200;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .navbar {
+    max-width: 1160px; margin: 0 auto;
+    padding: 0 24px; height: 64px;
+    display: flex; align-items: center; gap: 32px;
+  }
+  .logo {
+    font-size: 30px; font-weight: 700;
+    color: var(--blue); text-decoration: none;
+    letter-spacing: -1px;
+  }
+  .nav-badge {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 8px;
+    border: 1px solid var(--blue-mid);
+    margin-left: auto;
+  }
+
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--blue);
+    padding: 44px 24px 56px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .page-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(0,0,0,0.08) 0%, transparent 50%);
+  }
+  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.95);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 20px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .page-hero h1 {
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 700; color: #fff;
+    line-height: 1.2; margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .page-hero p {
+    color: rgba(255,255,255,0.82);
+    font-size: 14px; font-weight: 300;
+  }
+
+  /* ── PAGE LAYOUT ── */
+  .page {
+    max-width: 760px;
+    margin: -28px auto 96px;
+    padding: 0 16px;
+    position: relative; z-index: 10;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    margin-bottom: 14px;
+  }
+
+  /* ── FILTER CHIPS ── */
+  .filter-bar {
+    display: flex; gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .chip {
+    padding: 8px 14px;
+    border-radius: 100px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    color: var(--grey-mid);
+    transition: all 0.15s;
+    user-select: none;
+    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip:hover { border-color: var(--blue); color: var(--blue); }
+  .chip.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  .chip-count {
+    background: rgba(0,0,0,0.08);
+    padding: 1px 7px;
+    border-radius: 100px;
+    font-size: 11px; font-weight: 700;
+  }
+  .chip.active .chip-count { background: rgba(255,255,255,0.25); }
+
+  /* ── BOOKING ROW ── */
+  .booking-row {
+    display: block;
+    text-decoration: none; color: inherit;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .booking-row:hover {
+    border-color: var(--blue);
+    box-shadow: var(--shadow);
+    transform: translateY(-1px);
+  }
+  .row-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .row-date {
+    font-size: 15px; font-weight: 700;
+    color: var(--black);
+  }
+  .row-meta {
+    font-size: 12px; color: var(--grey-mid);
+    margin-top: 2px;
+  }
+  .row-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .row-guest {
+    color: var(--grey-dark);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .row-arrow {
+    color: var(--blue);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  /* ── STATUS BADGE ── */
+  .badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .badge-pending          { background: var(--amber-light); color: var(--amber); }
+  .badge-confirmed        { background: var(--green-light); color: var(--green); }
+  .badge-declined         { background: var(--red-light);   color: var(--red); }
+  .badge-counter_proposed { background: var(--blue-light);  color: var(--blue); }
+  .badge-counter_accepted { background: var(--green-light); color: var(--green); }
+  .badge-counter_rejected { background: var(--red-light);   color: var(--red); }
+  .badge-cancelled        { background: #f0f0f0;            color: var(--grey-mid); }
+  .badge-expired          { background: #f0f0f0;            color: var(--grey-mid); }
+
+  /* ── BOOKING-TYPE PILL ── */
+  .type-pill {
+    display: inline-block;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--grey-mid);
+    background: var(--bg-soft);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+
+  /* ── STATES ── */
+  .state {
+    text-align: center; padding: 40px 24px;
+  }
+  .state-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    font-size: 28px;
+    background: var(--blue-light); color: var(--blue);
+  }
+  .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .state-msg   { font-size: 14px; color: var(--grey-mid); max-width: 360px; margin: 0 auto; }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+
+  .page-foot {
+    text-align: center;
+    font-size: 12px; color: var(--grey-light);
+    padding: 20px 24px 40px;
+  }
+  .page-foot a { color: var(--grey-mid); }
+
+  @media (max-width: 520px) {
+    .navbar { padding: 0 16px; gap: 16px; }
+    .logo { font-size: 24px; }
+    .card, .booking-row { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Booking Inbox</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Partner Inbox</span>
+    <h1 id="hero-title">Loading…</h1>
+    <p id="hero-sub">Pulling up your bookings.</p>
+  </div>
+</section>
+
+<main class="page">
+
+  <!-- LOADING -->
+  <div id="view-loading" class="card state">
+    <div class="spinner"></div>
+    <div class="state-msg">Loading your inbox…</div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="view-error" class="card state hidden">
+    <div class="state-icon" style="background:var(--red-light); color:var(--red);">⚠️</div>
+    <div class="state-title">We couldn't load this inbox</div>
+    <p class="state-msg">
+      This link may have expired or been revoked.
+      Reply to any TRODDR booking email if you think this is a mistake.
+    </p>
+  </div>
+
+  <!-- INBOX -->
+  <div id="view-inbox" class="hidden">
+    <div class="filter-bar" id="filter-bar"></div>
+    <div id="bookings-list"></div>
+    <div id="empty-state" class="card state hidden">
+      <div class="state-icon">📭</div>
+      <div class="state-title">No bookings in this view</div>
+      <p class="state-msg">When a guest sends a request, it'll appear here.</p>
+    </div>
+  </div>
+
+  <p class="page-foot">
+    Bookmark this page to manage future bookings.<br>
+    Questions? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a><br>
+    © 2026 TRODDR · Made with ❤️ in Jamaica
+  </p>
+</main>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const $ = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+    });
+  }
+
+  function fmtRelative(ts) {
+    if (!ts) return '';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const m = Math.floor(diffMs / 60000);
+    if (m < 1)    return 'just now';
+    if (m < 60)   return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24)   return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 30)   return `${d}d ago`;
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function statusLabel(s) {
+    return ({
+      pending:          'Pending',
+      confirmed:        'Confirmed',
+      declined:         'Declined',
+      counter_proposed: 'Counter-Offered',
+      counter_accepted: 'Counter Accepted',
+      counter_rejected: 'Counter Declined',
+      cancelled:        'Cancelled',
+      expired:          'Expired',
+    })[s] || s;
+  }
+
+  function typeLabel(t) {
+    return ({
+      day_pass:   'Day Pass',
+      restaurant: 'Reservation',
+      stay:       'Stay',
+      activity:   'Activity',
+    })[t] || t;
+  }
+
+  // ── Filter definitions ────────────────────────────────────
+  // Order matters — first match shown leftmost.
+  const FILTERS = [
+    { id: 'pending',          label: 'Pending',         match: (b) => b.status === 'pending' },
+    { id: 'counter_proposed', label: 'Counter-Offered', match: (b) => b.status === 'counter_proposed' },
+    { id: 'confirmed',        label: 'Confirmed',       match: (b) => b.status === 'confirmed' || b.status === 'counter_accepted' },
+    { id: 'declined',         label: 'Declined',        match: (b) => b.status === 'declined'  || b.status === 'counter_rejected' },
+    { id: 'all',              label: 'All',             match: () => true },
+  ];
+
+  let activeFilter = 'pending';
+  let allBookings  = [];
+
+  // ── Load ──────────────────────────────────────────────────
+  async function load() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) {
+      hide('view-loading'); show('view-error');
+      return;
+    }
+
+    const [{ data: places, error: placeErr },
+           { data: bookings, error: bookErr }] = await Promise.all([
+      db.rpc('get_place_by_partner_token',    { p_token: token }),
+      db.rpc('get_bookings_by_partner_token', { p_token: token }),
+    ]);
+
+    if (placeErr || !places || !places.length) {
+      hide('view-loading'); show('view-error');
+      return;
+    }
+    if (bookErr) {
+      hide('view-loading'); show('view-error');
+      return;
+    }
+
+    const place = places[0];
+    allBookings = bookings || [];
+
+    $('hero-title').textContent = `${place.name} — Booking Inbox`;
+    $('hero-sub').textContent   = allBookings.length === 1
+      ? '1 booking'
+      : `${allBookings.length} bookings`;
+
+    // Default to whichever filter has results, preferring pending
+    if (!FILTERS.find((f) => f.id === activeFilter && allBookings.some(f.match))) {
+      activeFilter = (FILTERS.find((f) => allBookings.some(f.match)) || FILTERS[FILTERS.length - 1]).id;
+    }
+
+    renderFilters();
+    renderList();
+    hide('view-loading');
+    show('view-inbox');
+  }
+
+  function renderFilters() {
+    const bar = $('filter-bar');
+    bar.innerHTML = '';
+    FILTERS.forEach((f) => {
+      const count = allBookings.filter(f.match).length;
+      const chip  = document.createElement('button');
+      chip.className = 'chip' + (f.id === activeFilter ? ' active' : '');
+      chip.innerHTML = `${f.label}<span class="chip-count">${count}</span>`;
+      chip.addEventListener('click', () => { activeFilter = f.id; renderFilters(); renderList(); });
+      bar.appendChild(chip);
+    });
+  }
+
+  function renderList() {
+    const list = $('bookings-list');
+    list.innerHTML = '';
+    const filter = FILTERS.find((f) => f.id === activeFilter);
+    const rows   = allBookings.filter(filter.match);
+
+    if (!rows.length) {
+      show('empty-state');
+      return;
+    }
+    hide('empty-state');
+
+    rows.forEach((b) => list.appendChild(rowEl(b)));
+  }
+
+  function rowEl(b) {
+    const a = document.createElement('a');
+    a.className = 'booking-row';
+    a.href = `/booking?token=${encodeURIComponent(b.booking_token)}`;
+
+    const dateLabel = b.checkout_date
+      ? `${fmtDate(b.visit_date)} → ${fmtDate(b.checkout_date)}`
+      : fmtDate(b.visit_date);
+    const timeLabel = b.visit_time ? ` · ${b.visit_time}` : '';
+    const party     = b.party_size === 1 ? '1 guest' : `${b.party_size} guests`;
+
+    a.innerHTML = `
+      <div class="row-top">
+        <div>
+          <div class="row-date">${dateLabel}${timeLabel}</div>
+          <div class="row-meta">
+            <span class="type-pill">${typeLabel(b.booking_type)}</span>
+            ${party} · requested ${fmtRelative(b.created_at)}
+          </div>
+        </div>
+        <span class="badge badge-${b.status}">${statusLabel(b.status)}</span>
+      </div>
+      <div class="row-bottom">
+        <span class="row-guest">${b.guest_name}${b.guest_email ? ` · ${b.guest_email}` : ''}</span>
+        <span class="row-arrow">→</span>
+      </div>
+    `;
+    return a;
+  }
+
+  load();
+</script>
+
+</body>
+</html>
