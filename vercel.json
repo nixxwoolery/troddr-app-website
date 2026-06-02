@@ -78,6 +78,7 @@
       },
       { "source": "/dashboard", "destination": "/dashboard.html" },
       { "source": "/event-onboarding", "destination": "/event-onboarding.html" },
+      { "source": "/day-pass-booking", "destination": "/day-pass-booking.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" },
       { "source": "/app", "destination": "/app.html" }
     ],
@@ -149,6 +150,11 @@
     {
       "source": "/event-onboarding.html",
       "destination": "/event-onboarding",
+      "permanent": true
+    },
+    {
+      "source": "/day-pass-booking.html",
+      "destination": "/day-pass-booking",
       "permanent": true
     }
   ],

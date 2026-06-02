@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR — Day Pass Request</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --blue:        #0077CC;
+    --blue-dark:   #005fa3;
+    --blue-light:  #e8f4ff;
+    --blue-mid:    #cce5f6;
+    --gold:        #C3D600;
+    --gold-hover:  #a8b800;
+    --green:       #1a7f4e;
+    --green-light: #e6f5ec;
+    --red:         #c0392b;
+    --red-light:   #fdecea;
+    --black:       #111111;
+    --grey-dark:   #333333;
+    --grey-mid:    #666666;
+    --grey-light:  #999999;
+    --border:      #e8e8e8;
+    --bg:          #ffffff;
+    --bg-soft:     #f8f9fa;
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
+    --shadow:      0 4px 16px rgba(0,0,0,0.08);
+    --shadow-md:   0 8px 32px rgba(0,0,0,0.1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky; top: 0; z-index: 200;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .navbar {
+    max-width: 1160px; margin: 0 auto;
+    padding: 0 24px; height: 64px;
+    display: flex; align-items: center; gap: 32px;
+  }
+  .logo {
+    font-size: 30px; font-weight: 700;
+    color: var(--blue);
+    text-decoration: none;
+    letter-spacing: -1px;
+  }
+  .nav-badge {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 8px;
+    border: 1px solid var(--blue-mid);
+    margin-left: auto;
+  }
+
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--blue);
+    padding: 48px 24px 56px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .page-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(0,0,0,0.08) 0%, transparent 50%);
+  }
+  .hero-inner { position: relative; max-width: 640px; margin: 0 auto; }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.95);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 20px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .page-hero h1 {
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 700; color: #fff;
+    line-height: 1.2; margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .page-hero p {
+    color: rgba(255,255,255,0.82);
+    font-size: 14px; font-weight: 300;
+    line-height: 1.6; max-width: 480px; margin: 0 auto;
+  }
+
+  /* ── PAGE LAYOUT ── */
+  .page {
+    max-width: 640px;
+    margin: -28px auto 96px;
+    padding: 0 16px;
+    position: relative; z-index: 10;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 18px;
+  }
+
+  /* ── BOOKING SUMMARY ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 24px;
+  }
+  .summary-row { display: flex; flex-direction: column; gap: 2px; }
+  .summary-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--grey-light);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .summary-value {
+    font-size: 15px; font-weight: 500;
+    color: var(--black);
+  }
+  .summary-row.full { grid-column: 1 / -1; }
+
+  .price-bar {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--border);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .price-label { font-size: 13px; color: var(--grey-mid); font-weight: 500; }
+  .price-value { font-size: 22px; font-weight: 700; color: var(--black); letter-spacing: -0.5px; }
+  .price-note  { font-size: 11px; color: var(--grey-light); margin-top: 2px; }
+
+  /* ── PROPERTY HEADER ── */
+  .property-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .property-img {
+    width: 64px; height: 64px;
+    border-radius: 12px;
+    background: var(--bg-soft);
+    background-size: cover; background-position: center;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .property-name { font-size: 17px; font-weight: 700; color: var(--black); line-height: 1.3; }
+  .property-loc  { font-size: 13px; color: var(--grey-mid); margin-top: 2px; }
+
+  /* ── GUEST NOTES ── */
+  .notes-block {
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-size: 14px; color: var(--grey-dark);
+    line-height: 1.55;
+    border-left: 3px solid var(--blue);
+    margin-top: 14px;
+  }
+
+  /* ── ACTION BUTTONS ── */
+  .actions-stack {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .btn {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px;
+    padding: 16px 22px;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-confirm {
+    background: var(--green);
+    color: #fff;
+  }
+  .btn-confirm:hover:not(:disabled) { background: #15683f; transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn-counter {
+    background: #fff;
+    color: var(--blue);
+    border-color: var(--blue-mid);
+  }
+  .btn-counter:hover:not(:disabled) { background: var(--blue-light); border-color: var(--blue); }
+  .btn-decline {
+    background: #fff;
+    color: var(--red);
+    border-color: #f5cdc8;
+  }
+  .btn-decline:hover:not(:disabled) { background: var(--red-light); border-color: var(--red); }
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--blue-dark); }
+  .btn-secondary {
+    background: #fff;
+    color: var(--grey-mid);
+    border-color: var(--border);
+  }
+  .btn-secondary:hover:not(:disabled) { color: var(--black); border-color: var(--grey-light); }
+
+  /* ── EXPANDABLE FORM (counter / message) ── */
+  .form-panel {
+    display: none;
+    margin-top: 6px;
+    padding: 22px;
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  .form-panel.show { display: block; animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .form-row { margin-bottom: 14px; }
+  .form-row:last-child { margin-bottom: 0; }
+  .form-row label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    color: var(--grey-dark);
+    margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .form-row input, .form-row textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 14px;
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+  .form-row input:focus, .form-row textarea:focus {
+    outline: none; border-color: var(--blue);
+  }
+  .form-row textarea { resize: vertical; min-height: 80px; }
+  .form-row-split {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+
+  /* ── STATES ── */
+  .state-card {
+    text-align: center; padding: 40px 28px;
+  }
+  .state-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+    font-size: 32px;
+  }
+  .state-icon.success { background: var(--green-light); color: var(--green); }
+  .state-icon.error   { background: var(--red-light);   color: var(--red); }
+  .state-icon.info    { background: var(--blue-light);  color: var(--blue); }
+  .state-title {
+    font-size: 22px; font-weight: 700; margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .state-msg {
+    font-size: 14px; color: var(--grey-mid);
+    line-height: 1.6;
+    max-width: 380px; margin: 0 auto;
+  }
+
+  /* ── LOADING ── */
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--black); color: #fff;
+    padding: 13px 20px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s; z-index: 9999;
+    max-width: 320px; line-height: 1.5;
+    box-shadow: var(--shadow-md);
+  }
+  #toast.show  { opacity: 1; }
+  #toast.error { background: var(--red); }
+  #toast.ok    { background: var(--green); }
+
+  .hidden { display: none !important; }
+
+  /* ── FOOTER ── */
+  .page-foot {
+    text-align: center;
+    font-size: 12px; color: var(--grey-light);
+    padding: 20px 24px 40px;
+  }
+  .page-foot a { color: var(--grey-mid); }
+
+  @media (max-width: 520px) {
+    .navbar { padding: 0 16px; gap: 16px; }
+    .logo { font-size: 24px; }
+    .card { padding: 20px; }
+    .summary-grid { grid-template-columns: 1fr; gap: 12px; }
+    .form-row-split { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Partner Booking</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Day Pass Request</span>
+    <h1 id="hero-title">Loading request…</h1>
+    <p id="hero-sub">One moment while we pull up the details.</p>
+  </div>
+</section>
+
+<main class="page">
+
+  <!-- LOADING -->
+  <div id="view-loading" class="card state-card">
+    <div class="spinner"></div>
+    <div class="state-msg">Loading booking details…</div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="view-error" class="card state-card hidden">
+    <div class="state-icon error">⚠️</div>
+    <div class="state-title">We couldn't find this booking</div>
+    <p class="state-msg" id="error-msg">
+      This link may have expired, or the booking has been cancelled.
+      Reply to the original email if you think this is a mistake.
+    </p>
+  </div>
+
+  <!-- ALREADY RESPONDED -->
+  <div id="view-final" class="card state-card hidden">
+    <div class="state-icon info" id="final-icon">✓</div>
+    <div class="state-title" id="final-title">Already responded</div>
+    <p class="state-msg" id="final-msg"></p>
+  </div>
+
+  <!-- MAIN: actionable booking -->
+  <div id="view-main" class="hidden">
+
+    <div class="card">
+      <div class="property-header">
+        <div class="property-img" id="prop-img"></div>
+        <div>
+          <div class="property-name" id="prop-name"></div>
+          <div class="property-loc"  id="prop-loc"></div>
+        </div>
+      </div>
+
+      <div class="card-title">Booking Request</div>
+      <div class="summary-grid">
+        <div class="summary-row">
+          <span class="summary-label">Date</span>
+          <span class="summary-value" id="sum-date"></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Preferred Time</span>
+          <span class="summary-value" id="sum-time"></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Party</span>
+          <span class="summary-value" id="sum-party"></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Guest</span>
+          <span class="summary-value" id="sum-guest"></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Contact</span>
+          <span class="summary-value" id="sum-contact"></span>
+        </div>
+      </div>
+
+      <div id="notes-wrap" class="hidden">
+        <div class="notes-block" id="sum-notes"></div>
+      </div>
+
+      <div class="price-bar" id="price-bar">
+        <div>
+          <div class="price-label">Quoted total</div>
+          <div class="price-note" id="price-note"></div>
+        </div>
+        <div class="price-value" id="price-total">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Your Response</div>
+      <div class="actions-stack">
+        <button class="btn btn-confirm"  id="btn-confirm">✓ Confirm Booking</button>
+        <button class="btn btn-counter"  id="btn-counter">📅 Suggest a Different Time</button>
+        <button class="btn btn-decline"  id="btn-decline">✕ Decline</button>
+      </div>
+
+      <!-- CONFIRM panel -->
+      <div class="form-panel" id="panel-confirm">
+        <div class="form-row">
+          <label for="confirm-msg">Optional Message to Guest</label>
+          <textarea id="confirm-msg" placeholder="e.g. Looking forward to having you! Please check in at the main lobby."></textarea>
+        </div>
+        <div class="form-row">
+          <label for="confirm-email">Your Email (so the guest can reach you)</label>
+          <input type="email" id="confirm-email" placeholder="manager@hotel.com" />
+        </div>
+        <div class="form-row" style="display:flex; gap:10px;">
+          <button class="btn btn-secondary" data-cancel="confirm" style="flex:1">Cancel</button>
+          <button class="btn btn-confirm" data-submit="confirmed" style="flex:2">Send Confirmation</button>
+        </div>
+      </div>
+
+      <!-- COUNTER panel -->
+      <div class="form-panel" id="panel-counter">
+        <p style="font-size:13px; color:var(--grey-mid); margin-bottom:14px;">
+          Propose a different date or time. The guest will get a notification and can accept or decline.
+        </p>
+        <div class="form-row form-row-split">
+          <div>
+            <label for="counter-date">Suggested Date</label>
+            <input type="date" id="counter-date" required />
+          </div>
+          <div>
+            <label for="counter-time">Suggested Time</label>
+            <input type="text" id="counter-time" placeholder="e.g. 2:00 PM" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="counter-msg">Message to Guest</label>
+          <textarea id="counter-msg" placeholder="e.g. We're fully booked that day, but the next morning works great."></textarea>
+        </div>
+        <div class="form-row">
+          <label for="counter-email">Your Email</label>
+          <input type="email" id="counter-email" placeholder="manager@hotel.com" />
+        </div>
+        <div class="form-row" style="display:flex; gap:10px;">
+          <button class="btn btn-secondary" data-cancel="counter" style="flex:1">Cancel</button>
+          <button class="btn btn-primary" data-submit="counter_proposed" style="flex:2">Send Counter-Offer</button>
+        </div>
+      </div>
+
+      <!-- DECLINE panel -->
+      <div class="form-panel" id="panel-decline">
+        <div class="form-row">
+          <label for="decline-msg">Reason (optional, sent to guest)</label>
+          <textarea id="decline-msg" placeholder="e.g. We're fully booked that day. Try us next week!"></textarea>
+        </div>
+        <div class="form-row">
+          <label for="decline-email">Your Email</label>
+          <input type="email" id="decline-email" placeholder="manager@hotel.com" />
+        </div>
+        <div class="form-row" style="display:flex; gap:10px;">
+          <button class="btn btn-secondary" data-cancel="decline" style="flex:1">Cancel</button>
+          <button class="btn btn-decline" data-submit="declined" style="flex:2">Send Decline</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="page-foot">
+    Questions? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a><br>
+    © 2026 TRODDR · Made with ❤️ in Jamaica
+  </p>
+</main>
+
+<div id="toast"></div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  // ── Utilities ───────────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  function toast(msg, type = '') {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    setTimeout(() => { t.className = ''; }, 3500);
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    const date = new Date(d + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short', month: 'long', day: 'numeric', year: 'numeric'
+    });
+  }
+
+  function fmtPrice(n) {
+    if (n == null) return '—';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+  }
+
+  // ── Status → final-state copy ───────────────────────────────
+  const FINAL_STATES = {
+    confirmed:        { icon: '✓', cls: 'success', title: 'Booking Confirmed',
+                        msg: 'The guest has been notified. They\'ll see this in their TRODDR app and receive a confirmation email.' },
+    declined:         { icon: '✕', cls: 'error',   title: 'Booking Declined',
+                        msg: 'The guest has been notified.' },
+    counter_proposed: { icon: '📅', cls: 'info',   title: 'Counter-Offer Sent',
+                        msg: 'The guest will see your suggested time and can accept or decline.' },
+    counter_accepted: { icon: '✓', cls: 'success', title: 'Guest Accepted Your Counter-Offer',
+                        msg: 'The booking is confirmed for your proposed time.' },
+    counter_rejected: { icon: '✕', cls: 'error',   title: 'Guest Declined Your Counter-Offer',
+                        msg: 'No further action needed.' },
+    cancelled:        { icon: '✕', cls: 'info',    title: 'Booking Cancelled',
+                        msg: 'The guest cancelled this request.' },
+    expired:          { icon: '⌛', cls: 'info',    title: 'This Request Has Expired',
+                        msg: 'No response was recorded in time. The guest may have rebooked elsewhere.' },
+  };
+
+  // ── Load booking ────────────────────────────────────────────
+  let currentBooking = null;
+
+  async function load() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) {
+      hide('view-loading'); show('view-error');
+      $('hero-title').textContent = 'No booking token';
+      $('hero-sub').textContent = 'This page needs a valid booking link.';
+      return;
+    }
+
+    const { data, error } = await db.rpc('get_day_pass_booking_by_token', { p_token: token });
+    if (error || !data || !data.length) {
+      hide('view-loading'); show('view-error');
+      $('hero-title').textContent = 'Booking not found';
+      return;
+    }
+
+    currentBooking = data[0];
+    render(currentBooking);
+  }
+
+  function render(b) {
+    // Hero
+    $('hero-title').textContent = `Day Pass Request — ${b.place_name}`;
+    $('hero-sub').textContent   = `A guest has requested a day pass for ${fmtDate(b.visit_date)}.`;
+
+    // Already-responded short-circuit
+    if (b.status !== 'pending') {
+      hide('view-loading');
+      const state = FINAL_STATES[b.status] || FINAL_STATES.expired;
+      $('final-icon').textContent = state.icon;
+      $('final-icon').className = `state-icon ${state.cls}`;
+      $('final-title').textContent = state.title;
+      $('final-msg').textContent = state.msg
+        + (b.partner_message ? `\n\nYour earlier note: "${b.partner_message}"` : '');
+      show('view-final');
+      return;
+    }
+
+    // Property
+    $('prop-name').textContent = b.place_name;
+    $('prop-loc').textContent  = [b.place_town, b.place_parish].filter(Boolean).join(', ') || b.place_address || '';
+    if (b.place_image) $('prop-img').style.backgroundImage = `url('${b.place_image}')`;
+
+    // Summary
+    $('sum-date').textContent    = fmtDate(b.visit_date);
+    $('sum-time').textContent    = b.visit_time || 'Any time';
+    $('sum-party').textContent   = b.party_size === 1 ? '1 guest' : `${b.party_size} guests`;
+    $('sum-guest').textContent   = b.guest_name;
+    $('sum-contact').textContent = [b.guest_email, b.guest_phone].filter(Boolean).join(' · ');
+
+    if (b.notes) {
+      $('sum-notes').textContent = `"${b.notes}"`;
+      show('notes-wrap');
+    }
+
+    // Price
+    if (b.total_quoted != null) {
+      $('price-total').textContent = fmtPrice(b.total_quoted);
+      $('price-note').textContent  = `${b.party_size} × property rate`;
+    } else if (b.day_pass_price) {
+      $('price-total').textContent = b.day_pass_price;
+      $('price-note').textContent  = 'Property pricing';
+    } else {
+      $('price-bar').style.display = 'none';
+    }
+
+    // Counter date default = visit_date + 1 day
+    const nextDay = new Date(b.visit_date + 'T00:00:00');
+    nextDay.setDate(nextDay.getDate() + 1);
+    $('counter-date').value = nextDay.toISOString().slice(0, 10);
+    $('counter-date').min   = new Date().toISOString().slice(0, 10);
+
+    hide('view-loading');
+    show('view-main');
+  }
+
+  // ── Panel toggling ──────────────────────────────────────────
+  const PANELS = ['confirm', 'counter', 'decline'];
+
+  function openPanel(which) {
+    PANELS.forEach((p) => $(`panel-${p}`).classList.remove('show'));
+    $(`panel-${which}`).classList.add('show');
+    $(`panel-${which}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  $('btn-confirm').addEventListener('click', () => openPanel('confirm'));
+  $('btn-counter').addEventListener('click', () => openPanel('counter'));
+  $('btn-decline').addEventListener('click', () => openPanel('decline'));
+
+  document.querySelectorAll('[data-cancel]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      $(`panel-${btn.dataset.cancel}`).classList.remove('show');
+    });
+  });
+
+  // ── Submit response ─────────────────────────────────────────
+  document.querySelectorAll('[data-submit]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const status = btn.dataset.submit;
+      const panel  = status === 'confirmed' ? 'confirm'
+                   : status === 'declined'  ? 'decline'
+                   : 'counter';
+
+      const msg   = $(`${panel}-msg`).value.trim() || null;
+      const email = $(`${panel}-email`).value.trim() || null;
+
+      const params = {
+        p_token: currentBooking.token,
+        p_status: status,
+        p_message: msg,
+        p_responder_email: email,
+      };
+
+      if (status === 'counter_proposed') {
+        const date = $('counter-date').value;
+        const time = $('counter-time').value.trim() || null;
+        if (!date) { toast('Please pick a suggested date', 'error'); return; }
+        params.p_proposed_date = date;
+        params.p_proposed_time = time;
+      }
+
+      btn.disabled = true;
+      const { data, error } = await db.rpc('respond_to_day_pass_booking', params);
+
+      if (error) {
+        btn.disabled = false;
+        toast(`Couldn't send: ${error.message}`, 'error');
+        return;
+      }
+
+      // Success — switch to final state
+      currentBooking = { ...currentBooking, ...(Array.isArray(data) ? data[0] : data) };
+      hide('view-main');
+      const state = FINAL_STATES[status];
+      $('final-icon').textContent = state.icon;
+      $('final-icon').className = `state-icon ${state.cls}`;
+      $('final-title').textContent = state.title;
+      $('final-msg').textContent = state.msg;
+      show('view-final');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  load();
+</script>
+
+</body>
+</html>
