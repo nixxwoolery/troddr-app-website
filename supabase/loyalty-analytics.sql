@@ -68,6 +68,11 @@ begin
       ),
       visits as (
         select * from public.loyalty_visits where place_id = v_place_id
+      ),
+      per_member as (
+        select user_id, count(*) as n
+          from visits
+         group by user_id
       )
       select jsonb_build_object(
         'total_members',
@@ -97,7 +102,21 @@ begin
         'dormant_60d',
           (select count(*) from cards
             where last_stamped_at is not null
-              and last_stamped_at < v_now - interval '60 days')
+              and last_stamped_at < v_now - interval '60 days'),
+
+        'repeat_visit_rate',
+          (select case
+                    when count(*) = 0 then null
+                    else count(*) filter (where n >= 2)::float / count(*)
+                  end
+             from per_member),
+
+        'days_since_last_visit',
+          (select case
+                    when max(stamped_at) is null then null
+                    else floor(extract(epoch from (v_now - max(stamped_at))) / 86400)::int
+                  end
+             from visits)
       )
     ),
     'members', (
