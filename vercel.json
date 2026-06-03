@@ -83,6 +83,7 @@
       { "source": "/partner/listing",  "destination": "/partner-listing.html" },
       { "source": "/partner/loyalty",  "destination": "/partner-loyalty.html" },
       { "source": "/partner/feedback", "destination": "/partner-feedback.html" },
+      { "source": "/partner/event",    "destination": "/partner-event.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" },
       { "source": "/app", "destination": "/app.html" }
     ],
@@ -184,6 +185,11 @@
     {
       "source": "/partner-feedback.html",
       "destination": "/partner/feedback",
+      "permanent": true
+    },
+    {
+      "source": "/partner-event.html",
+      "destination": "/partner/event",
       "permanent": true
     }
   ],

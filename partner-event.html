@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Event Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --blue:        #0077CC;
+    --blue-light:  #e8f4ff;
+    --green:       #1a7f4e;
+    --green-light: #e6f5ec;
+    --red:         #c0392b;
+    --red-light:   #fdecea;
+    --amber:       #b86e00;
+    --amber-light: #fff4e0;
+    --black:       #111111;
+    --grey-dark:   #333333;
+    --grey-mid:    #666666;
+    --grey-light:  #999999;
+    --border:      #e8e8e8;
+    --border-soft: #f0f0f0;
+    --bg:          #ffffff;
+    --bg-soft:     #f8f9fa;
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06);
+
+    --brand-primary:   #111111;
+    --brand-accent:    #C3D600;
+    --brand-text:      #ffffff;
+    --brand-secondary: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky; top: 0; z-index: 200;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 60px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .logo {
+    font-size: 26px; font-weight: 700;
+    color: var(--blue); text-decoration: none;
+    letter-spacing: -1px;
+  }
+  .nav-badge {
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-left: auto;
+  }
+
+  /* ── HERO (event photo background) ── */
+  .page-hero {
+    background: var(--brand-primary) center / cover no-repeat;
+    color: var(--brand-text);
+    padding: 56px 24px 88px;
+    text-align: left;
+    position: relative; overflow: hidden;
+  }
+  .page-hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.7) 100%);
+    z-index: 1;
+  }
+  .hero-inner {
+    position: relative; max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+    z-index: 2;
+  }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    color: var(--brand-text);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 4px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.22);
+  }
+  .page-hero h1 {
+    font-size: clamp(28px, 4.5vw, 42px);
+    font-weight: 800; line-height: 1.1;
+    margin-bottom: 12px;
+    letter-spacing: -0.8px;
+    max-width: 760px;
+  }
+  .hero-meta {
+    display: flex; flex-wrap: wrap; gap: 8px 18px;
+    color: rgba(255,255,255,0.92);
+    font-size: 13px; font-weight: 500;
+  }
+  .hero-meta strong { color: #fff; font-weight: 700; }
+  .hero-status {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.16);
+  }
+  .hero-status.upcoming { background: var(--brand-accent); color: #111; }
+  .hero-status.today    { background: #ff6b35;            color: #fff; }
+  .hero-status.past     { background: rgba(255,255,255,0.16); color: rgba(255,255,255,0.85); }
+
+  /* ── LAYOUT ── */
+  .layout {
+    max-width: 1320px;
+    margin: -56px auto 0;
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    position: relative; z-index: 10;
+  }
+  .sidebar {
+    position: sticky; top: 76px;
+    align-self: start;
+    height: max-content;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .sidebar-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--grey-light);
+    padding: 10px 12px 8px;
+  }
+  .sidebar a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    color: var(--grey-dark);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar a:hover { background: var(--bg-soft); color: var(--black); }
+  .sidebar a.active {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    font-weight: 600;
+  }
+  .sidebar a svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar a.jump-link.active {
+    background: transparent;
+    color: var(--brand-primary);
+    font-weight: 700;
+  }
+  .main { min-width: 0; padding-bottom: 80px; }
+
+  .section { margin-bottom: 36px; scroll-margin-top: 80px; }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+  }
+  .section-sub {
+    font-size: 12px; color: var(--grey-mid);
+    font-weight: 500;
+  }
+  .pill {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 100px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    border: 1px solid var(--border);
+  }
+  .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
+  .pill.soon { background: var(--bg-soft); }
+
+  /* ── STATS GRID ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .stat {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 14px 14px;
+    min-width: 0;
+  }
+  .stat-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .stat-value {
+    font-size: 28px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -1px;
+    line-height: 1.1;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .stat-value .pct {
+    font-size: 14px; color: var(--grey-mid);
+    font-weight: 600;
+  }
+  .stat-sub {
+    font-size: 11px; color: var(--grey-mid);
+    margin-top: 6px;
+  }
+  .stat-sub.good { color: var(--green); }
+  .stat-sub.warn { color: var(--amber); }
+
+  /* ── EVENT PREVIEW ── */
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .preview-card, .actions-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .preview-body {
+    padding: 22px 24px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+    flex: 1;
+  }
+  .preview-section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 2px;
+  }
+  .preview-desc {
+    font-size: 13px; color: var(--grey-dark);
+    line-height: 1.65;
+    white-space: pre-wrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .preview-row {
+    display: grid; grid-template-columns: 100px 1fr; gap: 12px;
+    font-size: 13px;
+    color: var(--grey-dark);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .preview-row:last-of-type { border-bottom: none; }
+  .preview-row .lbl {
+    color: var(--grey-mid);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 2px;
+  }
+  .preview-links {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 6px;
+  }
+  .preview-link {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 12px;
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 12px; font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .preview-link:hover {
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+  }
+  .preview-link.primary {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    border-color: var(--brand-primary);
+  }
+  .preview-link svg { width: 12px; height: 12px; }
+  .tab-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .tab-chip {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    color: var(--grey-dark);
+    font-size: 11px; font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  .tab-chip.live {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: transparent;
+  }
+
+  /* ── ACTIONS PANEL (right side of preview) ── */
+  .actions-card { padding: 22px 24px; gap: 12px; }
+  .action-card {
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--grey-light);
+    padding: 12px 14px;
+  }
+  .action-card.positive { border-left-color: var(--green); }
+  .action-card.attention { border-left-color: var(--amber); }
+  .action-card.alert { border-left-color: var(--red); }
+  .action-card.info { border-left-color: var(--brand-primary); }
+  .action-tag {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 4px;
+  }
+  .action-card.positive .action-tag  { color: var(--green); }
+  .action-card.attention .action-tag { color: var(--amber); }
+  .action-card.alert .action-tag     { color: var(--red); }
+  .action-title {
+    font-size: 13px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 2px;
+  }
+  .action-text {
+    font-size: 12px; color: var(--grey-dark);
+    line-height: 1.5;
+  }
+
+  /* ── FUNNEL ── */
+  .funnel {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+  .funnel-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  .funnel-step {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+    display: flex; flex-direction: column; gap: 4px;
+    min-width: 0;
+  }
+  .funnel-step.live {
+    background: #fff;
+    border-color: var(--brand-primary);
+  }
+  .funnel-step.muted {
+    background: var(--bg-soft);
+    border-style: dashed;
+  }
+  .funnel-step-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .funnel-step-value {
+    font-size: 28px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.8px;
+    line-height: 1.1;
+  }
+  .funnel-step.muted .funnel-step-value {
+    color: var(--grey-light);
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .funnel-step-note {
+    font-size: 10px; font-weight: 600;
+    color: var(--grey-light);
+    letter-spacing: 0.04em;
+  }
+  .funnel-conv {
+    font-size: 10px; font-weight: 700;
+    color: var(--brand-primary);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .funnel-conv.muted { color: var(--grey-light); }
+
+  /* ── VENDORS ── */
+  .vendors-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+  }
+  .vendors-empty {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 8px 0;
+  }
+  .vendors-empty-icon {
+    width: 48px; height: 48px;
+    background: var(--brand-accent);
+    color: var(--black);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .vendors-empty-icon svg { width: 24px; height: 24px; }
+  .vendors-empty-body { flex: 1; }
+  .vendors-empty-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 4px;
+  }
+  .vendors-empty-text {
+    font-size: 13px; color: var(--grey-dark);
+    line-height: 1.55;
+    margin-bottom: 10px;
+  }
+  .vendors-future-list {
+    display: grid; gap: 6px;
+    font-size: 12px; color: var(--grey-mid);
+  }
+  .vendors-future-list li { list-style: none; padding-left: 16px; position: relative; }
+  .vendors-future-list li::before {
+    content: ''; position: absolute; left: 0; top: 8px;
+    width: 6px; height: 6px;
+    background: var(--brand-primary);
+    border-radius: 50%;
+  }
+
+  /* ── LOCKED / SOON ── */
+  .locked-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .locked-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+  }
+  .locked-card .lock-line {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--grey-mid);
+    font-size: 14px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .locked-card .lock-line svg { width: 14px; height: 14px; }
+  .locked-card-desc {
+    font-size: 12px; color: var(--grey-mid);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .locked-meter {
+    display: flex; justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 11px;
+  }
+  .locked-meter-label { color: var(--grey-mid); font-weight: 600; }
+  .locked-meter-count { color: var(--grey-light); font-weight: 700; }
+
+  /* ── STATES ── */
+  .state {
+    text-align: center; padding: 40px 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .state-msg   { font-size: 14px; color: var(--grey-mid); max-width: 380px; margin: 0 auto; }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--brand-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+
+  .page-foot {
+    text-align: center;
+    font-size: 12px; color: var(--grey-light);
+    padding: 24px 24px 40px;
+    grid-column: 1 / -1;
+  }
+  .page-foot a { color: var(--grey-mid); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    .funnel-steps { grid-template-columns: repeat(3, 1fr); }
+    .preview-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; gap: 16px; padding: 0 16px; }
+    .sidebar {
+      position: sticky; top: 60px;
+      padding: 6px;
+      display: flex; gap: 4px;
+      overflow-x: auto; scrollbar-width: none;
+      border-radius: var(--radius);
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .sidebar-title { display: none; }
+    .sidebar a { padding: 8px 12px; white-space: nowrap; font-size: 12px; }
+    .sidebar a svg { display: none; }
+    .page-hero { padding: 44px 20px 76px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .funnel-steps { grid-template-columns: 1fr 1fr; }
+    .stat-value { font-size: 22px; }
+  }
+  @media (max-width: 480px) {
+    .navbar { padding: 0 16px; gap: 12px; }
+    .logo { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="ic-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
+    </symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 13l4 4L19 7"/>
+    </symbol>
+    <symbol id="ic-ticket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4z"/>
+      <path d="M13 5v14"/>
+    </symbol>
+    <symbol id="ic-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3.5-7 7-7s7 3 7 7"/>
+      <circle cx="17" cy="9" r="3"/><path d="M22 20c0-3-2-5-5-5"/>
+    </symbol>
+    <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+    </symbol>
+    <symbol id="ic-funnel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 4h18l-7 9v7l-4-2v-5L3 4z"/>
+    </symbol>
+    <symbol id="ic-shop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 7l2-4h14l2 4M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7M3 7h18M9 11a3 3 0 0 0 6 0"/>
+    </symbol>
+    <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>
+    </symbol>
+    <symbol id="ic-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3h7v7M21 3l-9 9M19 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/>
+    </symbol>
+    <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="11" width="16" height="10" rx="2"/>
+      <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+    </symbol>
+    <symbol id="ic-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </symbol>
+    <symbol id="ic-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 8h.01M11 12h1v5h1"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Event Partner</span>
+  </div>
+</header>
+
+<section class="page-hero" id="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow" id="hero-eyebrow">Event Dashboard</span>
+    <h1 id="hero-title">Loading…</h1>
+    <div class="hero-meta" id="hero-meta"></div>
+  </div>
+</section>
+
+<!-- LOADING -->
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="spinner"></div>
+      <div class="state-msg">Loading your event dashboard…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="layout hidden" id="view-error">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="state-title">We couldn't load this event</div>
+      <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="layout hidden" id="view-dashboard">
+
+  <aside class="sidebar">
+    <div class="sidebar-title">On this page</div>
+    <a href="#overview"   class="jump-link" data-section="overview">
+      <svg><use href="#ic-info"/></svg> Overview
+    </a>
+    <a href="#engagement" class="jump-link" data-section="engagement">
+      <svg><use href="#ic-bolt"/></svg> Engagement
+    </a>
+    <a href="#funnel"     class="jump-link" data-section="funnel">
+      <svg><use href="#ic-funnel"/></svg> Discovery Funnel
+    </a>
+    <a href="#vendors"    class="jump-link" data-section="vendors" id="nav-vendors" style="display:none">
+      <svg><use href="#ic-shop"/></svg> Vendors
+    </a>
+    <a href="#actions"    class="jump-link" data-section="actions">
+      <svg><use href="#ic-bolt"/></svg> Action Center
+    </a>
+    <a href="#unlocks"    class="jump-link" data-section="unlocks">
+      <svg><use href="#ic-lock"/></svg> Unlocks
+    </a>
+  </aside>
+
+  <main class="main">
+
+    <section class="section" id="overview">
+      <div class="section-head">
+        <h2 class="section-title">Event Overview</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="preview-grid">
+        <div class="preview-card" id="preview-card"></div>
+        <div class="actions-card" id="actions-card-top">
+          <div class="preview-section-label" style="margin-bottom:8px;">Quick Insights</div>
+          <div id="actions-top"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="engagement">
+      <div class="section-head">
+        <h2 class="section-title">Engagement</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+    </section>
+
+    <section class="section" id="funnel">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Discovery → Attendance Funnel</h2>
+          <div class="section-sub">From listing view through to attendance. Steps without instrumentation show as muted.</div>
+        </div>
+      </div>
+      <div class="funnel" id="funnel"></div>
+    </section>
+
+    <section class="section" id="vendors" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Vendors</h2>
+          <div class="section-sub">Vendor lineup, listings, and guest interactions with each vendor.</div>
+        </div>
+      </div>
+      <div class="vendors-card" id="vendors-card"></div>
+    </section>
+
+    <section class="section" id="actions">
+      <div class="section-head">
+        <h2 class="section-title">Action Center</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div id="actions-list"></div>
+    </section>
+
+    <section class="section" id="unlocks">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Unlocks</h2>
+          <div class="section-sub">More analytics open up as the event approaches, runs, and wraps.</div>
+        </div>
+      </div>
+      <div class="locked-grid" id="locked-grid"></div>
+    </section>
+
+  </main>
+
+  <p class="page-foot">
+    Bookmark this page to keep an eye on your event.<br>
+    Questions? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a><br>
+    © 2026 TRODDR · Made with care in Jamaica
+  </p>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const $  = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  // ── Helpers ──────────────────────────────────────────────
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function fmtMoney(n, ccy) {
+    if (n == null) return '';
+    return `${ccy || 'JMD'} ${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  }
+  function fmtDate(d) {
+    if (!d) return '';
+    return new Date(d + (d.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function fmtTime(t) {
+    if (!t) return '';
+    const [h, m] = t.split(':');
+    const date = new Date();
+    date.setHours(parseInt(h, 10), parseInt(m, 10));
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+  function pluralize(n, s, p) { return n === 1 ? s : (p || s + 's'); }
+
+  // ── Hero ─────────────────────────────────────────────────
+  function renderHero(event, stats) {
+    const img = event.featured_image_url || (event.image_urls && event.image_urls[0]);
+    if (img) {
+      $('page-hero').style.backgroundImage = `url('${img}')`;
+    }
+    $('hero-eyebrow').textContent = `Event Partner · ${event.event_type ? event.event_type : 'event'}`.toUpperCase();
+    $('hero-title').textContent = event.title;
+
+    let status = 'Upcoming';
+    let statusClass = 'upcoming';
+    if (stats.is_past) { status = 'Past Event'; statusClass = 'past'; }
+    else if (stats.is_today) { status = 'Happening Today'; statusClass = 'today'; }
+    else if (stats.days_until_event !== null && stats.days_until_event >= 0) {
+      status = `In ${stats.days_until_event} ${pluralize(stats.days_until_event, 'day')}`;
+    }
+
+    const meta = [];
+    const dateStr = event.start_date === event.end_date
+      ? fmtDate(event.start_date)
+      : `${fmtDate(event.start_date)} → ${fmtDate(event.end_date)}`;
+    meta.push(`<span><strong>${dateStr}</strong></span>`);
+    if (event.start_time) meta.push(`<span>${fmtTime(event.start_time)}${event.end_time ? ` to ${fmtTime(event.end_time)}` : ''}</span>`);
+    if (event.venue_name) meta.push(`<span>${escapeHtml(event.venue_name)}${event.parish ? `, ${escapeHtml(event.parish)}` : ''}</span>`);
+    if (event.organizer_name) meta.push(`<span>by <strong>${escapeHtml(event.organizer_name)}</strong></span>`);
+    meta.push(`<span class="hero-status ${statusClass}">${status}</span>`);
+
+    $('hero-meta').innerHTML = meta.join('');
+  }
+
+  // ── Preview Card ─────────────────────────────────────────
+  function renderPreview(event, tabs) {
+    const links = [];
+    if (event.slug) links.push(`
+      <a class="preview-link primary" href="/events/${escapeHtml(event.slug)}" target="_blank" rel="noopener">
+        <svg><use href="#ic-external"/></svg> View live event page
+      </a>`);
+    if (event.ticket_url) links.push(`
+      <a class="preview-link" href="${escapeHtml(event.ticket_url)}" target="_blank" rel="noopener">
+        <svg><use href="#ic-ticket"/></svg> Tickets
+      </a>`);
+    if (event.website_url) links.push(`
+      <a class="preview-link" href="${escapeHtml(event.website_url)}" target="_blank" rel="noopener">
+        <svg><use href="#ic-external"/></svg> Website
+      </a>`);
+    if (event.venue_lat && event.venue_lng) links.push(`
+      <a class="preview-link" href="https://maps.google.com/?q=${event.venue_lat},${event.venue_lng}" target="_blank" rel="noopener">
+        <svg><use href="#ic-map"/></svg> Map
+      </a>`);
+
+    const priceStr = event.is_free
+      ? 'Free entry'
+      : (event.ticket_price_min && event.ticket_price_max && event.ticket_price_min !== event.ticket_price_max
+          ? `${fmtMoney(event.ticket_price_min, event.currency)} – ${fmtMoney(event.ticket_price_max, event.currency)}`
+          : event.ticket_price_min
+            ? fmtMoney(event.ticket_price_min, event.currency)
+            : 'See tickets');
+
+    const tabChips = (tabs || []).map(t => {
+      const label = t.label || t.key;
+      const isLive = ['home', 'tickets'].includes(t.key);
+      return `<span class="tab-chip ${isLive ? 'live' : ''}">${escapeHtml(label)}</span>`;
+    }).join('');
+
+    $('preview-card').innerHTML = `
+      <div class="preview-body">
+        ${event.description ? `
+          <div>
+            <div class="preview-section-label">About</div>
+            <div class="preview-desc">${escapeHtml(event.description)}</div>
+          </div>` : ''}
+
+        <div>
+          <div class="preview-row"><div class="lbl">Venue</div><div>${escapeHtml(event.venue_name || '')}${event.venue_address ? `, ${escapeHtml(event.venue_address)}` : ''}${event.parish ? `, ${escapeHtml(event.parish)}` : ''}</div></div>
+          <div class="preview-row"><div class="lbl">Price</div><div>${priceStr}</div></div>
+          ${event.capacity ? `<div class="preview-row"><div class="lbl">Capacity</div><div>${event.capacity}</div></div>` : ''}
+          ${event.min_age ? `<div class="preview-row"><div class="lbl">Min Age</div><div>${event.min_age}+</div></div>` : ''}
+          ${event.dress_code ? `<div class="preview-row"><div class="lbl">Dress Code</div><div>${escapeHtml(event.dress_code)}</div></div>` : ''}
+        </div>
+
+        ${tabChips ? `
+          <div>
+            <div class="preview-section-label">Event Tabs in App</div>
+            <div class="tab-chips">${tabChips}</div>
+          </div>` : ''}
+
+        ${links.length ? `<div class="preview-links">${links.join('')}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // ── Engagement stats ─────────────────────────────────────
+  function renderStats(stats) {
+    const cards = [
+      { label: 'Total Views',       value: stats.view_count,        sub: 'across the app' },
+      { label: 'Interested',        value: stats.interested_count,  sub: stats.view_to_interest_rate != null ? `${stats.view_to_interest_rate}% of views` : 'no view data yet' },
+      { label: 'Going',             value: stats.going_count,       sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : 'no interest data yet' },
+      { label: 'Capacity',
+        value: stats.capacity != null ? stats.capacity : 'N/A',
+        suffix: '',
+        sub: stats.capacity_fill_rate != null ? `${stats.capacity_fill_rate}% filled` : 'no capacity set' },
+      { label: 'Tickets',
+        value: stats.is_sold_out ? 'Sold Out' : (stats.has_tickets ? 'Open' : 'Off-platform'),
+        sub: stats.is_sold_out ? 'no spots remaining' : (stats.has_tickets ? 'online sales active' : 'tickets handled externally') },
+    ];
+
+    $('stats-grid').innerHTML = cards.map(c => {
+      const sub = c.sub ? `<div class="stat-sub">${c.sub}</div>` : '';
+      return `
+        <div class="stat">
+          <div class="stat-label">${c.label}</div>
+          <div class="stat-value"><span>${c.value}</span></div>
+          ${sub}
+        </div>`;
+    }).join('');
+  }
+
+  // ── Funnel ───────────────────────────────────────────────
+  function renderFunnel(stats) {
+    const steps = [
+      { label: 'Listing Views',     value: stats.view_count || 0,        live: true },
+      { label: 'Interested',        value: stats.interested_count || 0,  live: true },
+      { label: 'Going / RSVP',      value: stats.going_count || 0,       live: true },
+      { label: 'Attended',          value: null,                          muted: true, note: 'Check-in soon' },
+      { label: 'Returned (Loyalty)', value: null,                         muted: true, note: 'Soon' },
+    ];
+
+    const html = steps.map((step, i) => {
+      const prev = i > 0 ? steps[i - 1] : null;
+      let convHtml = '';
+      if (prev && prev.value !== null && step.value !== null && prev.value > 0) {
+        const pct = Math.round((step.value / prev.value) * 100);
+        convHtml = `<div class="funnel-conv">${pct}% from prev</div>`;
+      } else if (prev) {
+        convHtml = `<div class="funnel-conv muted">conv. soon</div>`;
+      }
+      const cls = step.muted ? 'muted' : 'live';
+      const value = step.value === null ? 'N/A' : step.value;
+      const note = step.muted ? `<div class="funnel-step-note">${step.note}</div>` : '';
+      return `
+        <div class="funnel-step ${cls}">
+          <div class="funnel-step-label">${step.label}</div>
+          <div class="funnel-step-value">${value}</div>
+          ${note}
+          ${convHtml}
+        </div>`;
+    }).join('');
+
+    $('funnel').innerHTML = `<div class="funnel-steps">${html}</div>`;
+  }
+
+  // ── Vendors (placeholder: schema not wired yet) ──────────
+  function renderVendors(data) {
+    // Only show if the event has a "vendors" tab in its app config.
+    const hasVendorTab = data.capabilities && data.capabilities.vendors;
+    if (!hasVendorTab) return;
+
+    $('vendors').style.display = '';
+    $('nav-vendors').style.display = '';
+
+    $('vendors-card').innerHTML = `
+      <div class="vendors-empty">
+        <div class="vendors-empty-icon">
+          <svg><use href="#ic-shop"/></svg>
+        </div>
+        <div class="vendors-empty-body">
+          <div class="vendors-empty-title">Your event has a Vendors tab</div>
+          <div class="vendors-empty-text">
+            Once the vendor lineup is wired into the dashboard, you'll be able to see each vendor and how guests are interacting with them.
+          </div>
+          <ul class="vendors-future-list">
+            <li>Vendor lineup with menu / offerings</li>
+            <li>Saves / favourites per vendor</li>
+            <li>Vendor profile views and tap-throughs</li>
+            <li>"Most popular" ranking on the night</li>
+            <li>Vendor-level guest feedback after the event</li>
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Action Center ────────────────────────────────────────
+  function buildActions(data) {
+    const e = data.event;
+    const s = data.stats;
+    const actions = [];
+
+    if (s.is_today) {
+      actions.push({ level: 'positive', tag: 'Event Day',
+        title: 'Your event is happening today',
+        text: 'Make sure your team has the dashboard bookmarked to track attendance and engagement in real time.'
+      });
+    } else if (s.days_until_event !== null && s.days_until_event >= 0 && s.days_until_event <= 7) {
+      actions.push({ level: 'attention', tag: 'This Week',
+        title: `Event in ${s.days_until_event} ${pluralize(s.days_until_event, 'day')}`,
+        text: 'Push final marketing now. The last week typically drives a third of total sign-ups.'
+      });
+    } else if (s.is_past) {
+      actions.push({ level: 'info', tag: 'Post-Event',
+        title: 'Event has wrapped',
+        text: 'Post-event analytics (attendance, feedback, loyalty impact) will land here as the new sections ship.'
+      });
+    }
+
+    if (s.capacity_fill_rate != null && s.capacity_fill_rate >= 80 && !s.is_past) {
+      actions.push({ level: 'attention', tag: 'Capacity',
+        title: `${s.capacity_fill_rate}% of capacity reached`,
+        text: 'Strong demand. Consider announcing limited availability to drive urgency.'
+      });
+    }
+
+    if (s.is_sold_out) {
+      actions.push({ level: 'positive', tag: 'Sold Out',
+        title: 'You are sold out',
+        text: 'Capture the demand: collect emails for waitlist, or announce a follow-up date.'
+      });
+    }
+
+    if (s.view_count > 0 && s.view_to_interest_rate != null && s.view_to_interest_rate < 5) {
+      actions.push({ level: 'attention', tag: 'Conversion',
+        title: `Only ${s.view_to_interest_rate}% of viewers mark interest`,
+        text: 'Your listing is getting traffic but not enough commitment. Review the hero image, description, and price clarity.'
+      });
+    }
+
+    if (s.view_count === 0 && !s.is_past) {
+      actions.push({ level: 'info', tag: 'Promote',
+        title: 'No views logged yet',
+        text: `Share your event link to start driving traffic: troddr.com/events/${e.slug}`
+      });
+    }
+
+    if (s.going_count > 0 && !s.is_past) {
+      actions.push({ level: 'positive', tag: 'Momentum',
+        title: `${s.going_count} ${pluralize(s.going_count, 'person')} marked going`,
+        text: 'Send a pre-event reminder a day before to maximize attendance from those who said yes.'
+      });
+    }
+
+    if (actions.length === 0) {
+      actions.push({ level: 'info', tag: 'All Good',
+        title: 'Your event is steady',
+        text: 'New insights and recommendations unlock as views, interest, and attendance data accumulate.'
+      });
+    }
+
+    const html = actions.map(a => `
+      <div class="action-card ${a.level}">
+        <div class="action-tag">${a.tag}</div>
+        <div class="action-title">${a.title}</div>
+        <div class="action-text">${a.text}</div>
+      </div>
+    `).join('');
+
+    $('actions-list').innerHTML = html;
+    // Also render top 2 in the right-side card on Overview
+    $('actions-top').innerHTML = actions.slice(0, 2).map(a => `
+      <div class="action-card ${a.level}">
+        <div class="action-tag">${a.tag}</div>
+        <div class="action-title">${a.title}</div>
+        <div class="action-text">${a.text}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── Locked / Unlocks ─────────────────────────────────────
+  function renderLocked(data) {
+    const stats = data.stats;
+    const locked = [
+      { title: 'Traffic Sources',     desc: 'Where guests discovered your event (Home Feed, Search, Nearby, Map, Shared Link).',                   meter: 'Requires PostHog wiring' },
+      { title: 'Audience Location',   desc: 'Breakdown of viewers by parish and country.',                                                            meter: 'Requires PostHog wiring' },
+      { title: 'Views Over Time',     desc: 'Daily / weekly / monthly view trends.',                                                                  meter: 'Requires view tracking' },
+      { title: 'Check-in & Attendance', desc: 'QR / NFC / manual check-in flow with arrival timeline and no-show rate.',                              meter: 'Needs check-in system' },
+      { title: 'Reservation / RSVP',  desc: 'Capacity, reserved, remaining, waitlist when TRODDR owns reservations.',                                meter: 'Needs reservations table' },
+      { title: 'Event Scorecard',     desc: 'Post-event guest feedback across value, vibe, organisation, taste, drinks.',                            meter: 'Needs event_id on feedback' },
+      { title: 'Loyalty Impact',      desc: 'How many event attendees joined a partner loyalty program and returned.',                               meter: 'Needs check-in + loyalty link' },
+      { title: 'Retargeting',         desc: 'Identify previous attendees when creating your next event.',                                            meter: 'Needs check-in history' },
+      { title: 'Attendee Networking', desc: 'For curated events: see who else is attending, exchange profiles (opt-in).',                            meter: 'Future feature' },
+    ];
+
+    $('locked-grid').innerHTML = locked.map(l => `
+      <div class="locked-card">
+        <div class="lock-line"><svg><use href="#ic-lock"/></svg> ${l.title}</div>
+        <div class="locked-card-desc">${l.desc}</div>
+        <div class="locked-meter">
+          <span class="locked-meter-label">${l.meter}</span>
+          <span class="locked-meter-count">Soon</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Sidebar wiring (event partner = jump-links only) ─────
+  function setupSidebar() {
+    const jumpLinks = document.querySelectorAll('.jump-link');
+    const sections  = Array.from(jumpLinks).map(l => $(l.dataset.section)).filter(Boolean);
+    function update() {
+      const scrollY = window.scrollY + 120;
+      let activeId = sections[0]?.id;
+      for (const sec of sections) {
+        if (sec.offsetTop <= scrollY) activeId = sec.id;
+      }
+      jumpLinks.forEach(l => l.classList.toggle('active', l.dataset.section === activeId));
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
+  // ── Load ─────────────────────────────────────────────────
+  async function load() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) { hide('view-loading'); show('view-error'); return; }
+
+    const { data, error } = await db.rpc('get_partner_event_by_token', { p_token: token });
+    if (error || !data || !data.event) {
+      console.error('event error', error);
+      hide('view-loading'); show('view-error');
+      return;
+    }
+
+    renderHero(data.event, data.stats);
+    renderPreview(data.event, data.tabs);
+    renderStats(data.stats);
+    renderFunnel(data.stats);
+    renderVendors(data);
+    buildActions(data);
+    renderLocked(data);
+
+    hide('view-loading');
+    show('view-dashboard');
+    setupSidebar();
+  }
+
+  load();
+</script>
+
+</body>
+</html>
