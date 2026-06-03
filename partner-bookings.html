@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TRODDR — Booking Inbox</title>
+<title>TRODDR · Booking Inbox</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -17,10 +17,7 @@
 <style>
   :root {
     --blue:        #0077CC;
-    --blue-dark:   #005fa3;
     --blue-light:  #e8f4ff;
-    --blue-mid:    #cce5f6;
-    --gold:        #C3D600;
     --green:       #1a7f4e;
     --green-light: #e6f5ec;
     --red:         #c0392b;
@@ -32,23 +29,29 @@
     --grey-mid:    #666666;
     --grey-light:  #999999;
     --border:      #e8e8e8;
+    --border-soft: #f0f0f0;
     --bg:          #ffffff;
     --bg-soft:     #f8f9fa;
     --radius-sm:   6px;
     --radius:      10px;
     --radius-lg:   16px;
-    --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
-    --shadow:      0 4px 16px rgba(0,0,0,0.08);
-    --shadow-md:   0 8px 32px rgba(0,0,0,0.1);
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06);
+    --shadow:      0 4px 16px rgba(0,0,0,0.06);
+
+    --brand-primary:   #0077CC;
+    --brand-accent:    #C3D600;
+    --brand-text:      #ffffff;
+    --brand-secondary: #ffffff;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: 'Poppins', sans-serif;
     background: var(--bg-soft);
     color: var(--black);
     font-size: 15px;
-    line-height: 1.6;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -57,100 +60,148 @@
     position: sticky; top: 0; z-index: 200;
     background: #fff;
     border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
   }
   .navbar {
-    max-width: 1160px; margin: 0 auto;
-    padding: 0 24px; height: 64px;
-    display: flex; align-items: center; gap: 32px;
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 60px;
+    display: flex; align-items: center; gap: 24px;
   }
   .logo {
-    font-size: 30px; font-weight: 700;
+    font-size: 26px; font-weight: 700;
     color: var(--blue); text-decoration: none;
     letter-spacing: -1px;
   }
   .nav-badge {
-    background: var(--blue-light);
-    color: var(--blue);
+    background: var(--bg-soft);
+    color: var(--grey-dark);
     font-size: 11px; font-weight: 600;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    padding: 4px 12px; border-radius: 8px;
-    border: 1px solid var(--blue-mid);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border);
     margin-left: auto;
   }
 
   /* ── HERO ── */
   .page-hero {
-    background: var(--blue);
-    padding: 44px 24px 56px;
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    padding: 32px 24px 56px;
     text-align: center;
     position: relative; overflow: hidden;
   }
-  .page-hero::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 60%),
-                radial-gradient(ellipse at 20% 80%, rgba(0,0,0,0.08) 0%, transparent 50%);
-  }
-  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; }
+  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; z-index: 1; }
   .hero-eyebrow {
     display: inline-block;
-    background: rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.95);
+    background: rgba(255,255,255,0.12);
+    color: var(--brand-text);
     font-size: 11px; font-weight: 600;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 5px 14px; border-radius: 20px;
-    margin-bottom: 14px;
-    border: 1px solid rgba(255,255,255,0.2);
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 4px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.18);
   }
   .page-hero h1 {
-    font-size: clamp(24px, 4vw, 34px);
-    font-weight: 700; color: #fff;
-    line-height: 1.2; margin-bottom: 6px;
-    letter-spacing: -0.5px;
+    font-size: clamp(28px, 4.5vw, 40px);
+    font-weight: 700; line-height: 1.15;
+    margin-bottom: 10px;
+    letter-spacing: -0.6px;
   }
-  .page-hero p {
-    color: rgba(255,255,255,0.82);
-    font-size: 14px; font-weight: 300;
+  .hero-sub {
+    color: rgba(255,255,255,0.85);
+    font-size: 14px; font-weight: 400;
   }
 
-  /* ── PAGE LAYOUT ── */
-  .page {
-    max-width: 760px;
-    margin: -28px auto 96px;
+  /* ── LAYOUT ── */
+  .layout {
+    max-width: 1320px;
+    margin: -32px auto 0;
     padding: 0 16px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
     position: relative; z-index: 10;
   }
-
-  .card {
+  .sidebar {
+    position: sticky; top: 76px;
+    align-self: start;
+    height: max-content;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-    padding: 22px;
-    margin-bottom: 14px;
+    padding: 10px;
+    box-shadow: var(--shadow-sm);
   }
+  .sidebar-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--grey-light);
+    padding: 10px 12px 8px;
+  }
+  .sidebar a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    color: var(--grey-dark);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar a:hover { background: var(--bg-soft); color: var(--black); }
+  .sidebar a.active {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    font-weight: 600;
+  }
+  .sidebar a svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar a.jump-link { font-size: 12px; padding: 7px 12px; color: var(--grey-mid); }
+  .sidebar a.jump-link.active {
+    background: transparent;
+    color: var(--brand-primary);
+    font-weight: 700;
+  }
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 8px;
+  }
+  .main { min-width: 0; padding-bottom: 80px; }
+
+  .section { margin-bottom: 28px; scroll-margin-top: 80px; }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+  }
+  .pill {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 100px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    border: 1px solid var(--border);
+  }
+  .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
 
   /* ── FILTER CHIPS ── */
   .filter-bar {
     display: flex; gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 16px;
-    padding: 14px;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
+    margin-bottom: 14px;
     overflow-x: auto;
     scrollbar-width: none;
   }
   .filter-bar::-webkit-scrollbar { display: none; }
   .chip {
-    padding: 8px 14px;
+    padding: 7px 14px;
     border-radius: 100px;
-    font-size: 13px; font-weight: 600;
+    font-size: 12px; font-weight: 600;
     cursor: pointer;
-    border: 1.5px solid var(--border);
+    border: 1px solid var(--border);
     background: #fff;
     color: var(--grey-mid);
     transition: all 0.15s;
@@ -158,19 +209,19 @@
     white-space: nowrap;
     display: inline-flex; align-items: center; gap: 6px;
   }
-  .chip:hover { border-color: var(--blue); color: var(--blue); }
+  .chip:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
   .chip.active {
-    background: var(--blue);
-    border-color: var(--blue);
-    color: #fff;
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
   }
   .chip-count {
     background: rgba(0,0,0,0.08);
     padding: 1px 7px;
     border-radius: 100px;
-    font-size: 11px; font-weight: 700;
+    font-size: 10px; font-weight: 700;
   }
-  .chip.active .chip-count { background: rgba(255,255,255,0.25); }
+  .chip.active .chip-count { background: rgba(255,255,255,0.22); }
 
   /* ── BOOKING ROW ── */
   .booking-row {
@@ -185,7 +236,7 @@
     cursor: pointer;
   }
   .booking-row:hover {
-    border-color: var(--blue);
+    border-color: var(--brand-primary);
     box-shadow: var(--shadow);
     transform: translateY(-1px);
   }
@@ -212,12 +263,11 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .row-arrow {
-    color: var(--blue);
+    color: var(--brand-primary);
     font-size: 18px;
     flex-shrink: 0;
   }
 
-  /* ── STATUS BADGE ── */
   .badge {
     display: inline-block;
     font-size: 10px; font-weight: 700;
@@ -235,7 +285,6 @@
   .badge-cancelled        { background: #f0f0f0;            color: var(--grey-mid); }
   .badge-expired          { background: #f0f0f0;            color: var(--grey-mid); }
 
-  /* ── BOOKING-TYPE PILL ── */
   .type-pill {
     display: inline-block;
     font-size: 10px; font-weight: 600;
@@ -247,9 +296,19 @@
     margin-right: 6px;
   }
 
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+  }
+
   /* ── STATES ── */
   .state {
     text-align: center; padding: 40px 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
   }
   .state-icon {
     width: 56px; height: 56px;
@@ -257,89 +316,195 @@
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 14px;
     font-size: 28px;
-    background: var(--blue-light); color: var(--blue);
+    background: var(--bg-soft); color: var(--grey-mid);
   }
   .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
   .state-msg   { font-size: 14px; color: var(--grey-mid); max-width: 360px; margin: 0 auto; }
-
   .spinner {
     width: 28px; height: 28px;
     border: 3px solid var(--border);
-    border-top-color: var(--blue);
+    border-top-color: var(--brand-primary);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
     margin: 0 auto 14px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .hidden { display: none !important; }
 
   .page-foot {
     text-align: center;
     font-size: 12px; color: var(--grey-light);
-    padding: 20px 24px 40px;
+    padding: 24px 24px 40px;
+    grid-column: 1 / -1;
   }
   .page-foot a { color: var(--grey-mid); }
 
-  @media (max-width: 520px) {
-    .navbar { padding: 0 16px; gap: 16px; }
-    .logo { font-size: 24px; }
-    .card, .booking-row { padding: 14px 16px; }
+  /* Coming-soon teaser for analytics tab */
+  .soon-card {
+    border: 1px dashed var(--border);
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    color: var(--grey-mid);
+    font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .soon-card strong { color: var(--grey-dark); font-weight: 700; }
+
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; gap: 16px; padding: 0 16px; }
+    .sidebar {
+      position: sticky; top: 60px;
+      padding: 6px;
+      display: flex; gap: 4px;
+      overflow-x: auto; scrollbar-width: none;
+      border-radius: var(--radius);
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .sidebar-title, .sidebar-divider { display: none; }
+    .sidebar a {
+      padding: 8px 12px; white-space: nowrap; font-size: 12px;
+    }
+    .sidebar a svg { display: none; }
+    .page-hero { padding: 28px 20px 48px; }
+  }
+  @media (max-width: 480px) {
+    .navbar { padding: 0 16px; gap: 12px; }
+    .logo { font-size: 22px; }
   }
 </style>
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+      <path d="M14 3v6h6M8 13h8M8 17h8M8 9h2"/>
+    </symbol>
+    <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2"/>
+      <path d="M3 10h18M8 3v4M16 3v4"/>
+    </symbol>
+    <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>
+    </symbol>
+    <symbol id="ic-star-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l2.6 6 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.4 7.8 14 3 9.6 9.4 9z"/>
+    </symbol>
+    <symbol id="ic-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+      <path d="M5.5 5h13l3.5 7v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8z"/>
+    </symbol>
+    <symbol id="ic-trend-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 17l6-6 4 4 8-8M14 7h7v7"/>
+    </symbol>
+  </defs>
+</svg>
+
 <header class="header">
   <div class="navbar">
     <a href="https://www.troddr.com" class="logo">troddr</a>
-    <span class="nav-badge">Booking Inbox</span>
+    <span class="nav-badge">Partner Dashboard</span>
   </div>
 </header>
 
 <section class="page-hero">
   <div class="hero-inner">
-    <span class="hero-eyebrow">Partner Inbox</span>
+    <span class="hero-eyebrow">Bookings</span>
     <h1 id="hero-title">Loading…</h1>
-    <p id="hero-sub">Pulling up your bookings.</p>
+    <p id="hero-sub" class="hero-sub"></p>
   </div>
 </section>
 
-<main class="page">
-
-  <!-- LOADING -->
-  <div id="view-loading" class="card state">
-    <div class="spinner"></div>
-    <div class="state-msg">Loading your inbox…</div>
-  </div>
-
-  <!-- ERROR -->
-  <div id="view-error" class="card state hidden">
-    <div class="state-icon" style="background:var(--red-light); color:var(--red);">⚠️</div>
-    <div class="state-title">We couldn't load this inbox</div>
-    <p class="state-msg">
-      This link may have expired or been revoked.
-      Reply to any TRODDR booking email if you think this is a mistake.
-    </p>
-  </div>
-
-  <!-- INBOX -->
-  <div id="view-inbox" class="hidden">
-    <div class="filter-bar" id="filter-bar"></div>
-    <div id="bookings-list"></div>
-    <div id="empty-state" class="card state hidden">
-      <div class="state-icon">📭</div>
-      <div class="state-title">No bookings in this view</div>
-      <p class="state-msg">When a guest sends a request, it'll appear here.</p>
+<!-- LOADING -->
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="spinner"></div>
+      <div class="state-msg">Loading your inbox…</div>
     </div>
   </div>
+</div>
+
+<!-- ERROR -->
+<div class="layout hidden" id="view-error">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="state-title">We couldn't load this inbox</div>
+      <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR booking email if you think this is a mistake.</p>
+    </div>
+  </div>
+</div>
+
+<!-- INBOX -->
+<div class="layout hidden" id="view-inbox">
+
+  <aside class="sidebar">
+    <div class="sidebar-title">Dashboard</div>
+    <a class="page-link" data-href="/partner/listing">
+      <svg><use href="#ic-doc"/></svg> Listing
+    </a>
+    <a class="page-link active" data-href="/partner/bookings">
+      <svg><use href="#ic-calendar"/></svg> Bookings
+    </a>
+    <a class="page-link" data-href="/partner/loyalty">
+      <svg><use href="#ic-bolt"/></svg> Loyalty
+    </a>
+    <a class="page-link" data-href="/partner/feedback">
+      <svg><use href="#ic-star-nav"/></svg> Feedback
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-title">On this page</div>
+    <a href="#inbox" class="jump-link active" data-section="inbox">
+      <svg><use href="#ic-inbox"/></svg> Inbox
+    </a>
+    <a href="#analytics" class="jump-link" data-section="analytics">
+      <svg><use href="#ic-trend-up"/></svg> Analytics
+    </a>
+  </aside>
+
+  <main class="main">
+
+    <section class="section" id="inbox">
+      <div class="section-head">
+        <h2 class="section-title">Booking Inbox</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="filter-bar" id="filter-bar"></div>
+      <div id="bookings-list"></div>
+      <div id="empty-state" class="card state hidden">
+        <div class="state-icon">
+          <svg width="24" height="24"><use href="#ic-inbox"/></svg>
+        </div>
+        <div class="state-title">No bookings in this view</div>
+        <p class="state-msg">When a guest sends a request, it'll appear here.</p>
+      </div>
+    </section>
+
+    <section class="section" id="analytics">
+      <div class="section-head">
+        <h2 class="section-title">Booking Analytics</h2>
+        <span class="pill">Coming soon</span>
+      </div>
+      <div class="soon-card">
+        <strong>Coming next:</strong>
+        Conversion rate, average response time, breakdown by booking type, and most-requested dates.
+      </div>
+    </section>
+
+  </main>
 
   <p class="page-foot">
     Bookmark this page to manage future bookings.<br>
     Questions? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a><br>
-    © 2026 TRODDR · Made with ❤️ in Jamaica
+    © 2026 TRODDR · Made with care in Jamaica
   </p>
-</main>
+</div>
 
 <script>
   const { createClient } = supabase;
@@ -350,7 +515,7 @@
   const hide = (id) => $(id).classList.add('hidden');
 
   function fmtDate(d) {
-    if (!d) return '—';
+    if (!d) return 'N/A';
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
       weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
     });
@@ -391,8 +556,7 @@
     })[t] || t;
   }
 
-  // ── Filter definitions ────────────────────────────────────
-  // Order matters — first match shown leftmost.
+  // Filter order: first match shown leftmost.
   const FILTERS = [
     { id: 'pending',          label: 'Pending',         match: (b) => b.status === 'pending' },
     { id: 'counter_proposed', label: 'Counter-Offered', match: (b) => b.status === 'counter_proposed' },
@@ -404,38 +568,71 @@
   let activeFilter = 'pending';
   let allBookings  = [];
 
-  // ── Load ──────────────────────────────────────────────────
+  function applyBrand(program) {
+    if (!program) return;
+    const root = document.documentElement.style;
+    if (program.primary_color)   root.setProperty('--brand-primary',   program.primary_color);
+    if (program.accent_color)    root.setProperty('--brand-accent',    program.accent_color);
+    if (program.text_color)      root.setProperty('--brand-text',      program.text_color);
+    if (program.secondary_color) root.setProperty('--brand-secondary', program.secondary_color);
+  }
+
+  function setupSidebar(capabilities) {
+    const token = new URLSearchParams(location.search).get('token') || '';
+    const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
+
+    document.querySelectorAll('.page-link').forEach(a => {
+      const key = a.dataset.href.split('/').pop();
+      if (caps[key] === false) { a.style.display = 'none'; return; }
+      const url = new URL(a.dataset.href, location.origin);
+      if (token) url.searchParams.set('token', token);
+      a.href = url.toString();
+    });
+
+    const jumpLinks = document.querySelectorAll('.jump-link');
+    const sections  = Array.from(jumpLinks).map(l => $(l.dataset.section)).filter(Boolean);
+    function update() {
+      const scrollY = window.scrollY + 120;
+      let activeId = sections[0]?.id;
+      for (const sec of sections) {
+        if (sec.offsetTop <= scrollY) activeId = sec.id;
+      }
+      jumpLinks.forEach(l => l.classList.toggle('active', l.dataset.section === activeId));
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
   async function load() {
     const token = new URLSearchParams(location.search).get('token');
-    if (!token) {
-      hide('view-loading'); show('view-error');
-      return;
-    }
+    if (!token) { hide('view-loading'); show('view-error'); return; }
 
-    const [{ data: partners, error: partnerErr },
-           { data: bookings, error: bookErr }] = await Promise.all([
-      db.rpc('get_partner_by_token',          { p_token: token }),
-      db.rpc('get_bookings_by_partner_token', { p_token: token }),
+    const [partnerRes, bookingsRes, capsRes] = await Promise.all([
+      db.rpc('get_partner_by_token',              { p_token: token }),
+      db.rpc('get_bookings_by_partner_token',     { p_token: token }),
+      db.rpc('get_partner_capabilities_by_token', { p_token: token }),
     ]);
 
-    if (partnerErr || !partners || !partners.length) {
+    if (partnerRes.error || !partnerRes.data || !partnerRes.data.length) {
       hide('view-loading'); show('view-error');
       return;
     }
-    if (bookErr) {
+    if (bookingsRes.error) {
       hide('view-loading'); show('view-error');
       return;
     }
 
-    const place = partners[0];
-    allBookings = bookings || [];
+    const place = partnerRes.data[0];
+    allBookings = bookingsRes.data || [];
 
-    $('hero-title').textContent = `${place.place_name} — Booking Inbox`;
+    const caps = capsRes.data;
+    applyBrand(caps && caps.program);
+
+    $('hero-title').textContent = place.place_name;
     $('hero-sub').textContent   = allBookings.length === 1
-      ? '1 booking'
-      : `${allBookings.length} bookings`;
+      ? '1 booking request'
+      : `${allBookings.length} booking requests`;
 
-    // Default to whichever filter has results, preferring pending
     if (!FILTERS.find((f) => f.id === activeFilter && allBookings.some(f.match))) {
       activeFilter = (FILTERS.find((f) => allBookings.some(f.match)) || FILTERS[FILTERS.length - 1]).id;
     }
@@ -444,6 +641,7 @@
     renderList();
     hide('view-loading');
     show('view-inbox');
+    setupSidebar(caps && caps.capabilities);
   }
 
   function renderFilters() {

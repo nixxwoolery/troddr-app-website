@@ -988,9 +988,13 @@
   }
 
   // ── Sidebar wiring ───────────────────────────────────────
-  function setupSidebar() {
+  function setupSidebar(capabilities) {
     const token = new URLSearchParams(location.search).get('token') || '';
+    const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
+
     document.querySelectorAll('.page-link').forEach(a => {
+      const key = a.dataset.href.split('/').pop();
+      if (caps[key] === false) { a.style.display = 'none'; return; }
       const url = new URL(a.dataset.href, location.origin);
       if (token) url.searchParams.set('token', token);
       a.href = url.toString();
@@ -1015,9 +1019,15 @@
     const token = new URLSearchParams(location.search).get('token');
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
-    const { data, error } = await db.rpc('get_partner_listing_by_token', { p_token: token });
-    if (error || !data || !data.place) {
-      console.error('listing error', error);
+    const [listingRes, capsRes] = await Promise.all([
+      db.rpc('get_partner_listing_by_token',      { p_token: token }),
+      db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+    ]);
+
+    const data = listingRes.data;
+    const caps = capsRes.data;
+    if (listingRes.error || !data || !data.place) {
+      console.error('listing error', listingRes.error);
       hide('view-loading'); show('view-error');
       return;
     }
@@ -1032,7 +1042,7 @@
 
     hide('view-loading');
     show('view-dashboard');
-    setupSidebar();
+    setupSidebar(caps && caps.capabilities);
   }
 
   load();
