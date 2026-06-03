@@ -71,7 +71,9 @@ begin
   if v_event.id is not null then
     v_has_vendors := coalesce(
       (select bool_or(t->>'key' = 'vendors')
-         from jsonb_array_elements(nullif(v_event.tabs, '')::jsonb) t),
+         from jsonb_array_elements(
+           coalesce(nullif(v_event.tabs, '')::jsonb, '[]'::jsonb)
+         ) t),
       false);
 
     return jsonb_build_object(

@@ -431,46 +431,149 @@
   .funnel-conv.muted { color: var(--grey-light); }
 
   /* ── VENDORS ── */
-  .vendors-card {
+  .vendor-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .vendor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .vendor-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .vendor-card:hover { border-color: var(--brand-primary); transform: translateY(-1px); }
+  .vendor-cover {
+    height: 96px;
+    background: var(--bg-soft) center / cover no-repeat;
+    position: relative;
+  }
+  .vendor-logo {
+    position: absolute;
+    bottom: -16px; left: 12px;
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    background: #fff center / contain no-repeat;
+    border: 2px solid #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .vendor-featured {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px;
+    background: var(--brand-accent);
+    color: #111;
+    border-radius: 100px;
+  }
+  .vendor-body {
+    padding: 22px 14px 14px;
+  }
+  .vendor-name {
+    font-size: 14px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 4px;
+    line-height: 1.25;
+  }
+  .vendor-meta {
+    font-size: 11px; color: var(--grey-mid);
+    display: flex; flex-wrap: wrap; gap: 4px 10px;
+  }
+  .vendor-meta .booth {
+    color: var(--brand-primary);
+    font-weight: 700;
+  }
+  .vendor-place-link {
+    margin-top: 8px;
+    font-size: 11px; font-weight: 600;
+    color: var(--brand-primary);
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .vendor-place-link svg { width: 10px; height: 10px; }
+
+  /* ── RATED ITEMS ── */
+  .rated-items {
+    display: grid; gap: 8px;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 24px;
+    padding: 18px;
+    margin-top: 14px;
   }
-  .vendors-empty {
-    display: flex; gap: 20px; align-items: flex-start;
-    padding: 8px 0;
+  .rated-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 6px;
+    border-bottom: 1px solid var(--border-soft);
   }
-  .vendors-empty-icon {
-    width: 48px; height: 48px;
-    background: var(--brand-accent);
+  .rated-row:last-child { border-bottom: none; }
+  .rated-name {
+    font-size: 13px; font-weight: 600;
     color: var(--black);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .vendors-empty-icon svg { width: 24px; height: 24px; }
-  .vendors-empty-body { flex: 1; }
-  .vendors-empty-title {
-    font-size: 15px; font-weight: 700;
+  .rated-vendor {
+    font-size: 10px; font-weight: 500;
+    color: var(--grey-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .rated-count {
+    font-size: 13px; font-weight: 800;
+    color: var(--brand-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .rated-count .lbl {
+    font-size: 10px; color: var(--grey-mid);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-left: 4px;
+  }
+
+  /* ── SPONSORS ── */
+  .sponsors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .sponsor-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s;
+  }
+  .sponsor-card:hover { border-color: var(--brand-primary); }
+  .sponsor-logo {
+    width: 100%;
+    height: 48px;
+    background: center / contain no-repeat;
+    margin-bottom: 10px;
+  }
+  .sponsor-name {
+    font-size: 13px; font-weight: 700;
     color: var(--black);
     margin-bottom: 4px;
   }
-  .vendors-empty-text {
-    font-size: 13px; color: var(--grey-dark);
-    line-height: 1.55;
-    margin-bottom: 10px;
-  }
-  .vendors-future-list {
-    display: grid; gap: 6px;
-    font-size: 12px; color: var(--grey-mid);
-  }
-  .vendors-future-list li { list-style: none; padding-left: 16px; position: relative; }
-  .vendors-future-list li::before {
-    content: ''; position: absolute; left: 0; top: 8px;
-    width: 6px; height: 6px;
-    background: var(--brand-primary);
-    border-radius: 50%;
+  .sponsor-tier {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--grey-mid);
   }
 
   /* ── LOCKED / SOON ── */
@@ -649,6 +752,7 @@
     <div class="state">
       <div class="state-title">We couldn't load this event</div>
       <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.</p>
+      <pre id="error-detail" style="margin-top:18px; padding:10px 14px; background:var(--bg-soft); border:1px solid var(--border); border-radius:8px; font-size:11px; color:var(--grey-mid); text-align:left; max-width:560px; margin-left:auto; margin-right:auto; white-space:pre-wrap; overflow:auto;"></pre>
     </div>
   </div>
 </div>
@@ -669,6 +773,9 @@
     </a>
     <a href="#vendors"    class="jump-link" data-section="vendors" id="nav-vendors" style="display:none">
       <svg><use href="#ic-shop"/></svg> Vendors
+    </a>
+    <a href="#sponsors"   class="jump-link" data-section="sponsors" id="nav-sponsors" style="display:none">
+      <svg><use href="#ic-bolt"/></svg> Sponsors
     </a>
     <a href="#actions"    class="jump-link" data-section="actions">
       <svg><use href="#ic-bolt"/></svg> Action Center
@@ -716,10 +823,24 @@
       <div class="section-head">
         <div>
           <h2 class="section-title">Vendors</h2>
-          <div class="section-sub">Vendor lineup, listings, and guest interactions with each vendor.</div>
+          <div class="section-sub">Lineup, menus, and what guests actually rated.</div>
         </div>
+        <span class="pill live">Live</span>
       </div>
-      <div class="vendors-card" id="vendors-card"></div>
+      <div class="vendor-stats" id="vendor-stats"></div>
+      <div class="vendor-grid" id="vendor-grid"></div>
+      <div class="rated-items hidden" id="rated-items"></div>
+    </section>
+
+    <section class="section" id="sponsors" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Sponsors</h2>
+          <div class="section-sub">Active sponsor lineup for this event.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="sponsors-grid" id="sponsors-grid"></div>
     </section>
 
     <section class="section" id="actions">
@@ -930,35 +1051,114 @@
     $('funnel').innerHTML = `<div class="funnel-steps">${html}</div>`;
   }
 
-  // ── Vendors (placeholder: schema not wired yet) ──────────
+  // ── Vendors (real data from event_vendors_with_menu + ratings) ─
   function renderVendors(data) {
-    // Only show if the event has a "vendors" tab in its app config.
     const hasVendorTab = data.capabilities && data.capabilities.vendors;
-    if (!hasVendorTab) return;
+    const vendors = data.vendors || [];
+    const vStats = data.vendor_stats || {};
+    const mStats = data.menu_stats || {};
+    const rated = data.top_rated_items || [];
+
+    if (!hasVendorTab && !vendors.length) return;
 
     $('vendors').style.display = '';
     $('nav-vendors').style.display = '';
 
-    $('vendors-card').innerHTML = `
-      <div class="vendors-empty">
-        <div class="vendors-empty-icon">
-          <svg><use href="#ic-shop"/></svg>
+    // Vendor name lookup for rated items
+    const vendorNameById = {};
+    vendors.forEach(v => { vendorNameById[v.vendor_id] = v.name; });
+
+    // Stats strip
+    const cards = [
+      { label: 'Vendors',         value: vStats.total || 0,         sub: vStats.featured ? `${vStats.featured} featured` : 'all vendors' },
+      { label: 'With Menu',       value: mStats.vendors_with_menu || 0, sub: `${mStats.items_total || 0} menu items` },
+      { label: 'Linked to Place', value: vStats.with_place || 0,    sub: 'cross-promo enabled' },
+      { label: 'Guest Ratings',
+        value: (data.rating_summary && data.rating_summary.total_ratings) || 0,
+        sub: data.rating_summary && data.rating_summary.unique_raters
+          ? `${data.rating_summary.unique_raters} unique raters`
+          : 'no ratings yet' },
+    ];
+    $('vendor-stats').innerHTML = cards.map(c => `
+      <div class="stat">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value"><span>${c.value}</span></div>
+        <div class="stat-sub">${c.sub}</div>
+      </div>`).join('');
+
+    // Vendor grid
+    if (!vendors.length) {
+      $('vendor-grid').innerHTML = `
+        <div class="state" style="grid-column: 1 / -1;">
+          <div class="state-title">No vendors added yet</div>
+          <p class="state-msg">Vendors and their menus will appear here once added to this event.</p>
+        </div>`;
+    } else {
+      $('vendor-grid').innerHTML = vendors.map(v => {
+        const cover = v.cover_image_url || (v.place_image && v.place_image[0]);
+        const logo  = v.logo_url;
+        return `
+          <div class="vendor-card">
+            <div class="vendor-cover" ${cover ? `style="background-image:url('${escapeHtml(cover)}')"` : ''}>
+              ${v.is_featured ? '<span class="vendor-featured">Featured</span>' : ''}
+              ${logo ? `<div class="vendor-logo" style="background-image:url('${escapeHtml(logo)}')"></div>` : ''}
+            </div>
+            <div class="vendor-body">
+              <div class="vendor-name">${escapeHtml(v.name || 'Unnamed vendor')}</div>
+              <div class="vendor-meta">
+                ${v.booth_number ? `<span class="booth">Booth ${escapeHtml(v.booth_number)}</span>` : ''}
+                ${v.vendor_type ? `<span>${escapeHtml(v.vendor_type)}</span>` : ''}
+                ${v.place_category ? `<span>${escapeHtml(v.place_category)}</span>` : ''}
+              </div>
+              ${v.place_slug && v.place_name
+                ? `<a class="vendor-place-link" href="/listings/${escapeHtml(v.place_slug)}" target="_blank" rel="noopener">
+                     <svg><use href="#ic-external"/></svg> ${escapeHtml(v.place_name)}
+                   </a>`
+                : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Top-rated items
+    if (rated.length) {
+      $('rated-items').classList.remove('hidden');
+      $('rated-items').innerHTML = `
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--grey-mid); margin-bottom:8px;">
+          Most-Rated Menu Items
         </div>
-        <div class="vendors-empty-body">
-          <div class="vendors-empty-title">Your event has a Vendors tab</div>
-          <div class="vendors-empty-text">
-            Once the vendor lineup is wired into the dashboard, you'll be able to see each vendor and how guests are interacting with them.
-          </div>
-          <ul class="vendors-future-list">
-            <li>Vendor lineup with menu / offerings</li>
-            <li>Saves / favourites per vendor</li>
-            <li>Vendor profile views and tap-throughs</li>
-            <li>"Most popular" ranking on the night</li>
-            <li>Vendor-level guest feedback after the event</li>
-          </ul>
-        </div>
-      </div>
-    `;
+        ${rated.map(r => {
+          const vendorName = vendorNameById[r.vendor_id] || 'Unknown vendor';
+          return `
+            <div class="rated-row">
+              <div>
+                <div class="rated-name">${escapeHtml(r.item_name)}</div>
+                <div class="rated-vendor">${escapeHtml(vendorName)}</div>
+              </div>
+              <div class="rated-count">${r.count}<span class="lbl">ratings</span></div>
+            </div>`;
+        }).join('')}
+      `;
+    } else {
+      $('rated-items').classList.add('hidden');
+    }
+  }
+
+  // ── Sponsors ─────────────────────────────────────────────
+  function renderSponsors(data) {
+    const sponsors = data.sponsors || [];
+    if (!sponsors.length) return;
+
+    $('sponsors').style.display = '';
+    $('nav-sponsors').style.display = '';
+
+    $('sponsors-grid').innerHTML = sponsors.map(s => `
+      <a class="sponsor-card" ${s.website ? `href="${escapeHtml(s.website)}" target="_blank" rel="noopener"` : ''}>
+        ${s.logo_url ? `<div class="sponsor-logo" style="background-image:url('${escapeHtml(s.logo_url)}')"></div>` : ''}
+        <div class="sponsor-name">${escapeHtml(s.name)}</div>
+        <div class="sponsor-tier">${escapeHtml(s.tier_label || s.tier || '')}</div>
+      </a>
+    `).join('');
   }
 
   // ── Action Center ────────────────────────────────────────
@@ -1096,6 +1296,12 @@
     const { data, error } = await db.rpc('get_partner_event_by_token', { p_token: token });
     if (error || !data || !data.event) {
       console.error('event error', error);
+      const msg = error
+        ? `Supabase error: ${error.message || error.code || JSON.stringify(error)}\n\nHint: did you run supabase/event-analytics.sql and the updated supabase/partner-capabilities.sql in the SQL editor?`
+        : (!data
+            ? 'RPC returned no data. The token may not match any event.'
+            : 'RPC returned data but no event field. Unexpected shape.');
+      $('error-detail').textContent = msg;
       hide('view-loading'); show('view-error');
       return;
     }
@@ -1105,6 +1311,7 @@
     renderStats(data.stats);
     renderFunnel(data.stats);
     renderVendors(data);
+    renderSponsors(data);
     buildActions(data);
     renderLocked(data);
 
