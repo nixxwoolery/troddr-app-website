@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR — Loyalty Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --blue:        #0077CC;
+    --blue-dark:   #005fa3;
+    --blue-light:  #e8f4ff;
+    --blue-mid:    #cce5f6;
+    --gold:        #C3D600;
+    --green:       #1a7f4e;
+    --green-light: #e6f5ec;
+    --red:         #c0392b;
+    --red-light:   #fdecea;
+    --amber:       #b86e00;
+    --amber-light: #fff4e0;
+    --black:       #111111;
+    --grey-dark:   #333333;
+    --grey-mid:    #666666;
+    --grey-light:  #999999;
+    --border:      #e8e8e8;
+    --bg:          #ffffff;
+    --bg-soft:     #f8f9fa;
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
+    --shadow:      0 4px 16px rgba(0,0,0,0.08);
+    --shadow-md:   0 8px 32px rgba(0,0,0,0.1);
+
+    /* Brand vars overridden at runtime from loyalty_programs */
+    --brand-primary:   #0077CC;
+    --brand-accent:    #C3D600;
+    --brand-text:      #ffffff;
+    --brand-secondary: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky; top: 0; z-index: 200;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .navbar {
+    max-width: 1160px; margin: 0 auto;
+    padding: 0 24px; height: 64px;
+    display: flex; align-items: center; gap: 32px;
+  }
+  .logo {
+    font-size: 30px; font-weight: 700;
+    color: var(--blue); text-decoration: none;
+    letter-spacing: -1px;
+  }
+  .nav-badge {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 8px;
+    border: 1px solid var(--blue-mid);
+    margin-left: auto;
+  }
+
+  /* ── BRANDED HERO ── */
+  .page-hero {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    padding: 48px 24px 72px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .page-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 55%),
+      radial-gradient(ellipse at 20% 80%, rgba(0,0,0,0.10) 0%, transparent 55%);
+  }
+  .hero-inner { position: relative; max-width: 760px; margin: 0 auto; }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: var(--brand-text);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 20px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.22);
+  }
+  .page-hero h1 {
+    font-size: clamp(28px, 4.5vw, 40px);
+    font-weight: 700; line-height: 1.15;
+    margin-bottom: 8px;
+    letter-spacing: -0.6px;
+  }
+  .hero-reward {
+    color: var(--brand-accent);
+    font-size: 15px; font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .hero-reward .reward-divider { opacity: 0.5; margin: 0 8px; }
+
+  /* ── PAGE ── */
+  .page {
+    max-width: 1080px;
+    margin: -44px auto 96px;
+    padding: 0 16px;
+    position: relative; z-index: 10;
+  }
+
+  .section-title {
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin: 28px 4px 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+  .section-title .pill {
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 100px;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--border);
+  }
+  .section-title .pill.live {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: transparent;
+  }
+
+  /* ── STATS GRID ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .stat {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 18px 18px 16px;
+    position: relative;
+  }
+  .stat-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 32px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+  .stat-sub {
+    font-size: 12px; color: var(--grey-mid);
+    margin-top: 4px;
+  }
+  .stat-accent::after {
+    content: ''; position: absolute;
+    left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--brand-primary);
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  }
+
+  /* ── ACTION CENTER ── */
+  .actions {
+    display: grid; gap: 10px;
+  }
+  .action-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex; gap: 14px; align-items: flex-start;
+    box-shadow: var(--shadow-sm);
+  }
+  .action-card.good    { border-left-color: var(--green); }
+  .action-card.warning { border-left-color: var(--amber); }
+  .action-card.alert   { border-left-color: var(--red); }
+  .action-card.info    { border-left-color: var(--blue); }
+  .action-icon {
+    font-size: 20px; line-height: 1; flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .action-body { flex: 1; }
+  .action-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 2px;
+  }
+  .action-text {
+    font-size: 13px; color: var(--grey-dark);
+    line-height: 1.5;
+  }
+
+  /* ── MEMBER LIST ── */
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 4px;
+    overflow: hidden;
+  }
+  .member-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) auto;
+    gap: 16px; align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .member-row:last-child { border-bottom: none; }
+  .member-label {
+    font-size: 14px; font-weight: 600;
+    color: var(--black);
+    display: flex; align-items: center; gap: 8px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .member-label .crown {
+    color: var(--brand-accent);
+    font-size: 14px;
+  }
+  .member-meta {
+    font-size: 11px; font-weight: 500;
+    color: var(--grey-mid);
+    margin-top: 2px;
+  }
+  .progress-wrap { min-width: 0; }
+  .progress-bar {
+    background: var(--bg-soft);
+    height: 8px; border-radius: 100px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--brand-primary);
+    border-radius: 100px;
+    transition: width 0.4s ease;
+  }
+  .progress-text {
+    font-size: 11px; font-weight: 600;
+    color: var(--grey-mid);
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+  .progress-text strong { color: var(--brand-primary); }
+  .stamps-pill {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    font-size: 11px; font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .stamps-pill.earned {
+    background: var(--green);
+    color: #fff;
+  }
+  .stamps-pill.close {
+    background: var(--amber);
+    color: #fff;
+  }
+
+  /* ── LOCKED TEASER CARDS ── */
+  .locked-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .locked-card {
+    background: #fff;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .locked-card.almost {
+    border-style: solid;
+    border-color: var(--brand-accent);
+    background: linear-gradient(135deg, #fff 0%, #fffceb 100%);
+  }
+  .locked-card-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--grey-dark);
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .locked-card-icon { font-size: 18px; }
+  .locked-card-desc {
+    font-size: 12px; color: var(--grey-mid);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .locked-progress {
+    background: var(--bg-soft);
+    height: 6px; border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .locked-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
+    border-radius: 100px;
+  }
+  .locked-progress-text {
+    font-size: 11px; font-weight: 600;
+    color: var(--grey-mid);
+  }
+  .locked-progress-text strong { color: var(--grey-dark); }
+  .coming-soon-tag {
+    position: absolute; top: 12px; right: 12px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    font-size: 9px; font-weight: 700;
+    padding: 3px 8px; border-radius: 100px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .locked-card.almost .coming-soon-tag {
+    background: var(--brand-accent);
+    color: var(--black);
+  }
+
+  /* ── STATES ── */
+  .state {
+    text-align: center; padding: 40px 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .state-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    font-size: 28px;
+    background: var(--blue-light); color: var(--blue);
+  }
+  .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .state-msg   { font-size: 14px; color: var(--grey-mid); max-width: 360px; margin: 0 auto; }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+
+  .page-foot {
+    text-align: center;
+    font-size: 12px; color: var(--grey-light);
+    padding: 24px 24px 40px;
+  }
+  .page-foot a { color: var(--grey-mid); }
+
+  @media (max-width: 560px) {
+    .navbar { padding: 0 16px; gap: 16px; }
+    .logo { font-size: 24px; }
+    .page-hero { padding: 36px 20px 60px; }
+    .stat-value { font-size: 26px; }
+    .member-row {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .member-row .stamps-pill { justify-self: start; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Loyalty Analytics</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Partner Dashboard</span>
+    <h1 id="hero-title">Loading…</h1>
+    <p id="hero-reward" class="hero-reward"></p>
+  </div>
+</section>
+
+<main class="page">
+
+  <!-- LOADING -->
+  <div id="view-loading" class="state">
+    <div class="spinner"></div>
+    <div class="state-msg">Loading your analytics…</div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="view-error" class="state hidden">
+    <div class="state-icon" style="background:var(--red-light); color:var(--red);">⚠️</div>
+    <div class="state-title">We couldn't load this dashboard</div>
+    <p class="state-msg">
+      This link may have expired or been revoked.
+      Reply to any TRODDR email if you think this is a mistake.
+    </p>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="view-dashboard" class="hidden">
+
+    <!-- ── Snapshot ── -->
+    <div class="section-title">
+      At a glance
+      <span class="pill live">Live</span>
+    </div>
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- ── Action Center ── -->
+    <div class="section-title">
+      Action center
+      <span class="pill live">Live</span>
+    </div>
+    <div class="actions" id="actions"></div>
+
+    <!-- ── Members ── -->
+    <div class="section-title">
+      Your members
+      <span class="pill live">Live</span>
+    </div>
+    <div class="card" id="members-card"></div>
+
+    <!-- ── Locked sections (grow with data) ── -->
+    <div class="section-title">
+      Coming soon — unlocks as your program grows
+    </div>
+    <div class="locked-grid" id="locked-grid"></div>
+  </div>
+
+  <p class="page-foot">
+    Bookmark this page to track your loyalty program.<br>
+    Questions? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a><br>
+    © 2026 TRODDR · Made with ❤️ in Jamaica
+  </p>
+</main>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const $ = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  // ── Helpers ───────────────────────────────────────────────
+  function fmtRelative(ts) {
+    if (!ts) return 'never';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const m = Math.floor(diffMs / 60000);
+    if (m < 1)  return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 30) return `${d}d ago`;
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function maskedLabel(userId) {
+    if (!userId) return 'Member';
+    const tail = userId.replace(/-/g, '').slice(-4);
+    return `Member ••${tail}`;
+  }
+
+  function pluralize(n, s, p) { return n === 1 ? s : (p || s + 's'); }
+
+  // ── Brand application ────────────────────────────────────
+  function applyBrand(program) {
+    const root = document.documentElement.style;
+    if (program.primary_color)   root.setProperty('--brand-primary',   program.primary_color);
+    if (program.accent_color)    root.setProperty('--brand-accent',    program.accent_color);
+    if (program.text_color)      root.setProperty('--brand-text',      program.text_color);
+    if (program.secondary_color) root.setProperty('--brand-secondary', program.secondary_color);
+  }
+
+  // ── Stats ────────────────────────────────────────────────
+  function renderStats(stats, program) {
+    const cards = [
+      { label: 'Total Members',     value: stats.total_members,    sub: stats.new_30d > 0 ? `+${stats.new_30d} this month` : '', accent: true },
+      { label: 'Active (30d)',      value: stats.active_30d,       sub: 'visited recently' },
+      { label: 'Total Visits',      value: stats.total_visits,     sub: 'all-time stamps' },
+      { label: 'Rewards Earned',    value: stats.rewards_earned,   sub: program.reward ? `${program.reward.slice(0, 28)}${program.reward.length > 28 ? '…' : ''}` : '' },
+      { label: 'Close to Reward',   value: stats.close_to_reward,  sub: '1–2 stamps away' },
+    ];
+    $('stats-grid').innerHTML = cards.map(c => `
+      <div class="stat ${c.accent ? 'stat-accent' : ''}">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${c.value}</div>
+        ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ── Action Center ────────────────────────────────────────
+  function buildActions(data) {
+    const { stats, program, members } = data;
+    const actions = [];
+
+    if (stats.total_members === 0) {
+      actions.push({
+        level: 'info', icon: '🔵',
+        title: 'No members yet — start promoting your program',
+        text: `Add the loyalty card link to your menu, receipts, and social media so guests can sign up and start earning ${program.reward || 'rewards'}.`
+      });
+    }
+
+    if (stats.close_to_reward > 0) {
+      const n = stats.close_to_reward;
+      actions.push({
+        level: 'good', icon: '🟢',
+        title: `${n} ${pluralize(n, 'member')} ${n === 1 ? 'is' : 'are'} close to earning a reward`,
+        text: `Give ${n === 1 ? 'them' : 'these guests'} a stamp on their next visit to unlock ${program.reward || 'their reward'} and bring them back again.`
+      });
+    }
+
+    if (stats.new_30d > 0) {
+      actions.push({
+        level: 'good', icon: '🟢',
+        title: `${stats.new_30d} new ${pluralize(stats.new_30d, 'member')} this month`,
+        text: 'Your program is attracting sign-ups — keep sharing the loyalty card link to grow the base.'
+      });
+    }
+
+    if (stats.dormant_60d > 0) {
+      actions.push({
+        level: 'warning', icon: '🟡',
+        title: `${stats.dormant_60d} ${pluralize(stats.dormant_60d, 'member')} ${stats.dormant_60d === 1 ? 'hasn\'t' : 'haven\'t'} visited in 60+ days`,
+        text: 'Send a re-engagement offer — a free stamp or a small perk usually wins them back.'
+      });
+    }
+
+    if (stats.rewards_earned > 0) {
+      actions.push({
+        level: 'good', icon: '🏆',
+        title: `${stats.rewards_earned} ${pluralize(stats.rewards_earned, 'reward')} earned to date`,
+        text: 'Every redemption is proof your program is driving repeat visits. Celebrate it.'
+      });
+    }
+
+    if (actions.length === 0) {
+      actions.push({
+        level: 'info', icon: '🔵',
+        title: 'Your program is steady',
+        text: 'Keep stamping! New insights will unlock as more members join and visit.'
+      });
+    }
+
+    $('actions').innerHTML = actions.map(a => `
+      <div class="action-card ${a.level}">
+        <div class="action-icon">${a.icon}</div>
+        <div class="action-body">
+          <div class="action-title">${a.title}</div>
+          <div class="action-text">${a.text}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Member list ──────────────────────────────────────────
+  function renderMembers(data) {
+    const { members, program } = data;
+    const card = $('members-card');
+
+    if (!members.length) {
+      card.innerHTML = `
+        <div class="state" style="border:none; box-shadow:none;">
+          <div class="state-icon">👤</div>
+          <div class="state-title">No members yet</div>
+          <p class="state-msg">When someone signs up for your loyalty card, they'll appear here.</p>
+        </div>`;
+      return;
+    }
+
+    const required = program.required_stamps || 10;
+
+    // Sort: in-progress descending, then completed cycles, then most recent
+    const sorted = [...members].sort((a, b) => {
+      if (b.completed_cycles !== a.completed_cycles) return b.completed_cycles - a.completed_cycles;
+      if (b.current_stamps !== a.current_stamps) return b.current_stamps - a.current_stamps;
+      return new Date(b.last_stamped_at || 0) - new Date(a.last_stamped_at || 0);
+    });
+
+    card.innerHTML = sorted.map((m, i) => {
+      const pct = Math.min(100, Math.round((m.current_stamps / required) * 100));
+      const isVip = m.completed_cycles >= 2;
+      const isClose = m.current_stamps >= required - 2 && !m.is_redeemed && m.current_stamps < required;
+      const pillClass = m.completed_cycles > 0 ? 'earned' : (isClose ? 'close' : '');
+      const lastSeen = m.last_stamped_at ? `last visit ${fmtRelative(m.last_stamped_at)}` : `joined ${fmtRelative(m.created_at)}`;
+      const cycleNote = m.completed_cycles > 0 ? `${m.completed_cycles}× reward earned · ` : '';
+
+      return `
+        <div class="member-row">
+          <div>
+            <div class="member-label">
+              ${isVip ? '<span class="crown">★</span>' : ''}
+              ${maskedLabel(m.user_id)}
+            </div>
+            <div class="member-meta">${cycleNote}${lastSeen}</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div class="progress-text">
+              <strong>${m.current_stamps}</strong> / ${required} stamps
+              ${isClose ? ' · close to reward' : ''}
+            </div>
+          </div>
+          <span class="stamps-pill ${pillClass}">
+            ${m.completed_cycles > 0 ? `${m.completed_cycles}× ✓` : `${m.current_stamps}/${required}`}
+          </span>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Locked / "coming soon" sections ──────────────────────
+  function renderLocked(data) {
+    const { stats } = data;
+    const locked = [
+      {
+        icon: '👥', title: 'Member Segmentation',
+        desc: 'Group members into First-Time, Regulars, VIPs, and Dormant so you can target the right people.',
+        current: stats.total_members, needs: 10, unit: 'members'
+      },
+      {
+        icon: '📈', title: 'Visit Trends',
+        desc: 'See daily, weekly, and monthly visits over time to spot peaks and dips.',
+        current: stats.total_visits, needs: 30, unit: 'visits'
+      },
+      {
+        icon: '🏆', title: 'Top Customers',
+        desc: 'Identify your most valuable guests by visits and rewards earned.',
+        current: stats.total_members, needs: 10, unit: 'members'
+      },
+      {
+        icon: '🔁', title: 'Visit Frequency',
+        desc: 'See the average days between visits so you can tell if retention is slipping.',
+        current: stats.total_visits, needs: 50, unit: 'visits'
+      },
+      {
+        icon: '🌡️', title: 'Visit Heatmap',
+        desc: 'Find your busiest days and peak hours from loyalty check-ins.',
+        current: stats.total_visits, needs: 100, unit: 'visits'
+      },
+      {
+        icon: '🔄', title: 'Cohort & Retention',
+        desc: '30/60/90-day retention by sign-up cohort to track if loyalty performance is improving.',
+        current: stats.total_members, needs: 50, unit: 'members'
+      },
+      {
+        icon: '💰', title: 'Revenue Influenced', soon: true,
+        desc: 'Estimate revenue driven by loyalty once we track per-visit ticket size.',
+      },
+      {
+        icon: '🎪', title: 'Campaigns', soon: true,
+        desc: 'Run promos like "Double Stamps Tuesday" and measure incremental visits.',
+      },
+      {
+        icon: '🔭', title: 'Discovery → Loyalty Funnel', soon: true,
+        desc: 'Track guests from TRODDR app views → favourites → check-ins → loyalty sign-ups → rewards redeemed.',
+      },
+    ];
+
+    $('locked-grid').innerHTML = locked.map(l => {
+      if (l.soon) {
+        return `
+          <div class="locked-card">
+            <span class="coming-soon-tag">Coming Soon</span>
+            <div class="locked-card-title"><span class="locked-card-icon">${l.icon}</span> ${l.title}</div>
+            <div class="locked-card-desc">${l.desc}</div>
+          </div>`;
+      }
+      const pct = Math.min(100, Math.round((l.current / l.needs) * 100));
+      const almost = pct >= 60;
+      const remaining = Math.max(0, l.needs - l.current);
+      const tagText = remaining === 0 ? 'Unlocking…' : `${remaining} ${l.unit} to go`;
+      return `
+        <div class="locked-card ${almost ? 'almost' : ''}">
+          <span class="coming-soon-tag">${tagText}</span>
+          <div class="locked-card-title"><span class="locked-card-icon">${l.icon}</span> ${l.title}</div>
+          <div class="locked-card-desc">${l.desc}</div>
+          <div class="locked-progress"><div class="locked-progress-fill" style="width:${pct}%"></div></div>
+          <div class="locked-progress-text">
+            <strong>${l.current}</strong> / ${l.needs} ${l.unit}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Hero ─────────────────────────────────────────────────
+  function renderHero(place, program) {
+    $('hero-title').textContent = `${place.name} — Loyalty`;
+    const reward = program.reward || 'a loyalty reward';
+    const required = program.required_stamps || 10;
+    $('hero-reward').innerHTML = `
+      ${required} stamps
+      <span class="reward-divider">→</span>
+      ${reward}
+    `;
+  }
+
+  // ── Load ─────────────────────────────────────────────────
+  async function load() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) {
+      hide('view-loading'); show('view-error');
+      return;
+    }
+
+    const { data, error } = await db.rpc('get_loyalty_analytics_by_token', { p_token: token });
+    if (error || !data) {
+      console.error('analytics error', error);
+      hide('view-loading'); show('view-error');
+      return;
+    }
+
+    applyBrand(data.program || {});
+    renderHero(data.place, data.program || {});
+    renderStats(data.stats, data.program || {});
+    buildActions(data);
+    renderMembers(data);
+    renderLocked(data);
+
+    hide('view-loading');
+    show('view-dashboard');
+  }
+
+  load();
+</script>
+
+</body>
+</html>
