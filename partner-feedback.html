@@ -163,6 +163,37 @@
     background: var(--border);
     margin: 8px 8px;
   }
+  .entity-picker { padding: 6px 4px 10px; }
+  .partner-tag {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--grey-light);
+    padding: 0 8px 2px;
+  }
+  .partner-name {
+    font-size: 12px; font-weight: 700;
+    color: var(--grey-dark);
+    padding: 0 8px 8px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .entity-select {
+    width: 100%;
+    padding: 8px 28px 8px 10px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    color: var(--brand-primary);
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+  }
+  .entity-select:hover { border-color: var(--brand-primary); }
+  .entity-select optgroup { font-weight: 700; }
   .main { min-width: 0; padding-bottom: 80px; }
 
   .section { margin-bottom: 36px; scroll-margin-top: 80px; }
@@ -610,6 +641,12 @@
 <div class="layout hidden" id="view-dashboard">
 
   <aside class="sidebar">
+    <div class="entity-picker hidden" id="entity-picker">
+      <div class="partner-tag">Partner</div>
+      <div class="partner-name" id="partner-name"></div>
+      <select class="entity-select" id="entity-select" aria-label="Switch entity"></select>
+    </div>
+    <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
     <div class="sidebar-title">Dashboard</div>
     <a class="page-link" data-href="/partner/listing">
       <svg><use href="#ic-doc"/></svg> Listing
@@ -1011,6 +1048,40 @@
     }).join('');
   }
 
+  // ── Entity picker (multi-domain partners) ────────────────
+  function renderEntityPicker(partner) {
+    if (!partner || !partner.entities || partner.entities.length <= 1) return;
+    const picker = $('entity-picker'); if (!picker) return;
+    picker.classList.remove('hidden');
+    const div = $('entity-picker-divider'); if (div) div.style.display = '';
+    $('partner-name').textContent = partner.name || 'Partner';
+
+    const select = $('entity-select');
+    const places = partner.entities.filter(e => e.type === 'place');
+    const events = partner.entities.filter(e => e.type === 'event');
+    const opt = (e) => {
+      const sel = e.id === partner.current_id ? ' selected' : '';
+      const safe = String(e.name || '').replace(/[<>&"]/g, '');
+      return `<option value="${e.token}" data-type="${e.type}"${sel}>${safe}</option>`;
+    };
+    let html = '';
+    if (places.length) html += '<optgroup label="Places">' + places.map(opt).join('') + '</optgroup>';
+    if (events.length) html += '<optgroup label="Events">' + events.map(opt).join('') + '</optgroup>';
+    select.innerHTML = html;
+    select.addEventListener('change', () => {
+      const o = select.options[select.selectedIndex];
+      const token = o.value;
+      let path;
+      if (o.dataset.type === 'event') path = '/partner/event';
+      else {
+        const current = location.pathname.split('/').pop().replace('.html', '');
+        const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
+        path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
+      }
+      location.href = `${path}?token=${encodeURIComponent(token)}`;
+    });
+  }
+
   // ── Sidebar wiring ───────────────────────────────────────
   function setupSidebar(capabilities) {
     const token = new URLSearchParams(location.search).get('token') || '';
@@ -1069,6 +1140,7 @@
 
     hide('view-loading');
     show('view-dashboard');
+    renderEntityPicker(caps && caps.partner);
     setupSidebar(caps && caps.capabilities);
   }
 
