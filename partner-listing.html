@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Listing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --blue:        #0077CC;
+    --blue-light:  #e8f4ff;
+    --green:       #1a7f4e;
+    --green-light: #e6f5ec;
+    --red:         #c0392b;
+    --red-light:   #fdecea;
+    --amber:       #b86e00;
+    --amber-light: #fff4e0;
+    --black:       #111111;
+    --grey-dark:   #333333;
+    --grey-mid:    #666666;
+    --grey-light:  #999999;
+    --border:      #e8e8e8;
+    --border-soft: #f0f0f0;
+    --bg:          #ffffff;
+    --bg-soft:     #f8f9fa;
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06);
+    --shadow:      0 4px 16px rgba(0,0,0,0.06);
+
+    --brand-primary:   #0077CC;
+    --brand-accent:    #C3D600;
+    --brand-text:      #ffffff;
+    --brand-secondary: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky; top: 0; z-index: 200;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 60px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .logo {
+    font-size: 26px; font-weight: 700;
+    color: var(--blue); text-decoration: none;
+    letter-spacing: -1px;
+  }
+  .nav-badge {
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-left: auto;
+  }
+
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    padding: 32px 24px 56px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; z-index: 1; }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    color: var(--brand-text);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 4px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .page-hero h1 {
+    font-size: clamp(28px, 4.5vw, 40px);
+    font-weight: 700; line-height: 1.15;
+    margin-bottom: 10px;
+    letter-spacing: -0.6px;
+  }
+  .hero-sub {
+    color: rgba(255,255,255,0.85);
+    font-size: 14px; font-weight: 400;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    max-width: 1320px;
+    margin: -32px auto 0;
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    position: relative; z-index: 10;
+  }
+  .sidebar {
+    position: sticky; top: 76px;
+    align-self: start;
+    height: max-content;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .sidebar-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--grey-light);
+    padding: 10px 12px 8px;
+  }
+  .sidebar a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    color: var(--grey-dark);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar a:hover { background: var(--bg-soft); color: var(--black); }
+  .sidebar a.active {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    font-weight: 600;
+  }
+  .sidebar a svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar a.jump-link { font-size: 12px; padding: 7px 12px; color: var(--grey-mid); }
+  .sidebar a.jump-link.active {
+    background: transparent;
+    color: var(--brand-primary);
+    font-weight: 700;
+  }
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 8px;
+  }
+  .main { min-width: 0; padding-bottom: 80px; }
+
+  .section { margin-bottom: 36px; scroll-margin-top: 80px; }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+  }
+  .section-sub {
+    font-size: 12px; color: var(--grey-mid);
+    font-weight: 500;
+  }
+  .pill {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 100px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    border: 1px solid var(--border);
+  }
+  .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
+
+  /* ── LISTING PREVIEW (2-col on desktop) ── */
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .preview-card, .summary-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .preview-img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--bg-soft) center / cover no-repeat;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .preview-img-empty {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--grey-light);
+    font-size: 12px;
+  }
+  .preview-cat {
+    position: absolute; top: 12px; left: 12px;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 10px; border-radius: 100px;
+  }
+  .preview-body {
+    padding: 18px 20px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .preview-name {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
+  }
+  .preview-meta {
+    display: flex; flex-wrap: wrap; gap: 6px 10px;
+    font-size: 12px; color: var(--grey-mid);
+    font-weight: 500;
+  }
+  .preview-meta .dot { color: var(--grey-light); }
+  .preview-desc {
+    font-size: 13px; color: var(--grey-dark);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .preview-note {
+    font-size: 13px; color: var(--grey-dark);
+    font-style: italic;
+    padding: 10px 12px;
+    border-left: 3px solid var(--brand-accent);
+    background: var(--bg-soft);
+    border-radius: 0 6px 6px 0;
+  }
+  .preview-quick-rows {
+    display: grid; gap: 6px;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .preview-quick-row {
+    display: grid; grid-template-columns: 90px 1fr; gap: 12px;
+    color: var(--grey-dark);
+  }
+  .preview-quick-row .lbl {
+    font-weight: 600; color: var(--grey-mid);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-size: 10px;
+    padding-top: 2px;
+  }
+  .preview-links {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 6px;
+  }
+  .preview-link {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 10px;
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 11px; font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .preview-link:hover {
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+  }
+  .preview-link.primary {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    border-color: var(--brand-primary);
+  }
+  .preview-link.primary:hover {
+    filter: brightness(1.08);
+    color: var(--brand-text);
+  }
+  .preview-link svg { width: 12px; height: 12px; }
+
+  /* ── SUMMARY (right side of preview-grid) ── */
+  .summary-card { padding: 20px; gap: 16px; }
+  .summary-overall {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .overall-score {
+    font-size: 44px; font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1.5px;
+    color: var(--black);
+  }
+  .overall-score .of {
+    font-size: 18px; color: var(--grey-light);
+    font-weight: 600;
+    margin-left: 4px;
+  }
+  .overall-meta {
+    flex: 1; min-width: 0;
+  }
+  .overall-stars {
+    display: flex; gap: 1px;
+    color: var(--brand-accent);
+    margin-bottom: 4px;
+  }
+  .overall-stars svg { width: 16px; height: 16px; }
+  .overall-stars .star-empty { color: var(--border); }
+  .overall-label {
+    font-size: 12px; font-weight: 600;
+    color: var(--grey-mid);
+  }
+  .overall-empty {
+    font-size: 13px;
+    color: var(--grey-mid);
+    text-align: center;
+    padding: 20px;
+  }
+  .would-return-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .would-return-label { color: var(--grey-mid); font-weight: 500; }
+  .would-return-value {
+    font-size: 18px; font-weight: 800;
+    color: var(--brand-primary);
+  }
+  .summary-tags-block {
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .summary-tags-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 8px;
+  }
+  .tag-list {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .tag {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    color: var(--grey-dark);
+    font-size: 12px; font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+  .tag .count {
+    color: var(--brand-primary);
+    font-weight: 700;
+    margin-left: 4px;
+  }
+
+  /* ── STATS STRIP ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .stat {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 14px 14px;
+    min-width: 0;
+  }
+  .stat-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 28px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+  .stat-sub {
+    font-size: 12px; color: var(--grey-mid);
+    margin-top: 6px;
+  }
+
+  /* ── RATING BREAKDOWN BARS ── */
+  .ratings-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+  }
+  .rating-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 60px;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .rating-row:last-child { border-bottom: none; }
+  .rating-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--grey-dark);
+    text-transform: capitalize;
+  }
+  .rating-bar {
+    height: 8px;
+    background: var(--bg-soft);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .rating-bar-fill {
+    height: 100%;
+    background: var(--brand-primary);
+    border-radius: 100px;
+    transition: width 0.3s ease;
+  }
+  .rating-value {
+    font-size: 14px; font-weight: 700;
+    color: var(--black);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .rating-value .of { color: var(--grey-light); font-weight: 500; }
+  .rating-value.empty {
+    color: var(--grey-light);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── FEEDBACK FEED ── */
+  .feedback-feed {
+    display: grid; gap: 10px;
+  }
+  .fb-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .fb-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .fb-id {
+    font-size: 13px; font-weight: 700;
+    color: var(--black);
+  }
+  .fb-time {
+    font-size: 11px; color: var(--grey-mid);
+  }
+  .fb-ratings {
+    display: flex; flex-wrap: wrap; gap: 4px 12px;
+    font-size: 12px; color: var(--grey-dark);
+    margin-bottom: 8px;
+  }
+  .fb-rating-pill {
+    font-size: 11px;
+    color: var(--grey-dark);
+  }
+  .fb-rating-pill strong {
+    color: var(--brand-primary);
+    margin-left: 3px;
+  }
+  .fb-rating-pill .name {
+    color: var(--grey-mid);
+    text-transform: capitalize;
+  }
+  .fb-tags {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-top: 6px;
+  }
+  .fb-tag {
+    font-size: 10px; font-weight: 600;
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .fb-return {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-top: 8px;
+  }
+  .fb-return.yes { color: var(--green); }
+  .fb-return.no  { color: var(--red); }
+
+  /* ── STATES ── */
+  .state {
+    text-align: center; padding: 40px 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .state-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    background: var(--bg-soft); color: var(--grey-mid);
+  }
+  .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .state-msg   { font-size: 14px; color: var(--grey-mid); max-width: 380px; margin: 0 auto; }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--brand-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+
+  .page-foot {
+    text-align: center;
+    font-size: 12px; color: var(--grey-light);
+    padding: 24px 24px 40px;
+    grid-column: 1 / -1;
+  }
+  .page-foot a { color: var(--grey-mid); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .preview-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; gap: 16px; padding: 0 16px; }
+    .sidebar {
+      position: sticky; top: 60px;
+      padding: 6px;
+      display: flex; gap: 4px;
+      overflow-x: auto; scrollbar-width: none;
+      border-radius: var(--radius);
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .sidebar-title, .sidebar-divider { display: none; }
+    .sidebar a {
+      padding: 8px 12px; white-space: nowrap; font-size: 12px;
+    }
+    .sidebar a svg { display: none; }
+    .page-hero { padding: 28px 20px 48px; }
+    .stat-value { font-size: 22px; }
+    .rating-row {
+      grid-template-columns: 100px 1fr 56px;
+      gap: 10px;
+    }
+  }
+  @media (max-width: 480px) {
+    .navbar { padding: 0 16px; gap: 12px; }
+    .logo { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── SVG sprite ───────────────────────────────────────────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-star-filled" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l2.9 6.6 7.1.6-5.4 4.8 1.7 7L12 17.3 5.7 21l1.7-7L2 9.2l7.1-.6z"/>
+    </symbol>
+    <symbol id="ic-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+      <path d="M12 3l2.6 6 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.4 7.8 14 3 9.6 9.4 9z"/>
+    </symbol>
+    <symbol id="ic-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3h7v7M21 3l-9 9M19 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/>
+    </symbol>
+    <symbol id="ic-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </symbol>
+    <symbol id="ic-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>
+    </symbol>
+    <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+      <path d="M14 3v6h6M8 13h8M8 17h8M8 9h2"/>
+    </symbol>
+    <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2"/>
+      <path d="M3 10h18M8 3v4M16 3v4"/>
+    </symbol>
+    <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>
+    </symbol>
+    <symbol id="ic-star-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l2.6 6 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.4 7.8 14 3 9.6 9.4 9z"/>
+    </symbol>
+    <symbol id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="ic-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.6 4.5 8.4 8.4 0 0 1-4-1L3 21l1.9-5.4a8.5 8.5 0 0 1-1-4 8.5 8.5 0 0 1 4.5-7.6 8.4 8.4 0 0 1 4-1A8.5 8.5 0 0 1 21 11.5z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Partner Dashboard</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Listing</span>
+    <h1 id="hero-title">Loading…</h1>
+    <p id="hero-sub" class="hero-sub"></p>
+  </div>
+</section>
+
+<!-- LOADING -->
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="spinner"></div>
+      <div class="state-msg">Loading your listing…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="layout hidden" id="view-error">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="state-title">We couldn't load this listing</div>
+      <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="layout hidden" id="view-dashboard">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Dashboard</div>
+    <a class="page-link active" data-href="/partner/listing">
+      <svg><use href="#ic-doc"/></svg> Listing
+    </a>
+    <a class="page-link" data-href="/partner/bookings">
+      <svg><use href="#ic-calendar"/></svg> Bookings
+    </a>
+    <a class="page-link" data-href="/partner/loyalty">
+      <svg><use href="#ic-bolt"/></svg> Loyalty
+    </a>
+    <a class="page-link" data-href="/partner/feedback">
+      <svg><use href="#ic-star-nav"/></svg> Feedback
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-title">On this page</div>
+    <a href="#preview"  class="jump-link" data-section="preview">
+      <svg><use href="#ic-doc"/></svg> Preview
+    </a>
+    <a href="#metrics"  class="jump-link" data-section="metrics">
+      <svg><use href="#ic-eye"/></svg> Discovery Metrics
+    </a>
+    <a href="#ratings"  class="jump-link" data-section="ratings">
+      <svg><use href="#ic-star-nav"/></svg> Ratings
+    </a>
+    <a href="#feedback" class="jump-link" data-section="feedback">
+      <svg><use href="#ic-chat"/></svg> Recent Feedback
+    </a>
+  </aside>
+
+  <main class="main">
+
+    <section class="section" id="preview">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">How your listing appears on TRODDR</h2>
+          <div class="section-sub">This is the public-facing summary guests see when they discover you.</div>
+        </div>
+      </div>
+      <div class="preview-grid">
+        <div class="preview-card" id="preview-card"></div>
+        <div class="summary-card" id="summary-card"></div>
+      </div>
+    </section>
+
+    <section class="section" id="metrics">
+      <div class="section-head">
+        <h2 class="section-title">Discovery Metrics</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+    </section>
+
+    <section class="section" id="ratings">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Rating Breakdown</h2>
+          <div class="section-sub">Average score across each dimension guests rate you on.</div>
+        </div>
+      </div>
+      <div class="ratings-card" id="ratings-card"></div>
+    </section>
+
+    <section class="section" id="feedback">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Recent Feedback</h2>
+          <div class="section-sub">The most recent 20 reviews left by guests.</div>
+        </div>
+      </div>
+      <div class="feedback-feed" id="feedback-feed"></div>
+    </section>
+
+  </main>
+
+  <p class="page-foot">
+    Bookmark this page to keep an eye on your listing.<br>
+    Questions? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a><br>
+    © 2026 TRODDR · Made with care in Jamaica
+  </p>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const $ = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  // ── Helpers ──────────────────────────────────────────────
+  function fmtRelative(ts) {
+    if (!ts) return 'never';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const d = Math.floor(diffMs / 86400000);
+    if (d < 1) {
+      const h = Math.floor(diffMs / 3600000);
+      if (h < 1) return 'just now';
+      return `${h}h ago`;
+    }
+    if (d === 1) return 'yesterday';
+    if (d < 30)  return `${d} days ago`;
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function maskedLabel(userId) {
+    if (!userId) return 'Member';
+    const tail = userId.replace(/-/g, '').slice(-4);
+    return `Member ••${tail}`;
+  }
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function titleCase(s) {
+    return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  // ── Brand application ───────────────────────────────────
+  function applyBrand(program) {
+    if (!program) return;
+    const root = document.documentElement.style;
+    if (program.primary_color)   root.setProperty('--brand-primary',   program.primary_color);
+    if (program.accent_color)    root.setProperty('--brand-accent',    program.accent_color);
+    if (program.text_color)      root.setProperty('--brand-text',      program.text_color);
+    if (program.secondary_color) root.setProperty('--brand-secondary', program.secondary_color);
+  }
+
+  // ── Hero ─────────────────────────────────────────────────
+  function renderHero(place) {
+    $('hero-title').textContent = place.name || 'Your Listing';
+    const parts = [place.category, place.town, place.parish].filter(Boolean);
+    $('hero-sub').textContent = parts.join(' · ');
+  }
+
+  // ── Preview card ─────────────────────────────────────────
+  function renderPreview(place) {
+    const img = (place.image && place.image.length) ? place.image[0] : null;
+    const slug = place.slug;
+
+    const meta = [];
+    if (place.cuisine)     meta.push(escapeHtml(place.cuisine));
+    if (place.price_range) meta.push(escapeHtml(place.price_range));
+    if (place.meal_type)   meta.push(escapeHtml(place.meal_type));
+    const metaHtml = meta.length
+      ? meta.map((m, i) => `${i > 0 ? '<span class="dot">·</span>' : ''}<span>${m}</span>`).join('')
+      : '';
+
+    const links = [];
+    if (slug) links.push(`
+      <a class="preview-link primary" href="/listings/${escapeHtml(slug)}" target="_blank" rel="noopener">
+        <svg><use href="#ic-external"/></svg> View live listing
+      </a>`);
+    if (place.website) links.push(`
+      <a class="preview-link" href="${escapeHtml(place.website)}" target="_blank" rel="noopener">
+        <svg><use href="#ic-globe"/></svg> Website
+      </a>`);
+    if (place.instagram_url) links.push(`
+      <a class="preview-link" href="${escapeHtml(place.instagram_url)}" target="_blank" rel="noopener">
+        <svg><use href="#ic-external"/></svg> Instagram
+      </a>`);
+    if (place.google_maps_link) links.push(`
+      <a class="preview-link" href="${escapeHtml(place.google_maps_link)}" target="_blank" rel="noopener">
+        <svg><use href="#ic-map"/></svg> Map
+      </a>`);
+
+    $('preview-card').innerHTML = `
+      <div class="preview-img" ${img ? `style="background-image:url('${escapeHtml(img)}')"` : ''}>
+        ${img ? '' : '<div class="preview-img-empty">No image set</div>'}
+        ${place.category ? `<span class="preview-cat">${escapeHtml(place.category)}</span>` : ''}
+      </div>
+      <div class="preview-body">
+        <div class="preview-name">${escapeHtml(place.name)}</div>
+        ${metaHtml ? `<div class="preview-meta">${metaHtml}</div>` : ''}
+        ${place.curator_note ? `<div class="preview-note">${escapeHtml(place.curator_note)}</div>` : ''}
+        ${place.description ? `<div class="preview-desc">${escapeHtml(place.description)}</div>` : ''}
+        <div class="preview-quick-rows">
+          ${place.address ? `<div class="preview-quick-row"><div class="lbl">Address</div><div>${escapeHtml(place.address)}${place.parish ? ', ' + escapeHtml(place.parish) : ''}</div></div>` : ''}
+          ${place.opening_hours ? `<div class="preview-quick-row"><div class="lbl">Hours</div><div>${escapeHtml(place.opening_hours)}</div></div>` : ''}
+          ${place.recommended_dishes ? `<div class="preview-quick-row"><div class="lbl">Try</div><div>${escapeHtml(place.recommended_dishes)}</div></div>` : ''}
+        </div>
+        ${links.length ? `<div class="preview-links">${links.join('')}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // ── Summary card (overall rating + would return + tags) ─
+  function renderSummary(data) {
+    const s = data.stats;
+    const tags = data.top_tags || [];
+    const overall = s.overall_rating;
+
+    const stars = (score) => {
+      const full = Math.round(score);
+      let out = '';
+      for (let i = 1; i <= 5; i++) {
+        out += `<svg class="${i <= full ? '' : 'star-empty'}"><use href="#${i <= full ? 'ic-star-filled' : 'ic-star-outline'}"/></svg>`;
+      }
+      return out;
+    };
+
+    let overallHtml;
+    if (overall != null && s.feedback_count > 0) {
+      overallHtml = `
+        <div class="summary-overall">
+          <div class="overall-score">${overall}<span class="of">/5</span></div>
+          <div class="overall-meta">
+            <div class="overall-stars">${stars(overall)}</div>
+            <div class="overall-label">${s.feedback_count} ${s.feedback_count === 1 ? 'review' : 'reviews'}</div>
+          </div>
+        </div>`;
+    } else {
+      overallHtml = `<div class="overall-empty">No ratings yet. Reviews will appear here as guests leave feedback.</div>`;
+    }
+
+    const wrRate = s.would_return_rate;
+    const wrHtml = wrRate != null
+      ? `<div class="would-return-row">
+           <span class="would-return-label">Would visit again</span>
+           <span class="would-return-value">${Math.round(wrRate * 100)}%</span>
+         </div>`
+      : '';
+
+    const tagsHtml = tags.length
+      ? `<div class="summary-tags-block">
+           <div class="summary-tags-label">Most-used tags</div>
+           <div class="tag-list">
+             ${tags.slice(0, 8).map(t => `<span class="tag">${escapeHtml(t.tag)}<span class="count">${t.count}</span></span>`).join('')}
+           </div>
+         </div>`
+      : '';
+
+    $('summary-card').innerHTML = overallHtml + wrHtml + tagsHtml;
+  }
+
+  // ── Stats strip ──────────────────────────────────────────
+  function renderStats(data) {
+    const s = data.stats;
+    const cards = [
+      { label: 'Marked Visits',       value: s.marked_visits,    sub: s.marked_visits_30d > 0 ? `${s.marked_visits_30d} in last 30d` : 'all-time' },
+      { label: 'Unique Visitors',     value: s.unique_visitors,  sub: 'distinct guests' },
+      { label: 'Feedback Submitted',  value: s.feedback_count,   sub: s.feedback_30d > 0 ? `${s.feedback_30d} in last 30d` : (s.feedback_count ? 'all-time' : 'none yet') },
+      { label: 'Overall Rating',      value: s.overall_rating != null ? s.overall_rating : 'N/A',
+        sub: s.overall_rating != null ? 'out of 5' : 'awaiting reviews' },
+    ];
+    $('stats-grid').innerHTML = cards.map(c => `
+      <div class="stat">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${c.value}</div>
+        ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ── Ratings breakdown ────────────────────────────────────
+  function renderRatings(data) {
+    const r = data.stats.avg_ratings || {};
+    const DIMENSIONS = ['taste', 'service', 'value', 'vibe', 'ambiance', 'cleanliness', 'wait_time', 'speed'];
+
+    const html = DIMENSIONS.map(dim => {
+      const score = r[dim];
+      if (score == null) {
+        return `
+          <div class="rating-row">
+            <div class="rating-name">${titleCase(dim)}</div>
+            <div class="rating-bar"><div class="rating-bar-fill" style="width:0%"></div></div>
+            <div class="rating-value empty">No data</div>
+          </div>`;
+      }
+      const pct = (score / 5) * 100;
+      return `
+        <div class="rating-row">
+          <div class="rating-name">${titleCase(dim)}</div>
+          <div class="rating-bar"><div class="rating-bar-fill" style="width:${pct}%"></div></div>
+          <div class="rating-value">${score}<span class="of"> / 5</span></div>
+        </div>`;
+    }).join('');
+
+    $('ratings-card').innerHTML = html;
+  }
+
+  // ── Feedback feed ────────────────────────────────────────
+  function renderFeedback(data) {
+    const feed = data.recent_feedback || [];
+    if (!feed.length) {
+      $('feedback-feed').innerHTML = `
+        <div class="state">
+          <div class="state-title">No feedback yet</div>
+          <p class="state-msg">Reviews will appear here as guests submit them after visiting.</p>
+        </div>`;
+      return;
+    }
+
+    $('feedback-feed').innerHTML = feed.map(fb => {
+      const ratings = fb.ratings || {};
+      const pills = Object.entries(ratings)
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => `<span class="fb-rating-pill"><span class="name">${titleCase(k)}</span> <strong>${v}</strong></span>`)
+        .join('');
+
+      const tags = (fb.quick_tags || []).map(t => `<span class="fb-tag">${escapeHtml(t)}</span>`).join('');
+      const wr = fb.would_return === true  ? `<div class="fb-return yes">✓ Would visit again</div>`
+              : fb.would_return === false ? `<div class="fb-return no">Would not return</div>`
+              : '';
+
+      return `
+        <div class="fb-card">
+          <div class="fb-head">
+            <div class="fb-id">${maskedLabel(fb.user_id)}</div>
+            <div class="fb-time">${fmtRelative(fb.created_at)}</div>
+          </div>
+          ${pills ? `<div class="fb-ratings">${pills}</div>` : ''}
+          ${tags ? `<div class="fb-tags">${tags}</div>` : ''}
+          ${wr}
+        </div>`;
+    }).join('');
+  }
+
+  // ── Sidebar wiring ───────────────────────────────────────
+  function setupSidebar() {
+    const token = new URLSearchParams(location.search).get('token') || '';
+    document.querySelectorAll('.page-link').forEach(a => {
+      const url = new URL(a.dataset.href, location.origin);
+      if (token) url.searchParams.set('token', token);
+      a.href = url.toString();
+    });
+
+    const jumpLinks = document.querySelectorAll('.jump-link');
+    const sections  = Array.from(jumpLinks).map(l => $(l.dataset.section)).filter(Boolean);
+    function update() {
+      const scrollY = window.scrollY + 120;
+      let activeId = sections[0]?.id;
+      for (const sec of sections) {
+        if (sec.offsetTop <= scrollY) activeId = sec.id;
+      }
+      jumpLinks.forEach(l => l.classList.toggle('active', l.dataset.section === activeId));
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
+  // ── Load ─────────────────────────────────────────────────
+  async function load() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) { hide('view-loading'); show('view-error'); return; }
+
+    const { data, error } = await db.rpc('get_partner_listing_by_token', { p_token: token });
+    if (error || !data || !data.place) {
+      console.error('listing error', error);
+      hide('view-loading'); show('view-error');
+      return;
+    }
+
+    applyBrand(data.program);
+    renderHero(data.place);
+    renderPreview(data.place);
+    renderSummary(data);
+    renderStats(data);
+    renderRatings(data);
+    renderFeedback(data);
+
+    hide('view-loading');
+    show('view-dashboard');
+    setupSidebar();
+  }
+
+  load();
+</script>
+
+</body>
+</html>
