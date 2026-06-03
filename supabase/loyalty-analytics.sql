@@ -1,5 +1,5 @@
 -- ============================================================
--- Loyalty Analytics — RPC for partner-analytics.html
+-- Loyalty Analytics RPC for partner-analytics.html
 -- Reuses places.partner_access_token (same token as booking inbox).
 -- Run this in the Supabase SQL editor.
 -- ============================================================

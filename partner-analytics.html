@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TRODDR — Loyalty Analytics</title>
+<title>TRODDR · Loyalty Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -124,12 +124,12 @@
 
   /* ── LAYOUT (sidebar + main) ───────────────────────────── */
   .layout {
-    max-width: 1280px;
+    max-width: 1320px;
     margin: -68px auto 0;
-    padding: 0 24px;
+    padding: 0 16px;
     display: grid;
-    grid-template-columns: 224px 1fr;
-    gap: 28px;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
     position: relative; z-index: 10;
   }
 
@@ -202,14 +202,15 @@
   /* ── PROGRAM HEALTH STATS ──────────────────────────────── */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
   }
   .stat {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 18px 18px 16px;
+    padding: 16px 14px 14px;
+    min-width: 0;
     position: relative;
     transition: border-color 0.15s, transform 0.15s;
   }
@@ -219,14 +220,17 @@
     transform: translateY(-1px);
   }
   .stat-label {
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 0.06em; text-transform: uppercase;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
     color: var(--grey-mid);
     margin-bottom: 6px;
     display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .stat-value {
-    font-size: 30px; font-weight: 800;
+    font-size: 28px; font-weight: 800;
     color: var(--black);
     letter-spacing: -1px;
     line-height: 1.1;
@@ -299,50 +303,70 @@
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 24px;
+    padding: 20px;
   }
-  .funnel-row {
+  .funnel-steps {
     display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    padding: 14px 0;
-    gap: 16px;
-    border-bottom: 1px solid var(--border-soft);
+    grid-template-columns: repeat(5, 1fr) ;
+    gap: 8px;
+    align-items: stretch;
   }
-  .funnel-row:last-child { border-bottom: none; }
-  .funnel-row.muted { opacity: 0.55; }
-  .funnel-label {
-    font-size: 14px; font-weight: 600;
-    color: var(--black);
-    display: flex; align-items: center; gap: 10px;
-  }
-  .funnel-bar {
-    height: 8px;
+  .funnel-step {
     background: var(--bg-soft);
-    border-radius: 100px;
-    margin-top: 8px;
-    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+    display: flex; flex-direction: column; gap: 4px;
+    position: relative;
+    min-width: 0;
   }
-  .funnel-bar-fill {
-    height: 100%;
-    background: var(--brand-primary);
-    border-radius: 100px;
+  .funnel-step.live {
+    background: #fff;
+    border-color: var(--brand-primary);
   }
-  .funnel-row.muted .funnel-bar-fill { background: var(--border); }
-  .funnel-value {
-    font-size: 22px; font-weight: 800;
+  .funnel-step.muted {
+    background: var(--bg-soft);
+    border-style: dashed;
+  }
+  .funnel-step-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .funnel-step-value {
+    font-size: 28px; font-weight: 800;
     color: var(--black);
-    letter-spacing: -0.5px;
-    min-width: 64px;
-    text-align: right;
+    letter-spacing: -0.8px;
+    line-height: 1.1;
   }
-  .funnel-row.muted .funnel-value { color: var(--grey-light); }
-  .funnel-arrow {
-    display: flex; justify-content: center;
+  .funnel-step.muted .funnel-step-value {
     color: var(--grey-light);
-    padding: 2px 0;
+    font-weight: 700;
+    font-size: 16px;
   }
-  .funnel-arrow svg { width: 14px; height: 14px; }
+  .funnel-step-note {
+    font-size: 10px; font-weight: 600;
+    color: var(--grey-light);
+    letter-spacing: 0.04em;
+  }
+  .funnel-conv {
+    font-size: 10px; font-weight: 700;
+    color: var(--brand-primary);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .funnel-conv.muted { color: var(--grey-light); }
+
+  @media (max-width: 1100px) {
+    .funnel-steps { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 700px) {
+    .funnel-steps { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .funnel-steps { grid-template-columns: 1fr; }
+  }
 
   /* ── REVENUE CARD ───────────────────────────────────────── */
   .revenue-card {
@@ -602,6 +626,9 @@
   .page-foot a { color: var(--grey-mid); }
 
   /* ── RESPONSIVE ────────────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  }
   @media (max-width: 880px) {
     .layout {
       grid-template-columns: 1fr;
@@ -626,7 +653,8 @@
     }
     .sidebar a svg { display: none; }
     .page-hero { padding: 44px 20px 80px; }
-    .stat-value { font-size: 24px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .stat-value { font-size: 22px; }
     .revenue-value { font-size: 32px; }
     .member-row {
       grid-template-columns: 1fr auto;
@@ -815,7 +843,7 @@
       <div class="section-head">
         <div>
           <h2 class="section-title">Estimated Impact</h2>
-          <div class="section-sub">Rough estimate based on visits — refine by updating ticket size in your program.</div>
+          <div class="section-sub">Rough estimate based on visits. Refine by updating ticket size in your program.</div>
         </div>
       </div>
       <div class="revenue-card" id="revenue-card"></div>
@@ -863,7 +891,7 @@
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
   function fmtMonth(ts) {
-    if (!ts) return '—';
+    if (!ts) return 'N/A';
     return new Date(ts).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
   function maskedLabel(userId) {
@@ -904,14 +932,17 @@
     const closeIsActionable = s.close_to_reward > 0;
 
     const cards = [
-      { label: 'Total Members',     value: s.total_members },
-      { label: 'Active (30d)',      value: s.active_30d,    sub: `${s.total_members ? Math.round((s.active_30d / s.total_members) * 100) : 0}% of all members` },
+      { label: 'Total Members',     value: s.total_members,
+        sub: s.new_30d > 0 ? `+${s.new_30d} this month` : 'no new sign-ups yet',
+        subDirection: s.new_30d > 0 ? 'up' : null },
+      { label: 'Active (30d)',      value: s.active_30d,
+        sub: `${s.total_members ? Math.round((s.active_30d / s.total_members) * 100) : 0}% of all members` },
       { label: 'Repeat Visit Rate', value: repeatPct,       suffix: '%',
         sub: repeatPct >= 40 ? 'healthy' : (repeatPct > 0 ? 'building' : 'no repeats yet'),
         subDirection: repeatPct >= 40 ? 'up' : null },
-      { label: 'Close to Reward',   value: s.close_to_reward, clickable: closeIsActionable, action: 'View →' },
-      { label: 'Rewards Redeemed',  value: s.rewards_earned },
-      { label: 'Growth This Month', value: s.new_30d,        prefix: '+', sub: 'new sign-ups', subDirection: s.new_30d > 0 ? 'up' : null },
+      { label: 'Close to Reward',   value: s.close_to_reward, clickable: closeIsActionable, action: 'View' },
+      { label: 'Rewards Redeemed',  value: s.rewards_earned,
+        sub: s.rewards_earned > 0 ? 'all time' : 'none yet' },
     ];
 
     $('stats-grid').innerHTML = cards.map((c, i) => {
@@ -949,7 +980,7 @@
 
     if (s.total_members === 0) {
       actions.push({ level: 'info', tag: 'Info',
-        title: 'No members yet — start promoting your program',
+        title: 'No members yet. Start promoting your program',
         text: `Add the loyalty card link to your menu, receipts, and Instagram so guests can sign up and start working toward ${reward}.`
       });
     }
@@ -965,7 +996,7 @@
     if (s.new_30d > 0) {
       actions.push({ level: 'positive', tag: 'Growth',
         title: `${s.new_30d} new ${pluralize(s.new_30d, 'member')} joined this month`,
-        text: 'Your program is attracting sign-ups — keep sharing the loyalty card link to compound the effect.'
+        text: 'Your program is attracting sign-ups. Keep sharing the loyalty card link to compound the effect.'
       });
     }
 
@@ -985,7 +1016,7 @@
       if (days <= 1) {
         actions.push({ level: 'positive', tag: 'Engaged',
           title: `${maskedLabel(mostRecent.user_id)} visited ${fmtRelative(mostRecent.last_stamped_at)}`,
-          text: 'Your most recently active member is engaged — a great moment to recognize them in person.'
+          text: 'Your most recently active member is engaged. A great moment to recognize them in person.'
         });
       }
     }
@@ -994,14 +1025,14 @@
     if (s.total_visits > 0 && s.days_since_last_visit !== null && s.days_since_last_visit >= 7) {
       actions.push({ level: 'alert', tag: 'Quiet',
         title: `No loyalty check-ins in the last ${s.days_since_last_visit} days`,
-        text: 'Remind your staff to scan the NFC tag for every loyalty member — missed stamps hurt retention.'
+        text: 'Remind your staff to scan the NFC tag for every loyalty member. Missed stamps hurt retention.'
       });
     }
 
     if (s.dormant_60d > 0) {
       actions.push({ level: 'attention', tag: 'At Risk',
         title: `${s.dormant_60d} ${pluralize(s.dormant_60d, 'member')} ${s.dormant_60d === 1 ? "hasn't" : "haven't"} visited in 60+ days`,
-        text: 'Send a re-engagement offer — a bonus stamp or free perk usually wins them back.'
+        text: 'Send a re-engagement offer. A bonus stamp or free perk usually wins them back.'
       });
     }
 
@@ -1036,34 +1067,39 @@
   // ── Funnel ──────────────────────────────────────────────
   function renderFunnel(data) {
     const s = data.stats;
-    // Top of funnel still needs instrumentation — show as muted "coming soon"
+    // Top of funnel still needs app-side instrumentation; show as muted.
     const steps = [
-      { label: 'Listing Views',      value: null, muted: true,  note: 'Coming soon' },
-      { label: 'Directions Opened',  value: null, muted: true,  note: 'Coming soon' },
-      { label: 'Check-ins',          value: s.total_visits },
-      { label: 'Loyalty Members',    value: s.total_members },
-      { label: 'Rewards Earned',     value: s.rewards_earned },
+      { label: 'Listing Views',     value: null,            muted: true,  note: 'Soon' },
+      { label: 'Directions Opened', value: null,            muted: true,  note: 'Soon' },
+      { label: 'Check-ins',         value: s.total_visits,  live: true },
+      { label: 'Loyalty Members',   value: s.total_members, live: true },
+      { label: 'Rewards Earned',    value: s.rewards_earned, live: true },
     ];
-    const maxVal = Math.max(1, ...steps.filter(s => s.value !== null).map(s => s.value));
-    const html = steps.map((step, i) => {
-      const pct = step.value === null ? 0 : Math.min(100, (step.value / maxVal) * 100);
-      const rowHtml = `
-        <div class="funnel-row ${step.muted ? 'muted' : ''}">
-          <div>
-            <div class="funnel-label">
-              ${step.label}
-              ${step.muted ? `<span class="badge first">${step.note}</span>` : ''}
-            </div>
-            <div class="funnel-bar"><div class="funnel-bar-fill" style="width:${pct}%"></div></div>
-          </div>
-          <div class="funnel-value">${step.value === null ? '—' : step.value}</div>
+
+    const stepsHtml = steps.map((step, i) => {
+      const prev = i > 0 ? steps[i - 1] : null;
+      let convHtml = '';
+      if (prev && prev.value !== null && step.value !== null && prev.value > 0) {
+        const pct = Math.round((step.value / prev.value) * 100);
+        convHtml = `<div class="funnel-conv">${pct}% from prev</div>`;
+      } else if (prev) {
+        convHtml = `<div class="funnel-conv muted">conv. soon</div>`;
+      }
+
+      const cls = step.muted ? 'muted' : (step.live ? 'live' : '');
+      const value = step.value === null ? 'N/A' : step.value;
+      const note = step.muted ? `<div class="funnel-step-note">${step.note}</div>` : '';
+
+      return `
+        <div class="funnel-step ${cls}">
+          <div class="funnel-step-label">${step.label}</div>
+          <div class="funnel-step-value">${value}</div>
+          ${note}
+          ${convHtml}
         </div>`;
-      const arrowHtml = i < steps.length - 1
-        ? `<div class="funnel-arrow"><svg><use href="#ic-arrow-down"/></svg></div>`
-        : '';
-      return rowHtml + arrowHtml;
     }).join('');
-    $('funnel').innerHTML = html;
+
+    $('funnel').innerHTML = `<div class="funnel-steps">${stepsHtml}</div>`;
   }
 
   // ── Revenue ─────────────────────────────────────────────
@@ -1212,7 +1248,7 @@
             </div>
             <div class="detail-field">
               <span class="detail-label">Last Visit</span>
-              <span class="detail-value">${m.last_stamped_at ? fmtRelative(m.last_stamped_at) : '—'}</span>
+              <span class="detail-value">${m.last_stamped_at ? fmtRelative(m.last_stamped_at) : 'N/A'}</span>
             </div>
             <div class="detail-field">
               <span class="detail-label">Member Since</span>
@@ -1222,7 +1258,7 @@
               ${badges.map(b => `<span class="badge ${b.class}">${b.label}</span>`).join('')}
             </div>
             <div class="detail-future">
-              Member messaging (Send Reminder, Send Reward Offer) — coming soon.
+              Member messaging (Send Reminder, Send Reward Offer). Coming soon.
             </div>
           </div>
         </div>
@@ -1248,7 +1284,7 @@
         current: s.total_visits,  needs: 30, unit: 'visits'  },
       { title: 'Top Customers',       desc: 'Your most valuable guests ranked by visits and rewards.',
         current: s.total_members, needs: 10, unit: 'members' },
-      { title: 'Visit Frequency',     desc: 'Average days between visits — early warning if retention slips.',
+      { title: 'Visit Frequency',     desc: 'Average days between visits. Early warning if retention slips.',
         current: s.total_visits,  needs: 50, unit: 'visits'  },
       { title: 'Visit Heatmap',       desc: 'Busiest days and peak hours from loyalty check-ins.',
         current: s.total_visits,  needs: 100, unit: 'visits' },
