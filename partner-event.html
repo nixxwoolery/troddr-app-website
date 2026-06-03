@@ -473,37 +473,40 @@
     gap: 10px;
     margin-bottom: 14px;
   }
-  .vendor-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
+  .vendor-list {
+    display: grid; gap: 14px;
   }
   .vendor-card {
     background: #fff;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    display: flex; flex-direction: column;
-    transition: border-color 0.15s, transform 0.15s;
   }
-  .vendor-card:hover { border-color: var(--brand-primary); transform: translateY(-1px); }
-  .vendor-cover {
-    height: 96px;
-    background: var(--bg-soft) center / cover no-repeat;
-    position: relative;
+  .vendor-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-soft);
   }
   .vendor-logo {
-    position: absolute;
-    bottom: -16px; left: 12px;
-    width: 44px; height: 44px;
-    border-radius: 8px;
-    background: #fff center / contain no-repeat;
-    border: 2px solid #fff;
-    box-shadow: var(--shadow-sm);
+    width: 56px; height: 56px;
+    border-radius: 10px;
+    background: var(--bg-soft) center / cover no-repeat;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .vendor-head-body { min-width: 0; }
+  .vendor-name {
+    font-size: 17px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
   }
   .vendor-featured {
-    position: absolute;
-    top: 10px; right: 10px;
     font-size: 9px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
     padding: 3px 8px;
@@ -511,71 +514,176 @@
     color: #111;
     border-radius: 100px;
   }
-  .vendor-body {
-    padding: 22px 14px 14px;
-  }
-  .vendor-name {
-    font-size: 14px; font-weight: 700;
-    color: var(--black);
-    margin-bottom: 4px;
-    line-height: 1.25;
-  }
   .vendor-meta {
-    font-size: 11px; color: var(--grey-mid);
-    display: flex; flex-wrap: wrap; gap: 4px 10px;
+    font-size: 12px; color: var(--grey-mid);
+    display: flex; flex-wrap: wrap; gap: 4px 14px;
   }
   .vendor-meta .booth {
     color: var(--brand-primary);
     font-weight: 700;
   }
-  .vendor-place-link {
-    margin-top: 8px;
-    font-size: 11px; font-weight: 600;
+  .vendor-meta a {
     color: var(--brand-primary);
     text-decoration: none;
+    font-weight: 600;
     display: inline-flex; align-items: center; gap: 4px;
   }
-  .vendor-place-link svg { width: 10px; height: 10px; }
-
-  /* ── RATED ITEMS ── */
-  .rated-items {
-    display: grid; gap: 8px;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 18px;
-    margin-top: 14px;
+  .vendor-meta a svg { width: 10px; height: 10px; }
+  .vendor-head-stat {
+    text-align: right;
+    flex-shrink: 0;
   }
-  .rated-row {
+  .vendor-head-stat .num {
+    font-size: 22px; font-weight: 800;
+    color: var(--black);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+  .vendor-head-stat .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 4px;
+  }
+
+  /* Menu items list */
+  .menu-list {
+    display: grid;
+  }
+  .menu-empty {
+    padding: 18px 20px;
+    font-size: 13px; color: var(--grey-mid);
+    font-style: italic;
+  }
+  .menu-row {
     display: grid;
     grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 14px;
-    padding: 10px 6px;
-    border-bottom: 1px solid var(--border-soft);
+    column-gap: 18px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-soft);
+    align-items: start;
   }
-  .rated-row:last-child { border-bottom: none; }
-  .rated-name {
-    font-size: 13px; font-weight: 600;
+  .menu-row:first-child { border-top: none; }
+  .menu-name {
+    font-size: 14px; font-weight: 700;
     color: var(--black);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap;
   }
-  .rated-vendor {
-    font-size: 10px; font-weight: 500;
-    color: var(--grey-mid);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .rated-count {
-    font-size: 13px; font-weight: 800;
+  .menu-name .price {
     color: var(--brand-primary);
+    font-weight: 800;
     font-variant-numeric: tabular-nums;
   }
-  .rated-count .lbl {
-    font-size: 10px; color: var(--grey-mid);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    margin-left: 4px;
+  .menu-sold-out {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--red);
+    background: var(--red-light);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .menu-special {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--amber);
+    background: var(--amber-light);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .menu-desc {
+    font-size: 12px; color: var(--grey-dark);
+    margin-top: 3px;
+    line-height: 1.5;
+  }
+  .menu-tags {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-top: 6px;
+  }
+  .menu-tag {
+    font-size: 10px; font-weight: 600;
+    color: var(--grey-mid);
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .menu-tag.cat {
+    color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    background: #fff;
+  }
+
+  /* Per-item performance block */
+  .item-perf {
+    text-align: right;
+    min-width: 140px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  }
+  .item-perf-count {
+    display: flex; align-items: baseline; gap: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .item-perf-count .num {
+    font-size: 18px; font-weight: 800;
+    color: var(--brand-primary);
+    letter-spacing: -0.5px;
+  }
+  .item-perf-count .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .item-perf-empty {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-light);
+  }
+  .rating-bar {
+    display: flex;
+    width: 130px;
+    height: 6px;
+    border-radius: 100px;
+    overflow: hidden;
+    background: var(--bg-soft);
+  }
+  .rating-bar-seg {
+    height: 100%;
+    min-width: 2px;
+  }
+  .rating-chips {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    justify-content: flex-end;
+  }
+  .rating-chip {
+    font-size: 10px; font-weight: 600;
+    color: var(--grey-dark);
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 2px 7px;
+    border-radius: 100px;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .rating-chip .n {
+    color: var(--brand-primary);
+    font-weight: 800;
+  }
+
+  @media (max-width: 780px) {
+    .vendor-head {
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+    }
+    .vendor-head-stat { grid-column: 1 / -1; text-align: left; }
+    .menu-row {
+      grid-template-columns: 1fr;
+      row-gap: 10px;
+    }
+    .item-perf {
+      align-items: flex-start;
+      text-align: left;
+    }
+    .rating-chips { justify-content: flex-start; }
   }
 
   /* ── SPONSORS ── */
@@ -870,8 +978,7 @@
         <span class="pill live">Live</span>
       </div>
       <div class="vendor-stats" id="vendor-stats"></div>
-      <div class="vendor-grid" id="vendor-grid"></div>
-      <div class="rated-items hidden" id="rated-items"></div>
+      <div class="vendor-list" id="vendor-list"></div>
     </section>
 
     <section class="section" id="sponsors" style="display:none">
@@ -1093,28 +1200,73 @@
     $('funnel').innerHTML = `<div class="funnel-steps">${html}</div>`;
   }
 
-  // ── Vendors (real data from event_vendors_with_menu + ratings) ─
+  // ── Vendors (per-vendor card with menu + per-item ratings) ──
+  // Stable color palette for arbitrary rating labels.
+  const RATING_PALETTE = [
+    '#1a7f4e', // green
+    '#0077CC', // blue
+    '#b86e00', // amber
+    '#c0392b', // red
+    '#6b3aa0', // purple
+    '#444',    // grey
+  ];
+  function colorForRating(rating, idx) {
+    // Common positive/negative cues; otherwise cycle palette.
+    const r = String(rating || '').toLowerCase();
+    if (['love','loved','amazing','great','fire','yes'].includes(r))    return '#1a7f4e';
+    if (['like','liked','good','okay','ok'].includes(r))                return '#0077CC';
+    if (['meh','neutral','average'].includes(r))                        return '#b86e00';
+    if (['dislike','bad','no','hated'].includes(r))                     return '#c0392b';
+    return RATING_PALETTE[idx % RATING_PALETTE.length];
+  }
+  function fmtPrice(price, ccy) {
+    if (price == null) return '';
+    const c = (ccy || 'JMD').toUpperCase();
+    return `${c} ${Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  }
+
+  function renderRatingViz(breakdown, total) {
+    if (!total || total === 0) {
+      return `<div class="item-perf-empty">No ratings yet</div>`;
+    }
+    const entries = Object.entries(breakdown || {})
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1]);
+    const segs = entries.map(([rating, n], i) => {
+      const pct = (n / total) * 100;
+      const color = colorForRating(rating, i);
+      return `<div class="rating-bar-seg" style="width:${pct}%; background:${color}" title="${escapeHtml(rating)}: ${n}"></div>`;
+    }).join('');
+    const chips = entries.map(([rating, n], i) => {
+      const color = colorForRating(rating, i);
+      return `<span class="rating-chip">
+        <span style="width:8px; height:8px; border-radius:50%; background:${color}; display:inline-block;"></span>
+        ${escapeHtml(rating)}
+        <span class="n">${n}</span>
+      </span>`;
+    }).join('');
+    return `
+      <div class="rating-bar">${segs}</div>
+      <div class="rating-chips">${chips}</div>
+    `;
+  }
+
   function renderVendors(data) {
     const hasVendorTab = data.capabilities && data.capabilities.vendors;
     const vendors = data.vendors || [];
     const vStats = data.vendor_stats || {};
     const mStats = data.menu_stats || {};
-    const rated = data.top_rated_items || [];
 
     if (!hasVendorTab && !vendors.length) return;
 
     $('vendors').style.display = '';
     $('nav-vendors').style.display = '';
 
-    // Vendor name lookup for rated items
-    const vendorNameById = {};
-    vendors.forEach(v => { vendorNameById[v.vendor_id] = v.name; });
-
     // Stats strip
     const cards = [
-      { label: 'Vendors',         value: vStats.total || 0,         sub: vStats.featured ? `${vStats.featured} featured` : 'all vendors' },
+      { label: 'Vendors',         value: vStats.total || 0,             sub: vStats.featured ? `${vStats.featured} featured` : 'all vendors' },
       { label: 'With Menu',       value: mStats.vendors_with_menu || 0, sub: `${mStats.items_total || 0} menu items` },
-      { label: 'Linked to Place', value: vStats.with_place || 0,    sub: 'cross-promo enabled' },
+      { label: 'Linked to Place', value: vStats.with_place || 0,        sub: 'cross-promo enabled' },
       { label: 'Guest Ratings',
         value: (data.rating_summary && data.rating_summary.total_ratings) || 0,
         sub: data.rating_summary && data.rating_summary.unique_raters
@@ -1128,62 +1280,92 @@
         <div class="stat-sub">${c.sub}</div>
       </div>`).join('');
 
-    // Vendor grid
     if (!vendors.length) {
-      $('vendor-grid').innerHTML = `
-        <div class="state" style="grid-column: 1 / -1;">
+      $('vendor-list').innerHTML = `
+        <div class="state">
           <div class="state-title">No vendors added yet</div>
           <p class="state-msg">Vendors and their menus will appear here once added to this event.</p>
         </div>`;
-    } else {
-      $('vendor-grid').innerHTML = vendors.map(v => {
-        const cover = v.cover_image_url || (v.place_image && v.place_image[0]);
-        const logo  = v.logo_url;
-        return `
-          <div class="vendor-card">
-            <div class="vendor-cover" ${cover ? `style="background-image:url('${escapeHtml(cover)}')"` : ''}>
-              ${v.is_featured ? '<span class="vendor-featured">Featured</span>' : ''}
-              ${logo ? `<div class="vendor-logo" style="background-image:url('${escapeHtml(logo)}')"></div>` : ''}
-            </div>
-            <div class="vendor-body">
-              <div class="vendor-name">${escapeHtml(v.name || 'Unnamed vendor')}</div>
+      return;
+    }
+
+    $('vendor-list').innerHTML = vendors.map(v => {
+      const logo = v.logo_url || (v.place_image && v.place_image[0]) || v.cover_image_url || '';
+      const items = v.menu_items || [];
+      const totalRatings = v.total_ratings || 0;
+
+      const menuHtml = items.length
+        ? items.map(it => {
+            const tagsHtml = [
+              it.category ? `<span class="menu-tag cat">${escapeHtml(it.category)}</span>` : '',
+              ...(it.tags || []).map(t => `<span class="menu-tag">${escapeHtml(t)}</span>`),
+            ].join('');
+
+            const ratingViz = renderRatingViz(it.rating_breakdown || {}, it.rating_count || 0);
+
+            return `
+              <div class="menu-row">
+                <div>
+                  <div class="menu-name">
+                    <span>${escapeHtml(it.name || 'Untitled item')}</span>
+                    ${it.is_special   ? '<span class="menu-special">Special</span>' : ''}
+                    ${it.is_sold_out  ? '<span class="menu-sold-out">Sold Out</span>' : ''}
+                    ${it.price != null ? `<span class="price">${fmtPrice(it.price, it.currency)}</span>` : ''}
+                  </div>
+                  ${it.description ? `<div class="menu-desc">${escapeHtml(it.description)}</div>` : ''}
+                  ${tagsHtml ? `<div class="menu-tags">${tagsHtml}</div>` : ''}
+                </div>
+                <div class="item-perf">
+                  ${(it.rating_count || 0) > 0
+                    ? `<div class="item-perf-count">
+                         <span class="num">${it.rating_count}</span>
+                         <span class="lbl">${it.rating_count === 1 ? 'rating' : 'ratings'}</span>
+                       </div>`
+                    : ''}
+                  ${ratingViz}
+                </div>
+              </div>`;
+          }).join('')
+        : `<div class="menu-empty">No menu items configured for this vendor yet.</div>`;
+
+      return `
+        <div class="vendor-card">
+          <div class="vendor-head">
+            <div class="vendor-logo" ${logo ? `style="background-image:url('${escapeHtml(logo)}')"` : ''}></div>
+            <div class="vendor-head-body">
+              <div class="vendor-name">
+                ${escapeHtml(v.name || 'Unnamed vendor')}
+                ${v.is_featured ? '<span class="vendor-featured">Featured</span>' : ''}
+              </div>
               <div class="vendor-meta">
                 ${v.booth_number ? `<span class="booth">Booth ${escapeHtml(v.booth_number)}</span>` : ''}
                 ${v.vendor_type ? `<span>${escapeHtml(v.vendor_type)}</span>` : ''}
-                ${v.place_category ? `<span>${escapeHtml(v.place_category)}</span>` : ''}
+                ${v.place_slug && v.place_name
+                  ? `<a href="/listings/${escapeHtml(v.place_slug)}" target="_blank" rel="noopener">
+                       <svg><use href="#ic-external"/></svg> ${escapeHtml(v.place_name)}
+                     </a>`
+                  : ''}
+                ${v.instagram
+                  ? `<a href="${escapeHtml(v.instagram)}" target="_blank" rel="noopener">
+                       <svg><use href="#ic-external"/></svg> Instagram
+                     </a>`
+                  : ''}
               </div>
-              ${v.place_slug && v.place_name
-                ? `<a class="vendor-place-link" href="/listings/${escapeHtml(v.place_slug)}" target="_blank" rel="noopener">
-                     <svg><use href="#ic-external"/></svg> ${escapeHtml(v.place_name)}
-                   </a>`
+            </div>
+            <div class="vendor-head-stat">
+              <div class="num">${items.length}</div>
+              <div class="lbl">${items.length === 1 ? 'menu item' : 'menu items'}</div>
+              ${totalRatings > 0
+                ? `<div style="margin-top:6px;">
+                     <div class="num" style="font-size:14px; color:var(--brand-primary);">${totalRatings}</div>
+                     <div class="lbl">guest ${totalRatings === 1 ? 'rating' : 'ratings'}</div>
+                   </div>`
                 : ''}
             </div>
-          </div>`;
-      }).join('');
-    }
-
-    // Top-rated items
-    if (rated.length) {
-      $('rated-items').classList.remove('hidden');
-      $('rated-items').innerHTML = `
-        <div style="font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--grey-mid); margin-bottom:8px;">
-          Most-Rated Menu Items
-        </div>
-        ${rated.map(r => {
-          const vendorName = vendorNameById[r.vendor_id] || 'Unknown vendor';
-          return `
-            <div class="rated-row">
-              <div>
-                <div class="rated-name">${escapeHtml(r.item_name)}</div>
-                <div class="rated-vendor">${escapeHtml(vendorName)}</div>
-              </div>
-              <div class="rated-count">${r.count}<span class="lbl">ratings</span></div>
-            </div>`;
-        }).join('')}
-      `;
-    } else {
-      $('rated-items').classList.add('hidden');
-    }
+          </div>
+          <div class="menu-list">${menuHtml}</div>
+        </div>`;
+    }).join('');
   }
 
   // ── Sponsors ─────────────────────────────────────────────

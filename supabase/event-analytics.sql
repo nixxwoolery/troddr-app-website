@@ -102,9 +102,9 @@ begin
         false)
     ),
 
-    -- ── Vendors lineup (one row per vendor, deduped from view) ─
+    -- ── Vendors lineup with per-vendor menu + per-item ratings ─
     'vendors', (
-      with rows as (
+      with vendor_base as (
         select distinct on (vendor_id)
           vendor_id, vendor_name, vendor_description, vendor_type,
           logo_url, cover_image_url, instagram, website,
@@ -112,32 +112,86 @@ begin
           event_vendor_id, booth_number, vendor_is_featured
         from public.event_vendors_with_menu
         where event_id = v_event.id
-        order by vendor_id
       )
       select coalesce(
         jsonb_agg(
           jsonb_build_object(
-            'vendor_id',          vendor_id,
-            'name',               vendor_name,
-            'description',        vendor_description,
-            'vendor_type',        vendor_type,
-            'logo_url',           logo_url,
-            'cover_image_url',    cover_image_url,
-            'instagram',          instagram,
-            'website',            website,
-            'place_id',           place_id,
-            'place_slug',         place_slug,
-            'place_name',         place_name,
-            'place_image',        place_image,
-            'place_category',     place_category,
-            'event_vendor_id',    event_vendor_id,
-            'booth_number',       booth_number,
-            'is_featured',        vendor_is_featured
+            'vendor_id',       vb.vendor_id,
+            'name',            vb.vendor_name,
+            'description',     vb.vendor_description,
+            'vendor_type',     vb.vendor_type,
+            'logo_url',        vb.logo_url,
+            'cover_image_url', vb.cover_image_url,
+            'instagram',       vb.instagram,
+            'website',         vb.website,
+            'place_id',        vb.place_id,
+            'place_slug',      vb.place_slug,
+            'place_name',      vb.place_name,
+            'place_image',     vb.place_image,
+            'place_category',  vb.place_category,
+            'event_vendor_id', vb.event_vendor_id,
+            'booth_number',    vb.booth_number,
+            'is_featured',     vb.vendor_is_featured,
+
+            -- Total ratings across all this vendor's items
+            'total_ratings', (
+              select count(*) from public.user_vendor_item_ratings r
+               where r.event_id = v_event.id
+                 and r.vendor_id = vb.vendor_id::text
+            ),
+
+            -- Menu items with per-item ratings
+            'menu_items', (
+              select coalesce(jsonb_agg(item_obj order by sort_key, name nulls last), '[]'::jsonb)
+              from (
+                select distinct on (menu_item_id)
+                  menu_item_id,
+                  menu_item_name as name,
+                  menu_item_description as description,
+                  price, currency, menu_category as category,
+                  tags, is_special, is_sold_out,
+                  menu_image_url as image_url,
+                  sort_order as sort_key,
+                  jsonb_build_object(
+                    'menu_item_id', menu_item_id,
+                    'name',         menu_item_name,
+                    'description',  menu_item_description,
+                    'price',        price,
+                    'currency',     currency,
+                    'category',     menu_category,
+                    'tags',         tags,
+                    'is_special',   is_special,
+                    'is_sold_out',  is_sold_out,
+                    'image_url',    menu_image_url,
+                    'rating_count', (
+                      select count(*) from public.user_vendor_item_ratings r
+                       where r.event_id = v_event.id
+                         and r.vendor_id = vb.vendor_id::text
+                         and r.item_name = evm.menu_item_name
+                    ),
+                    'rating_breakdown', (
+                      select coalesce(jsonb_object_agg(rating, n), '{}'::jsonb)
+                      from (
+                        select rating, count(*) as n
+                          from public.user_vendor_item_ratings r
+                         where r.event_id = v_event.id
+                           and r.vendor_id = vb.vendor_id::text
+                           and r.item_name = evm.menu_item_name
+                         group by rating
+                      ) rb
+                    )
+                  ) as item_obj
+                from public.event_vendors_with_menu evm
+                where evm.event_id = v_event.id
+                  and evm.vendor_id = vb.vendor_id
+                  and evm.menu_item_id is not null
+              ) items
+            )
           )
-          order by vendor_is_featured desc nulls last, vendor_name
+          order by vb.vendor_is_featured desc nulls last, vb.vendor_name
         ),
         '[]'::jsonb)
-      from rows
+      from vendor_base vb
     ),
 
     'vendor_stats', (
