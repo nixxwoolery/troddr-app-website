@@ -42,7 +42,12 @@ begin
   v_days    := floor(extract(epoch from (v_starts - v_now)) / 86400)::int;
   v_is_past := v_ends < v_now;
 
-  v_tabs := coalesce(nullif(v_event.tabs, '')::jsonb, '[]'::jsonb);
+  -- Parse tabs defensively: column could be text, json, or jsonb.
+  begin
+    v_tabs := coalesce(nullif(v_event.tabs::text, '')::jsonb, '[]'::jsonb);
+  exception when others then
+    v_tabs := '[]'::jsonb;
+  end;
 
   return jsonb_build_object(
 
