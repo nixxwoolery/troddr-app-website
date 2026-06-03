@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --blue:        #0077CC;
+    --blue-light:  #e8f4ff;
+    --green:       #1a7f4e;
+    --green-light: #e6f5ec;
+    --red:         #c0392b;
+    --red-light:   #fdecea;
+    --amber:       #b86e00;
+    --amber-light: #fff4e0;
+    --black:       #111111;
+    --grey-dark:   #333333;
+    --grey-mid:    #666666;
+    --grey-light:  #999999;
+    --border:      #e8e8e8;
+    --border-soft: #f0f0f0;
+    --bg:          #ffffff;
+    --bg-soft:     #f8f9fa;
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06);
+
+    --brand-primary:   #0077CC;
+    --brand-accent:    #C3D600;
+    --brand-text:      #ffffff;
+    --brand-secondary: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky; top: 0; z-index: 200;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 60px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .logo {
+    font-size: 26px; font-weight: 700;
+    color: var(--blue); text-decoration: none;
+    letter-spacing: -1px;
+  }
+  .nav-badge {
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-left: auto;
+  }
+
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    padding: 32px 24px 56px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; z-index: 1; }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    color: var(--brand-text);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 4px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .page-hero h1 {
+    font-size: clamp(28px, 4.5vw, 40px);
+    font-weight: 700; line-height: 1.15;
+    margin-bottom: 10px;
+    letter-spacing: -0.6px;
+  }
+  .hero-sub {
+    color: rgba(255,255,255,0.85);
+    font-size: 14px; font-weight: 400;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    max-width: 1320px;
+    margin: -32px auto 0;
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    position: relative; z-index: 10;
+  }
+  .sidebar {
+    position: sticky; top: 76px;
+    align-self: start;
+    height: max-content;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .sidebar-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--grey-light);
+    padding: 10px 12px 8px;
+  }
+  .sidebar a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    color: var(--grey-dark);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar a:hover { background: var(--bg-soft); color: var(--black); }
+  .sidebar a.active {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    font-weight: 600;
+  }
+  .sidebar a svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar a.jump-link { font-size: 12px; padding: 7px 12px; color: var(--grey-mid); }
+  .sidebar a.jump-link.active {
+    background: transparent;
+    color: var(--brand-primary);
+    font-weight: 700;
+  }
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 8px;
+  }
+  .main { min-width: 0; padding-bottom: 80px; }
+
+  .section { margin-bottom: 36px; scroll-margin-top: 80px; }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+  }
+  .section-sub {
+    font-size: 12px; color: var(--grey-mid);
+    font-weight: 500;
+  }
+  .pill {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 100px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    border: 1px solid var(--border);
+  }
+  .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
+
+  /* ── SUMMARY (top) ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .summary-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 22px 20px;
+    display: flex; flex-direction: column;
+  }
+  .summary-card.primary {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    border-color: transparent;
+  }
+  .summary-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 8px;
+  }
+  .summary-card:not(.primary) .summary-label { color: var(--grey-mid); opacity: 1; }
+  .summary-big {
+    font-size: 44px; font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1.5px;
+  }
+  .summary-big .of {
+    font-size: 18px; font-weight: 600;
+    opacity: 0.6;
+    margin-left: 4px;
+  }
+  .summary-sub {
+    font-size: 12px; font-weight: 500;
+    margin-top: 6px;
+    opacity: 0.85;
+  }
+  .summary-card.primary .stars {
+    display: flex; gap: 1px;
+    color: var(--brand-accent);
+    margin-top: 8px;
+  }
+  .summary-card.primary .stars svg { width: 18px; height: 18px; }
+  .summary-card.primary .stars .empty { color: rgba(255,255,255,0.3); }
+
+  /* Trend mini bar chart */
+  .trend-chart {
+    display: flex; align-items: flex-end; gap: 3px;
+    height: 56px;
+    margin-top: auto;
+    padding-top: 8px;
+  }
+  .trend-bar {
+    flex: 1;
+    background: var(--brand-primary);
+    border-radius: 2px;
+    min-height: 2px;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+  }
+  .trend-bar:hover { opacity: 1; }
+  .trend-bar.empty { background: var(--border); opacity: 0.6; }
+  .trend-foot {
+    font-size: 10px; color: var(--grey-light);
+    margin-top: 6px;
+    display: flex; justify-content: space-between;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── DISTRIBUTION CARDS ── */
+  .dist-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .dist-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+  }
+  .dist-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .dist-name {
+    font-size: 12px; font-weight: 600;
+    color: var(--grey-dark);
+    text-transform: capitalize;
+  }
+  .dist-avg {
+    font-size: 15px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.3px;
+  }
+  .dist-avg.empty {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--grey-light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .dist-bars {
+    display: flex; align-items: flex-end;
+    gap: 4px;
+    height: 44px;
+  }
+  .dist-bar {
+    flex: 1;
+    background: var(--brand-primary);
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    position: relative;
+    opacity: 0.5;
+  }
+  .dist-bar.has { opacity: 1; }
+  .dist-bar .label {
+    position: absolute; bottom: -16px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--grey-light);
+    font-weight: 600;
+  }
+  .dist-bars-wrap {
+    padding-bottom: 18px;
+  }
+
+  /* ── TAGS ── */
+  .tags-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+  }
+  .tag-list {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .tag {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    color: var(--grey-dark);
+    font-size: 13px; font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tag:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
+  .tag.active {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    border-color: var(--brand-primary);
+  }
+  .tag .count {
+    color: var(--brand-primary);
+    font-weight: 700;
+    margin-left: 6px;
+  }
+  .tag.active .count { color: var(--brand-text); }
+  /* tag size scales with count */
+  .tag.size-lg { font-size: 15px; padding: 7px 14px; }
+  .tag.size-md { font-size: 13px; }
+  .tag.size-sm { font-size: 12px; padding: 4px 10px; }
+
+  /* ── FILTERS ── */
+  .filter-bar {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .filter-group {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 6px;
+  }
+  .filter-group + .filter-group { border-left: 1px solid var(--border-soft); padding-left: 14px; }
+  .filter-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--grey-light);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-right: 4px;
+  }
+  .chip {
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--grey-mid);
+    transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
+  .chip.active {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
+  }
+
+  /* ── FEEDBACK FEED ── */
+  .feedback-feed {
+    display: grid; gap: 10px;
+  }
+  .fb-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .fb-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .fb-id {
+    font-size: 13px; font-weight: 700;
+    color: var(--black);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fb-context {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    border: 1px solid var(--border);
+  }
+  .fb-time {
+    font-size: 11px; color: var(--grey-mid);
+  }
+  .fb-ratings {
+    display: flex; flex-wrap: wrap; gap: 4px 12px;
+    margin-bottom: 8px;
+  }
+  .fb-rating-pill {
+    font-size: 11px;
+    color: var(--grey-dark);
+  }
+  .fb-rating-pill .name {
+    color: var(--grey-mid);
+    text-transform: capitalize;
+  }
+  .fb-rating-pill strong {
+    color: var(--brand-primary);
+    margin-left: 3px;
+  }
+  .fb-rating-pill.low strong { color: var(--red); }
+  .fb-tags {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-top: 6px;
+  }
+  .fb-tag {
+    font-size: 10px; font-weight: 600;
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .fb-return {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .fb-return.yes { color: var(--green); }
+  .fb-return.no  { color: var(--red); }
+
+  /* ── STATES ── */
+  .state {
+    text-align: center; padding: 40px 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .state-msg   { font-size: 14px; color: var(--grey-mid); max-width: 380px; margin: 0 auto; }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--brand-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+
+  .page-foot {
+    text-align: center;
+    font-size: 12px; color: var(--grey-light);
+    padding: 24px 24px 40px;
+    grid-column: 1 / -1;
+  }
+  .page-foot a { color: var(--grey-mid); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .summary-card.primary { grid-column: 1 / -1; }
+    .dist-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; gap: 16px; padding: 0 16px; }
+    .sidebar {
+      position: sticky; top: 60px;
+      padding: 6px;
+      display: flex; gap: 4px;
+      overflow-x: auto; scrollbar-width: none;
+      border-radius: var(--radius);
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .sidebar-title, .sidebar-divider { display: none; }
+    .sidebar a {
+      padding: 8px 12px; white-space: nowrap; font-size: 12px;
+    }
+    .sidebar a svg { display: none; }
+    .page-hero { padding: 28px 20px 48px; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .summary-card.primary { grid-column: auto; }
+    .summary-big { font-size: 36px; }
+    .filter-group + .filter-group { border-left: none; padding-left: 6px; }
+  }
+  @media (max-width: 480px) {
+    .navbar { padding: 0 16px; gap: 12px; }
+    .logo { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-star-filled" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l2.9 6.6 7.1.6-5.4 4.8 1.7 7L12 17.3 5.7 21l1.7-7L2 9.2l7.1-.6z"/>
+    </symbol>
+    <symbol id="ic-star-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+      <path d="M12 3l2.6 6 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.4 7.8 14 3 9.6 9.4 9z"/>
+    </symbol>
+    <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+      <path d="M14 3v6h6M8 13h8M8 17h8M8 9h2"/>
+    </symbol>
+    <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2"/>
+      <path d="M3 10h18M8 3v4M16 3v4"/>
+    </symbol>
+    <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>
+    </symbol>
+    <symbol id="ic-star-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l2.6 6 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.4 7.8 14 3 9.6 9.4 9z"/>
+    </symbol>
+    <symbol id="ic-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 3v18h18M7 14l4-4 3 3 5-6"/>
+    </symbol>
+    <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 12l-8 8a2 2 0 0 1-3 0L2 13V2h11l7 7a2 2 0 0 1 0 3z"/>
+      <circle cx="7" cy="7" r="1.2"/>
+    </symbol>
+    <symbol id="ic-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.6 4.5 8.4 8.4 0 0 1-4-1L3 21l1.9-5.4a8.5 8.5 0 0 1-1-4 8.5 8.5 0 0 1 4.5-7.6 8.4 8.4 0 0 1 4-1A8.5 8.5 0 0 1 21 11.5z"/>
+    </symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 13l4 4L19 7"/>
+    </symbol>
+    <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 6l12 12M18 6L6 18"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Partner Dashboard</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Feedback</span>
+    <h1 id="hero-title">Loading…</h1>
+    <p id="hero-sub" class="hero-sub"></p>
+  </div>
+</section>
+
+<!-- LOADING -->
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="spinner"></div>
+      <div class="state-msg">Loading feedback…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="layout hidden" id="view-error">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="state-title">We couldn't load this page</div>
+      <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="layout hidden" id="view-dashboard">
+
+  <aside class="sidebar">
+    <div class="sidebar-title">Dashboard</div>
+    <a class="page-link" data-href="/partner/listing">
+      <svg><use href="#ic-doc"/></svg> Listing
+    </a>
+    <a class="page-link" data-href="/partner/bookings">
+      <svg><use href="#ic-calendar"/></svg> Bookings
+    </a>
+    <a class="page-link" data-href="/partner/loyalty">
+      <svg><use href="#ic-bolt"/></svg> Loyalty
+    </a>
+    <a class="page-link active" data-href="/partner/feedback">
+      <svg><use href="#ic-star-nav"/></svg> Feedback
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-title">On this page</div>
+    <a href="#summary"      class="jump-link" data-section="summary">
+      <svg><use href="#ic-chart"/></svg> Summary
+    </a>
+    <a href="#distribution" class="jump-link" data-section="distribution">
+      <svg><use href="#ic-chart"/></svg> Distribution
+    </a>
+    <a href="#tags"         class="jump-link" data-section="tags">
+      <svg><use href="#ic-tag"/></svg> Tags
+    </a>
+    <a href="#feed"         class="jump-link" data-section="feed">
+      <svg><use href="#ic-chat"/></svg> All Feedback
+    </a>
+  </aside>
+
+  <main class="main">
+
+    <section class="section" id="summary">
+      <div class="section-head">
+        <h2 class="section-title">Summary</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="summary-grid" id="summary-grid"></div>
+    </section>
+
+    <section class="section" id="distribution">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Rating Distribution</h2>
+          <div class="section-sub">For each dimension, how often guests gave 1 / 2 / 3 / 4 / 5 stars.</div>
+        </div>
+      </div>
+      <div class="dist-grid" id="dist-grid"></div>
+    </section>
+
+    <section class="section" id="tags">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">What guests are saying</h2>
+          <div class="section-sub">Click a tag to filter the feed below.</div>
+        </div>
+      </div>
+      <div class="tags-card" id="tags-card"></div>
+    </section>
+
+    <section class="section" id="feed">
+      <div class="section-head">
+        <h2 class="section-title">All Feedback</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="filter-bar" id="filter-bar"></div>
+      <div class="feedback-feed" id="feedback-feed"></div>
+    </section>
+
+  </main>
+
+  <p class="page-foot">
+    Bookmark this page to track guest feedback.<br>
+    Questions? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a><br>
+    © 2026 TRODDR · Made with care in Jamaica
+  </p>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const $  = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  function fmtRelative(ts) {
+    if (!ts) return 'never';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const d = Math.floor(diffMs / 86400000);
+    if (d < 1) {
+      const h = Math.floor(diffMs / 3600000);
+      if (h < 1) return 'just now';
+      return `${h}h ago`;
+    }
+    if (d === 1) return 'yesterday';
+    if (d < 30)  return `${d} days ago`;
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function maskedLabel(userId) {
+    if (!userId) return 'Member';
+    const tail = userId.replace(/-/g, '').slice(-4);
+    return `Member ••${tail}`;
+  }
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function titleCase(s) { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+
+  // ── Brand application ────────────────────────────────────
+  function applyBrand(program) {
+    if (!program) return;
+    const root = document.documentElement.style;
+    if (program.primary_color)   root.setProperty('--brand-primary',   program.primary_color);
+    if (program.accent_color)    root.setProperty('--brand-accent',    program.accent_color);
+    if (program.text_color)      root.setProperty('--brand-text',      program.text_color);
+    if (program.secondary_color) root.setProperty('--brand-secondary', program.secondary_color);
+  }
+
+  // ── State ────────────────────────────────────────────────
+  let allFeedback   = [];
+  let activeRating  = 'all';   // all | 4plus | 3 | 2less
+  let activeReturn  = 'all';   // all | yes | no
+  let activeTime    = 'all';   // all | 7 | 30 | 90
+  let activeTag     = null;
+
+  // ── Hero ─────────────────────────────────────────────────
+  function renderHero(place, stats) {
+    $('hero-title').textContent = place.name;
+    const total = stats.total || 0;
+    $('hero-sub').textContent = total === 1
+      ? '1 review from guests'
+      : `${total} reviews from guests`;
+  }
+
+  // ── Summary ──────────────────────────────────────────────
+  function renderSummary(data) {
+    const s = data.stats;
+    const overall = s.overall_rating;
+    const wr = s.would_return_rate;
+
+    // Overall card (primary, brand-colored)
+    const stars = (score) => {
+      const full = Math.round(score);
+      let out = '';
+      for (let i = 1; i <= 5; i++) {
+        out += `<svg class="${i <= full ? '' : 'empty'}"><use href="#${i <= full ? 'ic-star-filled' : 'ic-star-outline'}"/></svg>`;
+      }
+      return out;
+    };
+
+    const overallHtml = overall != null
+      ? `<div class="summary-card primary">
+           <div class="summary-label">Overall Rating</div>
+           <div class="summary-big">${overall}<span class="of">/5</span></div>
+           <div class="stars">${stars(overall)}</div>
+           <div class="summary-sub">Across ${s.total} ${s.total === 1 ? 'review' : 'reviews'}</div>
+         </div>`
+      : `<div class="summary-card primary">
+           <div class="summary-label">Overall Rating</div>
+           <div class="summary-big">N/A</div>
+           <div class="summary-sub">No reviews yet</div>
+         </div>`;
+
+    // Would Return card
+    const wrHtml = wr != null
+      ? `<div class="summary-card">
+           <div class="summary-label">Would Visit Again</div>
+           <div class="summary-big" style="color:var(--brand-primary)">${Math.round(wr * 100)}%</div>
+           <div class="summary-sub">${s.would_return_yes} yes · ${s.would_return_no} no</div>
+         </div>`
+      : `<div class="summary-card">
+           <div class="summary-label">Would Visit Again</div>
+           <div class="summary-big" style="color:var(--grey-light)">N/A</div>
+           <div class="summary-sub">No data yet</div>
+         </div>`;
+
+    // Trend card: last 12 weeks
+    const trend = data.trend || [];
+    const maxCount = Math.max(1, ...trend.map(t => t.count));
+    const bars = trend.length
+      ? trend.map(t => `<div class="trend-bar ${t.count === 0 ? 'empty' : ''}" style="height:${(t.count / maxCount) * 100}%" title="Week of ${t.week}: ${t.count}"></div>`).join('')
+      : `<div class="trend-bar empty" style="height:6%"></div>`.repeat(12);
+    const totalLast12 = trend.reduce((a, t) => a + t.count, 0);
+
+    const trendHtml = `
+      <div class="summary-card">
+        <div class="summary-label">Reviews Over Time</div>
+        <div class="summary-big">${totalLast12}</div>
+        <div class="summary-sub">Last 12 weeks · ${s.count_7d} in last 7 days</div>
+        <div class="trend-chart">${bars}</div>
+      </div>`;
+
+    $('summary-grid').innerHTML = overallHtml + wrHtml + trendHtml;
+  }
+
+  // ── Distribution per dimension ───────────────────────────
+  function renderDistribution(data) {
+    const avgs = data.avg_ratings || {};
+    const dists = data.distributions || {};
+    const DIMENSIONS = ['taste', 'service', 'value', 'vibe', 'ambiance', 'cleanliness', 'wait_time', 'speed'];
+
+    $('dist-grid').innerHTML = DIMENSIONS.map(dim => {
+      const avg = avgs[dim];
+      const dist = dists[dim] || {};
+      const total = ['1','2','3','4','5'].reduce((a, k) => a + (dist[k] || 0), 0);
+
+      if (avg == null) {
+        return `
+          <div class="dist-card">
+            <div class="dist-head">
+              <div class="dist-name">${titleCase(dim)}</div>
+              <div class="dist-avg empty">No data</div>
+            </div>
+            <div class="dist-bars-wrap"><div class="dist-bars">
+              ${['1','2','3','4','5'].map(k => `<div class="dist-bar" style="height:2px"><span class="label">${k}</span></div>`).join('')}
+            </div></div>
+          </div>`;
+      }
+
+      const max = Math.max(1, ...['1','2','3','4','5'].map(k => dist[k] || 0));
+      const bars = ['1','2','3','4','5'].map(k => {
+        const v = dist[k] || 0;
+        const h = (v / max) * 44;
+        return `<div class="dist-bar ${v > 0 ? 'has' : ''}" style="height:${Math.max(2, h)}px"><span class="label">${k}</span></div>`;
+      }).join('');
+
+      return `
+        <div class="dist-card">
+          <div class="dist-head">
+            <div class="dist-name">${titleCase(dim)}</div>
+            <div class="dist-avg">${avg}</div>
+          </div>
+          <div class="dist-bars-wrap"><div class="dist-bars">${bars}</div></div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Tags cloud ───────────────────────────────────────────
+  function renderTags(data) {
+    const tags = data.top_tags || [];
+    if (!tags.length) {
+      $('tags-card').innerHTML = `<div style="text-align:center; color:var(--grey-mid); font-size:13px; padding:8px;">No tags yet. They'll appear here as guests pick them in their feedback.</div>`;
+      return;
+    }
+    const max = Math.max(...tags.map(t => t.count));
+    const sizeClass = (n) => n >= max * 0.66 ? 'size-lg' : n >= max * 0.33 ? 'size-md' : 'size-sm';
+
+    $('tags-card').innerHTML = `
+      <div class="tag-list">
+        <span class="tag ${activeTag == null ? 'active' : ''}" data-tag="">All</span>
+        ${tags.map(t => `
+          <span class="tag ${sizeClass(t.count)} ${activeTag === t.tag ? 'active' : ''}" data-tag="${escapeHtml(t.tag)}">
+            ${escapeHtml(t.tag)}<span class="count">${t.count}</span>
+          </span>`).join('')}
+      </div>`;
+
+    $('tags-card').querySelectorAll('.tag').forEach(el => {
+      el.addEventListener('click', () => {
+        const t = el.dataset.tag;
+        activeTag = (t === '' || activeTag === t) ? null : t;
+        renderTags(data);
+        renderFilters();
+        renderFeed();
+      });
+    });
+  }
+
+  // ── Filters ──────────────────────────────────────────────
+  function renderFilters() {
+    const RATING_OPTS = [
+      { id: 'all',    label: 'All ratings' },
+      { id: '4plus',  label: '4★ +' },
+      { id: '3',      label: '3★' },
+      { id: '2less',  label: '1–2★' },
+    ];
+    const RETURN_OPTS = [
+      { id: 'all', label: 'All' },
+      { id: 'yes', label: 'Would return' },
+      { id: 'no',  label: 'Would not' },
+    ];
+    const TIME_OPTS = [
+      { id: 'all', label: 'All time' },
+      { id: '7',   label: '7d' },
+      { id: '30',  label: '30d' },
+      { id: '90',  label: '90d' },
+    ];
+
+    const mkChips = (opts, active, fn) => opts.map(o =>
+      `<button class="chip ${active === o.id ? 'active' : ''}" data-val="${o.id}">${o.label}</button>`).join('');
+
+    $('filter-bar').innerHTML = `
+      <div class="filter-group">
+        <span class="filter-label">Rating</span>
+        ${mkChips(RATING_OPTS, activeRating)}
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Return</span>
+        ${mkChips(RETURN_OPTS, activeReturn)}
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">When</span>
+        ${mkChips(TIME_OPTS, activeTime)}
+      </div>
+      ${activeTag ? `
+        <div class="filter-group">
+          <span class="filter-label">Tag</span>
+          <button class="chip active" data-val="clear-tag">${escapeHtml(activeTag)} ✕</button>
+        </div>` : ''}
+    `;
+
+    // Wire up clicks. We split by which group they fall into based on data-val membership.
+    $('filter-bar').querySelectorAll('button.chip').forEach((btn, i, all) => {
+      btn.addEventListener('click', () => {
+        const v = btn.dataset.val;
+        if (RATING_OPTS.find(o => o.id === v))      activeRating = v;
+        else if (RETURN_OPTS.find(o => o.id === v)) activeReturn = v;
+        else if (TIME_OPTS.find(o => o.id === v))   activeTime = v;
+        else if (v === 'clear-tag')                  activeTag = null;
+        renderFilters();
+        renderFeed();
+        if (v === 'clear-tag') renderTagsRefresh();
+      });
+    });
+  }
+
+  function renderTagsRefresh() {
+    // Re-render tag cloud so the active state updates after clearing
+    if (window._tagData) renderTags(window._tagData);
+  }
+
+  // ── Feed render ──────────────────────────────────────────
+  function avgOfRow(r) {
+    const vals = Object.values(r.ratings || {}).filter(v => v != null);
+    if (!vals.length) return null;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  }
+
+  function matchesFilters(fb) {
+    const avg = avgOfRow(fb);
+    if (activeRating !== 'all') {
+      if (avg == null) return false;
+      if (activeRating === '4plus' && avg < 4)         return false;
+      if (activeRating === '3'     && (avg < 2.5 || avg >= 3.75)) return false;
+      if (activeRating === '2less' && avg >= 2.5)      return false;
+    }
+    if (activeReturn !== 'all') {
+      if (activeReturn === 'yes' && fb.would_return !== true)  return false;
+      if (activeReturn === 'no'  && fb.would_return !== false) return false;
+    }
+    if (activeTime !== 'all') {
+      const days = parseInt(activeTime, 10);
+      const cutoff = Date.now() - days * 86400000;
+      if (new Date(fb.created_at).getTime() < cutoff) return false;
+    }
+    if (activeTag) {
+      if (!(fb.quick_tags || []).includes(activeTag)) return false;
+    }
+    return true;
+  }
+
+  function renderFeed() {
+    const filtered = allFeedback.filter(matchesFilters);
+    if (!filtered.length) {
+      $('feedback-feed').innerHTML = `
+        <div class="state">
+          <div class="state-title">No feedback matches these filters</div>
+          <p class="state-msg">Try widening the filters above, or clear them to see all reviews.</p>
+        </div>`;
+      return;
+    }
+
+    $('feedback-feed').innerHTML = filtered.map(fb => {
+      const ratings = fb.ratings || {};
+      const pills = Object.entries(ratings)
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => `<span class="fb-rating-pill ${v <= 2 ? 'low' : ''}"><span class="name">${titleCase(k)}</span> <strong>${v}</strong></span>`)
+        .join('');
+      const tags = (fb.quick_tags || []).map(t => `<span class="fb-tag">${escapeHtml(t)}</span>`).join('');
+      const wr = fb.would_return === true
+        ? `<div class="fb-return yes"><svg width="11" height="11"><use href="#ic-check"/></svg> Would visit again</div>`
+        : fb.would_return === false
+          ? `<div class="fb-return no"><svg width="11" height="11"><use href="#ic-x"/></svg> Would not return</div>`
+          : '';
+      const ctx = (fb.context && fb.context !== 'general')
+        ? `<span class="fb-context">${escapeHtml(fb.context)}</span>` : '';
+
+      return `
+        <div class="fb-card">
+          <div class="fb-head">
+            <div class="fb-id">${maskedLabel(fb.user_id)} ${ctx}</div>
+            <div class="fb-time">${fmtRelative(fb.created_at)}</div>
+          </div>
+          ${pills ? `<div class="fb-ratings">${pills}</div>` : ''}
+          ${tags ? `<div class="fb-tags">${tags}</div>` : ''}
+          ${wr}
+        </div>`;
+    }).join('');
+  }
+
+  // ── Sidebar wiring ───────────────────────────────────────
+  function setupSidebar(capabilities) {
+    const token = new URLSearchParams(location.search).get('token') || '';
+    const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
+
+    document.querySelectorAll('.page-link').forEach(a => {
+      const key = a.dataset.href.split('/').pop();
+      if (caps[key] === false) { a.style.display = 'none'; return; }
+      const url = new URL(a.dataset.href, location.origin);
+      if (token) url.searchParams.set('token', token);
+      a.href = url.toString();
+    });
+
+    const jumpLinks = document.querySelectorAll('.jump-link');
+    const sections  = Array.from(jumpLinks).map(l => $(l.dataset.section)).filter(Boolean);
+    function update() {
+      const scrollY = window.scrollY + 120;
+      let activeId = sections[0]?.id;
+      for (const sec of sections) {
+        if (sec.offsetTop <= scrollY) activeId = sec.id;
+      }
+      jumpLinks.forEach(l => l.classList.toggle('active', l.dataset.section === activeId));
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
+  // ── Load ─────────────────────────────────────────────────
+  async function load() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) { hide('view-loading'); show('view-error'); return; }
+
+    const [feedbackRes, capsRes] = await Promise.all([
+      db.rpc('get_partner_feedback_by_token',     { p_token: token }),
+      db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+    ]);
+
+    const data = feedbackRes.data;
+    const caps = capsRes.data;
+    if (feedbackRes.error || !data || !data.place) {
+      console.error('feedback error', feedbackRes.error);
+      hide('view-loading'); show('view-error');
+      return;
+    }
+
+    applyBrand(data.program);
+    allFeedback = data.feedback || [];
+    window._tagData = data;
+
+    renderHero(data.place, data.stats);
+    renderSummary(data);
+    renderDistribution(data);
+    renderTags(data);
+    renderFilters();
+    renderFeed();
+
+    hide('view-loading');
+    show('view-dashboard');
+    setupSidebar(caps && caps.capabilities);
+  }
+
+  load();
+</script>
+
+</body>
+</html>
