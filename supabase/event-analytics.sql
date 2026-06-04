@@ -53,43 +53,197 @@ begin
 
     'event', (to_jsonb(v_event) - 'partner_access_token'),
 
-    'stats', jsonb_build_object(
-      'view_count',       coalesce(v_event.view_count, 0),
-      'interested_count', coalesce(v_event.interested_count, 0),
-      'going_count',      coalesce(v_event.going_count, 0),
-      'capacity',         v_event.capacity,
-      'is_sold_out',      coalesce(v_event.is_sold_out, false),
-      'days_until_event', v_days,
-      'is_past',          v_is_past,
-      'is_today',         (v_starts::date = v_now::date),
-      'has_tickets',      coalesce(v_event.has_online_tickets, false),
-      'price_min',        v_event.ticket_price_min,
-      'price_max',        v_event.ticket_price_max,
-      'currency',         coalesce(nullif(v_event.currency, ''), 'JMD'),
+    'stats', (
+      with
+        viewers as (
+          select count(*) as n
+            from public.user_event_interactions
+           where event_id = v_event.id and interaction_type = 'viewed'
+        ),
+        saves as (
+          select count(*) as n from public.saved_events where event_id = v_event.id
+        ),
+        interests as (
+          select status, count(*) as n
+            from public.event_interests
+           where event_id = v_event.id
+           group by status
+        ),
+        checkins as (
+          select count(*) as n
+            from public.user_event_activity
+           where event_id = v_event.id and activity_type = 'checked_in'
+        )
+      select jsonb_build_object(
+        -- Hard event metadata
+        'capacity',         v_event.capacity,
+        'is_sold_out',      coalesce(v_event.is_sold_out, false),
+        'days_until_event', v_days,
+        'is_past',          v_is_past,
+        'is_today',         (v_starts::date = v_now::date),
+        'has_tickets',      coalesce(v_event.has_online_tickets, false),
+        'price_min',        v_event.ticket_price_min,
+        'price_max',        v_event.ticket_price_max,
+        'currency',         coalesce(nullif(v_event.currency, ''), 'JMD'),
 
-      'capacity_fill_rate',
-        (case
-          when v_event.capacity is null or v_event.capacity = 0 then null
-          else round(
-            (coalesce(v_event.going_count, 0)::numeric / v_event.capacity) * 100,
-            1)
-        end),
+        -- Real engagement (from new tables)
+        'view_count',       coalesce(v_event.view_count, 0),
+        'unique_viewers',   (select n from viewers),
+        'saved_count',      (select n from saves),
+        'interested_count', coalesce((select n from interests where status = 'interested'), 0),
+        'going_count',      coalesce((select n from interests where status = 'going'), 0),
+        'went_count',       coalesce((select n from interests where status = 'went'), 0),
+        'checkin_count',    (select n from checkins),
 
-      'view_to_interest_rate',
-        (case
-          when coalesce(v_event.view_count, 0) = 0 then null
-          else round(
-            (coalesce(v_event.interested_count, 0)::numeric / v_event.view_count) * 100,
-            1)
-        end),
+        'checkin_by_method', (
+          select coalesce(jsonb_object_agg(coalesce(checkin_method, 'self'), n), '{}'::jsonb)
+          from (
+            select checkin_method, count(*) as n
+              from public.user_event_activity
+             where event_id = v_event.id and activity_type = 'checked_in'
+             group by checkin_method
+          ) m
+        ),
 
-      'interest_to_going_rate',
-        (case
-          when coalesce(v_event.interested_count, 0) = 0 then null
-          else round(
-            (coalesce(v_event.going_count, 0)::numeric / v_event.interested_count) * 100,
-            1)
-        end)
+        'capacity_fill_rate',
+          (case
+            when v_event.capacity is null or v_event.capacity = 0 then null
+            else round(
+              (coalesce((select n from interests where status = 'going'), 0)::numeric
+                / v_event.capacity) * 100,
+              1)
+          end),
+
+        'view_to_interest_rate',
+          (case
+            when (select n from viewers) = 0 then null
+            else round(
+              ((select coalesce(sum(n), 0) from interests where status in ('interested','going','went'))::numeric
+                / (select n from viewers)) * 100,
+              1)
+          end),
+
+        'interest_to_going_rate',
+          (case
+            when coalesce((select n from interests where status = 'interested'), 0) = 0 then null
+            else round(
+              (coalesce((select n from interests where status = 'going'), 0)::numeric
+                / (select n from interests where status = 'interested')) * 100,
+              1)
+          end),
+
+        'going_to_attended_rate',
+          (case
+            when coalesce((select n from interests where status = 'going'), 0) = 0 then null
+            else round(
+              ((select n from checkins)::numeric
+                / (select n from interests where status = 'going')) * 100,
+              1)
+          end)
+      )
+    ),
+
+    -- ── Audience location (from interactions.country) ─
+    'top_countries', (
+      select coalesce(
+        jsonb_agg(jsonb_build_object('country', country, 'count', n) order by n desc),
+        '[]'::jsonb)
+      from (
+        select country, count(*) as n
+          from public.user_event_interactions
+         where event_id = v_event.id
+           and country is not null and country <> ''
+         group by country
+         order by count(*) desc
+         limit 10
+      ) c
+    ),
+
+    -- ── Activity trend (last 30 days, bucketed by day) ─
+    'activity_trend', (
+      select coalesce(
+        jsonb_agg(jsonb_build_object('date', d, 'count', n) order by d),
+        '[]'::jsonb)
+      from (
+        select to_char(created_at::date, 'YYYY-MM-DD') as d, count(*) as n
+          from public.user_event_activity
+         where event_id = v_event.id
+           and created_at >= v_now - interval '30 days'
+         group by created_at::date
+      ) t
+    ),
+
+    -- ── Schedule overview ─
+    'schedule', jsonb_build_object(
+      'days_count', (
+        select count(*) from public.event_schedule_days where event_id = v_event.id
+      ),
+      'items_count', (
+        select count(*) from public.event_schedule_items where event_id = v_event.id
+      ),
+      'featured_count', (
+        select count(*) from public.event_schedule_items
+         where event_id = v_event.id and is_featured = true
+      ),
+      'must_see_count', (
+        select count(*) from public.event_schedule_items
+         where event_id = v_event.id and is_must_see = true
+      ),
+      'days', (
+        select coalesce(
+          jsonb_agg(jsonb_build_object(
+            'id',            d.id,
+            'date',          d.date,
+            'label',         d.label,
+            'date_display',  d.date_display,
+            'gates_open',    d.gates_open,
+            'gates_close',   d.gates_close,
+            'is_cancelled',  d.is_cancelled,
+            'day_number',    d.day_number,
+            'items_count',   (select count(*) from public.event_schedule_items
+                               where day_id = d.id and is_published = true),
+            'must_see_count',(select count(*) from public.event_schedule_items
+                               where day_id = d.id and is_must_see = true)
+          ) order by d.date),
+          '[]'::jsonb)
+        from public.event_schedule_days d
+        where d.event_id = v_event.id
+      ),
+      'next_item', (
+        select jsonb_build_object(
+          'id',          id,
+          'title',       title,
+          'subtitle',    subtitle,
+          'start_time',  start_time,
+          'end_time',    end_time,
+          'venue_override', venue_override,
+          'is_must_see', is_must_see
+        )
+        from public.event_schedule_items
+        where event_id = v_event.id
+          and is_published = true
+          and start_time > v_now
+        order by start_time
+        limit 1
+      )
+    ),
+
+    -- ── Updates (organizer-pushed messages) ─
+    'updates', (
+      select coalesce(
+        jsonb_agg(jsonb_build_object(
+          'id',         id,
+          'title',      title,
+          'message',    message,
+          'created_at', created_at
+        ) order by created_at desc),
+        '[]'::jsonb)
+      from (
+        select * from public.event_updates
+        where event_id = v_event.id
+        order by created_at desc
+        limit 20
+      ) u
     ),
 
     'tabs', v_tabs,
@@ -268,7 +422,7 @@ begin
       )
     ),
 
-    -- ── Sponsors ─
+    -- ── Sponsors (with activations + real engagement) ─
     'sponsors', (
       select coalesce(
         jsonb_agg(
@@ -281,7 +435,33 @@ begin
             'tier',         es.tier,
             'tier_label',   es.display_tier_label,
             'is_featured',  es.is_featured,
-            'tagline',      es.custom_tagline
+            'tagline',      es.custom_tagline,
+            'activations', (
+              select coalesce(
+                jsonb_agg(jsonb_build_object(
+                  'id',             a.id,
+                  'name',           a.name,
+                  'description',    a.description,
+                  'zone',           a.zone,
+                  'days_active',    a.days_active,
+                  'start_time',     a.start_time,
+                  'end_time',       a.end_time,
+                  'troddr_offer',   a.troddr_offer,
+                  'checkin_method', a.checkin_method,
+                  'has_qr',         (a.qr_code_token is not null),
+                  'has_nfc',        (a.nfc_token is not null),
+                  'redemptions', (
+                    select count(*) from public.user_event_activity
+                     where event_id = v_event.id
+                       and entity_type = 'sponsor_activation'
+                       and entity_id = a.id
+                  )
+                ) order by a.display_order),
+                '[]'::jsonb)
+              from public.event_sponsor_activations a
+              where a.event_sponsor_id = es.id
+                and coalesce(a.is_active, true) = true
+            )
           )
           order by es.display_order, es.tier),
         '[]'::jsonb)

@@ -84,7 +84,7 @@
   .page-hero {
     background: var(--brand-primary) center / cover no-repeat;
     color: var(--brand-text);
-    padding: 56px 24px 88px;
+    padding: 48px 24px 64px;
     text-align: left;
     position: relative; overflow: hidden;
   }
@@ -139,7 +139,7 @@
   /* ── LAYOUT ── */
   .layout {
     max-width: 1320px;
-    margin: -56px auto 0;
+    margin: -32px auto 0;
     padding: 0 16px;
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -769,6 +769,208 @@
     .rating-chips { justify-content: flex-start; }
   }
 
+  /* ── SCHEDULE ── */
+  .schedule-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+  }
+  .schedule-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .schedule-summary-item .num {
+    font-size: 22px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.5px;
+  }
+  .schedule-summary-item .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 2px;
+  }
+  .schedule-day {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .schedule-day:last-child { border-bottom: none; }
+  .schedule-day-num {
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800;
+  }
+  .schedule-day-info { min-width: 0; }
+  .schedule-day-label {
+    font-size: 14px; font-weight: 700;
+    color: var(--black);
+  }
+  .schedule-day-sub {
+    font-size: 11px; color: var(--grey-mid);
+    margin-top: 2px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .schedule-day-stats {
+    text-align: right;
+    font-size: 11px; font-weight: 600;
+    color: var(--grey-mid);
+  }
+  .schedule-day-stats .n {
+    font-size: 16px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.3px;
+  }
+  .schedule-next {
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    display: flex; gap: 14px; align-items: center;
+  }
+  .schedule-next-tag {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--brand-primary);
+    background: #fff;
+    border: 1px solid var(--brand-primary);
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .schedule-next-body { flex: 1; min-width: 0; }
+  .schedule-next-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 2px;
+  }
+  .schedule-next-meta {
+    font-size: 11px; color: var(--grey-mid);
+  }
+
+  /* ── UPDATES FEED ── */
+  .updates-list {
+    display: grid; gap: 10px;
+  }
+  .update-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand-primary);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+  }
+  .update-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .update-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--black);
+  }
+  .update-time {
+    font-size: 11px; color: var(--grey-mid);
+    white-space: nowrap;
+  }
+  .update-msg {
+    font-size: 13px; color: var(--grey-dark);
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .updates-empty {
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    padding: 22px;
+    text-align: center;
+    color: var(--grey-mid);
+    font-size: 13px;
+  }
+
+  /* ── COUNTRIES ── */
+  .countries-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+  }
+  .country-row {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  .country-row .name { font-weight: 600; color: var(--black); }
+  .country-row .bar {
+    height: 6px;
+    background: var(--bg-soft);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .country-row .bar-fill {
+    height: 100%;
+    background: var(--brand-primary);
+    border-radius: 100px;
+  }
+  .country-row .count {
+    font-size: 12px; font-weight: 700;
+    color: var(--grey-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── SPONSOR ACTIVATIONS ── */
+  .activation-list {
+    margin-top: 12px;
+    display: grid; gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-soft);
+    text-align: left;
+  }
+  .activation-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    font-size: 11px;
+    align-items: center;
+  }
+  .activation-name {
+    font-weight: 700;
+    color: var(--black);
+  }
+  .activation-meta {
+    font-size: 10px;
+    color: var(--grey-mid);
+    margin-top: 2px;
+  }
+  .activation-redemptions {
+    font-size: 12px; font-weight: 800;
+    color: var(--brand-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .activation-method {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+  }
+  .activation-method.qr   { background: var(--blue-light); color: var(--blue); }
+  .activation-method.nfc  { background: #ede5fa;          color: #6b3aa0; }
+  .activation-method.self { background: var(--bg-soft);   color: var(--grey-mid); }
+
   /* ── LINKED PLACE BADGE (vendor) ── */
   .link-status {
     font-size: 10px; font-weight: 700;
@@ -976,6 +1178,13 @@
       <circle cx="12" cy="12" r="9"/>
       <path d="M12 8h.01M11 12h1v5h1"/>
     </symbol>
+    <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2"/>
+      <path d="M3 10h18M8 3v4M16 3v4"/>
+    </symbol>
+    <symbol id="ic-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.6 4.5 8.4 8.4 0 0 1-4-1L3 21l1.9-5.4a8.5 8.5 0 0 1-1-4 8.5 8.5 0 0 1 4.5-7.6 8.4 8.4 0 0 1 4-1A8.5 8.5 0 0 1 21 11.5z"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -1040,6 +1249,15 @@
     <a href="#engagement" class="jump-link" data-section="engagement">
       <svg><use href="#ic-bolt"/></svg> Engagement
     </a>
+    <a href="#audience"   class="jump-link" data-section="audience" id="nav-audience" style="display:none">
+      <svg><use href="#ic-users"/></svg> Audience
+    </a>
+    <a href="#schedule"   class="jump-link" data-section="schedule" id="nav-schedule" style="display:none">
+      <svg><use href="#ic-calendar"/></svg> Schedule
+    </a>
+    <a href="#updates"    class="jump-link" data-section="updates" id="nav-updates" style="display:none">
+      <svg><use href="#ic-chat"/></svg> Updates
+    </a>
     <a href="#vendors"    class="jump-link" data-section="vendors" id="nav-vendors" style="display:none">
       <svg><use href="#ic-shop"/></svg> Vendors
     </a>
@@ -1084,6 +1302,39 @@
         <span class="pill live">Live</span>
       </div>
       <div class="stats-grid" id="stats-grid"></div>
+    </section>
+
+    <section class="section" id="audience" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Audience Location</h2>
+          <div class="section-sub">Where engaged guests are coming from, based on interactions.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="countries-card" id="countries-card"></div>
+    </section>
+
+    <section class="section" id="schedule" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Schedule</h2>
+          <div class="section-sub">Days, set times, and must-see moments.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="schedule-card" id="schedule-card"></div>
+    </section>
+
+    <section class="section" id="updates" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Event Updates</h2>
+          <div class="section-sub">Announcements pushed to attendees through the TRODDR app.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="updates-list" id="updates-list"></div>
     </section>
 
     <section class="section" id="vendors" style="display:none">
@@ -1320,11 +1571,20 @@
       ? `Share <strong>troddr.com/events/${escapeHtml(eventSlug)}</strong> to start collecting traffic.`
       : `Share your event link to start collecting traffic.`;
 
+    // Prefer the explicit view_count counter; fall back to unique viewers.
+    const views = stats.view_count || stats.unique_viewers || 0;
+
     const cards = [
-      { label: 'Total Views',
-        value: stats.view_count,
+      { label: 'Views',
+        value: views,
         emptyMsg: shareLine,
-        sub: 'across the app' },
+        sub: stats.unique_viewers
+          ? `${stats.unique_viewers} unique ${stats.unique_viewers === 1 ? 'viewer' : 'viewers'}`
+          : 'across the app' },
+      { label: 'Saved',
+        value: stats.saved_count,
+        emptyMsg: 'Saves appear here when guests bookmark your event in the app.',
+        sub: 'bookmarked in the app' },
       { label: 'Interested',
         value: stats.interested_count,
         emptyMsg: 'Guests can tap <strong>Interested</strong> to follow updates. Counts appear as guests engage.',
@@ -1333,14 +1593,14 @@
         value: stats.going_count,
         emptyMsg: 'Once guests mark <strong>Going</strong> or RSVP, you\'ll see commitment counts here.',
         sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : null },
-      { label: 'Capacity',
-        value: stats.capacity != null && stats.capacity > 0 ? stats.capacity : null,
-        emptyMsg: 'Set a capacity in your event details to unlock fill-rate insights.',
-        sub: stats.capacity_fill_rate != null ? `${stats.capacity_fill_rate}% filled` : null },
-      { label: 'Tickets',
-        labelOverride: true,
-        rawValue: stats.is_sold_out ? 'Sold Out' : (stats.has_tickets ? 'Open' : 'Off-platform'),
-        sub: stats.is_sold_out ? 'no spots remaining' : (stats.has_tickets ? 'online sales active' : 'tickets handled externally') },
+      { label: 'Checked In',
+        value: stats.checkin_count,
+        emptyMsg: stats.is_past
+          ? 'No check-ins were captured for this event.'
+          : 'Check-in counts appear here on event day via QR, NFC, or self check-in.',
+        sub: stats.going_to_attended_rate != null
+          ? `${stats.going_to_attended_rate}% of going attended`
+          : (stats.checkin_count ? 'live attendance' : null) },
     ];
 
     $('stats-grid').innerHTML = cards.map(c => {
@@ -1372,13 +1632,16 @@
 
   // ── Funnel (hero) ────────────────────────────────────────
   function renderFunnel(stats, eventSlug) {
+    const views = stats.view_count || stats.unique_viewers || 0;
+    const attended = stats.checkin_count || stats.went_count || 0;
     const liveSteps = [
-      { label: 'Listing Views',  value: stats.view_count || 0 },
-      { label: 'Interested',     value: stats.interested_count || 0 },
-      { label: 'Going / RSVP',   value: stats.going_count || 0 },
+      { label: 'Listing Views', value: views },
+      { label: 'Saved',         value: stats.saved_count || 0 },
+      { label: 'Interested',    value: stats.interested_count || 0 },
+      { label: 'Going / RSVP',  value: stats.going_count || 0 },
+      { label: 'Attended',      value: attended },
     ];
     const futureSteps = [
-      { label: 'Attended',           note: 'Coming soon' },
       { label: 'Returned via Loyalty', note: 'Coming soon' },
     ];
 
@@ -1606,7 +1869,7 @@
     }).join('');
   }
 
-  // ── Sponsors ─────────────────────────────────────────────
+  // ── Sponsors with activations + redemption counts ────────
   function renderSponsors(data) {
     const sponsors = data.sponsors || [];
     if (!sponsors.length) return;
@@ -1614,18 +1877,174 @@
     $('sponsors').style.display = '';
     $('nav-sponsors').style.display = '';
 
-    $('sponsors-grid').innerHTML = sponsors.map(s => `
-      <a class="sponsor-card" ${s.website ? `href="${escapeHtml(s.website)}" target="_blank" rel="noopener"` : ''}>
-        ${s.logo_url ? `<div class="sponsor-logo" style="background-image:url('${escapeHtml(s.logo_url)}')"></div>` : ''}
-        <div class="sponsor-name">${escapeHtml(s.name)}</div>
-        <div class="sponsor-tier">${escapeHtml(s.tier_label || s.tier || '')}</div>
-        <div class="sponsor-metrics">
-          <div class="sponsor-metric-row"><span class="lbl">Logo impressions</span><span class="val">Soon</span></div>
-          <div class="sponsor-metric-row"><span class="lbl">Profile clicks</span><span class="val">Soon</span></div>
-          <div class="sponsor-metric-row"><span class="lbl">Engagement rate</span><span class="val">Soon</span></div>
+    $('sponsors-grid').innerHTML = sponsors.map(s => {
+      const acts = s.activations || [];
+      const totalRedemptions = acts.reduce((sum, a) => sum + (a.redemptions || 0), 0);
+
+      const activationsHtml = acts.length
+        ? `<div class="activation-list">
+             ${acts.map(a => {
+               const methods = [];
+               if (a.has_qr)  methods.push(`<span class="activation-method qr">QR</span>`);
+               if (a.has_nfc) methods.push(`<span class="activation-method nfc">NFC</span>`);
+               if (!methods.length && a.checkin_method) {
+                 methods.push(`<span class="activation-method ${escapeHtml(a.checkin_method)}">${escapeHtml(a.checkin_method)}</span>`);
+               }
+               return `
+                 <div class="activation-row">
+                   <div>
+                     <div class="activation-name">${escapeHtml(a.name)}</div>
+                     <div class="activation-meta">
+                       ${a.zone ? escapeHtml(a.zone) + ' · ' : ''}
+                       ${a.troddr_offer ? escapeHtml(a.troddr_offer) : ''}
+                       ${methods.join(' ')}
+                     </div>
+                   </div>
+                   <div class="activation-redemptions" title="Redemptions">
+                     ${a.redemptions || 0}
+                   </div>
+                 </div>`;
+             }).join('')}
+           </div>`
+        : '';
+
+      return `
+        <a class="sponsor-card" ${s.website ? `href="${escapeHtml(s.website)}" target="_blank" rel="noopener"` : ''}>
+          ${s.logo_url ? `<div class="sponsor-logo" style="background-image:url('${escapeHtml(s.logo_url)}')"></div>` : ''}
+          <div class="sponsor-name">${escapeHtml(s.name)}</div>
+          <div class="sponsor-tier">${escapeHtml(s.tier_label || s.tier || '')}</div>
+          ${acts.length
+            ? `<div class="sponsor-metrics">
+                 <div class="sponsor-metric-row"><span class="lbl">Activations</span><span class="val" style="color:var(--brand-primary);">${acts.length}</span></div>
+                 <div class="sponsor-metric-row"><span class="lbl">Total redemptions</span><span class="val" style="color:var(--brand-primary);">${totalRedemptions}</span></div>
+               </div>`
+            : `<div class="sponsor-metrics">
+                 <div class="sponsor-metric-row"><span class="lbl">Activations</span><span class="val">None set</span></div>
+                 <div class="sponsor-metric-row"><span class="lbl">Logo impressions</span><span class="val">Soon</span></div>
+               </div>`}
+          ${activationsHtml}
+        </a>`;
+    }).join('');
+  }
+
+  // ── Audience location ────────────────────────────────────
+  function renderAudience(data) {
+    const countries = data.top_countries || [];
+    if (!countries.length) return;
+    $('audience').style.display = '';
+    $('nav-audience').style.display = '';
+
+    const max = Math.max(...countries.map(c => c.count));
+    $('countries-card').innerHTML = countries.map(c => {
+      const pct = (c.count / max) * 100;
+      return `
+        <div class="country-row">
+          <span class="name">${escapeHtml(c.country)}</span>
+          <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
+          <span class="count">${c.count}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Schedule overview ────────────────────────────────────
+  function renderSchedule(data) {
+    const sch = data.schedule || {};
+    if (!sch.days_count) return;
+    $('schedule').style.display = '';
+    $('nav-schedule').style.display = '';
+
+    const summary = `
+      <div class="schedule-summary">
+        <div class="schedule-summary-item">
+          <div class="num">${sch.days_count}</div>
+          <div class="lbl">${sch.days_count === 1 ? 'Day' : 'Days'}</div>
         </div>
-      </a>
+        <div class="schedule-summary-item">
+          <div class="num">${sch.items_count}</div>
+          <div class="lbl">Set times</div>
+        </div>
+        <div class="schedule-summary-item">
+          <div class="num">${sch.featured_count}</div>
+          <div class="lbl">Featured</div>
+        </div>
+        <div class="schedule-summary-item">
+          <div class="num">${sch.must_see_count}</div>
+          <div class="lbl">Must-see</div>
+        </div>
+      </div>`;
+
+    const days = (sch.days || []).map(d => {
+      const dateLabel = d.label || d.date_display || (d.date ? new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : 'Day');
+      const subs = [];
+      if (d.gates_open)  subs.push(`Gates open ${d.gates_open.slice(0,5)}`);
+      if (d.gates_close) subs.push(`closes ${d.gates_close.slice(0,5)}`);
+      if (d.is_cancelled) subs.push('<span style="color:var(--red); font-weight:700;">Cancelled</span>');
+      return `
+        <div class="schedule-day">
+          <div class="schedule-day-num">${d.day_number || ''}</div>
+          <div class="schedule-day-info">
+            <div class="schedule-day-label">${escapeHtml(dateLabel)}</div>
+            <div class="schedule-day-sub">${subs.join(' · ')}</div>
+          </div>
+          <div class="schedule-day-stats">
+            <div class="n">${d.items_count}</div>
+            <div>${d.items_count === 1 ? 'item' : 'items'}${d.must_see_count ? ` · ${d.must_see_count} must-see` : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    let nextUp = '';
+    if (sch.next_item) {
+      const ni = sch.next_item;
+      const t = ni.start_time ? new Date(ni.start_time).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : '';
+      nextUp = `
+        <div class="schedule-next">
+          <span class="schedule-next-tag">Next up</span>
+          <div class="schedule-next-body">
+            <div class="schedule-next-title">${escapeHtml(ni.title || '')}</div>
+            <div class="schedule-next-meta">
+              ${t}${ni.venue_override ? ` · ${escapeHtml(ni.venue_override)}` : ''}${ni.subtitle ? ` · ${escapeHtml(ni.subtitle)}` : ''}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    $('schedule-card').innerHTML = summary + days + nextUp;
+  }
+
+  // ── Event updates feed ──────────────────────────────────
+  function renderUpdates(data) {
+    const updates = data.updates || [];
+    if (!updates.length) return;
+    $('updates').style.display = '';
+    $('nav-updates').style.display = '';
+
+    $('updates-list').innerHTML = updates.map(u => `
+      <div class="update-card">
+        <div class="update-head">
+          <div class="update-title">${escapeHtml(u.title)}</div>
+          <div class="update-time">${fmtRelativeShort(u.created_at)}</div>
+        </div>
+        <div class="update-msg">${escapeHtml(u.message)}</div>
+      </div>
     `).join('');
+  }
+
+  function fmtRelativeShort(ts) {
+    if (!ts) return '';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const d = Math.floor(diffMs / 86400000);
+    if (d < 1) {
+      const h = Math.floor(diffMs / 3600000);
+      if (h < 1) {
+        const m = Math.floor(diffMs / 60000);
+        return m < 1 ? 'just now' : `${m}m ago`;
+      }
+      return `${h}h ago`;
+    }
+    if (d === 1) return 'yesterday';
+    if (d < 30)  return `${d}d ago`;
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   // ── Action Center ────────────────────────────────────────
@@ -1716,9 +2135,8 @@
   function renderLocked(data) {
     const locked = [
       { title: 'Traffic Sources',       desc: 'See where guests discovered your event: Home Feed, Search, Nearby, Map, or shared links.' },
-      { title: 'Audience Location',     desc: 'Where your audience is coming from, broken down by parish and country.' },
       { title: 'Views Over Time',       desc: 'Daily, weekly, and monthly trends so you can see what marketing is working.' },
-      { title: 'Check-in & Attendance', desc: 'QR, NFC, or manual check-in. Arrival timeline and no-show rate.' },
+      { title: 'Arrival Timeline',      desc: 'When check-ins peak through the day to help plan staffing and queues.' },
       { title: 'Reservations',          desc: 'Capacity, reserved, remaining, and waitlist when TRODDR handles RSVPs.' },
       { title: 'Event Scorecard',       desc: 'Post-event guest feedback across value, vibe, organisation, taste, and drinks.' },
       { title: 'Loyalty Impact',        desc: 'How many event attendees joined a partner loyalty program and returned later.' },
@@ -1815,6 +2233,9 @@
     renderFunnel(data.stats, data.event.slug);
     renderPreview(data.event, data.tabs);
     renderStats(data.stats, data.event.slug);
+    renderAudience(data);
+    renderSchedule(data);
+    renderUpdates(data);
     renderVendors(data);
     renderSponsors(data);
     buildActions(data);
