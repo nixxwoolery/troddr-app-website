@@ -425,35 +425,91 @@
     border-color: transparent;
   }
 
-  /* ── ACTIONS PANEL (right side of preview) ── */
-  .actions-card { padding: 22px 24px; gap: 12px; }
+  /* ── ACTIONS (Quick Insights side panel) ── */
+  .actions-card { padding: 22px 24px; gap: 8px; }
   .action-card {
     background: var(--bg-soft);
     border-radius: var(--radius);
-    border-left: 3px solid var(--grey-light);
     padding: 12px 14px;
   }
-  .action-card.positive { border-left-color: var(--green); }
-  .action-card.attention { border-left-color: var(--amber); }
-  .action-card.alert { border-left-color: var(--red); }
-  .action-card.info { border-left-color: var(--brand-primary); }
   .action-tag {
     font-size: 9px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--grey-mid);
     margin-bottom: 4px;
+    display: inline-flex; align-items: center; gap: 6px;
   }
+  .action-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--grey-light);
+  }
+  .action-card.positive .action-tag::before  { background: var(--green); }
+  .action-card.attention .action-tag::before { background: var(--amber); }
+  .action-card.alert .action-tag::before     { background: var(--red); }
+  .action-card.info .action-tag::before      { background: var(--brand-primary); }
   .action-card.positive .action-tag  { color: var(--green); }
   .action-card.attention .action-tag { color: var(--amber); }
   .action-card.alert .action-tag     { color: var(--red); }
+  .action-card.info .action-tag      { color: var(--brand-primary); }
   .action-title {
     font-size: 13px; font-weight: 700;
     color: var(--black);
     margin-bottom: 2px;
+    line-height: 1.35;
   }
   .action-text {
     font-size: 12px; color: var(--grey-dark);
     line-height: 1.5;
+  }
+
+  /* ── ACTION CENTER (main section, single container) ── */
+  .action-center-list {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .action-center-list .action-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border-soft);
+    align-items: start;
+  }
+  .action-center-list .action-row:last-child { border-bottom: none; }
+  .action-center-list .action-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--grey-light);
+    margin-top: 7px;
+    flex-shrink: 0;
+  }
+  .action-center-list .action-row.positive  .action-dot { background: var(--green); }
+  .action-center-list .action-row.attention .action-dot { background: var(--amber); }
+  .action-center-list .action-row.alert     .action-dot { background: var(--red); }
+  .action-center-list .action-row.info      .action-dot { background: var(--brand-primary); }
+  .action-center-list .action-tag-inline {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-right: 10px;
+  }
+  .action-center-list .action-row.positive  .action-tag-inline { color: var(--green); }
+  .action-center-list .action-row.attention .action-tag-inline { color: var(--amber); }
+  .action-center-list .action-row.alert     .action-tag-inline { color: var(--red); }
+  .action-center-list .action-row.info      .action-tag-inline { color: var(--brand-primary); }
+  .action-center-list .action-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--black);
+    display: inline;
+  }
+  .action-center-list .action-text {
+    font-size: 13px; color: var(--grey-dark);
+    line-height: 1.55;
+    margin-top: 4px;
   }
 
   /* ── FUNNEL (hero) ── */
@@ -499,6 +555,114 @@
     line-height: 1.6;
   }
   .funnel-empty strong { color: var(--brand-primary); }
+
+  /* Funnel header supplementary chips (shares, bookmarks) */
+  .funnel-hero-chips {
+    display: flex; gap: 8px;
+    flex-wrap: wrap;
+    align-self: flex-end;
+  }
+  .hero-chip {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-align: center;
+    min-width: 76px;
+  }
+  .hero-chip .num {
+    font-size: 18px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.3px;
+    line-height: 1;
+  }
+  .hero-chip .num.muted { color: var(--grey-light); }
+  .hero-chip .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 4px;
+  }
+
+  /* Stat delta indicator (e.g. "+12 this week") */
+  .stat-delta {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700;
+    color: var(--green);
+    margin-top: 4px;
+  }
+  .stat-delta svg { width: 10px; height: 10px; }
+  .stat-delta.flat { color: var(--grey-light); }
+
+  /* Top saved schedule items */
+  .top-saved {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .top-saved-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .top-saved-label .savers {
+    color: var(--grey-light);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: none;
+  }
+  .saved-item-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .saved-item-row:last-child { border-bottom: none; }
+  .saved-rank {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+  }
+  .saved-rank.top1 { background: var(--brand-accent); color: #111; }
+  .saved-rank.top2 { background: var(--brand-primary); color: var(--brand-text); }
+  .saved-item-info { min-width: 0; }
+  .saved-item-title {
+    font-size: 13px; font-weight: 700;
+    color: var(--black);
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap;
+  }
+  .saved-must-see {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: var(--brand-accent);
+    color: #111;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .saved-item-sub {
+    font-size: 11px; color: var(--grey-mid);
+    margin-top: 2px;
+  }
+  .saved-item-count {
+    text-align: right;
+  }
+  .saved-item-count .num {
+    font-size: 16px; font-weight: 800;
+    color: var(--brand-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .saved-item-count .lbl {
+    font-size: 10px; color: var(--grey-mid);
+    font-weight: 600;
+  }
   .funnel-steps {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -1221,6 +1385,12 @@
     <symbol id="ic-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.6 4.5 8.4 8.4 0 0 1-4-1L3 21l1.9-5.4a8.5 8.5 0 0 1-1-4 8.5 8.5 0 0 1 4.5-7.6 8.4 8.4 0 0 1 4-1A8.5 8.5 0 0 1 21 11.5z"/>
     </symbol>
+    <symbol id="ic-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 9l6 6 6-6"/>
+    </symbol>
+    <symbol id="ic-trend-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 17l6-6 4 4 8-8M14 7h7v7"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -1401,7 +1571,7 @@
         <h2 class="section-title">Action Center</h2>
         <span class="pill live">Live</span>
       </div>
-      <div id="actions-list"></div>
+      <div class="action-center-list" id="actions-list"></div>
     </section>
 
     <section class="section" id="unlocks">
@@ -1618,15 +1788,18 @@
       { label: 'Saved',
         value: stats.saved_count,
         emptyMsg: 'Saves appear here when guests bookmark your event in the app.',
-        sub: 'bookmarked in the app' },
+        sub: 'bookmarked in the app',
+        delta: stats.saves_7d },
       { label: 'Interested',
         value: stats.interested_count,
         emptyMsg: 'Guests can tap <strong>Interested</strong> to follow updates. Counts appear as guests engage.',
-        sub: stats.view_to_interest_rate != null ? `${stats.view_to_interest_rate}% of views` : null },
+        sub: stats.view_to_interest_rate != null ? `${stats.view_to_interest_rate}% of views` : null,
+        delta: stats.interests_7d },
       { label: 'Going',
         value: stats.going_count,
         emptyMsg: 'Once guests mark <strong>Going</strong> or RSVP, you\'ll see commitment counts here.',
-        sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : null },
+        sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : null,
+        delta: stats.going_7d },
       { label: 'Checked In',
         value: stats.checkin_count,
         emptyMsg: stats.is_past
@@ -1655,11 +1828,18 @@
             <div class="stat-empty-msg">${c.emptyMsg}</div>
           </div>`;
       }
+      const deltaHtml = c.delta > 0
+        ? `<div class="stat-delta">
+             <svg><use href="#ic-trend-up"/></svg>
+             +${c.delta} this week
+           </div>`
+        : '';
       return `
         <div class="stat">
           <div class="stat-label">${c.label}</div>
           <div class="stat-value"><span>${c.value}</span></div>
           ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+          ${deltaHtml}
         </div>`;
     }).join('');
   }
@@ -1680,6 +1860,21 @@
     ];
 
     const liveTotal = liveSteps.reduce((a, s) => a + s.value, 0);
+
+    // Supplementary signals (right-side chips on the header)
+    const chips = [
+      { num: stats.shares_count    || 0, lbl: 'Shares' },
+      { num: stats.bookmarks_count || 0, lbl: 'Bookmarks' },
+    ];
+    const chipsHtml = `
+      <div class="funnel-hero-chips">
+        ${chips.map(c => `
+          <div class="hero-chip">
+            <div class="num ${c.num === 0 ? 'muted' : ''}">${c.num}</div>
+            <div class="lbl">${c.lbl}</div>
+          </div>`).join('')}
+      </div>`;
+
     const headHtml = `
       <div class="funnel-hero-head">
         <div>
@@ -1687,6 +1882,7 @@
           <div class="funnel-hero-title">How guests move through your event</div>
           <div class="funnel-hero-sub">From first impression in the TRODDR app, through commitment, to attendance and return visits.</div>
         </div>
+        ${chipsHtml}
       </div>`;
 
     // If no live data at all, show one centered empty state with a single CTA.
@@ -1822,10 +2018,13 @@
       return;
     }
 
-    $('vendor-list').innerHTML = vendors.map(v => {
+    $('vendor-list').innerHTML = vendors.map((v, i) => {
       const logo = v.logo_url || (v.place_image && v.place_image[0]) || v.cover_image_url || '';
       const items = v.menu_items || [];
       const totalRatings = v.total_ratings || 0;
+      const linkedBadge = v.place_id && v.place_slug
+        ? `<span class="link-status linked"><svg><use href="#ic-check"/></svg> Listed</span>`
+        : `<span class="link-status unlinked">Not linked</span>`;
 
       const menuHtml = items.length
         ? items.map(it => {
@@ -1833,9 +2032,7 @@
               it.category ? `<span class="menu-tag cat">${escapeHtml(it.category)}</span>` : '',
               ...(it.tags || []).map(t => `<span class="menu-tag">${escapeHtml(t)}</span>`),
             ].join('');
-
             const ratingViz = renderRatingViz(it.rating_breakdown || {}, it.rating_count || 0);
-
             return `
               <div class="menu-row">
                 <div>
@@ -1861,8 +2058,14 @@
           }).join('')
         : `<div class="menu-empty">No menu items configured for this vendor yet.</div>`;
 
+      const placeLink = v.place_id && v.place_slug && v.place_name
+        ? `<a href="/listings/${escapeHtml(v.place_slug)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+             <svg><use href="#ic-external"/></svg> ${escapeHtml(v.place_name)}
+           </a>`
+        : '';
+
       return `
-        <div class="vendor-card">
+        <div class="vendor-card" data-vendor-idx="${i}">
           <div class="vendor-head">
             <div class="vendor-logo" ${logo ? `style="background-image:url('${escapeHtml(logo)}')"` : ''}></div>
             <div class="vendor-head-body">
@@ -1871,36 +2074,37 @@
                 ${v.is_featured ? '<span class="vendor-featured">Featured</span>' : ''}
               </div>
               <div class="vendor-meta">
+                ${linkedBadge}
                 ${v.booth_number ? `<span class="booth">Booth ${escapeHtml(v.booth_number)}</span>` : ''}
                 ${v.vendor_type ? `<span>${escapeHtml(v.vendor_type)}</span>` : ''}
-                ${v.place_id && v.place_slug && v.place_name
-                  ? `<a href="/listings/${escapeHtml(v.place_slug)}" target="_blank" rel="noopener">
-                       <span class="link-status linked">
-                         <svg><use href="#ic-check"/></svg> Listed on TRODDR
-                       </span>
-                     </a>`
-                  : `<span class="link-status unlinked">Not linked to a listing</span>`}
-                ${v.instagram
-                  ? `<a href="${escapeHtml(v.instagram)}" target="_blank" rel="noopener">
-                       <svg><use href="#ic-external"/></svg> Instagram
-                     </a>`
-                  : ''}
+                ${placeLink}
               </div>
             </div>
-            <div class="vendor-head-stat">
-              <div class="num">${items.length}</div>
-              <div class="lbl">${items.length === 1 ? 'menu item' : 'menu items'}</div>
-              ${totalRatings > 0
-                ? `<div style="margin-top:6px;">
-                     <div class="num" style="font-size:14px; color:var(--brand-primary);">${totalRatings}</div>
-                     <div class="lbl">guest ${totalRatings === 1 ? 'rating' : 'ratings'}</div>
-                   </div>`
-                : ''}
+            <div class="vendor-head-stat-cell">
+              <div class="num ${items.length === 0 ? 'muted' : ''}">${items.length}</div>
+              <div class="lbl">${items.length === 1 ? 'item' : 'items'}</div>
             </div>
+            <div class="vendor-head-stat-cell">
+              <div class="num ${totalRatings === 0 ? 'muted' : 'accent'}">${totalRatings}</div>
+              <div class="lbl">ratings</div>
+            </div>
+            <div class="vendor-head-stat-cell">
+              <div class="num ${v.is_featured ? 'accent' : 'muted'}">${v.is_featured ? 'Yes' : 'No'}</div>
+              <div class="lbl">featured</div>
+            </div>
+            <div class="vendor-expand-icon"><svg><use href="#ic-chevron-down"/></svg></div>
           </div>
-          <div class="menu-list">${menuHtml}</div>
+          <div class="vendor-detail">
+            <div class="menu-list">${menuHtml}</div>
+          </div>
         </div>`;
     }).join('');
+
+    // Wire click-to-expand
+    $('vendor-list').querySelectorAll('.vendor-card').forEach(card => {
+      const head = card.querySelector('.vendor-head');
+      head.addEventListener('click', () => card.classList.toggle('expanded'));
+    });
   }
 
   // ── Sponsors with activations + redemption counts ────────
@@ -2043,7 +2247,49 @@
         </div>`;
     }
 
-    $('schedule-card').innerHTML = summary + days + nextUp;
+    // Top-saved schedule items (lineup engagement)
+    let topSaved = '';
+    const topItems = sch.top_saved_items || [];
+    if (topItems.length) {
+      const max = topItems[0].count || 1;
+      const rows = topItems.slice(0, 5).map((it, i) => {
+        const rankClass = i === 0 ? 'top1' : (i === 1 ? 'top2' : '');
+        const t = it.start_time
+          ? new Date(it.start_time).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+          : '';
+        const subParts = [t, it.venue_override, it.subtitle, it.category].filter(Boolean).map(escapeHtml);
+        return `
+          <div class="saved-item-row">
+            <div class="saved-rank ${rankClass}">${i + 1}</div>
+            <div class="saved-item-info">
+              <div class="saved-item-title">
+                ${escapeHtml(it.title || 'Untitled')}
+                ${it.is_must_see ? '<span class="saved-must-see">Must See</span>' : ''}
+              </div>
+              ${subParts.length ? `<div class="saved-item-sub">${subParts.join(' · ')}</div>` : ''}
+            </div>
+            <div class="saved-item-count">
+              <div class="num">${it.count}</div>
+              <div class="lbl">${it.count === 1 ? 'save' : 'saves'}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      const saversNote = sch.unique_savers
+        ? `${sch.unique_savers} unique ${sch.unique_savers === 1 ? 'saver' : 'savers'} · ${sch.total_saved} total saves`
+        : '';
+
+      topSaved = `
+        <div class="top-saved">
+          <div class="top-saved-label">
+            <span>What guests are most excited about</span>
+            <span class="savers">${saversNote}</span>
+          </div>
+          ${rows}
+        </div>`;
+    }
+
+    $('schedule-card').innerHTML = summary + days + nextUp + topSaved;
   }
 
   // ── Event updates feed ──────────────────────────────────
@@ -2146,16 +2392,21 @@
       });
     }
 
-    const html = actions.map(a => `
-      <div class="action-card ${a.level}">
-        <div class="action-tag">${a.tag}</div>
-        <div class="action-title">${a.title}</div>
-        <div class="action-text">${a.text}</div>
+    // Main Action Center: single container with row layout
+    $('actions-list').innerHTML = actions.map(a => `
+      <div class="action-row ${a.level}">
+        <div class="action-dot"></div>
+        <div>
+          <div>
+            <span class="action-tag-inline">${a.tag}</span>
+            <span class="action-title">${a.title}</span>
+          </div>
+          <div class="action-text">${a.text}</div>
+        </div>
       </div>
     `).join('');
 
-    $('actions-list').innerHTML = html;
-    // Also render top 2 in the right-side card on Overview
+    // Quick Insights side card on Overview: keep the soft-bg card style
     $('actions-top').innerHTML = actions.slice(0, 2).map(a => `
       <div class="action-card ${a.level}">
         <div class="action-tag">${a.tag}</div>

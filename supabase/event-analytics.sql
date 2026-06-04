@@ -63,16 +63,38 @@ begin
         saves as (
           select count(*) as n from public.saved_events where event_id = v_event.id
         ),
+        saves_7d as (
+          select count(*) as n from public.saved_events
+           where event_id = v_event.id and created_at >= v_now - interval '7 days'
+        ),
         interests as (
           select status, count(*) as n
             from public.event_interests
            where event_id = v_event.id
            group by status
         ),
+        interests_7d as (
+          select count(*) as n from public.event_interests
+           where event_id = v_event.id and created_at >= v_now - interval '7 days'
+        ),
+        going_7d as (
+          select count(*) as n from public.event_interests
+           where event_id = v_event.id
+             and status = 'going'
+             and updated_at >= v_now - interval '7 days'
+        ),
         checkins as (
           select count(*) as n
             from public.user_event_activity
            where event_id = v_event.id and activity_type = 'checked_in'
+        ),
+        shares as (
+          select count(*) as n from public.user_event_activity
+           where event_id = v_event.id and activity_type = 'shared'
+        ),
+        bookmarks as (
+          select count(*) as n from public.user_event_activity
+           where event_id = v_event.id and activity_type = 'bookmarked'
         )
       select jsonb_build_object(
         -- Hard event metadata
@@ -94,6 +116,11 @@ begin
         'going_count',      coalesce((select n from interests where status = 'going'), 0),
         'went_count',       coalesce((select n from interests where status = 'went'), 0),
         'checkin_count',    (select n from checkins),
+        'shares_count',     (select n from shares),
+        'bookmarks_count',  (select n from bookmarks),
+        'saves_7d',         (select n from saves_7d),
+        'interests_7d',     (select n from interests_7d),
+        'going_7d',         (select n from going_7d),
 
         'checkin_by_method', (
           select coalesce(jsonb_object_agg(coalesce(checkin_method, 'self'), n), '{}'::jsonb)
@@ -225,6 +252,43 @@ begin
           and start_time > v_now
         order by start_time
         limit 1
+      ),
+
+      'total_saved', (
+        select count(*) from public.user_saved_schedule_items
+         where event_id = v_event.id
+      ),
+
+      'unique_savers', (
+        select count(distinct user_id) from public.user_saved_schedule_items
+         where event_id = v_event.id
+      ),
+
+      'top_saved_items', (
+        select coalesce(
+          jsonb_agg(jsonb_build_object(
+            'id',             sc.schedule_item_id,
+            'count',          sc.n,
+            'title',          si.title,
+            'subtitle',       si.subtitle,
+            'start_time',     si.start_time,
+            'venue_override', si.venue_override,
+            'is_must_see',    si.is_must_see,
+            'is_featured',    si.is_featured,
+            'image_url',      si.image_url,
+            'category',       si.category
+          ) order by sc.n desc),
+          '[]'::jsonb)
+        from (
+          select schedule_item_id, count(*) as n
+            from public.user_saved_schedule_items
+           where event_id = v_event.id
+           group by schedule_item_id
+           order by count(*) desc
+           limit 10
+        ) sc
+        join public.event_schedule_items si on si.id = sc.schedule_item_id
+        where si.is_published = true
       )
     ),
 
