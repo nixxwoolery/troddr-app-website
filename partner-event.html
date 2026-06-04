@@ -326,6 +326,7 @@
     font-size: 12px; color: var(--grey-dark);
     line-height: 1.5;
     margin-top: 4px;
+    overflow-wrap: anywhere;
   }
   .stat.empty .stat-empty-msg strong {
     color: var(--brand-primary);
@@ -557,37 +558,65 @@
     margin-bottom: 14px;
   }
   .vendor-list {
-    display: grid; gap: 14px;
-  }
-  .vendor-card {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     overflow: hidden;
   }
-  .vendor-head {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
+  .vendor-card {
     border-bottom: 1px solid var(--border-soft);
   }
+  .vendor-card:last-child { border-bottom: none; }
+  .vendor-head {
+    display: grid;
+    grid-template-columns: auto 1fr repeat(3, minmax(80px, auto)) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .vendor-head:hover { background: var(--bg-soft); }
+  .vendor-card.expanded .vendor-head { background: var(--bg-soft); }
+  .vendor-head-stat-cell {
+    text-align: center;
+    min-width: 60px;
+  }
+  .vendor-head-stat-cell .num {
+    font-size: 16px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.3px;
+    line-height: 1;
+  }
+  .vendor-head-stat-cell .num.muted { color: var(--grey-light); }
+  .vendor-head-stat-cell .num.accent { color: var(--brand-primary); }
+  .vendor-head-stat-cell .lbl {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 4px;
+  }
+  .vendor-expand-icon {
+    color: var(--grey-light);
+    transition: transform 0.2s;
+  }
+  .vendor-expand-icon svg { width: 16px; height: 16px; }
+  .vendor-card.expanded .vendor-expand-icon { transform: rotate(180deg); color: var(--brand-primary); }
   .vendor-logo {
-    width: 56px; height: 56px;
-    border-radius: 10px;
+    width: 40px; height: 40px;
+    border-radius: 8px;
     background: var(--bg-soft) center / cover no-repeat;
     border: 1px solid var(--border);
     flex-shrink: 0;
   }
   .vendor-head-body { min-width: 0; }
   .vendor-name {
-    font-size: 17px; font-weight: 700;
+    font-size: 14px; font-weight: 700;
     color: var(--black);
-    letter-spacing: -0.3px;
+    letter-spacing: -0.2px;
     line-height: 1.2;
     display: flex; align-items: center; gap: 8px;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
   .vendor-featured {
     font-size: 9px; font-weight: 700;
@@ -598,8 +627,8 @@
     border-radius: 100px;
   }
   .vendor-meta {
-    font-size: 12px; color: var(--grey-mid);
-    display: flex; flex-wrap: wrap; gap: 4px 14px;
+    font-size: 11px; color: var(--grey-mid);
+    display: flex; flex-wrap: wrap; gap: 3px 10px;
   }
   .vendor-meta .booth {
     color: var(--brand-primary);
@@ -628,6 +657,13 @@
     color: var(--grey-mid);
     margin-top: 4px;
   }
+
+  /* Vendor expandable detail area */
+  .vendor-detail {
+    display: none;
+    border-top: 1px solid var(--border);
+  }
+  .vendor-card.expanded .vendor-detail { display: block; }
 
   /* Menu items list */
   .menu-list {
@@ -1567,9 +1603,7 @@
 
   // ── Engagement stats with empty-state guidance ──────────
   function renderStats(stats, eventSlug) {
-    const shareLine = eventSlug
-      ? `Share <strong>troddr.com/events/${escapeHtml(eventSlug)}</strong> to start collecting traffic.`
-      : `Share your event link to start collecting traffic.`;
+    const shareLine = `Share your event link to start collecting views.`;
 
     // Prefer the explicit view_count counter; fall back to unique viewers.
     const views = stats.view_count || stats.unique_viewers || 0;
@@ -2094,7 +2128,7 @@
     if (s.view_count === 0 && !s.is_past) {
       actions.push({ level: 'info', tag: 'Promote',
         title: 'No views logged yet',
-        text: `Share your event link to start driving traffic: troddr.com/events/${e.slug}`
+        text: 'Share your event link on Instagram, WhatsApp, and your website to start driving traffic.'
       });
     }
 
