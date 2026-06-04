@@ -110,7 +110,8 @@ begin
           or v_place.day_pass_available = true
         ),
         'loyalty',  v_has_loyalty,
-        'feedback', true
+        'feedback', true,
+        'specials', true
       ),
       'program', (
         select jsonb_build_object(

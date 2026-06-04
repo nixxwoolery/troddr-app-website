@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Specials</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --blue:        #0077CC;
+    --blue-light:  #e8f4ff;
+    --green:       #1a7f4e;
+    --green-light: #e6f5ec;
+    --red:         #c0392b;
+    --red-light:   #fdecea;
+    --amber:       #b86e00;
+    --amber-light: #fff4e0;
+    --black:       #111111;
+    --grey-dark:   #333333;
+    --grey-mid:    #666666;
+    --grey-light:  #999999;
+    --border:      #e8e8e8;
+    --border-soft: #f0f0f0;
+    --bg:          #ffffff;
+    --bg-soft:     #f8f9fa;
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06);
+
+    --brand-primary:   #0077CC;
+    --brand-accent:    #C3D600;
+    --brand-text:      #ffffff;
+    --brand-secondary: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header { position: sticky; top: 0; z-index: 200; background: #fff; border-bottom: 1px solid var(--border); }
+  .navbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 60px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .logo {
+    font-size: 26px; font-weight: 700;
+    color: var(--blue); text-decoration: none;
+    letter-spacing: -1px;
+  }
+  .nav-badge {
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-left: auto;
+  }
+
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    padding: 32px 24px 56px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; z-index: 1; }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    color: var(--brand-text);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 4px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .page-hero h1 {
+    font-size: clamp(28px, 4.5vw, 40px);
+    font-weight: 700; line-height: 1.15;
+    margin-bottom: 10px;
+    letter-spacing: -0.6px;
+  }
+  .hero-sub { color: rgba(255,255,255,0.85); font-size: 14px; }
+
+  /* ── LAYOUT ── */
+  .layout {
+    max-width: 1320px;
+    margin: -32px auto 0;
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    position: relative; z-index: 10;
+  }
+  .sidebar {
+    position: sticky; top: 76px;
+    align-self: start;
+    height: max-content;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .sidebar-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--grey-light);
+    padding: 10px 12px 8px;
+  }
+  .sidebar a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    color: var(--grey-dark);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar a:hover { background: var(--bg-soft); color: var(--black); }
+  .sidebar a.active {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    font-weight: 600;
+  }
+  .sidebar a svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar a.jump-link { font-size: 12px; padding: 7px 12px; color: var(--grey-mid); }
+  .sidebar a.jump-link.active {
+    background: transparent;
+    color: var(--brand-primary);
+    font-weight: 700;
+  }
+  .sidebar-divider {
+    height: 1px; background: var(--border); margin: 8px 8px;
+  }
+  .entity-picker { padding: 6px 4px 10px; }
+  .partner-tag {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--grey-light); padding: 0 8px 2px;
+  }
+  .partner-name {
+    font-size: 12px; font-weight: 700;
+    color: var(--grey-dark);
+    padding: 0 8px 8px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .entity-select {
+    width: 100%;
+    padding: 8px 28px 8px 10px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    color: var(--brand-primary);
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+  }
+  .entity-select:hover { border-color: var(--brand-primary); }
+  .main { min-width: 0; padding-bottom: 80px; }
+
+  .section { margin-bottom: 32px; scroll-margin-top: 80px; }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; gap: 12px;
+  }
+  .section-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+  }
+  .section-sub { font-size: 12px; color: var(--grey-mid); font-weight: 500; }
+  .pill {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 100px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    border: 1px solid var(--border);
+  }
+  .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
+  .pill.soon { background: var(--bg-soft); }
+
+  /* ── SUMMARY STATS ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .stat {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 14px 14px;
+    min-width: 0;
+  }
+  .stat-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .stat-value {
+    font-size: 28px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+  .stat-sub { font-size: 11px; color: var(--grey-mid); margin-top: 6px; }
+
+  /* ── SPECIAL CARD ── */
+  .specials-list { display: grid; gap: 14px; }
+  .special-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+  }
+  .special-card.compact { grid-template-columns: 140px 1fr; }
+  .special-image {
+    background: var(--bg-soft) center / cover no-repeat;
+    min-height: 160px;
+    position: relative;
+  }
+  .special-image.empty {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--grey-light);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .special-lifecycle {
+    position: absolute; top: 10px; left: 10px;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 100px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+  }
+  .special-lifecycle.active   { background: var(--green); }
+  .special-lifecycle.upcoming { background: var(--brand-accent); color: #111; }
+  .special-lifecycle.ended    { background: #555; }
+  .special-lifecycle.inactive { background: var(--grey-light); }
+
+  .special-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .special-title {
+    font-size: 17px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap;
+  }
+  .special-type {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .special-meta {
+    font-size: 12px; color: var(--grey-mid);
+    display: flex; flex-wrap: wrap; gap: 4px 12px;
+  }
+  .special-meta .strong { color: var(--brand-primary); font-weight: 700; }
+  .special-desc {
+    font-size: 13px; color: var(--grey-dark);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .special-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .special-stat {
+    min-width: 0;
+  }
+  .special-stat .num {
+    font-size: 18px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.4px;
+    line-height: 1;
+  }
+  .special-stat .num.accent { color: var(--brand-primary); }
+  .special-stat .num.muted { color: var(--grey-light); }
+  .special-stat .lbl {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 3px;
+  }
+  .vote-row {
+    display: inline-flex; gap: 12px;
+    margin-top: 2px;
+    font-size: 11px;
+  }
+  .vote-row .up   { color: var(--green); }
+  .vote-row .down { color: var(--red); }
+
+  .special-tags {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-top: 4px;
+  }
+  .special-tag {
+    font-size: 10px; font-weight: 600;
+    background: var(--bg-soft);
+    color: var(--grey-dark);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .special-tag .n { color: var(--brand-primary); font-weight: 700; margin-left: 4px; }
+
+  /* ── BILLING / UPLOAD PLACEHOLDERS ── */
+  .upload-card, .billing-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+  }
+  .upload-card .lead, .billing-card .lead {
+    font-size: 15px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 4px;
+  }
+  .upload-card .desc, .billing-card .desc {
+    font-size: 13px; color: var(--grey-mid);
+    line-height: 1.55;
+    margin-bottom: 14px;
+  }
+  .placeholder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .placeholder-tile {
+    background: var(--bg-soft);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 12px;
+    color: var(--grey-mid);
+    line-height: 1.5;
+  }
+  .placeholder-tile strong {
+    color: var(--grey-dark);
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .placeholder-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+  }
+  .placeholder-cta:hover { filter: brightness(1.08); }
+
+  /* ── STATES ── */
+  .state {
+    text-align: center; padding: 40px 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .state-msg   { font-size: 14px; color: var(--grey-mid); max-width: 380px; margin: 0 auto; }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--brand-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+
+  .page-foot {
+    text-align: center;
+    font-size: 12px; color: var(--grey-light);
+    padding: 24px 24px 40px;
+    grid-column: 1 / -1;
+  }
+  .page-foot a { color: var(--grey-mid); }
+
+  @media (max-width: 1100px) {
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; gap: 16px; padding: 0 16px; }
+    .sidebar {
+      position: sticky; top: 60px;
+      padding: 6px;
+      display: flex; gap: 4px;
+      overflow-x: auto; scrollbar-width: none;
+      border-radius: var(--radius);
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .sidebar-title, .sidebar-divider { display: none; }
+    .sidebar a { padding: 8px 12px; white-space: nowrap; font-size: 12px; }
+    .sidebar a svg { display: none; }
+    .page-hero { padding: 28px 20px 48px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .special-card { grid-template-columns: 1fr; }
+    .special-image { min-height: 140px; aspect-ratio: 16/8; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h8M8 9h2"/>
+    </symbol>
+    <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+    </symbol>
+    <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>
+    </symbol>
+    <symbol id="ic-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l2.6 6 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.4 7.8 14 3 9.6 9.4 9z"/>
+    </symbol>
+    <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 12l-8 8a2 2 0 0 1-3 0L2 13V2h11l7 7a2 2 0 0 1 0 3z"/><circle cx="7" cy="7" r="1.2"/>
+    </symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 5v14M5 12h14"/>
+    </symbol>
+    <symbol id="ic-dollar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2v20M17 6H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H7"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Partner Dashboard</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Specials</span>
+    <h1 id="hero-title">Loading…</h1>
+    <p id="hero-sub" class="hero-sub"></p>
+  </div>
+</section>
+
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main">
+    <div class="state"><div class="spinner"></div><div class="state-msg">Loading your specials…</div></div>
+  </div>
+</div>
+
+<div class="layout hidden" id="view-error">
+  <div></div>
+  <div class="main">
+    <div class="state">
+      <div class="state-title">We couldn't load this dashboard</div>
+      <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.</p>
+    </div>
+  </div>
+</div>
+
+<div class="layout hidden" id="view-dashboard">
+
+  <aside class="sidebar">
+    <div class="entity-picker hidden" id="entity-picker">
+      <div class="partner-tag">Partner</div>
+      <div class="partner-name" id="partner-name"></div>
+      <select class="entity-select" id="entity-select" aria-label="Switch entity"></select>
+    </div>
+    <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
+    <div class="sidebar-title">Dashboard</div>
+    <a class="page-link" data-href="/partner/listing">
+      <svg><use href="#ic-doc"/></svg> Listing
+    </a>
+    <a class="page-link" data-href="/partner/bookings">
+      <svg><use href="#ic-calendar"/></svg> Bookings
+    </a>
+    <a class="page-link" data-href="/partner/loyalty">
+      <svg><use href="#ic-bolt"/></svg> Loyalty
+    </a>
+    <a class="page-link" data-href="/partner/feedback">
+      <svg><use href="#ic-star"/></svg> Feedback
+    </a>
+    <a class="page-link active" data-href="/partner/specials">
+      <svg><use href="#ic-tag"/></svg> Specials
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-title">On this page</div>
+    <a href="#summary"  class="jump-link" data-section="summary">
+      <svg><use href="#ic-bolt"/></svg> Summary
+    </a>
+    <a href="#active"   class="jump-link" data-section="active">
+      <svg><use href="#ic-tag"/></svg> Active
+    </a>
+    <a href="#upcoming" class="jump-link" data-section="upcoming">
+      <svg><use href="#ic-calendar"/></svg> Upcoming
+    </a>
+    <a href="#ended"    class="jump-link" data-section="ended">
+      <svg><use href="#ic-doc"/></svg> Ended
+    </a>
+    <a href="#upload"   class="jump-link" data-section="upload">
+      <svg><use href="#ic-plus"/></svg> Add new
+    </a>
+    <a href="#billing"  class="jump-link" data-section="billing">
+      <svg><use href="#ic-dollar"/></svg> Billing
+    </a>
+  </aside>
+
+  <main class="main">
+
+    <section class="section" id="summary">
+      <div class="section-head">
+        <h2 class="section-title">Specials Summary</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="summary-grid" id="summary-grid"></div>
+    </section>
+
+    <section class="section" id="active">
+      <div class="section-head">
+        <h2 class="section-title">Active Specials</h2>
+        <span class="pill live" id="active-pill">Live</span>
+      </div>
+      <div class="specials-list" id="active-list"></div>
+    </section>
+
+    <section class="section" id="upcoming" style="display:none">
+      <div class="section-head">
+        <h2 class="section-title">Upcoming</h2>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="specials-list" id="upcoming-list"></div>
+    </section>
+
+    <section class="section" id="ended" style="display:none">
+      <div class="section-head">
+        <h2 class="section-title">Ended</h2>
+        <span class="pill">Archive</span>
+      </div>
+      <div class="specials-list" id="ended-list"></div>
+    </section>
+
+    <section class="section" id="upload">
+      <div class="section-head">
+        <h2 class="section-title">Add a new special</h2>
+        <span class="pill soon">Coming soon</span>
+      </div>
+      <div class="upload-card">
+        <div class="lead">Self-serve special creation is coming soon</div>
+        <div class="desc">
+          Until the upload form is live, send your special details (title, dates, description, image, and any pricing or discount) and we'll get it published for you within a business day.
+        </div>
+        <button type="button" class="placeholder-cta" id="upload-fallback-cta">
+          <svg width="14" height="14"><use href="#ic-plus"/></svg> Submit a new special
+        </button>
+        <div class="placeholder-grid">
+          <div class="placeholder-tile">
+            <strong>Image</strong>
+            One landscape image (1200×630 recommended).
+          </div>
+          <div class="placeholder-tile">
+            <strong>Dates &amp; time</strong>
+            Start and end dates. Times if applicable.
+          </div>
+          <div class="placeholder-tile">
+            <strong>Pricing or discount</strong>
+            Flat price, % discount, or free.
+          </div>
+          <div class="placeholder-tile">
+            <strong>Description</strong>
+            One paragraph describing the offer.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="billing">
+      <div class="section-head">
+        <h2 class="section-title">Billing</h2>
+        <span class="pill soon">Coming soon</span>
+      </div>
+      <div class="billing-card">
+        <div class="lead">Invoicing for specials is in progress</div>
+        <div class="desc">
+          Specials will be billed based on the placement tier (standard, boosted, or featured) and run length.
+          Once billing is live, you'll see invoices, payment status, and next charge here.
+        </div>
+        <div class="placeholder-grid">
+          <div class="placeholder-tile">
+            <strong>Standard</strong>
+            Listed in your TRODDR profile and the Specials feed for the run dates.
+          </div>
+          <div class="placeholder-tile">
+            <strong>Boosted</strong>
+            Prioritized in the feed and surfaced in "Nearby" recommendations.
+          </div>
+          <div class="placeholder-tile">
+            <strong>Featured</strong>
+            Hero placement on the home screen for high-impact campaigns.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <p class="page-foot">
+    Questions about your specials? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a><br>
+    © 2026 TRODDR · Made with care in Jamaica
+  </p>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const $  = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function fmtDate(d) {
+    if (!d) return '';
+    const date = new Date(d);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function fmtMoney(n, ccy) {
+    if (n == null) return '';
+    return `${ccy || 'JMD'} ${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  }
+
+  function applyBrand(program) {
+    if (!program) return;
+    const root = document.documentElement.style;
+    if (program.primary_color)   root.setProperty('--brand-primary',   program.primary_color);
+    if (program.accent_color)    root.setProperty('--brand-accent',    program.accent_color);
+    if (program.text_color)      root.setProperty('--brand-text',      program.text_color);
+    if (program.secondary_color) root.setProperty('--brand-secondary', program.secondary_color);
+  }
+
+  function renderHero(place, summary) {
+    $('hero-title').textContent = place.name;
+    const total = (summary && summary.total) || 0;
+    $('hero-sub').textContent = total === 1 ? '1 special configured' : `${total} specials configured`;
+  }
+
+  function renderSummary(summary) {
+    summary = summary || {};
+    const cards = [
+      { label: 'Total Specials', value: summary.total || 0 },
+      { label: 'Active Now',     value: summary.active || 0,   sub: summary.active ? 'live in the app' : null },
+      { label: 'Upcoming',       value: summary.upcoming || 0, sub: 'scheduled' },
+      { label: 'Ended',          value: summary.ended || 0,    sub: 'archived' },
+      { label: 'Total Visits',   value: summary.total_visits || 0, sub: 'across all specials' },
+    ];
+    $('summary-grid').innerHTML = cards.map(c => `
+      <div class="stat">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${c.value}</div>
+        ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+      </div>`).join('');
+  }
+
+  function pricingLine(sp) {
+    if (sp.discount_percentage) return `${sp.discount_percentage}% off`;
+    if (sp.discount_amount)     return `${fmtMoney(sp.discount_amount, sp.currency)} off`;
+    if (sp.price_amount)        return fmtMoney(sp.price_amount, sp.currency);
+    return null;
+  }
+
+  function specialCard(sp) {
+    const tagsHtml = (sp.top_tags || []).slice(0, 5)
+      .map(t => `<span class="special-tag">${escapeHtml(t.tag)}<span class="n">${t.count}</span></span>`).join('');
+
+    const stats = [
+      { label: 'Visits',     value: sp.visits_count || 0, accent: (sp.visits_count || 0) > 0 },
+      { label: 'Unique',     value: sp.unique_visitors || 0, muted: (sp.unique_visitors || 0) === 0 },
+      { label: 'Interested', value: sp.interested_count || 0 },
+      { label: 'Going',      value: sp.going_count || 0 },
+      { label: 'Attended',   value: sp.attended_count || 0 },
+      { label: 'Rating',
+        value: sp.rating_avg != null ? sp.rating_avg : 'N/A',
+        accent: sp.rating_avg != null,
+        muted: sp.rating_avg == null,
+        sub: sp.rating_count ? `${sp.rating_count} ${sp.rating_count === 1 ? 'review' : 'reviews'}` : null },
+    ];
+
+    const votesHtml = (sp.upvotes || sp.downvotes)
+      ? `<div class="vote-row">
+           <span class="up">▲ ${sp.upvotes || 0}</span>
+           <span class="down">▼ ${sp.downvotes || 0}</span>
+         </div>`
+      : '';
+
+    const pricing = pricingLine(sp);
+    const dates = sp.start_date && sp.end_date
+      ? (sp.start_date === sp.end_date ? fmtDate(sp.start_date) : `${fmtDate(sp.start_date)} → ${fmtDate(sp.end_date)}`)
+      : '';
+
+    return `
+      <div class="special-card">
+        <div class="special-image ${!sp.image_url ? 'empty' : ''}" ${sp.image_url ? `style="background-image:url('${escapeHtml(sp.image_url)}')"` : ''}>
+          ${!sp.image_url ? 'No image' : ''}
+          <span class="special-lifecycle ${sp.lifecycle}">${sp.lifecycle}</span>
+        </div>
+        <div class="special-body">
+          <div class="special-title">
+            ${escapeHtml(sp.title)}
+            <span class="special-type">${escapeHtml((sp.special_type || '').replace(/_/g, ' '))}</span>
+          </div>
+          <div class="special-meta">
+            ${dates ? `<span>${dates}</span>` : ''}
+            ${pricing ? `<span class="strong">${pricing}</span>` : ''}
+            ${sp.event_category ? `<span>${escapeHtml(sp.event_category)}</span>` : ''}
+          </div>
+          ${sp.description ? `<div class="special-desc">${escapeHtml(sp.description)}</div>` : ''}
+          ${tagsHtml ? `<div class="special-tags">${tagsHtml}</div>` : ''}
+          <div class="special-stats">
+            ${stats.map(st => `
+              <div class="special-stat">
+                <div class="num ${st.accent ? 'accent' : ''}${st.muted ? ' muted' : ''}">${st.value}</div>
+                <div class="lbl">${st.label}</div>
+                ${st.sub ? `<div class="lbl" style="text-transform:none; letter-spacing:0; color:var(--grey-light); margin-top:2px;">${st.sub}</div>` : ''}
+              </div>`).join('')}
+          </div>
+          ${votesHtml}
+        </div>
+      </div>`;
+  }
+
+  function renderLists(specials) {
+    const buckets = { active: [], upcoming: [], ended: [], inactive: [] };
+    specials.forEach(s => {
+      const b = s.lifecycle || 'ended';
+      (buckets[b] || buckets.ended).push(s);
+    });
+
+    if (buckets.active.length) {
+      $('active-list').innerHTML = buckets.active.map(specialCard).join('');
+    } else {
+      $('active-list').innerHTML = `
+        <div class="state">
+          <div class="state-title">No specials running today</div>
+          <p class="state-msg">When a special is within its run dates and active, it'll appear here. Submit a new special below to get started.</p>
+        </div>`;
+    }
+
+    if (buckets.upcoming.length) {
+      $('upcoming').style.display = '';
+      $('upcoming-list').innerHTML = buckets.upcoming.map(specialCard).join('');
+    }
+    if (buckets.ended.length || buckets.inactive.length) {
+      $('ended').style.display = '';
+      const all = [...buckets.ended, ...buckets.inactive];
+      $('ended-list').innerHTML = all.map(specialCard).join('');
+    }
+  }
+
+  // ── Entity picker (multi-domain partners) ────────────────
+  function renderEntityPicker(partner) {
+    if (!partner || !partner.entities || partner.entities.length <= 1) return;
+    const picker = $('entity-picker'); if (!picker) return;
+    picker.classList.remove('hidden');
+    const div = $('entity-picker-divider'); if (div) div.style.display = '';
+    $('partner-name').textContent = partner.name || 'Partner';
+
+    const select = $('entity-select');
+    const places = partner.entities.filter(e => e.type === 'place');
+    const events = partner.entities.filter(e => e.type === 'event');
+    const opt = (e) => {
+      const sel = e.id === partner.current_id ? ' selected' : '';
+      const safe = String(e.name || '').replace(/[<>&"]/g, '');
+      return `<option value="${e.token}" data-type="${e.type}"${sel}>${safe}</option>`;
+    };
+    let html = '';
+    if (places.length) html += '<optgroup label="Places">' + places.map(opt).join('') + '</optgroup>';
+    if (events.length) html += '<optgroup label="Events">' + events.map(opt).join('') + '</optgroup>';
+    select.innerHTML = html;
+    select.addEventListener('change', () => {
+      const o = select.options[select.selectedIndex];
+      const token = o.value;
+      let path;
+      if (o.dataset.type === 'event') path = '/partner/event';
+      else {
+        const current = location.pathname.split('/').pop().replace('.html', '');
+        const placeSections = ['listing', 'bookings', 'loyalty', 'feedback', 'specials'];
+        path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
+      }
+      location.href = `${path}?token=${encodeURIComponent(token)}`;
+    });
+  }
+
+  function setupSidebar(capabilities) {
+    const token = new URLSearchParams(location.search).get('token') || '';
+    const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true, specials: true };
+
+    document.querySelectorAll('.page-link').forEach(a => {
+      const key = a.dataset.href.split('/').pop();
+      if (!caps[key]) { a.style.display = 'none'; return; }
+      const url = new URL(a.dataset.href, location.origin);
+      if (token) url.searchParams.set('token', token);
+      a.href = url.toString();
+    });
+
+    const jumpLinks = document.querySelectorAll('.jump-link');
+    const sections  = Array.from(jumpLinks).map(l => $(l.dataset.section)).filter(Boolean);
+    function update() {
+      const scrollY = window.scrollY + 120;
+      let activeId = sections[0]?.id;
+      for (const sec of sections) { if (sec.offsetTop <= scrollY) activeId = sec.id; }
+      jumpLinks.forEach(l => l.classList.toggle('active', l.dataset.section === activeId));
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
+  async function load() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) { hide('view-loading'); show('view-error'); return; }
+
+    const [specialsRes, capsRes] = await Promise.all([
+      db.rpc('get_partner_specials_by_token',     { p_token: token }),
+      db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+    ]);
+    const data = specialsRes.data;
+    const caps = capsRes.data;
+    if (specialsRes.error || !data || !data.place) {
+      console.error('specials error', specialsRes.error);
+      hide('view-loading'); show('view-error');
+      return;
+    }
+
+    applyBrand(data.program);
+    renderHero(data.place, data.summary);
+    renderSummary(data.summary);
+    renderLists(data.specials || []);
+
+    // Wire the "Submit a new special" placeholder CTA to the message modal.
+    document.getElementById('upload-fallback-cta').addEventListener('click', () => {
+      const fab = document.getElementById('msg-fab');
+      if (fab) fab.click();
+      setTimeout(() => {
+        const subj = document.getElementById('msg-subject');
+        const body = document.getElementById('msg-body');
+        if (subj) subj.value = 'New special submission';
+        if (body) body.focus();
+      }, 80);
+    });
+
+    hide('view-loading');
+    show('view-dashboard');
+    renderEntityPicker(caps && caps.partner);
+    setupSidebar(caps && caps.capabilities);
+  }
+
+  load();
+</script>
+
+<script src="js/partner-messages.js" defer></script>
+</body>
+</html>
