@@ -247,6 +247,43 @@
   .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
   .pill.soon { background: var(--bg-soft); }
 
+  /* ── EVENT STATUS CARD ── */
+  .event-status {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--grey-light);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .event-status.upcoming { border-left-color: var(--brand-accent); }
+  .event-status.today    { border-left-color: #ff6b35; }
+  .event-status.past     { border-left-color: var(--grey-mid); }
+  .event-status.draft    { border-left-color: var(--amber); }
+  .status-badge {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    white-space: nowrap;
+  }
+  .event-status.upcoming .status-badge { background: var(--brand-accent); color: #111; }
+  .event-status.today .status-badge    { background: #ff6b35;            color: #fff; }
+  .event-status.past .status-badge     { background: #f0f0f0;            color: var(--grey-mid); }
+  .event-status.draft .status-badge    { background: var(--amber-light); color: var(--amber); }
+  .event-status-body { flex: 1; }
+  .event-status-title {
+    font-size: 16px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 2px;
+  }
+  .event-status-msg {
+    font-size: 13px; color: var(--grey-mid);
+    line-height: 1.5;
+  }
+
   /* ── STATS GRID ── */
   .stats-grid {
     display: grid;
@@ -284,6 +321,16 @@
   }
   .stat-sub.good { color: var(--green); }
   .stat-sub.warn { color: var(--amber); }
+  /* Empty-state stat (no number) */
+  .stat.empty .stat-empty-msg {
+    font-size: 12px; color: var(--grey-dark);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .stat.empty .stat-empty-msg strong {
+    color: var(--brand-primary);
+    font-weight: 700;
+  }
 
   /* ── EVENT PREVIEW ── */
   .preview-grid {
@@ -408,13 +455,49 @@
     line-height: 1.5;
   }
 
-  /* ── FUNNEL ── */
+  /* ── FUNNEL (hero) ── */
   .funnel {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 20px;
+    padding: 24px;
   }
+  .funnel.hero {
+    background: linear-gradient(180deg, #fff 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--border);
+    padding: 28px;
+  }
+  .funnel-hero-head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 16px;
+    gap: 16px;
+  }
+  .funnel-hero-tag {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--brand-primary);
+    margin-bottom: 4px;
+  }
+  .funnel-hero-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+  }
+  .funnel-hero-sub {
+    font-size: 12px; color: var(--grey-mid);
+    margin-top: 4px;
+    line-height: 1.5;
+    max-width: 480px;
+  }
+  .funnel-empty {
+    text-align: center;
+    padding: 28px 20px;
+    font-size: 13px; color: var(--grey-mid);
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    line-height: 1.6;
+  }
+  .funnel-empty strong { color: var(--brand-primary); }
   .funnel-steps {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -686,38 +769,71 @@
     .rating-chips { justify-content: flex-start; }
   }
 
+  /* ── LINKED PLACE BADGE (vendor) ── */
+  .link-status {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 100px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .link-status.linked   { background: var(--green-light); color: var(--green); }
+  .link-status.unlinked { background: var(--bg-soft);     color: var(--grey-mid); border: 1px solid var(--border); }
+  .link-status svg { width: 10px; height: 10px; }
+
   /* ── SPONSORS ── */
   .sponsors-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
   }
   .sponsor-card {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px;
-    text-align: center;
+    padding: 16px;
     text-decoration: none;
     color: inherit;
     transition: border-color 0.15s;
+    display: flex; flex-direction: column;
   }
   .sponsor-card:hover { border-color: var(--brand-primary); }
   .sponsor-logo {
     width: 100%;
     height: 48px;
     background: center / contain no-repeat;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
   .sponsor-name {
-    font-size: 13px; font-weight: 700;
+    font-size: 14px; font-weight: 700;
     color: var(--black);
     margin-bottom: 4px;
+    text-align: center;
   }
   .sponsor-tier {
     font-size: 9px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--grey-mid);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .sponsor-metrics {
+    display: grid;
+    gap: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .sponsor-metric-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px;
+  }
+  .sponsor-metric-row .lbl { color: var(--grey-mid); font-weight: 500; }
+  .sponsor-metric-row .val {
+    color: var(--grey-light);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   /* ── LOCKED / SOON ── */
@@ -912,14 +1028,17 @@
     </div>
     <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
     <div class="sidebar-title">On this page</div>
+    <a href="#status"     class="jump-link" data-section="status">
+      <svg><use href="#ic-info"/></svg> Status
+    </a>
+    <a href="#funnel"     class="jump-link" data-section="funnel">
+      <svg><use href="#ic-funnel"/></svg> Discovery Funnel
+    </a>
     <a href="#overview"   class="jump-link" data-section="overview">
       <svg><use href="#ic-info"/></svg> Overview
     </a>
     <a href="#engagement" class="jump-link" data-section="engagement">
       <svg><use href="#ic-bolt"/></svg> Engagement
-    </a>
-    <a href="#funnel"     class="jump-link" data-section="funnel">
-      <svg><use href="#ic-funnel"/></svg> Discovery Funnel
     </a>
     <a href="#vendors"    class="jump-link" data-section="vendors" id="nav-vendors" style="display:none">
       <svg><use href="#ic-shop"/></svg> Vendors
@@ -937,6 +1056,14 @@
 
   <main class="main">
 
+    <section class="section" id="status">
+      <div class="event-status" id="event-status"></div>
+    </section>
+
+    <section class="section" id="funnel">
+      <div class="funnel hero" id="funnel-body"></div>
+    </section>
+
     <section class="section" id="overview">
       <div class="section-head">
         <h2 class="section-title">Event Overview</h2>
@@ -953,20 +1080,10 @@
 
     <section class="section" id="engagement">
       <div class="section-head">
-        <h2 class="section-title">Engagement</h2>
+        <h2 class="section-title">Engagement Snapshot</h2>
         <span class="pill live">Live</span>
       </div>
       <div class="stats-grid" id="stats-grid"></div>
-    </section>
-
-    <section class="section" id="funnel">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Discovery → Attendance Funnel</h2>
-          <div class="section-sub">From listing view through to attendance. Steps without instrumentation show as muted.</div>
-        </div>
-      </div>
-      <div class="funnel" id="funnel"></div>
     </section>
 
     <section class="section" id="vendors" style="display:none">
@@ -1048,6 +1165,63 @@
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   }
   function pluralize(n, s, p) { return n === 1 ? s : (p || s + 's'); }
+
+  // ── Event Status (Draft / Upcoming / Today / Completed) ──
+  function computeStatus(event, stats) {
+    const raw = (event.status || '').toLowerCase();
+    if (raw === 'draft' || raw === 'archived' || raw === 'cancelled') {
+      return {
+        key: 'draft',
+        label: raw === 'cancelled' ? 'Cancelled' : (raw === 'archived' ? 'Archived' : 'Draft'),
+        title: raw === 'draft' ? 'Not yet published' : (raw === 'cancelled' ? 'Event cancelled' : 'Archived'),
+        msg: raw === 'draft'
+          ? 'Your event is saved but not visible in the TRODDR app. Publish it when you\'re ready for guests to discover it.'
+          : (raw === 'cancelled'
+              ? 'Guests can no longer find or RSVP to this event.'
+              : 'This event has been archived from the app feed.')
+      };
+    }
+    if (stats.is_today) {
+      return {
+        key: 'today',
+        label: 'Happening Today',
+        title: 'Your event is live right now',
+        msg: 'Keep an eye on engagement and vendor activity through the day. Post-event analytics unlock once it wraps.'
+      };
+    }
+    if (stats.is_past) {
+      return {
+        key: 'past',
+        label: 'Completed',
+        title: 'This event has wrapped',
+        msg: 'Post-event sections (attendance, scorecard, loyalty impact) land here as their data sources come online.'
+      };
+    }
+    if (stats.days_until_event !== null && stats.days_until_event >= 0) {
+      const d = stats.days_until_event;
+      return {
+        key: 'upcoming',
+        label: 'Upcoming',
+        title: d === 0 ? 'Event starts later today' : `Event in ${d} ${d === 1 ? 'day' : 'days'}`,
+        msg: d <= 7
+          ? 'The last week typically drives a third of total sign-ups. Now is the time to push final promotion.'
+          : 'Your event is live in the TRODDR app and discoverable to guests.'
+      };
+    }
+    return { key: 'past', label: 'Completed', title: 'This event has wrapped', msg: 'Post-event analytics will appear here as data arrives.' };
+  }
+
+  function renderEventStatus(event, stats) {
+    const s = computeStatus(event, stats);
+    $('event-status').className = `event-status ${s.key}`;
+    $('event-status').innerHTML = `
+      <span class="status-badge">${s.label}</span>
+      <div class="event-status-body">
+        <div class="event-status-title">${s.title}</div>
+        <div class="event-status-msg">${s.msg}</div>
+      </div>
+    `;
+  }
 
   // ── Hero ─────────────────────────────────────────────────
   function renderHero(event, stats) {
@@ -1140,43 +1314,103 @@
     `;
   }
 
-  // ── Engagement stats ─────────────────────────────────────
-  function renderStats(stats) {
+  // ── Engagement stats with empty-state guidance ──────────
+  function renderStats(stats, eventSlug) {
+    const shareLine = eventSlug
+      ? `Share <strong>troddr.com/events/${escapeHtml(eventSlug)}</strong> to start collecting traffic.`
+      : `Share your event link to start collecting traffic.`;
+
     const cards = [
-      { label: 'Total Views',       value: stats.view_count,        sub: 'across the app' },
-      { label: 'Interested',        value: stats.interested_count,  sub: stats.view_to_interest_rate != null ? `${stats.view_to_interest_rate}% of views` : 'no view data yet' },
-      { label: 'Going',             value: stats.going_count,       sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : 'no interest data yet' },
+      { label: 'Total Views',
+        value: stats.view_count,
+        emptyMsg: shareLine,
+        sub: 'across the app' },
+      { label: 'Interested',
+        value: stats.interested_count,
+        emptyMsg: 'Guests can tap <strong>Interested</strong> to follow updates. Counts appear as guests engage.',
+        sub: stats.view_to_interest_rate != null ? `${stats.view_to_interest_rate}% of views` : null },
+      { label: 'Going',
+        value: stats.going_count,
+        emptyMsg: 'Once guests mark <strong>Going</strong> or RSVP, you\'ll see commitment counts here.',
+        sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : null },
       { label: 'Capacity',
-        value: stats.capacity != null ? stats.capacity : 'N/A',
-        suffix: '',
-        sub: stats.capacity_fill_rate != null ? `${stats.capacity_fill_rate}% filled` : 'no capacity set' },
+        value: stats.capacity != null && stats.capacity > 0 ? stats.capacity : null,
+        emptyMsg: 'Set a capacity in your event details to unlock fill-rate insights.',
+        sub: stats.capacity_fill_rate != null ? `${stats.capacity_fill_rate}% filled` : null },
       { label: 'Tickets',
-        value: stats.is_sold_out ? 'Sold Out' : (stats.has_tickets ? 'Open' : 'Off-platform'),
+        labelOverride: true,
+        rawValue: stats.is_sold_out ? 'Sold Out' : (stats.has_tickets ? 'Open' : 'Off-platform'),
         sub: stats.is_sold_out ? 'no spots remaining' : (stats.has_tickets ? 'online sales active' : 'tickets handled externally') },
     ];
 
     $('stats-grid').innerHTML = cards.map(c => {
-      const sub = c.sub ? `<div class="stat-sub">${c.sub}</div>` : '';
+      // Ticket card is always present
+      if (c.labelOverride) {
+        return `
+          <div class="stat">
+            <div class="stat-label">${c.label}</div>
+            <div class="stat-value"><span>${c.rawValue}</span></div>
+            ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+          </div>`;
+      }
+      // Empty state when value is 0 or null
+      if (!c.value || c.value === 0) {
+        return `
+          <div class="stat empty">
+            <div class="stat-label">${c.label}</div>
+            <div class="stat-empty-msg">${c.emptyMsg}</div>
+          </div>`;
+      }
       return `
         <div class="stat">
           <div class="stat-label">${c.label}</div>
           <div class="stat-value"><span>${c.value}</span></div>
-          ${sub}
+          ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
         </div>`;
     }).join('');
   }
 
-  // ── Funnel ───────────────────────────────────────────────
-  function renderFunnel(stats) {
-    const steps = [
-      { label: 'Listing Views',     value: stats.view_count || 0,        live: true },
-      { label: 'Interested',        value: stats.interested_count || 0,  live: true },
-      { label: 'Going / RSVP',      value: stats.going_count || 0,       live: true },
-      { label: 'Attended',          value: null,                          muted: true, note: 'Check-in soon' },
-      { label: 'Returned (Loyalty)', value: null,                         muted: true, note: 'Soon' },
+  // ── Funnel (hero) ────────────────────────────────────────
+  function renderFunnel(stats, eventSlug) {
+    const liveSteps = [
+      { label: 'Listing Views',  value: stats.view_count || 0 },
+      { label: 'Interested',     value: stats.interested_count || 0 },
+      { label: 'Going / RSVP',   value: stats.going_count || 0 },
+    ];
+    const futureSteps = [
+      { label: 'Attended',           note: 'Coming soon' },
+      { label: 'Returned via Loyalty', note: 'Coming soon' },
     ];
 
-    const html = steps.map((step, i) => {
+    const liveTotal = liveSteps.reduce((a, s) => a + s.value, 0);
+    const headHtml = `
+      <div class="funnel-hero-head">
+        <div>
+          <div class="funnel-hero-tag">Discovery → Attendance</div>
+          <div class="funnel-hero-title">How guests move through your event</div>
+          <div class="funnel-hero-sub">From first impression in the TRODDR app, through commitment, to attendance and return visits.</div>
+        </div>
+      </div>`;
+
+    // If no live data at all, show one centered empty state with a single CTA.
+    if (liveTotal === 0) {
+      const linkLine = eventSlug
+        ? `Share <strong>troddr.com/events/${escapeHtml(eventSlug)}</strong> on Instagram, WhatsApp, or your website.`
+        : 'Share your event link on Instagram, WhatsApp, or your website.';
+      $('funnel-body').innerHTML = headHtml + `
+        <div class="funnel-empty">
+          Your funnel will populate once guests find your event.<br>
+          ${linkLine}
+        </div>`;
+      return;
+    }
+
+    const steps = [
+      ...liveSteps.map(s => ({ ...s, live: true })),
+      ...futureSteps.map(s => ({ ...s, muted: true, value: null })),
+    ];
+
+    const stepsHtml = steps.map((step, i) => {
       const prev = i > 0 ? steps[i - 1] : null;
       let convHtml = '';
       if (prev && prev.value !== null && step.value !== null && prev.value > 0) {
@@ -1186,18 +1420,20 @@
         convHtml = `<div class="funnel-conv muted">conv. soon</div>`;
       }
       const cls = step.muted ? 'muted' : 'live';
-      const value = step.value === null ? 'N/A' : step.value;
+      const valueDisplay = step.value === null
+        ? '<span style="font-size:14px; color:var(--grey-light);">Soon</span>'
+        : step.value;
       const note = step.muted ? `<div class="funnel-step-note">${step.note}</div>` : '';
       return `
         <div class="funnel-step ${cls}">
           <div class="funnel-step-label">${step.label}</div>
-          <div class="funnel-step-value">${value}</div>
+          <div class="funnel-step-value">${valueDisplay}</div>
           ${note}
           ${convHtml}
         </div>`;
     }).join('');
 
-    $('funnel').innerHTML = `<div class="funnel-steps">${html}</div>`;
+    $('funnel-body').innerHTML = headHtml + `<div class="funnel-steps">${stepsHtml}</div>`;
   }
 
   // ── Vendors (per-vendor card with menu + per-item ratings) ──
@@ -1340,11 +1576,13 @@
               <div class="vendor-meta">
                 ${v.booth_number ? `<span class="booth">Booth ${escapeHtml(v.booth_number)}</span>` : ''}
                 ${v.vendor_type ? `<span>${escapeHtml(v.vendor_type)}</span>` : ''}
-                ${v.place_slug && v.place_name
+                ${v.place_id && v.place_slug && v.place_name
                   ? `<a href="/listings/${escapeHtml(v.place_slug)}" target="_blank" rel="noopener">
-                       <svg><use href="#ic-external"/></svg> ${escapeHtml(v.place_name)}
+                       <span class="link-status linked">
+                         <svg><use href="#ic-check"/></svg> Listed on TRODDR
+                       </span>
                      </a>`
-                  : ''}
+                  : `<span class="link-status unlinked">Not linked to a listing</span>`}
                 ${v.instagram
                   ? `<a href="${escapeHtml(v.instagram)}" target="_blank" rel="noopener">
                        <svg><use href="#ic-external"/></svg> Instagram
@@ -1381,6 +1619,11 @@
         ${s.logo_url ? `<div class="sponsor-logo" style="background-image:url('${escapeHtml(s.logo_url)}')"></div>` : ''}
         <div class="sponsor-name">${escapeHtml(s.name)}</div>
         <div class="sponsor-tier">${escapeHtml(s.tier_label || s.tier || '')}</div>
+        <div class="sponsor-metrics">
+          <div class="sponsor-metric-row"><span class="lbl">Logo impressions</span><span class="val">Soon</span></div>
+          <div class="sponsor-metric-row"><span class="lbl">Profile clicks</span><span class="val">Soon</span></div>
+          <div class="sponsor-metric-row"><span class="lbl">Engagement rate</span><span class="val">Soon</span></div>
+        </div>
       </a>
     `).join('');
   }
@@ -1469,19 +1712,18 @@
     `).join('');
   }
 
-  // ── Locked / Unlocks ─────────────────────────────────────
+  // ── Unlocks (partner-friendly roadmap cards) ────────────
   function renderLocked(data) {
-    const stats = data.stats;
     const locked = [
-      { title: 'Traffic Sources',     desc: 'Where guests discovered your event (Home Feed, Search, Nearby, Map, Shared Link).',                   meter: 'Requires PostHog wiring' },
-      { title: 'Audience Location',   desc: 'Breakdown of viewers by parish and country.',                                                            meter: 'Requires PostHog wiring' },
-      { title: 'Views Over Time',     desc: 'Daily / weekly / monthly view trends.',                                                                  meter: 'Requires view tracking' },
-      { title: 'Check-in & Attendance', desc: 'QR / NFC / manual check-in flow with arrival timeline and no-show rate.',                              meter: 'Needs check-in system' },
-      { title: 'Reservation / RSVP',  desc: 'Capacity, reserved, remaining, waitlist when TRODDR owns reservations.',                                meter: 'Needs reservations table' },
-      { title: 'Event Scorecard',     desc: 'Post-event guest feedback across value, vibe, organisation, taste, drinks.',                            meter: 'Needs event_id on feedback' },
-      { title: 'Loyalty Impact',      desc: 'How many event attendees joined a partner loyalty program and returned.',                               meter: 'Needs check-in + loyalty link' },
-      { title: 'Retargeting',         desc: 'Identify previous attendees when creating your next event.',                                            meter: 'Needs check-in history' },
-      { title: 'Attendee Networking', desc: 'For curated events: see who else is attending, exchange profiles (opt-in).',                            meter: 'Future feature' },
+      { title: 'Traffic Sources',       desc: 'See where guests discovered your event: Home Feed, Search, Nearby, Map, or shared links.' },
+      { title: 'Audience Location',     desc: 'Where your audience is coming from, broken down by parish and country.' },
+      { title: 'Views Over Time',       desc: 'Daily, weekly, and monthly trends so you can see what marketing is working.' },
+      { title: 'Check-in & Attendance', desc: 'QR, NFC, or manual check-in. Arrival timeline and no-show rate.' },
+      { title: 'Reservations',          desc: 'Capacity, reserved, remaining, and waitlist when TRODDR handles RSVPs.' },
+      { title: 'Event Scorecard',       desc: 'Post-event guest feedback across value, vibe, organisation, taste, and drinks.' },
+      { title: 'Loyalty Impact',        desc: 'How many event attendees joined a partner loyalty program and returned later.' },
+      { title: 'Retargeting',           desc: 'Find previous attendees when creating your next event.' },
+      { title: 'Attendee Networking',   desc: 'For curated events: see who else is attending and connect (opt-in).' },
     ];
 
     $('locked-grid').innerHTML = locked.map(l => `
@@ -1489,8 +1731,7 @@
         <div class="lock-line"><svg><use href="#ic-lock"/></svg> ${l.title}</div>
         <div class="locked-card-desc">${l.desc}</div>
         <div class="locked-meter">
-          <span class="locked-meter-label">${l.meter}</span>
-          <span class="locked-meter-count">Soon</span>
+          <span class="locked-meter-label">Coming soon as your event data grows</span>
         </div>
       </div>
     `).join('');
@@ -1570,9 +1811,10 @@
     }
 
     renderHero(data.event, data.stats);
+    renderEventStatus(data.event, data.stats);
+    renderFunnel(data.stats, data.event.slug);
     renderPreview(data.event, data.tabs);
-    renderStats(data.stats);
-    renderFunnel(data.stats);
+    renderStats(data.stats, data.event.slug);
     renderVendors(data);
     renderSponsors(data);
     buildActions(data);

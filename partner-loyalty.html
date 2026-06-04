@@ -1449,7 +1449,7 @@
     // Cross-page nav: append token to each page link + hide unavailable.
     document.querySelectorAll('.page-link').forEach(a => {
       const key = a.dataset.href.split('/').pop();   // listing | bookings | loyalty | feedback
-      if (caps[key] === false) { a.style.display = 'none'; return; }
+      if (!caps[key]) { a.style.display = 'none'; return; }
       const url = new URL(a.dataset.href, location.origin);
       if (token) url.searchParams.set('token', token);
       a.href = url.toString();
