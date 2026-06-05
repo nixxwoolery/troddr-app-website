@@ -380,9 +380,14 @@
   .tag .count {
     color: var(--brand-primary);
     font-weight: 700;
-    margin-left: 6px;
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
   }
-  .tag.active .count { color: var(--brand-text); }
+  .tag.active .count {
+    color: var(--brand-text);
+    border-left-color: rgba(255,255,255,0.3);
+  }
   /* tag size scales with count */
   .tag.size-lg { font-size: 15px; padding: 7px 14px; }
   .tag.size-md { font-size: 13px; }
@@ -663,6 +668,9 @@
     <a class="page-link" data-href="/partner/specials">
       <svg><use href="#ic-doc"/></svg> Specials
     </a>
+    <a class="page-link" data-href="/partner/billing">
+      <svg><use href="#ic-doc"/></svg> Billing
+    </a>
 
     <div class="sidebar-divider"></div>
     <div class="sidebar-title">On this page</div>
@@ -759,6 +767,34 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
   function titleCase(s) { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+
+  // Humanize squashed compound tags like "freshingredients" → "Fresh Ingredients"
+  function humanizeTag(raw) {
+    if (!raw) return '';
+    let s = String(raw).toLowerCase().replace(/[-_]/g, ' ').trim();
+    if (s.includes(' ')) {
+      return s.replace(/\b\w/g, c => c.toUpperCase());
+    }
+    // Single concatenated word: try to split on known compound parts.
+    const parts = [
+      'ingredients','food','packed','staff','service','drinks','drink','options',
+      'value','vibe','vibes','experience','taste','tasty','menu','portion','portions',
+      'presentation','cleanliness','clean','speed','price','priced','quality','quick',
+      'friendly','fresh','cozy','tasty','warm','hot','cold','spicy','sweet','savoury',
+      'authentic','local','homemade','generous','attentive','knowledgeable','welcoming'
+    ].sort((a, b) => b.length - a.length);
+    for (const w of parts) {
+      const i = s.indexOf(w);
+      if (i > 0) {
+        s = s.slice(0, i) + ' ' + s.slice(i);
+        break;
+      } else if (i === 0 && s.length > w.length) {
+        s = s.slice(0, w.length) + ' ' + s.slice(w.length);
+        break;
+      }
+    }
+    return s.replace(/\b\w/g, c => c.toUpperCase());
+  }
 
   // ── Brand application ────────────────────────────────────
   function applyBrand(program) {
@@ -904,7 +940,7 @@
         <span class="tag ${activeTag == null ? 'active' : ''}" data-tag="">All</span>
         ${tags.map(t => `
           <span class="tag ${sizeClass(t.count)} ${activeTag === t.tag ? 'active' : ''}" data-tag="${escapeHtml(t.tag)}">
-            ${escapeHtml(t.tag)}<span class="count">${t.count}</span>
+            ${escapeHtml(humanizeTag(t.tag))}<span class="count">${t.count}</span>
           </span>`).join('')}
       </div>`;
 
@@ -1029,7 +1065,7 @@
         .filter(([, v]) => v != null)
         .map(([k, v]) => `<span class="fb-rating-pill ${v <= 2 ? 'low' : ''}"><span class="name">${titleCase(k)}</span> <strong>${v}</strong></span>`)
         .join('');
-      const tags = (fb.quick_tags || []).map(t => `<span class="fb-tag">${escapeHtml(t)}</span>`).join('');
+      const tags = (fb.quick_tags || []).map(t => `<span class="fb-tag">${escapeHtml(humanizeTag(t))}</span>`).join('');
       const wr = fb.would_return === true
         ? `<div class="fb-return yes"><svg width="11" height="11"><use href="#ic-check"/></svg> Would visit again</div>`
         : fb.would_return === false

@@ -43,11 +43,21 @@ begin
     'summary', (
       select jsonb_build_object(
         'total',     count(*),
-        'active',    count(*) filter (where coalesce(active, true) = true
-                                        and v_now between start_date and end_date),
-        'upcoming',  count(*) filter (where coalesce(active, true) = true and v_now < start_date),
+        'active',    count(*) filter (
+          where coalesce(submission_status, 'approved') = 'approved'
+            and coalesce(active, true) = true
+            and v_now between start_date and end_date),
+        'upcoming',  count(*) filter (
+          where coalesce(submission_status, 'approved') = 'approved'
+            and coalesce(active, true) = true
+            and v_now < start_date),
         'ended',     count(*) filter (where v_now > end_date),
-        'inactive',  count(*) filter (where coalesce(active, true) = false),
+        'inactive',  count(*) filter (
+          where coalesce(submission_status, 'approved') = 'approved'
+            and coalesce(active, true) = false),
+        'pending',   count(*) filter (where submission_status = 'pending'),
+        'rejected',  count(*) filter (where submission_status = 'rejected'),
+        'draft',     count(*) filter (where submission_status = 'draft'),
         'total_visits',
           (select count(*) from public.special_visits
             where special_id in (select id from public.specials where place_id = v_place.id)),
@@ -75,6 +85,9 @@ begin
         'start_time',          s.start_time,
         'end_time',            s.end_time,
         'is_active',           coalesce(s.active, true),
+        'submission_status',   coalesce(s.submission_status, 'approved'),
+        'submitted_at',        s.submitted_at,
+        'review_note',         s.review_note,
         'image_url',
           (case when s.image_urls is not null and array_length(s.image_urls, 1) > 0
                 then s.image_urls[1] else null end),
@@ -89,6 +102,9 @@ begin
         'priority',            coalesce(s.priority, 0),
         'lifecycle', (
           case
+            when coalesce(s.submission_status, 'approved') = 'pending'  then 'pending'
+            when coalesce(s.submission_status, 'approved') = 'rejected' then 'rejected'
+            when coalesce(s.submission_status, 'approved') = 'draft'    then 'draft'
             when not coalesce(s.active, true) then 'inactive'
             when v_now < s.start_date then 'upcoming'
             when v_now > s.end_date then 'ended'

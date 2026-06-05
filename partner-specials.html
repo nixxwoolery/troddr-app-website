@@ -270,6 +270,109 @@
   .special-lifecycle.upcoming { background: var(--brand-accent); color: #111; }
   .special-lifecycle.ended    { background: #555; }
   .special-lifecycle.inactive { background: var(--grey-light); }
+  .special-lifecycle.pending  { background: var(--amber); }
+  .special-lifecycle.rejected { background: var(--red); }
+  .special-lifecycle.draft    { background: #888; }
+
+  /* ── UPLOAD FORM ── */
+  .form-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--black);
+    box-sizing: border-box;
+  }
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+  }
+  .form-field textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+  .form-field .hint {
+    font-size: 11px; color: var(--grey-light);
+    margin-top: 2px;
+  }
+  .form-actions {
+    display: flex; justify-content: flex-end; gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .form-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--grey-dark);
+  }
+  .form-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .form-btn.primary {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
+  }
+  .form-btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .form-error {
+    font-size: 12px; color: var(--red);
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: var(--red-light);
+    border-radius: 6px;
+    display: none;
+  }
+  .form-error.show { display: block; }
+  .form-success {
+    text-align: center;
+    padding: 18px;
+    background: var(--green-light);
+    border: 1px solid var(--green);
+    border-radius: var(--radius);
+    color: var(--green);
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .form-success.show { display: block; }
+  .form-success small {
+    display: block;
+    font-weight: 500;
+    color: var(--green);
+    font-size: 12px;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 720px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
 
   .special-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
   .special-title {
@@ -536,6 +639,9 @@
     <a class="page-link active" data-href="/partner/specials">
       <svg><use href="#ic-tag"/></svg> Specials
     </a>
+    <a class="page-link" data-href="/partner/billing">
+      <svg><use href="#ic-dollar"/></svg> Billing
+    </a>
 
     <div class="sidebar-divider"></div>
     <div class="sidebar-title">On this page</div>
@@ -545,6 +651,9 @@
     <a href="#active"   class="jump-link" data-section="active">
       <svg><use href="#ic-tag"/></svg> Active
     </a>
+    <a href="#pending"  class="jump-link" data-section="pending" id="nav-pending" style="display:none">
+      <svg><use href="#ic-doc"/></svg> Pending
+    </a>
     <a href="#upcoming" class="jump-link" data-section="upcoming">
       <svg><use href="#ic-calendar"/></svg> Upcoming
     </a>
@@ -553,9 +662,6 @@
     </a>
     <a href="#upload"   class="jump-link" data-section="upload">
       <svg><use href="#ic-plus"/></svg> Add new
-    </a>
-    <a href="#billing"  class="jump-link" data-section="billing">
-      <svg><use href="#ic-dollar"/></svg> Billing
     </a>
   </aside>
 
@@ -593,67 +699,105 @@
       <div class="specials-list" id="ended-list"></div>
     </section>
 
+    <section class="section" id="pending" style="display:none">
+      <div class="section-head">
+        <h2 class="section-title">Pending Review</h2>
+        <span class="pill warn" id="pending-pill">Awaiting approval</span>
+      </div>
+      <div class="specials-list" id="pending-list"></div>
+    </section>
+
     <section class="section" id="upload">
       <div class="section-head">
-        <h2 class="section-title">Add a new special</h2>
-        <span class="pill soon">Coming soon</span>
+        <h2 class="section-title">Submit a new special</h2>
+        <span class="pill live">Live</span>
       </div>
-      <div class="upload-card">
-        <div class="lead">Self-serve special creation is coming soon</div>
-        <div class="desc">
-          Until the upload form is live, send your special details (title, dates, description, image, and any pricing or discount) and we'll get it published for you within a business day.
+      <div class="form-card">
+        <div class="form-success" id="submit-success">
+          Submitted for approval.
+          <small>We'll review within 1 business day and publish it automatically once approved. You'll see it appear in <strong>Pending Review</strong> above.</small>
         </div>
-        <button type="button" class="placeholder-cta" id="upload-fallback-cta">
-          <svg width="14" height="14"><use href="#ic-plus"/></svg> Submit a new special
-        </button>
-        <div class="placeholder-grid">
-          <div class="placeholder-tile">
-            <strong>Image</strong>
-            One landscape image (1200×630 recommended).
+        <div class="form-grid" id="submit-form-grid">
+          <div class="form-field full">
+            <label for="sp-title">Title *</label>
+            <input id="sp-title" type="text" maxlength="120" placeholder="e.g. Half-price Soup Tuesday" />
           </div>
-          <div class="placeholder-tile">
-            <strong>Dates &amp; time</strong>
-            Start and end dates. Times if applicable.
+          <div class="form-field">
+            <label for="sp-type">Type *</label>
+            <select id="sp-type">
+              <option value="">Choose…</option>
+              <option value="local_discount">Local discount</option>
+              <option value="general">General special</option>
+              <option value="seasonal">Seasonal</option>
+              <option value="partnership">Partnership</option>
+              <option value="event">Event-tied</option>
+              <option value="travel_special">Travel special</option>
+            </select>
           </div>
-          <div class="placeholder-tile">
-            <strong>Pricing or discount</strong>
-            Flat price, % discount, or free.
+          <div class="form-field">
+            <label for="sp-category">Event category (optional)</label>
+            <input id="sp-category" type="text" maxlength="60" placeholder="e.g. Lunch, Drinks, Brunch" />
           </div>
-          <div class="placeholder-tile">
-            <strong>Description</strong>
-            One paragraph describing the offer.
+          <div class="form-field">
+            <label for="sp-start-date">Start date *</label>
+            <input id="sp-start-date" type="date" />
           </div>
+          <div class="form-field">
+            <label for="sp-end-date">End date *</label>
+            <input id="sp-end-date" type="date" />
+          </div>
+          <div class="form-field">
+            <label for="sp-start-time">Start time (optional)</label>
+            <input id="sp-start-time" type="time" />
+          </div>
+          <div class="form-field">
+            <label for="sp-end-time">End time (optional)</label>
+            <input id="sp-end-time" type="time" />
+          </div>
+          <div class="form-field full">
+            <label for="sp-description">Description</label>
+            <textarea id="sp-description" maxlength="800" placeholder="One paragraph describing the offer."></textarea>
+          </div>
+          <div class="form-field">
+            <label for="sp-discount-pct">Discount %</label>
+            <input id="sp-discount-pct" type="number" min="1" max="100" step="1" placeholder="e.g. 20" />
+            <div class="hint">For "% off" specials.</div>
+          </div>
+          <div class="form-field">
+            <label for="sp-discount-amt">Discount amount</label>
+            <input id="sp-discount-amt" type="number" min="0" step="1" placeholder="e.g. 500" />
+            <div class="hint">For "$ off" specials.</div>
+          </div>
+          <div class="form-field">
+            <label for="sp-price">Price</label>
+            <input id="sp-price" type="number" min="0" step="1" placeholder="e.g. 1500" />
+            <div class="hint">For flat-price specials.</div>
+          </div>
+          <div class="form-field">
+            <label for="sp-currency">Currency</label>
+            <select id="sp-currency">
+              <option value="JMD">JMD</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label for="sp-image">Image URL (optional)</label>
+            <input id="sp-image" type="url" placeholder="https://..." />
+            <div class="hint">Landscape image, 1200×630 recommended. Self-serve image upload is coming soon.</div>
+          </div>
+          <div class="form-field full">
+            <label for="sp-tags">Tags (optional, comma-separated)</label>
+            <input id="sp-tags" type="text" maxlength="200" placeholder="lunch, family-friendly, vegan" />
+          </div>
+        </div>
+        <div class="form-error" id="submit-error"></div>
+        <div class="form-actions">
+          <button type="button" class="form-btn" id="submit-reset">Clear</button>
+          <button type="button" class="form-btn primary" id="submit-special">Submit for approval</button>
         </div>
       </div>
     </section>
 
-    <section class="section" id="billing">
-      <div class="section-head">
-        <h2 class="section-title">Billing</h2>
-        <span class="pill soon">Coming soon</span>
-      </div>
-      <div class="billing-card">
-        <div class="lead">Invoicing for specials is in progress</div>
-        <div class="desc">
-          Specials will be billed based on the placement tier (standard, boosted, or featured) and run length.
-          Once billing is live, you'll see invoices, payment status, and next charge here.
-        </div>
-        <div class="placeholder-grid">
-          <div class="placeholder-tile">
-            <strong>Standard</strong>
-            Listed in your TRODDR profile and the Specials feed for the run dates.
-          </div>
-          <div class="placeholder-tile">
-            <strong>Boosted</strong>
-            Prioritized in the feed and surfaced in "Nearby" recommendations.
-          </div>
-          <div class="placeholder-tile">
-            <strong>Featured</strong>
-            Hero placement on the home screen for high-impact campaigns.
-          </div>
-        </div>
-      </div>
-    </section>
 
   </main>
 
@@ -785,11 +929,25 @@
   }
 
   function renderLists(specials) {
-    const buckets = { active: [], upcoming: [], ended: [], inactive: [] };
+    const buckets = { active: [], upcoming: [], ended: [], inactive: [], pending: [], rejected: [], draft: [] };
     specials.forEach(s => {
       const b = s.lifecycle || 'ended';
       (buckets[b] || buckets.ended).push(s);
     });
+
+    if (buckets.pending.length || buckets.rejected.length || buckets.draft.length) {
+      $('pending').style.display = '';
+      const submission = [...buckets.pending, ...buckets.rejected, ...buckets.draft];
+      $('pending-list').innerHTML = submission.map(specialCard).join('');
+      const pendingCount = buckets.pending.length;
+      const rejectedCount = buckets.rejected.length;
+      const draftCount = buckets.draft.length;
+      const bits = [];
+      if (pendingCount)  bits.push(`${pendingCount} awaiting review`);
+      if (rejectedCount) bits.push(`${rejectedCount} rejected`);
+      if (draftCount)    bits.push(`${draftCount} draft`);
+      $('pending-pill').textContent = bits.join(' · ') || 'Pending';
+    }
 
     if (buckets.active.length) {
       $('active-list').innerHTML = buckets.active.map(specialCard).join('');
@@ -797,7 +955,7 @@
       $('active-list').innerHTML = `
         <div class="state">
           <div class="state-title">No specials running today</div>
-          <p class="state-msg">When a special is within its run dates and active, it'll appear here. Submit a new special below to get started.</p>
+          <p class="state-msg">When a special is within its run dates and approved, it'll appear here. Submit a new special below to get started.</p>
         </div>`;
     }
 
@@ -810,6 +968,106 @@
       const all = [...buckets.ended, ...buckets.inactive];
       $('ended-list').innerHTML = all.map(specialCard).join('');
     }
+  }
+
+  // ── Submit form wiring ───────────────────────────────────
+  function setupSubmitForm() {
+    const formGrid     = $('submit-form-grid');
+    const successBox   = $('submit-success');
+    const errorBox     = $('submit-error');
+    const submitBtn    = $('submit-special');
+    const resetBtn     = $('submit-reset');
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.add('show');
+    }
+    function clearError() { errorBox.classList.remove('show'); }
+
+    function clearForm() {
+      ['sp-title','sp-category','sp-start-date','sp-end-date','sp-start-time','sp-end-time',
+       'sp-description','sp-discount-pct','sp-discount-amt','sp-price','sp-image','sp-tags'
+      ].forEach(id => { const el = $(id); if (el) el.value = ''; });
+      $('sp-type').value = '';
+      $('sp-currency').value = 'JMD';
+      clearError();
+    }
+
+    resetBtn.addEventListener('click', clearForm);
+
+    submitBtn.addEventListener('click', async () => {
+      clearError();
+      const token = new URLSearchParams(location.search).get('token');
+      if (!token) { showError('Missing token. Reload the page from your bookmarked link.'); return; }
+
+      const title       = $('sp-title').value.trim();
+      const type        = $('sp-type').value;
+      const startDate   = $('sp-start-date').value;
+      const endDate     = $('sp-end-date').value;
+      const startTime   = $('sp-start-time').value || null;
+      const endTime     = $('sp-end-time').value || null;
+      const description = $('sp-description').value.trim() || null;
+      const discountPct = $('sp-discount-pct').value ? Number($('sp-discount-pct').value) : null;
+      const discountAmt = $('sp-discount-amt').value ? Number($('sp-discount-amt').value) : null;
+      const price       = $('sp-price').value ? Number($('sp-price').value) : null;
+      const currency    = $('sp-currency').value || 'JMD';
+      const imageUrl    = $('sp-image').value.trim() || null;
+      const category    = $('sp-category').value.trim() || null;
+      const tagsRaw     = $('sp-tags').value.trim();
+      const tags        = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : null;
+
+      if (!title)     { showError('Please add a title.'); return; }
+      if (!type)      { showError('Please pick a special type.'); return; }
+      if (!startDate) { showError('Please pick a start date.'); return; }
+      if (!endDate)   { showError('Please pick an end date.'); return; }
+      if (endDate < startDate) { showError('End date must be on or after start date.'); return; }
+
+      submitBtn.disabled = true;
+      const original = submitBtn.textContent;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const { data, error } = await db.rpc('submit_partner_special', {
+          p_token:               token,
+          p_title:               title,
+          p_description:         description,
+          p_special_type:        type,
+          p_start_date:          new Date(startDate + 'T00:00:00').toISOString(),
+          p_end_date:            new Date(endDate   + 'T23:59:59').toISOString(),
+          p_start_time:          startTime,
+          p_end_time:            endTime,
+          p_image_url:           imageUrl,
+          p_discount_percentage: discountPct,
+          p_discount_amount:     discountAmt,
+          p_price_amount:        price,
+          p_currency:            currency,
+          p_event_category:      category,
+          p_tags:                tags,
+        });
+        if (error || !data || !data.ok) {
+          showError((data && data.error) || (error && error.message) || 'Could not submit. Please try again.');
+        } else {
+          formGrid.style.display = 'none';
+          successBox.classList.add('show');
+          submitBtn.style.display = 'none';
+          resetBtn.textContent = 'Submit another';
+          resetBtn.addEventListener('click', () => {
+            formGrid.style.display = '';
+            successBox.classList.remove('show');
+            submitBtn.style.display = '';
+            resetBtn.textContent = 'Clear';
+            clearForm();
+          }, { once: true });
+          // Reload list after a short delay
+          setTimeout(() => location.reload(), 1500);
+        }
+      } catch (err) {
+        showError('Network error. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = original;
+      }
+    });
   }
 
   // ── Entity picker (multi-domain partners) ────────────────
@@ -890,18 +1148,12 @@
     renderHero(data.place, data.summary);
     renderSummary(data.summary);
     renderLists(data.specials || []);
+    setupSubmitForm();
 
-    // Wire the "Submit a new special" placeholder CTA to the message modal.
-    document.getElementById('upload-fallback-cta').addEventListener('click', () => {
-      const fab = document.getElementById('msg-fab');
-      if (fab) fab.click();
-      setTimeout(() => {
-        const subj = document.getElementById('msg-subject');
-        const body = document.getElementById('msg-body');
-        if (subj) subj.value = 'New special submission';
-        if (body) body.focus();
-      }, 80);
-    });
+    // Reveal the Pending sidebar link if there are pending/rejected/draft specials.
+    const hasPending = (data.specials || []).some(s =>
+      ['pending','rejected','draft'].includes(s.lifecycle));
+    if (hasPending) $('nav-pending').style.display = '';
 
     hide('view-loading');
     show('view-dashboard');

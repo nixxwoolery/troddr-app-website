@@ -111,7 +111,8 @@ begin
         ),
         'loyalty',  v_has_loyalty,
         'feedback', true,
-        'specials', true
+        'specials', true,
+        'billing',  true
       ),
       'program', (
         select jsonb_build_object(

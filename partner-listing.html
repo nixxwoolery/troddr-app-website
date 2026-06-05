@@ -403,7 +403,9 @@
   .tag .count {
     color: var(--brand-primary);
     font-weight: 700;
-    margin-left: 4px;
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
   }
 
   /* ── STATS STRIP ── */
@@ -721,6 +723,9 @@
     <a class="page-link" data-href="/partner/specials">
       <svg><use href="#ic-doc"/></svg> Specials
     </a>
+    <a class="page-link" data-href="/partner/billing">
+      <svg><use href="#ic-doc"/></svg> Billing
+    </a>
 
     <div class="sidebar-divider"></div>
     <div class="sidebar-title">On this page</div>
@@ -823,6 +828,25 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
+  function humanizeTag(raw) {
+    if (!raw) return '';
+    let s = String(raw).toLowerCase().replace(/[-_]/g, ' ').trim();
+    if (s.includes(' ')) return s.replace(/\b\w/g, c => c.toUpperCase());
+    const parts = [
+      'ingredients','food','packed','staff','service','drinks','drink','options',
+      'value','vibe','vibes','experience','taste','tasty','menu','portion','portions',
+      'presentation','cleanliness','clean','speed','price','priced','quality','quick',
+      'friendly','fresh','cozy','warm','hot','cold','spicy','sweet','savoury',
+      'authentic','local','homemade','generous','attentive','knowledgeable','welcoming'
+    ].sort((a, b) => b.length - a.length);
+    for (const w of parts) {
+      const i = s.indexOf(w);
+      if (i > 0) { s = s.slice(0, i) + ' ' + s.slice(i); break; }
+      if (i === 0 && s.length > w.length) { s = s.slice(0, w.length) + ' ' + s.slice(w.length); break; }
+    }
+    return s.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
   function titleCase(s) {
     return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
@@ -936,7 +960,7 @@
       ? `<div class="summary-tags-block">
            <div class="summary-tags-label">Most-used tags</div>
            <div class="tag-list">
-             ${tags.slice(0, 8).map(t => `<span class="tag">${escapeHtml(t.tag)}<span class="count">${t.count}</span></span>`).join('')}
+             ${tags.slice(0, 8).map(t => `<span class="tag">${escapeHtml(humanizeTag(t.tag))}<span class="count">${t.count}</span></span>`).join('')}
            </div>
          </div>`
       : '';
