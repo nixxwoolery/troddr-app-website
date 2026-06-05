@@ -18,6 +18,47 @@ create index if not exists eps_event_id_idx
   on public.event_partner_submissions(event_id);
 
 -- ============================================================
+-- 2a. Event-type normalizer. Maps free-form intake values to
+--     known-safe event_type values that satisfy the
+--     events.valid_event_type check constraint. Anything we
+--     can't confidently map → NULL, and an admin sets it later
+--     via the Edit Event form.
+-- ============================================================
+create or replace function public._normalize_event_type(p_raw text)
+returns text
+language sql
+immutable
+as $$
+  select case lower(regexp_replace(coalesce(trim(p_raw), ''), '[\s&-]+', ' ', 'g'))
+    when ''                  then null
+    when 'music'             then 'music'
+    when 'concert'           then 'music'
+    when 'live music'        then 'music'
+    when 'food'              then 'food and drink'
+    when 'food and drink'    then 'food and drink'
+    when 'drink'             then 'food and drink'
+    when 'drinks'            then 'food and drink'
+    when 'culinary'          then 'food and drink'
+    when 'art'               then 'art'
+    when 'art and culture'   then 'art'
+    when 'culture'           then 'art'
+    when 'sports'            then 'sports'
+    when 'sport'             then 'sports'
+    when 'comedy'            then 'comedy'
+    when 'festival'          then 'festival'
+    when 'conference'        then 'conference'
+    when 'networking'        then 'networking'
+    when 'workshop'          then 'workshop'
+    when 'party'             then 'party'
+    when 'nightlife'         then 'nightlife'
+    when 'family'            then 'family'
+    when 'wellness'          then 'wellness'
+    when 'community'         then 'community'
+    else null
+  end;
+$$;
+
+-- ============================================================
 -- 2. Slug helper. Lowercases, strips non-alphanum, dedupes.
 -- ============================================================
 create or replace function public.generate_unique_event_slug(p_title text)
@@ -113,7 +154,7 @@ begin
       organizer_name     = coalesce(nullif(trim(new.organizer_name), ''), organizer_name),
       contact_email      = coalesce(nullif(trim(new.contact_email), ''), contact_email),
       contact_phone      = coalesce(nullif(trim(new.contact_phone), ''), contact_phone),
-      event_type         = coalesce(nullif(trim(new.event_type), ''), event_type),
+      event_type         = coalesce(public._normalize_event_type(new.event_type), event_type),
       featured_image_url = coalesce(nullif(trim(new.hero_url), ''), featured_image_url),
       capacity           = coalesce(v_capacity, capacity),
       min_age            = coalesce(v_min_age, min_age),
@@ -164,7 +205,7 @@ begin
       nullif(trim(new.organizer_name), ''),
       nullif(trim(new.contact_email), ''),
       nullif(trim(new.contact_phone), ''),
-      nullif(trim(new.event_type), ''),
+      public._normalize_event_type(new.event_type),
       nullif(trim(new.hero_url), ''),
       coalesce(v_gallery, array[]::text[]),
       v_capacity,

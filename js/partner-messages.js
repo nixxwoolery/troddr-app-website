@@ -213,6 +213,9 @@
       if (e.key === 'Escape' && overlay.classList.contains('open')) close();
     });
 
+    // Use the shared friendly-error helper if loaded; fall back gracefully.
+    const fe = window.friendlyError || ((err, fb) => fb || 'Something went wrong. Please try again.');
+
     sendBtn.addEventListener('click', async () => {
       const msg = bodyIn.value.trim();
       if (!msg) {
@@ -222,7 +225,7 @@
       }
       const token = new URLSearchParams(location.search).get('token');
       if (!token) {
-        errorBox.textContent = 'Missing partner token. Reload from your bookmarked link.';
+        errorBox.textContent = "We couldn't find your account from this link. Open the dashboard from your bookmarked URL.";
         errorBox.classList.add('show');
         return;
       }
@@ -240,16 +243,15 @@
           p_source_page: location.pathname
         });
         if (error || !data || !data.ok) {
-          errorBox.textContent = (data && data.error)
-            || (error && error.message)
-            || 'Could not send right now. Please try again.';
+          errorBox.textContent = fe(error || (data && data.error) || data,
+            "We couldn't send that just now. Please try again in a moment.");
           errorBox.classList.add('show');
         } else {
           formBox.style.display = 'none';
           successBox.style.display = '';
         }
       } catch (err) {
-        errorBox.textContent = 'Network error. Please try again.';
+        errorBox.textContent = fe(err, "Couldn't reach our servers. Check your connection and try again.");
         errorBox.classList.add('show');
       } finally {
         sendBtn.disabled = false;

@@ -2901,7 +2901,8 @@
         imgStatus.className = 'image-status success';
       } catch (err) {
         console.error('image upload failed', err);
-        imgStatus.textContent = (err && err.message) || 'Upload failed. Try again or paste a URL.';
+        imgStatus.textContent = (window.friendlyError || (() => ''))(err,
+          "Upload didn't go through. Try a smaller image, or paste a URL instead.");
         imgStatus.className = 'image-status error';
       } finally {
         imgFile.value = '';
@@ -2912,10 +2913,12 @@
       renderEditForm(event); // re-render from original
     });
 
+    const fe = window.friendlyError || ((err, fb) => fb || 'Something went wrong.');
+
     $('edit-save').addEventListener('click', async () => {
       hideStatus();
       const token = new URLSearchParams(location.search).get('token');
-      if (!token) { showStatus('Missing token. Reload from your bookmarked link.', 'error'); return; }
+      if (!token) { showStatus("We couldn't find your account from this link. Open the dashboard from your bookmarked URL.", 'error'); return; }
 
       const num = (v) => v === '' || v == null ? null : Number(v);
       const str = (v) => { const s = (v ?? '').toString().trim(); return s === '' ? null : s; };
@@ -2969,13 +2972,14 @@
       try {
         const { data, error } = await db.rpc('update_partner_event', payload);
         if (error || !data || !data.ok) {
-          showStatus((data && data.error) || (error && error.message) || 'Could not save. Please try again.', 'error');
+          showStatus(fe(error || (data && data.error) || data,
+            "We couldn't save those changes. Please try again, or send us a message."), 'error');
         } else {
           showStatus('Saved. Refreshing dashboard...', 'success');
           setTimeout(() => location.reload(), 1200);
         }
       } catch (err) {
-        showStatus('Network error. Please try again.', 'error');
+        showStatus(fe(err, "Couldn't reach our servers. Check your connection and try again."), 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = original;
@@ -3011,13 +3015,13 @@
     const { data, error } = eventRes;
     const caps = capsRes.data;
     if (error || !data || !data.event) {
-      console.error('event error', error);
-      const msg = error
-        ? `Supabase error: ${error.message || error.code || JSON.stringify(error)}\n\nHint: did you run supabase/event-analytics.sql and the updated supabase/partner-capabilities.sql in the SQL editor?`
-        : (!data
-            ? 'RPC returned no data. The token may not match any event.'
-            : 'RPC returned data but no event field. Unexpected shape.');
-      $('error-detail').textContent = msg;
+      console.error('event error', error, 'data:', data);
+      const fe2 = window.friendlyError || ((err, fb) => fb);
+      const friendly = fe2(error || data,
+        !data
+          ? "We couldn't find this event from your link. It may have moved or the link may have expired."
+          : "We couldn't load this dashboard right now. Please try again, or send us a message.");
+      $('error-detail').textContent = friendly;
       hide('view-loading'); show('view-error');
       return;
     }
@@ -3045,6 +3049,7 @@
   load();
 </script>
 
+<script src="js/partner-errors.js"></script>
 <script src="js/partner-messages.js" defer></script>
 </body>
 </html>

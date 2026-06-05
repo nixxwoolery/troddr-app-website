@@ -524,7 +524,9 @@
       p_review_note: note
     });
     if (error || !data || !data.ok) {
-      alert('Failed: ' + ((data && data.error) || (error && error.message) || 'unknown'));
+      console.error('special action failed', error, data);
+      const raw = (data && data.error) || (error && error.message) || 'unknown';
+      alert("Couldn't update this special.\n\nDetails: " + raw);
       card.querySelectorAll('.action-btn').forEach(b => b.classList.remove('disabled'));
       return;
     }
@@ -601,7 +603,9 @@
       p_status:        status
     });
     if (error || !data || !data.ok) {
-      alert('Failed: ' + ((data && data.error) || (error && error.message) || 'unknown'));
+      console.error('submission action failed', error, data);
+      const raw = (data && data.error) || (error && error.message) || 'unknown';
+      alert("Couldn't update this submission.\n\nDetails: " + raw);
       card.querySelectorAll('.action-btn').forEach(b => b.classList.remove('disabled'));
       return;
     }
@@ -666,7 +670,9 @@
       p_status:      status
     });
     if (error || !data || !data.ok) {
-      alert('Failed: ' + ((data && data.error) || (error && error.message) || 'unknown'));
+      console.error('message action failed', error, data);
+      const raw = (data && data.error) || (error && error.message) || 'unknown';
+      alert("Couldn't update this message.\n\nDetails: " + raw);
       btn.classList.remove('disabled');
       return;
     }
