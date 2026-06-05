@@ -219,6 +219,105 @@
   }
   .entity-select:hover { border-color: var(--brand-primary); }
   .entity-select optgroup { font-weight: 700; }
+
+  /* ── EVENT EDIT FORM ── */
+  .edit-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+  }
+  .edit-section-title {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin: 18px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .edit-section-title:first-child { margin-top: 0; }
+  .edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+  }
+  .edit-grid .full { grid-column: 1 / -1; }
+  .edit-field { display: flex; flex-direction: column; gap: 4px; }
+  .edit-field label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .edit-field input,
+  .edit-field select,
+  .edit-field textarea {
+    width: 100%;
+    padding: 9px 11px;
+    font-family: inherit;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--black);
+    box-sizing: border-box;
+  }
+  .edit-field input:focus,
+  .edit-field select:focus,
+  .edit-field textarea:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+  }
+  .edit-field textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+  .edit-field.checkbox {
+    flex-direction: row; align-items: center; gap: 8px;
+    padding: 6px 0;
+  }
+  .edit-field.checkbox label {
+    font-size: 13px; font-weight: 500;
+    color: var(--grey-dark);
+    letter-spacing: 0; text-transform: none;
+    cursor: pointer;
+  }
+  .edit-field.checkbox input {
+    width: auto; padding: 0;
+  }
+  .edit-actions {
+    display: flex; justify-content: flex-end; gap: 8px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .edit-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--grey-dark);
+  }
+  .edit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .edit-btn.primary {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
+  }
+  .edit-btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .edit-status {
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-top: 8px;
+    display: none;
+  }
+  .edit-status.show { display: block; }
+  .edit-status.error { color: var(--red); background: var(--red-light); }
+  .edit-status.success { color: var(--green); background: var(--green-light); }
+
+  @media (max-width: 720px) {
+    .edit-grid { grid-template-columns: 1fr; }
+  }
   .main { min-width: 0; padding-bottom: 80px; }
 
   .section { margin-bottom: 36px; scroll-margin-top: 80px; }
@@ -1473,6 +1572,9 @@
     <a href="#actions"    class="jump-link" data-section="actions">
       <svg><use href="#ic-bolt"/></svg> Action Center
     </a>
+    <a href="#edit"       class="jump-link" data-section="edit">
+      <svg><use href="#ic-doc"/></svg> Edit Event
+    </a>
     <a href="#unlocks"    class="jump-link" data-section="unlocks">
       <svg><use href="#ic-lock"/></svg> Unlocks
     </a>
@@ -1572,6 +1674,17 @@
         <span class="pill live">Live</span>
       </div>
       <div class="action-center-list" id="actions-list"></div>
+    </section>
+
+    <section class="section" id="edit">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Edit Event Details</h2>
+          <div class="section-sub">Changes save immediately and reflect across the TRODDR app.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="edit-card" id="edit-card"></div>
     </section>
 
     <section class="section" id="unlocks">
@@ -2474,6 +2587,266 @@
     });
   }
 
+  // ── Event Edit form ──────────────────────────────────────
+  function renderEditForm(event) {
+    const e = event || {};
+    const toDate = (d) => d ? new Date(d).toISOString().slice(0, 10) : '';
+    const toTime = (t) => t ? String(t).slice(0, 5) : '';
+
+    $('edit-card').innerHTML = `
+      <div class="edit-section-title">Basics</div>
+      <div class="edit-grid">
+        <div class="edit-field full">
+          <label for="ed-title">Title</label>
+          <input id="ed-title" type="text" maxlength="200" value="${escapeHtml(e.title || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-type">Event type</label>
+          <input id="ed-type" type="text" maxlength="60" value="${escapeHtml(e.event_type || '')}" placeholder="music, food and drink, etc." />
+        </div>
+        <div class="edit-field">
+          <label for="ed-organizer">Organizer name</label>
+          <input id="ed-organizer" type="text" maxlength="200" value="${escapeHtml(e.organizer_name || '')}" />
+        </div>
+        <div class="edit-field full">
+          <label for="ed-short">Short description</label>
+          <input id="ed-short" type="text" maxlength="200" value="${escapeHtml(e.short_description || '')}" placeholder="One-line summary" />
+        </div>
+        <div class="edit-field full">
+          <label for="ed-desc">Full description</label>
+          <textarea id="ed-desc" maxlength="5000">${escapeHtml(e.description || '')}</textarea>
+        </div>
+        <div class="edit-field full">
+          <label for="ed-image">Featured image URL</label>
+          <input id="ed-image" type="url" value="${escapeHtml(e.featured_image_url || '')}" placeholder="https://..." />
+        </div>
+      </div>
+
+      <div class="edit-section-title">When</div>
+      <div class="edit-grid">
+        <div class="edit-field">
+          <label for="ed-start-date">Start date</label>
+          <input id="ed-start-date" type="date" value="${toDate(e.start_date)}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-end-date">End date</label>
+          <input id="ed-end-date" type="date" value="${toDate(e.end_date)}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-start-time">Start time</label>
+          <input id="ed-start-time" type="time" value="${toTime(e.start_time)}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-end-time">End time</label>
+          <input id="ed-end-time" type="time" value="${toTime(e.end_time)}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-timezone">Timezone</label>
+          <input id="ed-timezone" type="text" maxlength="60" value="${escapeHtml(e.timezone || 'America/Jamaica')}" />
+        </div>
+        <div class="edit-field checkbox">
+          <input id="ed-allday" type="checkbox" ${e.is_all_day ? 'checked' : ''} />
+          <label for="ed-allday">All-day event</label>
+        </div>
+      </div>
+
+      <div class="edit-section-title">Where</div>
+      <div class="edit-grid">
+        <div class="edit-field full">
+          <label for="ed-venue">Venue name</label>
+          <input id="ed-venue" type="text" maxlength="200" value="${escapeHtml(e.venue_name || '')}" />
+        </div>
+        <div class="edit-field full">
+          <label for="ed-address">Address</label>
+          <input id="ed-address" type="text" maxlength="200" value="${escapeHtml(e.venue_address || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-town">Town</label>
+          <input id="ed-town" type="text" maxlength="100" value="${escapeHtml(e.town || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-parish">Parish</label>
+          <input id="ed-parish" type="text" maxlength="100" value="${escapeHtml(e.parish || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-country">Country</label>
+          <input id="ed-country" type="text" maxlength="100" value="${escapeHtml(e.country || '')}" />
+        </div>
+      </div>
+
+      <div class="edit-section-title">Tickets &amp; Capacity</div>
+      <div class="edit-grid">
+        <div class="edit-field checkbox">
+          <input id="ed-free" type="checkbox" ${e.is_free ? 'checked' : ''} />
+          <label for="ed-free">This event is free</label>
+        </div>
+        <div class="edit-field checkbox">
+          <input id="ed-online" type="checkbox" ${e.has_online_tickets ? 'checked' : ''} />
+          <label for="ed-online">Online tickets available</label>
+        </div>
+        <div class="edit-field">
+          <label for="ed-price-min">Ticket price (min)</label>
+          <input id="ed-price-min" type="number" min="0" step="0.01" value="${e.ticket_price_min ?? ''}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-price-max">Ticket price (max)</label>
+          <input id="ed-price-max" type="number" min="0" step="0.01" value="${e.ticket_price_max ?? ''}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-currency">Currency</label>
+          <input id="ed-currency" type="text" maxlength="10" value="${escapeHtml(e.currency || 'JMD')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-capacity">Capacity</label>
+          <input id="ed-capacity" type="number" min="0" step="1" value="${e.capacity ?? ''}" />
+        </div>
+        <div class="edit-field full">
+          <label for="ed-ticket-url">Ticket URL</label>
+          <input id="ed-ticket-url" type="url" value="${escapeHtml(e.ticket_url || '')}" />
+        </div>
+        <div class="edit-field checkbox full">
+          <input id="ed-soldout" type="checkbox" ${e.is_sold_out ? 'checked' : ''} />
+          <label for="ed-soldout">Mark as sold out</label>
+        </div>
+      </div>
+
+      <div class="edit-section-title">Restrictions &amp; Amenities</div>
+      <div class="edit-grid">
+        <div class="edit-field">
+          <label for="ed-minage">Minimum age</label>
+          <input id="ed-minage" type="number" min="0" step="1" value="${e.min_age ?? ''}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-dress">Dress code</label>
+          <input id="ed-dress" type="text" maxlength="100" value="${escapeHtml(e.dress_code || '')}" />
+        </div>
+        <div class="edit-field checkbox">
+          <input id="ed-food" type="checkbox" ${e.food_available ? 'checked' : ''} />
+          <label for="ed-food">Food available</label>
+        </div>
+        <div class="edit-field checkbox">
+          <input id="ed-alcohol" type="checkbox" ${e.alcohol_served ? 'checked' : ''} />
+          <label for="ed-alcohol">Alcohol served</label>
+        </div>
+      </div>
+
+      <div class="edit-section-title">Contact &amp; Links</div>
+      <div class="edit-grid">
+        <div class="edit-field">
+          <label for="ed-contact-email">Contact email</label>
+          <input id="ed-contact-email" type="email" value="${escapeHtml(e.contact_email || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-contact-phone">Contact phone</label>
+          <input id="ed-contact-phone" type="tel" value="${escapeHtml(e.contact_phone || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-support-email">Support email</label>
+          <input id="ed-support-email" type="email" value="${escapeHtml(e.support_email || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-support-url">Support URL</label>
+          <input id="ed-support-url" type="url" value="${escapeHtml(e.support_url || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-website">Website</label>
+          <input id="ed-website" type="url" value="${escapeHtml(e.website_url || '')}" />
+        </div>
+        <div class="edit-field">
+          <label for="ed-instagram">Instagram URL</label>
+          <input id="ed-instagram" type="url" value="${escapeHtml(e.instagram_url || '')}" />
+        </div>
+      </div>
+
+      <div class="edit-status" id="edit-status"></div>
+      <div class="edit-actions">
+        <button type="button" class="edit-btn" id="edit-reset">Reset</button>
+        <button type="button" class="edit-btn primary" id="edit-save">Save changes</button>
+      </div>
+    `;
+
+    const statusBox = $('edit-status');
+    function showStatus(msg, kind) {
+      statusBox.textContent = msg;
+      statusBox.className = `edit-status show ${kind}`;
+    }
+    function hideStatus() { statusBox.className = 'edit-status'; }
+
+    $('edit-reset').addEventListener('click', () => {
+      renderEditForm(event); // re-render from original
+    });
+
+    $('edit-save').addEventListener('click', async () => {
+      hideStatus();
+      const token = new URLSearchParams(location.search).get('token');
+      if (!token) { showStatus('Missing token. Reload from your bookmarked link.', 'error'); return; }
+
+      const num = (v) => v === '' || v == null ? null : Number(v);
+      const str = (v) => { const s = (v ?? '').toString().trim(); return s === '' ? null : s; };
+      const chk = (id) => document.getElementById(id).checked;
+      const val = (id) => document.getElementById(id).value;
+
+      const payload = {
+        p_token:              token,
+        p_title:              str(val('ed-title')),
+        p_description:        str(val('ed-desc')),
+        p_short_description:  str(val('ed-short')),
+        p_start_date:         val('ed-start-date') || null,
+        p_end_date:           val('ed-end-date') || null,
+        p_start_time:         val('ed-start-time') || null,
+        p_end_time:           val('ed-end-time') || null,
+        p_is_all_day:         chk('ed-allday'),
+        p_timezone:           str(val('ed-timezone')),
+        p_venue_name:         str(val('ed-venue')),
+        p_venue_address:      str(val('ed-address')),
+        p_parish:             str(val('ed-parish')),
+        p_town:               str(val('ed-town')),
+        p_country:            str(val('ed-country')),
+        p_is_free:            chk('ed-free'),
+        p_ticket_price_min:   num(val('ed-price-min')),
+        p_ticket_price_max:   num(val('ed-price-max')),
+        p_currency:           str(val('ed-currency')),
+        p_has_online_tickets: chk('ed-online'),
+        p_is_sold_out:        chk('ed-soldout'),
+        p_ticket_url:         str(val('ed-ticket-url')),
+        p_capacity:           num(val('ed-capacity')),
+        p_min_age:            num(val('ed-minage')),
+        p_dress_code:         str(val('ed-dress')),
+        p_food_available:     chk('ed-food'),
+        p_alcohol_served:     chk('ed-alcohol'),
+        p_organizer_name:     str(val('ed-organizer')),
+        p_contact_email:      str(val('ed-contact-email')),
+        p_contact_phone:      str(val('ed-contact-phone')),
+        p_support_email:      str(val('ed-support-email')),
+        p_support_url:        str(val('ed-support-url')),
+        p_website_url:        str(val('ed-website')),
+        p_instagram_url:      str(val('ed-instagram')),
+        p_featured_image_url: str(val('ed-image')),
+        p_event_type:         str(val('ed-type')),
+      };
+
+      const btn = $('edit-save');
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Saving...';
+
+      try {
+        const { data, error } = await db.rpc('update_partner_event', payload);
+        if (error || !data || !data.ok) {
+          showStatus((data && data.error) || (error && error.message) || 'Could not save. Please try again.', 'error');
+        } else {
+          showStatus('Saved. Refreshing dashboard...', 'success');
+          setTimeout(() => location.reload(), 1200);
+        }
+      } catch (err) {
+        showStatus('Network error. Please try again.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+  }
+
   // ── Sidebar wiring (event partner = jump-links only) ─────
   function setupSidebar() {
     const jumpLinks = document.querySelectorAll('.jump-link');
@@ -2524,6 +2897,7 @@
     renderVendors(data);
     renderSponsors(data);
     buildActions(data);
+    renderEditForm(data.event);
     renderLocked(data);
 
     hide('view-loading');

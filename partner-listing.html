@@ -250,12 +250,13 @@
   }
   .preview-cat {
     position: absolute; top: 12px; left: 12px;
-    background: rgba(0,0,0,0.65);
+    background: rgba(0,0,0,0.7);
     color: #fff;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 5px 10px; border-radius: 100px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
   }
+  .preview-cat svg { width: 18px; height: 18px; }
   .preview-body {
     padding: 18px 20px 20px;
     display: flex; flex-direction: column; gap: 10px;
@@ -656,6 +657,29 @@
     <symbol id="ic-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.6 4.5 8.4 8.4 0 0 1-4-1L3 21l1.9-5.4a8.5 8.5 0 0 1-1-4 8.5 8.5 0 0 1 4.5-7.6 8.4 8.4 0 0 1 4-1A8.5 8.5 0 0 1 21 11.5z"/>
     </symbol>
+    <!-- Category icons (outline style) -->
+    <symbol id="ic-cat-eat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 2v8a2 2 0 0 0 2 2v10"/>
+      <path d="M8 2v8"/>
+      <path d="M6 2v8"/>
+      <path d="M18 2c-1.5 0-3 2-3 4v6h3v10"/>
+      <path d="M21 2v20"/>
+    </symbol>
+    <symbol id="ic-cat-drink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 5h16l-2 9a4 4 0 0 1-4 3h-4a4 4 0 0 1-4-3z"/>
+      <path d="M12 17v4"/>
+      <path d="M8 21h8"/>
+    </symbol>
+    <symbol id="ic-cat-sleep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 12V6"/>
+      <path d="M22 22V12a4 4 0 0 0-4-4h-7v6"/>
+      <path d="M2 22v-4a2 2 0 0 1 2-2h18"/>
+      <circle cx="7" cy="11" r="2"/>
+    </symbol>
+    <symbol id="ic-cat-do" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M16 8l-2 6-6 2 2-6z"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -899,10 +923,14 @@
         <svg><use href="#ic-map"/></svg> Map
       </a>`);
 
+    const catKey = (place.category || '').toLowerCase().trim();
+    const catIcons = { eat: '#ic-cat-eat', drink: '#ic-cat-drink', sleep: '#ic-cat-sleep', do: '#ic-cat-do' };
+    const catIcon = catIcons[catKey];
+
     $('preview-card').innerHTML = `
       <div class="preview-img" ${img ? `style="background-image:url('${escapeHtml(img)}')"` : ''}>
         ${img ? '' : '<div class="preview-img-empty">No image set</div>'}
-        ${place.category ? `<span class="preview-cat">${escapeHtml(place.category)}</span>` : ''}
+        ${catIcon ? `<span class="preview-cat" title="${escapeHtml(place.category)}"><svg><use href="${catIcon}"/></svg></span>` : ''}
       </div>
       <div class="preview-body">
         <div class="preview-name">${escapeHtml(place.name)}</div>
