@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR Admin · Review Queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="robots" content="noindex,nofollow" />
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#fff; --bg-soft:#f8f9fa;
+    --primary:#0077CC; --primary-text:#fff;
+    --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea;
+    --amber:#b86e00; --amber-light:#fff4e0;
+    --blue-light:#e8f4ff;
+    --radius:10px; --radius-lg:16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft); color: var(--black);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--black); color: #fff;
+    border-bottom: 1px solid #000;
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .navbar h1 {
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .navbar .tag {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+  }
+
+  .layout { max-width: 1280px; margin: 24px auto; padding: 0 24px; }
+
+  .counts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .count-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .count-card:hover { border-color: var(--primary); transform: translateY(-1px); }
+  .count-card.active { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+  .count-card .num {
+    font-size: 28px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.8px; line-height: 1;
+  }
+  .count-card .num.urgent { color: var(--red); }
+  .count-card .num.muted  { color: var(--grey-light); }
+  .count-card .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 6px;
+  }
+
+  .tabs {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 10px 16px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    color: var(--grey-mid);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: var(--black); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab .badge {
+    display: inline-block;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    font-size: 10px; font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 100px;
+    margin-left: 6px;
+  }
+  .tab.active .badge {
+    background: var(--blue-light);
+    color: var(--primary);
+  }
+  .tab.urgent .badge { background: var(--red-light); color: var(--red); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Review item */
+  .item {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .item-head {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .item-head-body { flex: 1; min-width: 0; }
+  .item-title {
+    font-size: 16px; font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap;
+  }
+  .item-status-pill {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .item-status-pill.pending     { background: var(--amber-light); color: var(--amber); }
+  .item-status-pill.submitted   { background: var(--amber-light); color: var(--amber); }
+  .item-status-pill.reviewing   { background: var(--blue-light); color: var(--primary); }
+  .item-status-pill.draft       { background: var(--bg-soft); color: var(--grey-mid); }
+  .item-status-pill.approved    { background: var(--green-light); color: var(--green); }
+  .item-status-pill.rejected    { background: var(--red-light); color: var(--red); }
+  .item-status-pill.new         { background: var(--red-light); color: var(--red); }
+  .item-status-pill.in_progress { background: var(--amber-light); color: var(--amber); }
+  .item-status-pill.resolved    { background: var(--green-light); color: var(--green); }
+
+  .item-meta {
+    font-size: 12px; color: var(--grey-mid);
+    display: flex; flex-wrap: wrap; gap: 4px 14px;
+    margin-bottom: 6px;
+  }
+  .item-meta strong { color: var(--grey-dark); font-weight: 700; }
+  .item-thumb {
+    width: 96px; height: 64px;
+    border-radius: 8px;
+    background: var(--bg-soft) center / cover no-repeat;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .item-actions {
+    display: flex; gap: 8px;
+    padding: 12px 20px;
+    background: var(--bg-soft);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .action-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--grey-dark);
+  }
+  .action-btn:hover { background: var(--bg); border-color: var(--grey-light); }
+  .action-btn.approve {
+    background: var(--green); border-color: var(--green); color: #fff;
+  }
+  .action-btn.approve:hover { filter: brightness(1.08); }
+  .action-btn.reject {
+    background: #fff; border-color: var(--red); color: var(--red);
+  }
+  .action-btn.reject:hover { background: var(--red-light); }
+  .action-btn.disabled { opacity: 0.5; pointer-events: none; }
+  .action-spacer { flex: 1; }
+  .action-note {
+    font-size: 12px; color: var(--grey-mid);
+  }
+  .action-input {
+    flex: 1; min-width: 180px;
+    padding: 8px 12px;
+    font-family: inherit; font-size: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .item-body {
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--grey-dark);
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .item-body.expandable { max-height: 96px; overflow: hidden; position: relative; }
+  .item-body.expandable::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 30px;
+    background: linear-gradient(180deg, transparent, #fff);
+  }
+  .item-body.expanded { max-height: none; }
+  .item-body.expanded::after { display: none; }
+  .body-toggle {
+    background: transparent; border: none;
+    color: var(--primary);
+    font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    padding: 6px 20px 12px;
+  }
+
+  .item-detail-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 6px 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12px;
+  }
+  .detail-key { color: var(--grey-mid); font-weight: 600; }
+  .detail-val { color: var(--grey-dark); overflow: hidden; text-overflow: ellipsis; }
+  .detail-val a { color: var(--primary); }
+
+  .gate {
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 60px 30px;
+    max-width: 480px; margin: 60px auto;
+  }
+  .gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .gate p { color: var(--grey-mid); font-size: 14px; margin-bottom: 18px; }
+  .gate input {
+    width: 100%; padding: 10px 14px;
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .gate button {
+    padding: 10px 22px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+  .gate-error {
+    color: var(--red); font-size: 12px; margin-top: 8px; display: none;
+  }
+  .gate-error.show { display: block; }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty {
+    text-align: center; padding: 40px 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--grey-mid);
+  }
+  .hidden { display: none !important; }
+
+  @media (max-width: 880px) {
+    .counts { grid-template-columns: repeat(2, 1fr); }
+    .item-detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <h1>TRODDR Admin</h1>
+    <span class="tag">Review Queue</span>
+  </div>
+</header>
+
+<div id="gate" class="gate hidden">
+  <h2>Admin sign-in</h2>
+  <p>Enter your admin token to access the review queue.</p>
+  <input id="gate-input" type="password" placeholder="admin token..." />
+  <div>
+    <button id="gate-go">Continue</button>
+  </div>
+  <div class="gate-error" id="gate-error">Invalid or revoked token.</div>
+</div>
+
+<div id="loading" class="gate hidden">
+  <div class="spinner"></div>
+  <p>Loading queue...</p>
+</div>
+
+<div id="dashboard" class="layout hidden">
+
+  <div class="counts" id="counts"></div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="specials">Specials <span class="badge" id="badge-specials">0</span></button>
+    <button class="tab" data-tab="submissions">Event Submissions <span class="badge" id="badge-submissions">0</span></button>
+    <button class="tab" data-tab="messages">Messages <span class="badge" id="badge-messages">0</span></button>
+    <button class="tab" data-tab="updates">Recent Event Updates <span class="badge" id="badge-updates">0</span></button>
+  </div>
+
+  <div class="panel active" id="panel-specials"></div>
+  <div class="panel" id="panel-submissions"></div>
+  <div class="panel" id="panel-messages"></div>
+  <div class="panel" id="panel-updates"></div>
+
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const $ = (id) => document.getElementById(id);
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function fmtRelative(ts) {
+    if (!ts) return '';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const d = Math.floor(diffMs / 86400000);
+    if (d < 1) {
+      const h = Math.floor(diffMs / 3600000);
+      if (h < 1) {
+        const m = Math.floor(diffMs / 60000);
+        return m < 1 ? 'just now' : `${m}m ago`;
+      }
+      return `${h}h ago`;
+    }
+    if (d === 1) return 'yesterday';
+    if (d < 30) return `${d}d ago`;
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function fmtDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  let adminToken = '';
+  let queueData  = null;
+
+  // ── Auth ─────────────────────────────────────────────────
+  function setToken(t) {
+    adminToken = t;
+    try { sessionStorage.setItem('troddr_admin_token', t); } catch (e) {}
+  }
+  function loadStoredToken() {
+    const urlT = new URLSearchParams(location.search).get('token');
+    if (urlT) { setToken(urlT); return urlT; }
+    try { return sessionStorage.getItem('troddr_admin_token') || ''; } catch (e) { return ''; }
+  }
+  function showGate() {
+    $('gate').classList.remove('hidden');
+    $('loading').classList.add('hidden');
+    $('dashboard').classList.add('hidden');
+  }
+  function showLoading() {
+    $('gate').classList.add('hidden');
+    $('loading').classList.remove('hidden');
+    $('dashboard').classList.add('hidden');
+  }
+  function showDashboard() {
+    $('gate').classList.add('hidden');
+    $('loading').classList.add('hidden');
+    $('dashboard').classList.remove('hidden');
+  }
+
+  $('gate-go').addEventListener('click', async () => {
+    const t = $('gate-input').value.trim();
+    if (!t) return;
+    setToken(t);
+    await loadQueue();
+  });
+  $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
+
+  // ── Load queue ───────────────────────────────────────────
+  async function loadQueue() {
+    showLoading();
+    const { data, error } = await db.rpc('get_admin_review_queue', { p_admin_token: adminToken });
+    if (error || !data) {
+      console.error('queue load failed', error);
+      $('gate-error').classList.add('show');
+      showGate();
+      return;
+    }
+    queueData = data;
+    renderCounts(data.counts);
+    renderSpecials(data.pending_specials || []);
+    renderSubmissions(data.pending_submissions || []);
+    renderMessages(data.new_messages || []);
+    renderUpdates(data.recent_event_updates || []);
+    showDashboard();
+  }
+
+  // ── Counts strip ────────────────────────────────────────
+  function renderCounts(c) {
+    c = c || {};
+    const items = [
+      { label: 'Pending Specials', value: c.pending_specials || 0, tab: 'specials', urgent: c.pending_specials > 0 },
+      { label: 'Pending Submissions', value: c.pending_submissions || 0, tab: 'submissions', urgent: c.pending_submissions > 0 },
+      { label: 'New Messages', value: c.new_messages || 0, tab: 'messages', urgent: c.new_messages > 0 },
+      { label: 'Event Updates (7d)', value: c.recent_event_updates_7d || 0, tab: 'updates' },
+    ];
+    $('counts').innerHTML = items.map(it => `
+      <div class="count-card" data-jump="${it.tab}">
+        <div class="num ${it.urgent ? 'urgent' : (it.value === 0 ? 'muted' : '')}">${it.value}</div>
+        <div class="lbl">${it.label}</div>
+      </div>`).join('');
+    $('counts').querySelectorAll('.count-card').forEach(c => {
+      c.addEventListener('click', () => switchTab(c.dataset.jump));
+    });
+
+    // Badges
+    $('badge-specials').textContent    = c.pending_specials || 0;
+    $('badge-submissions').textContent = c.pending_submissions || 0;
+    $('badge-messages').textContent    = c.new_messages || 0;
+    $('badge-updates').textContent     = c.recent_event_updates_7d || 0;
+
+    // Urgent class on tab if pending > 0
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('urgent'));
+    if ((c.pending_specials || 0) > 0)    document.querySelector('.tab[data-tab="specials"]').classList.add('urgent');
+    if ((c.pending_submissions || 0) > 0) document.querySelector('.tab[data-tab="submissions"]').classList.add('urgent');
+    if ((c.new_messages || 0) > 0)        document.querySelector('.tab[data-tab="messages"]').classList.add('urgent');
+  }
+
+  // ── Tabs ────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+  }
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+  });
+
+  // ── Specials ────────────────────────────────────────────
+  function renderSpecials(specials) {
+    if (!specials.length) {
+      $('panel-specials').innerHTML = `<div class="empty">No pending specials. Inbox zero.</div>`;
+      return;
+    }
+    $('panel-specials').innerHTML = specials.map(sp => {
+      const place = sp.place || {};
+      const pricing = sp.discount_percentage ? `${sp.discount_percentage}% off`
+                    : sp.discount_amount     ? `${sp.currency || 'JMD'} ${sp.discount_amount} off`
+                    : sp.price_amount        ? `${sp.currency || 'JMD'} ${sp.price_amount}`
+                    : 'Free';
+      const dates = sp.start_date && sp.end_date
+        ? `${fmtDate(sp.start_date)} → ${fmtDate(sp.end_date)}`
+        : '';
+      return `
+        <div class="item" data-id="${sp.id}">
+          <div class="item-head">
+            ${sp.image_url ? `<div class="item-thumb" style="background-image:url('${escapeHtml(sp.image_url)}')"></div>` : '<div class="item-thumb"></div>'}
+            <div class="item-head-body">
+              <div class="item-title">
+                ${escapeHtml(sp.title)}
+                <span class="item-status-pill ${sp.submission_status}">${sp.submission_status}</span>
+              </div>
+              <div class="item-meta">
+                <span><strong>${escapeHtml(place.name || 'Unknown place')}</strong>${place.town ? ', ' + escapeHtml(place.town) : ''}</span>
+                <span>${escapeHtml(sp.special_type.replace(/_/g, ' '))}</span>
+                <span>${dates}</span>
+                <span>${pricing}</span>
+                <span>submitted ${fmtRelative(sp.submitted_at || sp.created_at)}</span>
+              </div>
+            </div>
+          </div>
+          ${sp.description ? `<div class="item-body">${escapeHtml(sp.description)}</div>` : ''}
+          ${sp.event_tags && sp.event_tags.length ? `<div style="padding:0 20px 12px; font-size:11px; color:var(--grey-mid);">Tags: ${sp.event_tags.map(escapeHtml).join(', ')}</div>` : ''}
+          <div class="item-actions">
+            <input class="action-input reject-note" placeholder="Optional review note (shown if rejected)" />
+            <div class="action-spacer"></div>
+            <button class="action-btn approve" data-action="approve" data-id="${sp.id}">Approve</button>
+            <button class="action-btn reject" data-action="reject" data-id="${sp.id}">Reject</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    $('panel-specials').querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', () => handleSpecialAction(btn));
+    });
+  }
+
+  async function handleSpecialAction(btn) {
+    const card = btn.closest('.item');
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const note = card.querySelector('.reject-note').value.trim() || null;
+    const status = action === 'approve' ? 'approved' : 'rejected';
+    card.querySelectorAll('.action-btn').forEach(b => b.classList.add('disabled'));
+    const { data, error } = await db.rpc('admin_set_special_status', {
+      p_admin_token: adminToken,
+      p_special_id:  id,
+      p_status:      status,
+      p_review_note: note
+    });
+    if (error || !data || !data.ok) {
+      alert('Failed: ' + ((data && data.error) || (error && error.message) || 'unknown'));
+      card.querySelectorAll('.action-btn').forEach(b => b.classList.remove('disabled'));
+      return;
+    }
+    card.style.opacity = '0.4';
+    card.querySelector('.item-status-pill').textContent = status;
+    card.querySelector('.item-status-pill').className = `item-status-pill ${status}`;
+    setTimeout(loadQueue, 600);
+  }
+
+  // ── Submissions ─────────────────────────────────────────
+  function renderSubmissions(items) {
+    if (!items.length) {
+      $('panel-submissions').innerHTML = `<div class="empty">No pending event submissions.</div>`;
+      return;
+    }
+    $('panel-submissions').innerHTML = items.map(sb => `
+      <div class="item" data-id="${sb.id}">
+        <div class="item-head">
+          ${sb.hero_url ? `<div class="item-thumb" style="background-image:url('${escapeHtml(sb.hero_url)}')"></div>` : '<div class="item-thumb"></div>'}
+          <div class="item-head-body">
+            <div class="item-title">
+              ${escapeHtml(sb.event_name || 'Untitled event')}
+              <span class="item-status-pill ${sb.status}">${sb.status}</span>
+              ${sb.event_id ? '<span class="item-status-pill approved" title="Linked to existing event">linked</span>' : ''}
+            </div>
+            <div class="item-meta">
+              <span><strong>${escapeHtml(sb.organizer_name || 'Unknown organizer')}</strong></span>
+              ${sb.event_type ? `<span>${escapeHtml(sb.event_type)}</span>` : ''}
+              ${sb.event_start_date ? `<span>${escapeHtml(sb.event_start_date)}${sb.event_end_date && sb.event_end_date !== sb.event_start_date ? ' → ' + escapeHtml(sb.event_end_date) : ''}</span>` : ''}
+              ${sb.venue_name ? `<span>${escapeHtml(sb.venue_name)}</span>` : ''}
+              <span>submitted ${fmtRelative(sb.created_at)}</span>
+            </div>
+          </div>
+        </div>
+        ${sb.event_description ? `<div class="item-body expandable">${escapeHtml(sb.event_description)}</div><button class="body-toggle" data-toggle>Show more</button>` : ''}
+        <div class="item-detail-grid">
+          <div class="detail-key">Contact</div>
+          <div class="detail-val">${escapeHtml(sb.contact_email || '')}${sb.contact_phone ? ' · ' + escapeHtml(sb.contact_phone) : ''}</div>
+          ${sb.venue_address ? `<div class="detail-key">Address</div><div class="detail-val">${escapeHtml(sb.venue_address)}</div>` : ''}
+          ${sb.website ? `<div class="detail-key">Website</div><div class="detail-val"><a href="${escapeHtml(sb.website)}" target="_blank" rel="noopener">${escapeHtml(sb.website)}</a></div>` : ''}
+          ${sb.instagram ? `<div class="detail-key">Instagram</div><div class="detail-val"><a href="${escapeHtml(sb.instagram)}" target="_blank" rel="noopener">${escapeHtml(sb.instagram)}</a></div>` : ''}
+          ${sb.tickets_url ? `<div class="detail-key">Tickets</div><div class="detail-val"><a href="${escapeHtml(sb.tickets_url)}" target="_blank" rel="noopener">${escapeHtml(sb.tickets_url)}</a></div>` : ''}
+        </div>
+        <div class="item-actions">
+          <span class="action-note">Approving will ${sb.event_id ? 'update the linked event' : 'create a new event row'}.</span>
+          <div class="action-spacer"></div>
+          <button class="action-btn" data-action="reviewing" data-id="${sb.id}">Mark Reviewing</button>
+          <button class="action-btn approve" data-action="approved" data-id="${sb.id}">Approve &amp; Publish</button>
+          <button class="action-btn reject" data-action="archived" data-id="${sb.id}">Archive</button>
+        </div>
+      </div>
+    `).join('');
+
+    $('panel-submissions').querySelectorAll('.body-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const body = btn.previousElementSibling;
+        body.classList.toggle('expanded');
+        btn.textContent = body.classList.contains('expanded') ? 'Show less' : 'Show more';
+      });
+    });
+    $('panel-submissions').querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', () => handleSubmissionAction(btn));
+    });
+  }
+
+  async function handleSubmissionAction(btn) {
+    const card = btn.closest('.item');
+    const id = btn.dataset.id;
+    const status = btn.dataset.action;
+    card.querySelectorAll('.action-btn').forEach(b => b.classList.add('disabled'));
+    const { data, error } = await db.rpc('admin_set_submission_status', {
+      p_admin_token:   adminToken,
+      p_submission_id: id,
+      p_status:        status
+    });
+    if (error || !data || !data.ok) {
+      alert('Failed: ' + ((data && data.error) || (error && error.message) || 'unknown'));
+      card.querySelectorAll('.action-btn').forEach(b => b.classList.remove('disabled'));
+      return;
+    }
+    card.style.opacity = '0.4';
+    if (status === 'approved' && data.event_slug) {
+      const link = document.createElement('div');
+      link.style.cssText = 'padding:8px 20px; background:var(--green-light); color:var(--green); font-size:12px; font-weight:600;';
+      link.innerHTML = `Published: <a href="/events/${escapeHtml(data.event_slug)}" target="_blank">/events/${escapeHtml(data.event_slug)}</a>`;
+      card.appendChild(link);
+    }
+    setTimeout(loadQueue, 800);
+  }
+
+  // ── Messages ────────────────────────────────────────────
+  function renderMessages(items) {
+    if (!items.length) {
+      $('panel-messages').innerHTML = `<div class="empty">No open messages.</div>`;
+      return;
+    }
+    $('panel-messages').innerHTML = items.map(m => {
+      const ctx = m.partner ? m.partner.name
+                : m.place   ? m.place.name
+                : m.event   ? m.event.title
+                : 'Unknown sender';
+      return `
+        <div class="item" data-id="${m.id}">
+          <div class="item-head">
+            <div class="item-head-body">
+              <div class="item-title">
+                ${escapeHtml(m.subject || 'No subject')}
+                <span class="item-status-pill ${m.status}">${m.status.replace('_',' ')}</span>
+              </div>
+              <div class="item-meta">
+                <span><strong>${escapeHtml(ctx)}</strong></span>
+                ${m.source_page ? `<span>from ${escapeHtml(m.source_page)}</span>` : ''}
+                <span>${fmtRelative(m.created_at)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="item-body">${escapeHtml(m.message)}</div>
+          <div class="item-actions">
+            <div class="action-spacer"></div>
+            ${m.status === 'new' ? `<button class="action-btn" data-action="in_progress" data-id="${m.id}">Mark In Progress</button>` : ''}
+            ${m.status !== 'resolved' ? `<button class="action-btn approve" data-action="resolved" data-id="${m.id}">Mark Resolved</button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    $('panel-messages').querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', () => handleMessageAction(btn));
+    });
+  }
+
+  async function handleMessageAction(btn) {
+    const card = btn.closest('.item');
+    const id = btn.dataset.id;
+    const status = btn.dataset.action;
+    btn.classList.add('disabled');
+    const { data, error } = await db.rpc('admin_set_message_status', {
+      p_admin_token: adminToken,
+      p_message_id:  id,
+      p_status:      status
+    });
+    if (error || !data || !data.ok) {
+      alert('Failed: ' + ((data && data.error) || (error && error.message) || 'unknown'));
+      btn.classList.remove('disabled');
+      return;
+    }
+    setTimeout(loadQueue, 600);
+  }
+
+  // ── Event Updates ───────────────────────────────────────
+  function renderUpdates(items) {
+    if (!items.length) {
+      $('panel-updates').innerHTML = `<div class="empty">No event updates in the last 30 days.</div>`;
+      return;
+    }
+    $('panel-updates').innerHTML = items.map(u => {
+      const ev = u.event || {};
+      return `
+        <div class="item">
+          <div class="item-head">
+            <div class="item-head-body">
+              <div class="item-title">${escapeHtml(u.title)}</div>
+              <div class="item-meta">
+                <span><strong>${escapeHtml(ev.title || 'Unknown event')}</strong></span>
+                ${ev.slug ? `<span><a href="/events/${escapeHtml(ev.slug)}" target="_blank" style="color:var(--primary);">/events/${escapeHtml(ev.slug)}</a></span>` : ''}
+                <span>${fmtRelative(u.created_at)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="item-body">${escapeHtml(u.message)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Bootstrap ───────────────────────────────────────────
+  const stored = loadStoredToken();
+  if (stored) {
+    adminToken = stored;
+    loadQueue();
+  } else {
+    showGate();
+  }
+</script>
+
+</body>
+</html>
