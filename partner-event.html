@@ -318,6 +318,58 @@
   @media (max-width: 720px) {
     .edit-grid { grid-template-columns: 1fr; }
   }
+
+  /* ── IMAGE UPLOAD ── */
+  .image-upload {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  .image-preview {
+    width: 120px; height: 80px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-soft) center / cover no-repeat;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--grey-light);
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    overflow: hidden;
+  }
+  .image-upload-body {
+    display: flex; flex-direction: column; gap: 6px;
+    min-width: 0;
+  }
+  .image-upload-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .image-pick-btn {
+    padding: 8px 14px;
+    border: 1px solid var(--brand-primary);
+    background: #fff;
+    color: var(--brand-primary);
+    border-radius: 8px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer;
+  }
+  .image-pick-btn:hover { background: var(--brand-primary); color: var(--brand-text); }
+  .image-pick-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .image-pick-btn input[type=file] { display: none; }
+  .image-url-input {
+    width: 100%; padding: 8px 11px;
+    font-family: inherit; font-size: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff; color: var(--grey-dark);
+    box-sizing: border-box;
+    word-break: break-all;
+  }
+  .image-status {
+    font-size: 11px; color: var(--grey-mid);
+  }
+  .image-status.error { color: var(--red); }
+  .image-status.success { color: var(--green); }
   .main { min-width: 0; padding-bottom: 80px; }
 
   .section { margin-bottom: 36px; scroll-margin-top: 80px; }
@@ -2617,8 +2669,23 @@
           <textarea id="ed-desc" maxlength="5000">${escapeHtml(e.description || '')}</textarea>
         </div>
         <div class="edit-field full">
-          <label for="ed-image">Featured image URL</label>
-          <input id="ed-image" type="url" value="${escapeHtml(e.featured_image_url || '')}" placeholder="https://..." />
+          <label>Featured image</label>
+          <div class="image-upload">
+            <div class="image-preview" id="ed-image-preview" ${e.featured_image_url ? `style="background-image:url('${escapeHtml(e.featured_image_url)}'); color:transparent;"` : ''}>
+              ${e.featured_image_url ? '' : 'No image'}
+            </div>
+            <div class="image-upload-body">
+              <div class="image-upload-actions">
+                <label class="image-pick-btn">
+                  Upload new image
+                  <input id="ed-image-file" type="file" accept="image/*" />
+                </label>
+                <button type="button" class="image-pick-btn" id="ed-image-clear" style="border-color:var(--border); color:var(--grey-dark);">Clear</button>
+              </div>
+              <input id="ed-image" class="image-url-input" type="url" value="${escapeHtml(e.featured_image_url || '')}" placeholder="https://... (or upload above)" />
+              <div class="image-status" id="ed-image-status"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2771,6 +2838,75 @@
       statusBox.className = `edit-status show ${kind}`;
     }
     function hideStatus() { statusBox.className = 'edit-status'; }
+
+    // ── Image upload (partner-intake-assets bucket) ──
+    const imgFile    = $('ed-image-file');
+    const imgUrlIn   = $('ed-image');
+    const imgPreview = $('ed-image-preview');
+    const imgStatus  = $('ed-image-status');
+
+    function setPreview(url) {
+      if (url) {
+        imgPreview.style.backgroundImage = `url('${url}')`;
+        imgPreview.style.color = 'transparent';
+        imgPreview.textContent = '';
+      } else {
+        imgPreview.style.backgroundImage = '';
+        imgPreview.style.color = '';
+        imgPreview.textContent = 'No image';
+      }
+    }
+
+    imgUrlIn.addEventListener('input', () => setPreview(imgUrlIn.value.trim()));
+
+    $('ed-image-clear').addEventListener('click', () => {
+      imgUrlIn.value = '';
+      setPreview('');
+      imgFile.value = '';
+      imgStatus.textContent = '';
+      imgStatus.className = 'image-status';
+    });
+
+    imgFile.addEventListener('change', async () => {
+      const file = imgFile.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        imgStatus.textContent = 'Please choose an image file.';
+        imgStatus.className = 'image-status error';
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        imgStatus.textContent = 'Image too large (10MB max).';
+        imgStatus.className = 'image-status error';
+        return;
+      }
+      const slug = (event && event.slug) || 'event';
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${slug}/${Date.now()}_${safeName}`;
+      imgStatus.textContent = 'Uploading...';
+      imgStatus.className = 'image-status';
+      try {
+        const { data, error } = await db.storage
+          .from('partner-intake-assets')
+          .upload(path, file, { cacheControl: '3600', upsert: false });
+        if (error) throw error;
+        const pub = db.storage
+          .from('partner-intake-assets')
+          .getPublicUrl(data.path);
+        const url = pub && pub.data && pub.data.publicUrl;
+        if (!url) throw new Error('No public URL returned');
+        imgUrlIn.value = url;
+        setPreview(url);
+        imgStatus.textContent = 'Uploaded. Click "Save changes" to apply.';
+        imgStatus.className = 'image-status success';
+      } catch (err) {
+        console.error('image upload failed', err);
+        imgStatus.textContent = (err && err.message) || 'Upload failed. Try again or paste a URL.';
+        imgStatus.className = 'image-status error';
+      } finally {
+        imgFile.value = '';
+      }
+    });
 
     $('edit-reset').addEventListener('click', () => {
       renderEditForm(event); // re-render from original
