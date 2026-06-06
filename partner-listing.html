@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/troddr-config.js"></script>
+<script src="js/partner-auth.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -1305,9 +1306,10 @@
     const feed = data.recent_feedback || [];
     if (!feed.length) {
       $('feedback-feed').innerHTML = `
-        <div class="state">
-          <div class="state-title">No feedback yet</div>
-          <p class="state-msg">Reviews will appear here as guests submit them after visiting.</p>
+        <div class="empty-state-card">
+          <div class="empty-state-icon"><svg width="24" height="24"><use href="#ic-chat"/></svg></div>
+          <div class="empty-state-title">No feedback yet</div>
+          <div class="empty-state-body">Reviews will appear here as guests submit them after visiting. Encourage your team to remind happy guests to leave a review in the TRODDR app.</div>
         </div>`;
       return;
     }
@@ -1368,7 +1370,7 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      location.href = `${path}?token=${encodeURIComponent(token)}`;
+      window.PartnerAuth?.navigate(path, token);
     });
   }
 
@@ -1554,7 +1556,7 @@
 
     $('hours-save').addEventListener('click', async () => {
       statusBox.className = 'hours-status';
-      const token = new URLSearchParams(location.search).get('token');
+      const token = window.PartnerAuth?.getToken() || '';
       const openingStruct = readHoursGrid('hours-grid');
       const kitchenStruct = sameToggle.checked ? openingStruct : readHoursGrid('kitchen-grid');
 
@@ -1629,7 +1631,7 @@
   }
 
   async function refreshClosures() {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     const { data } = await db.rpc('list_partner_closures', { p_token: token });
     if (data && data.ok) renderClosures(data.closures || []);
   }
@@ -1639,7 +1641,7 @@
     const statusBox = $('closure-status');
     statusBox.className = 'hours-status';
 
-    const token   = new URLSearchParams(location.search).get('token');
+    const token   = window.PartnerAuth?.getToken() || '';
     const date    = $('closure-date').value;
     const closed  = $('closure-closed').checked;
     const open    = $('closure-open').value  || null;
@@ -1696,7 +1698,7 @@
   }
 
   async function deleteClosure(id) {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     const { data } = await db.rpc('delete_partner_closure', {
       p_token: token, p_closure_id: id
     });
@@ -1705,7 +1707,7 @@
 
   // ── Discovery (PostHog via Edge Function) ────────────────
   async function loadDiscovery() {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     if (!token) return;
 
     try {
@@ -1835,7 +1837,7 @@
     const statusBox = $('contact-status');
 
     $('contact-save').addEventListener('click', async () => {
-      const token = new URLSearchParams(location.search).get('token');
+      const token = window.PartnerAuth?.getToken() || '';
       statusBox.className = 'hours-status';
       const btn = $('contact-save');
       btn.disabled = true;
@@ -1872,14 +1874,13 @@
 
   // ── Sidebar wiring ───────────────────────────────────────
   function setupSidebar(capabilities) {
-    const token = new URLSearchParams(location.search).get('token') || '';
+    const token = window.PartnerAuth?.getToken({ require: false }) || '';
     const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
 
     document.querySelectorAll('.page-link').forEach(a => {
       const key = a.dataset.href.split('/').pop();
       if (!caps[key]) { a.style.display = 'none'; return; }
       const url = new URL(a.dataset.href, location.origin);
-      if (token) url.searchParams.set('token', token);
       a.href = url.toString();
     });
 
@@ -1899,7 +1900,7 @@
 
   // ── Load ─────────────────────────────────────────────────
   async function load() {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
     // Use allSettled so a single failed RPC doesn't take down the page.
@@ -1926,8 +1927,12 @@
       console.error('[partner-listing] failing because:', rawMsg, 'full:', listingRes);
       const errBox = document.querySelector('#view-error .state-msg');
       if (errBox) {
-        errBox.innerHTML = errBox.innerHTML
-          + `<div style="margin-top:14px; padding:10px 14px; background:#fdecea; border-radius:6px; font-size:11px; color:#c0392b; text-align:left; font-family:monospace; word-break:break-word;">${String(rawMsg).replace(/[<>]/g,'')}</div>`;
+        const friendly = window.friendlyError
+          ? window.friendlyError(listingRes.error || rawMsg,
+              "We couldn't reach the dashboard service. Refresh the page, or open the latest dashboard link from TRODDR.")
+          : "We couldn't reach the dashboard service. Refresh the page, or open the latest dashboard link from TRODDR.";
+        errBox.innerHTML = `${friendly}
+          <div style="margin-top:14px; padding:10px 14px; background:#fdecea; border-radius:6px; font-size:11px; color:#c0392b; text-align:left; font-family:monospace; word-break:break-word;">${String(rawMsg).replace(/[<>]/g,'')}</div>`;
       }
       hide('view-loading'); show('view-error');
       return;
@@ -1955,6 +1960,7 @@
 
     hide('view-loading');
     show('view-dashboard');
+    window.PartnerAuth?.mountSessionControl('partner');
     safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));
     safe('setupSidebar',       () => setupSidebar(caps && caps.capabilities));
   }

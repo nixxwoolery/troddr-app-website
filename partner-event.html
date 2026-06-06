@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/troddr-config.js"></script>
+<script src="js/partner-auth.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -2209,9 +2210,10 @@
 
     if (!vendors.length) {
       $('vendor-list').innerHTML = `
-        <div class="state">
-          <div class="state-title">No vendors added yet</div>
-          <p class="state-msg">Vendors and their menus will appear here once added to this event.</p>
+        <div class="empty-state-card">
+          <div class="empty-state-icon"><svg width="24" height="24"><use href="#ic-shop"/></svg></div>
+          <div class="empty-state-title">No vendors added yet</div>
+          <div class="empty-state-body">Vendors and their menus will appear here once added to this event. Send us a message to add your vendor lineup.</div>
         </div>`;
       return;
     }
@@ -2668,7 +2670,7 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      location.href = `${path}?token=${encodeURIComponent(token)}`;
+      window.PartnerAuth?.navigate(path, token);
     });
   }
 
@@ -2950,7 +2952,7 @@
 
     $('edit-save').addEventListener('click', async () => {
       hideStatus();
-      const token = new URLSearchParams(location.search).get('token');
+      const token = window.PartnerAuth?.getToken() || '';
       if (!token) { showStatus("We couldn't find your account from this link. Open the dashboard from your bookmarked URL.", 'error'); return; }
 
       const num = (v) => v === '' || v == null ? null : Number(v);
@@ -3022,7 +3024,7 @@
 
   // ── Discovery (PostHog via Edge Function) ────────────────
   async function loadDiscovery() {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     if (!token) return;
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/posthog-stats`, {
@@ -3139,7 +3141,7 @@
 
   // ── Load ─────────────────────────────────────────────────
   async function load() {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
     const [eventRes, capsRes] = await Promise.all([
@@ -3187,6 +3189,7 @@
 
     hide('view-loading');
     show('view-dashboard');
+    window.PartnerAuth?.mountSessionControl('partner');
     safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));
     safe('setupSidebar',       () => setupSidebar());
   }

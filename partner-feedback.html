@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/troddr-config.js"></script>
+<script src="js/partner-auth.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -1059,10 +1060,14 @@
   function renderFeed() {
     const filtered = allFeedback.filter(matchesFilters);
     if (!filtered.length) {
+      const isEmpty = allFeedback.length === 0;
       $('feedback-feed').innerHTML = `
-        <div class="state">
-          <div class="state-title">No feedback matches these filters</div>
-          <p class="state-msg">Try widening the filters above, or clear them to see all reviews.</p>
+        <div class="empty-state-card">
+          <div class="empty-state-icon"><svg width="24" height="24"><use href="#ic-chat"/></svg></div>
+          <div class="empty-state-title">${isEmpty ? 'No reviews yet' : 'No feedback matches these filters'}</div>
+          <div class="empty-state-body">${isEmpty
+            ? "When guests leave feedback after visiting, it'll show up here with ratings, tags, and any notes they include."
+            : "Try widening the filters above, or clear them to see all reviews."}</div>
         </div>`;
       return;
     }
@@ -1125,20 +1130,19 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      location.href = `${path}?token=${encodeURIComponent(token)}`;
+      window.PartnerAuth?.navigate(path, token);
     });
   }
 
   // ── Sidebar wiring ───────────────────────────────────────
   function setupSidebar(capabilities) {
-    const token = new URLSearchParams(location.search).get('token') || '';
+    const token = window.PartnerAuth?.getToken({ require: false }) || '';
     const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
 
     document.querySelectorAll('.page-link').forEach(a => {
       const key = a.dataset.href.split('/').pop();
       if (!caps[key]) { a.style.display = 'none'; return; }
       const url = new URL(a.dataset.href, location.origin);
-      if (token) url.searchParams.set('token', token);
       a.href = url.toString();
     });
 
@@ -1158,7 +1162,7 @@
 
   // ── Load ─────────────────────────────────────────────────
   async function load() {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
     const [feedbackRes, capsRes] = await Promise.all([
@@ -1187,6 +1191,7 @@
 
     hide('view-loading');
     show('view-dashboard');
+    window.PartnerAuth?.mountSessionControl('partner');
     renderEntityPicker(caps && caps.partner);
     setupSidebar(caps && caps.capabilities);
   }

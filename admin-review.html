@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/partner-shared.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/troddr-config.js"></script>
+<script src="js/partner-auth.js"></script>
 <meta name="robots" content="noindex,nofollow" />
 
 <script>
@@ -376,7 +377,8 @@
     try { sessionStorage.setItem('troddr_admin_token', t); } catch (e) {}
   }
   function loadStoredToken() {
-    const urlT = new URLSearchParams(location.search).get('token');
+    const urlT = window.PartnerAuth?.getAdminToken({ require: false })
+      || new URLSearchParams(location.search).get('token');
     if (urlT) { setToken(urlT); return urlT; }
     try { return sessionStorage.getItem('troddr_admin_token') || ''; } catch (e) { return ''; }
   }
@@ -394,6 +396,7 @@
     $('gate').classList.add('hidden');
     $('loading').classList.add('hidden');
     $('dashboard').classList.remove('hidden');
+    window.PartnerAuth?.mountSessionControl('admin');
   }
 
   $('gate-go').addEventListener('click', async () => {

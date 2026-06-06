@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/troddr-config.js"></script>
+<script src="js/partner-auth.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -1317,13 +1318,16 @@
     const card = $('members-card');
 
     if (!filtered.length) {
+      const isEmpty = members.length === 0;
       card.innerHTML = `
-        <div class="state" style="border:none">
-          <div class="state-icon">
-            <svg width="24" height="24"><use href="#ic-users"/></svg>
-          </div>
-          <div class="state-title">No members in this view</div>
-          <p class="state-msg">Try a different filter, or share your loyalty card link to bring more guests in.</p>
+        <div class="empty-state-card" style="border: none;">
+          <div class="empty-state-icon"><svg><use href="#ic-users"/></svg></div>
+          <div class="empty-state-title">${isEmpty ? 'No members yet' : 'No members match this view'}</div>
+          <div class="empty-state-body">${isEmpty
+            ? "When a guest signs up for your loyalty card in the TRODDR app, they'll appear here with their stamp progress."
+            : memberSearchTerm
+              ? "No member ID matches that search. Try a different search or clear it."
+              : "Try a different filter chip, or share your loyalty card link to bring more guests in."}</div>
         </div>`;
       return;
     }
@@ -1482,13 +1486,13 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      location.href = `${path}?token=${encodeURIComponent(token)}`;
+      window.PartnerAuth?.navigate(path, token);
     });
   }
 
   // ── Sidebar: wire cross-page links + intra-page scroll-spy ─
   function setupSidebar(capabilities) {
-    const token = new URLSearchParams(location.search).get('token') || '';
+    const token = window.PartnerAuth?.getToken({ require: false }) || '';
     const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
 
     // Cross-page nav: append token to each page link + hide unavailable.
@@ -1496,7 +1500,6 @@
       const key = a.dataset.href.split('/').pop();   // listing | bookings | loyalty | feedback
       if (!caps[key]) { a.style.display = 'none'; return; }
       const url = new URL(a.dataset.href, location.origin);
-      if (token) url.searchParams.set('token', token);
       a.href = url.toString();
     });
 
@@ -1517,7 +1520,7 @@
 
   // ── Load ────────────────────────────────────────────────
   async function load() {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
     const [analyticsRes, capsRes] = await Promise.all([
@@ -1545,6 +1548,7 @@
 
     hide('view-loading');
     show('view-dashboard');
+    window.PartnerAuth?.mountSessionControl('partner');
     renderEntityPicker(caps && caps.partner);
     setupSidebar(caps && caps.capabilities);
   }

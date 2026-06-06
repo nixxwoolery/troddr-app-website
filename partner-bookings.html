@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/troddr-config.js"></script>
+<script src="js/partner-auth.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -524,12 +525,10 @@
       </div>
       <div class="filter-bar" id="filter-bar"></div>
       <div id="bookings-list"></div>
-      <div id="empty-state" class="card state hidden">
-        <div class="state-icon">
-          <svg width="24" height="24"><use href="#ic-inbox"/></svg>
-        </div>
-        <div class="state-title">No bookings in this view</div>
-        <p class="state-msg">When a guest sends a request, it'll appear here.</p>
+      <div id="empty-state" class="empty-state-card hidden">
+        <div class="empty-state-icon"><svg><use href="#ic-inbox"/></svg></div>
+        <div class="empty-state-title">No bookings in this view</div>
+        <div class="empty-state-body">When a guest sends a booking request through TRODDR, it'll appear here. You'll also get an email so you can respond fast.</div>
       </div>
     </section>
 
@@ -653,19 +652,18 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      location.href = `${path}?token=${encodeURIComponent(token)}`;
+      window.PartnerAuth?.navigate(path, token);
     });
   }
 
   function setupSidebar(capabilities) {
-    const token = new URLSearchParams(location.search).get('token') || '';
+    const token = window.PartnerAuth?.getToken({ require: false }) || '';
     const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
 
     document.querySelectorAll('.page-link').forEach(a => {
       const key = a.dataset.href.split('/').pop();
       if (!caps[key]) { a.style.display = 'none'; return; }
       const url = new URL(a.dataset.href, location.origin);
-      if (token) url.searchParams.set('token', token);
       a.href = url.toString();
     });
 
@@ -684,7 +682,7 @@
   }
 
   async function load() {
-    const token = new URLSearchParams(location.search).get('token');
+    const token = window.PartnerAuth?.getToken() || '';
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
     const [partnerRes, bookingsRes, capsRes] = await Promise.all([
@@ -721,6 +719,7 @@
     renderList();
     hide('view-loading');
     show('view-inbox');
+    window.PartnerAuth?.mountSessionControl('partner');
     renderEntityPicker(caps && caps.partner);
     setupSidebar(caps && caps.capabilities);
   }

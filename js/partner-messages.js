@@ -223,7 +223,8 @@
         errorBox.classList.add('show');
         return;
       }
-      const token = new URLSearchParams(location.search).get('token');
+      const token = window.PartnerAuth?.getToken({ require: false })
+        || new URLSearchParams(location.search).get('token');
       if (!token) {
         errorBox.textContent = "We couldn't find your account from this link. Open the dashboard from your bookmarked URL.";
         errorBox.classList.add('show');
