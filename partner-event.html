@@ -1619,6 +1619,9 @@
     <a href="#funnel"     class="jump-link" data-section="funnel">
       <svg><use href="#ic-funnel"/></svg> Discovery Funnel
     </a>
+    <a href="#discovery"  class="jump-link" data-section="discovery" id="nav-discovery" style="display:none">
+      <svg><use href="#ic-eye"/></svg> Web Traffic
+    </a>
     <a href="#overview"   class="jump-link" data-section="overview">
       <svg><use href="#ic-info"/></svg> Overview
     </a>
@@ -1659,6 +1662,17 @@
 
     <section class="section" id="funnel">
       <div class="funnel hero" id="funnel-body"></div>
+    </section>
+
+    <section class="section" id="discovery" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Web Traffic</h2>
+          <div class="section-sub">Where guests are discovering your event page across the web.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div id="discovery-card"></div>
     </section>
 
     <section class="section" id="overview">
@@ -3006,6 +3020,107 @@
     });
   }
 
+  // ── Discovery (PostHog via Edge Function) ────────────────
+  async function loadDiscovery() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/posthog-stats`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+        },
+        body: JSON.stringify({ token, range_days: 30 }),
+      });
+      if (!res.ok) {
+        console.warn('[discovery] non-ok:', res.status);
+        return;
+      }
+      const data = await res.json();
+      if (!data || data.ok === false) {
+        console.warn('[discovery] not configured or rejected:', data && data.error);
+        return;
+      }
+      renderDiscovery(data);
+      $('discovery').style.display = '';
+      $('nav-discovery').style.display = '';
+    } catch (e) {
+      console.warn('[discovery] failed to load:', e);
+    }
+  }
+
+  function renderDiscovery(data) {
+    let html = `
+      <div class="discovery-card">
+        <div class="discovery-totals">
+          <div class="ds-stat">
+            <div class="ds-num">${data.total_views || 0}</div>
+            <div class="ds-lbl">Total views (last ${data.range_days || 30}d)</div>
+          </div>
+          <div class="ds-stat">
+            <div class="ds-num">${data.unique_visitors || 0}</div>
+            <div class="ds-lbl">Unique visitors</div>
+          </div>
+        </div>
+    `;
+
+    if (data.trend && data.trend.length) {
+      const max = Math.max(1, ...data.trend.map(d => d.views || 0));
+      const bars = data.trend.map(d => {
+        const pct = (d.views / max) * 100;
+        return `<div class="ds-trend-bar ${d.views === 0 ? 'empty' : ''}" style="height:${pct}%" title="${d.day}: ${d.views} views"></div>`;
+      }).join('');
+      html += `
+        <div class="discovery-section-title">Daily views</div>
+        <div class="ds-trend">${bars}</div>
+      `;
+    }
+
+    if (data.top_referrers && data.top_referrers.length) {
+      const max = Math.max(...data.top_referrers.map(r => r.views));
+      html += `<div class="discovery-section-title">Top traffic sources</div>`;
+      html += data.top_referrers.slice(0, 6).map(r => `
+        <div class="ds-bar-row">
+          <span class="name">${escapeHtml(r.source)}</span>
+          <div class="ds-bar"><div class="ds-bar-fill" style="width:${(r.views / max) * 100}%"></div></div>
+          <span class="n">${r.views}</span>
+        </div>
+      `).join('');
+    }
+
+    if (data.top_utm_sources && data.top_utm_sources.length > 1) {
+      const filtered = data.top_utm_sources.filter(u => u.utm_source !== '(none)');
+      if (filtered.length) {
+        const max = Math.max(...filtered.map(u => u.views));
+        html += `<div class="discovery-section-title">Campaign attribution</div>`;
+        html += filtered.slice(0, 6).map(u => `
+          <div class="ds-bar-row">
+            <span class="name">${escapeHtml(u.utm_source)}</span>
+            <div class="ds-bar"><div class="ds-bar-fill" style="width:${(u.views / max) * 100}%"></div></div>
+            <span class="n">${u.views}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    if (data.top_countries && data.top_countries.length) {
+      const max = Math.max(...data.top_countries.map(c => c.views));
+      html += `<div class="discovery-section-title">Web visitors by country</div>`;
+      html += data.top_countries.slice(0, 6).map(c => `
+        <div class="ds-bar-row">
+          <span class="name">${escapeHtml(c.country)}</span>
+          <div class="ds-bar"><div class="ds-bar-fill" style="width:${(c.views / max) * 100}%"></div></div>
+          <span class="n">${c.views}</span>
+        </div>
+      `).join('');
+    }
+
+    html += `</div>`;
+    $('discovery-card').innerHTML = html;
+  }
+
   // ── Sidebar wiring (event partner = jump-links only) ─────
   function setupSidebar() {
     const jumpLinks = document.querySelectorAll('.jump-link');
@@ -3067,6 +3182,8 @@
     safe('buildActions',      () => buildActions(data));
     safe('renderEditForm',    () => renderEditForm(data.event));
     safe('renderLocked',      () => renderLocked(data));
+    // Discovery loads async via PostHog Edge Function. Stays hidden if not configured.
+    loadDiscovery();
 
     hide('view-loading');
     show('view-dashboard');

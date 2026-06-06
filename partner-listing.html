@@ -929,6 +929,9 @@
     <a href="#ratings"  class="jump-link" data-section="ratings">
       <svg><use href="#ic-star-nav"/></svg> Ratings
     </a>
+    <a href="#discovery" class="jump-link" data-section="discovery" id="nav-discovery" style="display:none">
+      <svg><use href="#ic-eye"/></svg> Discovery
+    </a>
     <a href="#feedback" class="jump-link" data-section="feedback">
       <svg><use href="#ic-chat"/></svg> Recent Feedback
     </a>
@@ -971,6 +974,17 @@
         </div>
       </div>
       <div class="ratings-card" id="ratings-card"></div>
+    </section>
+
+    <section class="section" id="discovery" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Discovery</h2>
+          <div class="section-sub">Where guests are finding your listing across the TRODDR app, search, and shared links.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div id="discovery-card"></div>
     </section>
 
     <section class="section" id="feedback">
@@ -1689,6 +1703,101 @@
     if (data && data.ok) refreshClosures();
   }
 
+  // ── Discovery (PostHog via Edge Function) ────────────────
+  async function loadDiscovery() {
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/posthog-stats`, {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey':       SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+        },
+        body: JSON.stringify({ token, range_days: 30 }),
+      });
+      if (!res.ok) {
+        console.warn('[discovery] non-ok:', res.status);
+        return; // silently hide
+      }
+      const data = await res.json();
+      if (!data || data.ok === false) {
+        console.warn('[discovery] not configured or rejected:', data && data.error);
+        return; // silently hide
+      }
+      renderDiscovery(data);
+      $('discovery').style.display = '';
+      $('nav-discovery').style.display = '';
+    } catch (e) {
+      console.warn('[discovery] failed to load:', e);
+      // Silent fail. The section just stays hidden.
+    }
+  }
+
+  function renderDiscovery(data) {
+    const card = document.createElement('div');
+    card.className = 'discovery-card';
+
+    // Totals
+    let html = `
+      <div class="discovery-totals">
+        <div class="ds-stat">
+          <div class="ds-num">${data.total_views || 0}</div>
+          <div class="ds-lbl">Total views (last ${data.range_days || 30}d)</div>
+        </div>
+        <div class="ds-stat">
+          <div class="ds-num">${data.unique_visitors || 0}</div>
+          <div class="ds-lbl">Unique visitors</div>
+        </div>
+      </div>
+    `;
+
+    // Trend (mini bar chart)
+    if (data.trend && data.trend.length) {
+      const max = Math.max(1, ...data.trend.map(d => d.views || 0));
+      const bars = data.trend.map(d => {
+        const pct = (d.views / max) * 100;
+        return `<div class="ds-trend-bar ${d.views === 0 ? 'empty' : ''}" style="height:${pct}%" title="${d.day}: ${d.views} views"></div>`;
+      }).join('');
+      html += `
+        <div class="discovery-section-title">Daily views</div>
+        <div class="ds-trend">${bars}</div>
+      `;
+    }
+
+    // Traffic sources
+    if (data.top_referrers && data.top_referrers.length) {
+      const max = Math.max(...data.top_referrers.map(r => r.views));
+      html += `<div class="discovery-section-title">Top traffic sources</div>`;
+      html += data.top_referrers.slice(0, 6).map(r => `
+        <div class="ds-bar-row">
+          <span class="name">${escapeHtml(r.source)}</span>
+          <div class="ds-bar"><div class="ds-bar-fill" style="width:${(r.views / max) * 100}%"></div></div>
+          <span class="n">${r.views}</span>
+        </div>
+      `).join('');
+    }
+
+    // Countries
+    if (data.top_countries && data.top_countries.length) {
+      const max = Math.max(...data.top_countries.map(c => c.views));
+      html += `<div class="discovery-section-title">Top countries</div>`;
+      html += data.top_countries.slice(0, 6).map(c => `
+        <div class="ds-bar-row">
+          <span class="name">${escapeHtml(c.country)}</span>
+          <div class="ds-bar"><div class="ds-bar-fill" style="width:${(c.views / max) * 100}%"></div></div>
+          <span class="n">${c.views}</span>
+        </div>
+      `).join('');
+    }
+
+    card.innerHTML = html;
+    $('discovery-card').innerHTML = '';
+    $('discovery-card').appendChild(card);
+  }
+
   // ── Contact info editor ──────────────────────────────────
   function setupContactEditor(place) {
     const fields = [
@@ -1841,6 +1950,8 @@
     safe('renderFeedback',   () => renderFeedback(data));
     safe('setupHoursEditor',   () => setupHoursEditor(data.place, data.closures || []));
     safe('setupContactEditor', () => setupContactEditor(data.place));
+    // Discovery loads async (PostHog) without blocking the rest of the page
+    loadDiscovery();
 
     hide('view-loading');
     show('view-dashboard');

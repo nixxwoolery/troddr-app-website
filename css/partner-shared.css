@@ -146,6 +146,77 @@
   animation-duration: 2s;
 }
 
+/* ── DISCOVERY (PostHog stats card) ────────────────────── */
+.discovery-card {
+  background: #fff;
+  border: 1px solid var(--border, #e8e8e8);
+  border-radius: 16px;
+  padding: 22px 24px;
+}
+.discovery-totals {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.discovery-totals .ds-stat {
+  background: var(--bg-soft, #f8f9fa);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.discovery-totals .ds-num {
+  font-size: 26px; font-weight: 800;
+  color: var(--brand-primary, #0077CC);
+  letter-spacing: -0.6px;
+  line-height: 1;
+}
+.discovery-totals .ds-lbl {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--grey-mid, #666);
+  margin-top: 6px;
+}
+.discovery-section-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--grey-mid, #666);
+  margin: 14px 0 8px;
+}
+.ds-bar-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 60px;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 12px;
+}
+.ds-bar-row .name {
+  color: var(--grey-dark, #333);
+  font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ds-bar { height: 8px; background: var(--bg-soft, #f8f9fa); border-radius: 100px; overflow: hidden; }
+.ds-bar-fill { height: 100%; background: var(--brand-primary, #0077CC); border-radius: 100px; }
+.ds-bar-row .n {
+  text-align: right; font-weight: 700;
+  color: var(--grey-dark, #333);
+  font-variant-numeric: tabular-nums;
+}
+.ds-trend {
+  display: flex; align-items: flex-end;
+  gap: 3px; height: 60px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft, #f0f0f0);
+}
+.ds-trend-bar {
+  flex: 1; background: var(--brand-primary, #0077CC);
+  border-radius: 2px;
+  min-height: 2px;
+  opacity: 0.85;
+}
+.ds-trend-bar.empty { background: var(--border, #e8e8e8); opacity: 0.5; }
+
 /* ── PRINT STYLESHEET ───────────────────────────────────── */
 @media print {
   /* Page setup */
