@@ -1336,6 +1336,80 @@
     { key: 'sat', label: 'Sat' },
     { key: 'sun', label: 'Sun' },
   ];
+  const DAY_KEYS = DAYS.map(d => d.key);
+  const DAY_ALIASES = {
+    mon: 'mon', monday: 'mon',
+    tue: 'tue', tues: 'tue', tuesday: 'tue',
+    wed: 'wed', weds: 'wed', wednesday: 'wed',
+    thu: 'thu', thur: 'thu', thurs: 'thu', thursday: 'thu',
+    fri: 'fri', friday: 'fri',
+    sat: 'sat', saturday: 'sat',
+    sun: 'sun', sunday: 'sun',
+  };
+
+  // Convert "11:00 AM" / "5pm" / "17:00" → "17:00"
+  function parseClockToken(raw) {
+    if (!raw) return null;
+    const t = raw.toLowerCase().replace(/\s+/g, '').trim();
+    const m = t.match(/^(\d{1,2})(?::(\d{2}))?(am|pm)?$/);
+    if (!m) return null;
+    let h = parseInt(m[1], 10);
+    const mins = m[2] ? parseInt(m[2], 10) : 0;
+    const ampm = m[3];
+    if (ampm === 'pm' && h < 12) h += 12;
+    if (ampm === 'am' && h === 12) h = 0;
+    if (h < 0 || h > 24 || mins < 0 || mins > 59) return null;
+    return `${String(h).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  }
+
+  // Best-effort parse of legacy free-form hours into the struct shape.
+  // Handles entries like:
+  //   "Mon-Fri 11:00AM-5:00PM"
+  //   "Sat 11:00 AM - 6:00 PM"
+  //   "Sun Closed"
+  //   "Monday-Friday 11-17"
+  // Separated by ; or , or newlines.
+  function parseLegacyHours(text) {
+    if (!text || typeof text !== 'string') return {};
+    const result = {};
+    const segments = text.split(/[;\n]+/).map(s => s.trim()).filter(Boolean);
+
+    for (const seg of segments) {
+      // "Day(s) Closed"
+      const closed = seg.match(/^([a-z]+)(?:\s*[-–]\s*([a-z]+))?\s*[:\s]?\s*closed\b/i);
+      if (closed) {
+        const a = DAY_ALIASES[closed[1].toLowerCase()];
+        const b = closed[2] ? DAY_ALIASES[closed[2].toLowerCase()] : a;
+        if (a) {
+          const i0 = DAY_KEYS.indexOf(a);
+          const i1 = b ? DAY_KEYS.indexOf(b) : i0;
+          for (let i = i0; i <= i1 && i >= 0; i++) result[DAY_KEYS[i]] = { closed: true };
+        }
+        continue;
+      }
+
+      // "Day(s) Time-Time"
+      const hrs = seg.match(
+        /^([a-z]+)(?:\s*[-–]\s*([a-z]+))?\s*[:\s]?\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*[-–to]+\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i
+      );
+      if (hrs) {
+        const a = DAY_ALIASES[hrs[1].toLowerCase()];
+        const b = hrs[2] ? DAY_ALIASES[hrs[2].toLowerCase()] : a;
+        const open  = parseClockToken(hrs[3]);
+        const close = parseClockToken(hrs[4]);
+        if (a && open && close) {
+          const i0 = DAY_KEYS.indexOf(a);
+          const i1 = b ? DAY_KEYS.indexOf(b) : i0;
+          for (let i = i0; i <= i1 && i >= 0; i++) result[DAY_KEYS[i]] = { open, close };
+        }
+      }
+    }
+    return result;
+  }
+
+  function isEmptyStruct(s) {
+    return !s || typeof s !== 'object' || Object.keys(s).length === 0;
+  }
 
   function renderHoursGrid(gridId, struct) {
     const s = struct || {};
@@ -1383,14 +1457,37 @@
   }
 
   function setupHoursEditor(place, closures) {
-    const opening = place.opening_hours_struct || {};
-    const kitchen = place.kitchen_hours_struct || {};
+    // Fall back to parsing the legacy text columns when the struct
+    // is empty (e.g. Soup King already has opening_hours set as text
+    // but hasn't filled in the new struct yet).
+    let opening = place.opening_hours_struct;
+    let kitchen = place.kitchen_hours_struct;
+    let openingImported = false;
+    let kitchenImported = false;
+
+    if (isEmptyStruct(opening) && place.opening_hours) {
+      const parsed = parseLegacyHours(place.opening_hours);
+      if (!isEmptyStruct(parsed)) { opening = parsed; openingImported = true; }
+    }
+    if (isEmptyStruct(kitchen) && place.kitchen_hours) {
+      const parsed = parseLegacyHours(place.kitchen_hours);
+      if (!isEmptyStruct(parsed)) { kitchen = parsed; kitchenImported = true; }
+    }
+    opening = opening || {};
+    kitchen = kitchen || {};
+
     renderHoursGrid('hours-grid',   opening);
     renderHoursGrid('kitchen-grid', kitchen);
 
+    if (openingImported || kitchenImported) {
+      const statusBox = $('hours-status');
+      statusBox.textContent = "We pre-filled your existing hours from your current listing. Review and click Save to apply.";
+      statusBox.className = 'hours-status show success';
+    }
+
     // "Kitchen same as opening" toggle
     const sameToggle = $('kitchen-same');
-    sameToggle.checked = (Object.keys(kitchen).length === 0);
+    sameToggle.checked = isEmptyStruct(place.kitchen_hours_struct) && !place.kitchen_hours;
     function syncKitchenDisabled() {
       const sync = sameToggle.checked;
       $('kitchen-grid').querySelectorAll('input').forEach(i => i.disabled = sync || (sync ? false : i.disabled));
@@ -1592,32 +1689,58 @@
     const token = new URLSearchParams(location.search).get('token');
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
-    const [listingRes, capsRes] = await Promise.all([
+    // Use allSettled so a single failed RPC doesn't take down the page.
+    const results = await Promise.allSettled([
       db.rpc('get_partner_listing_by_token',      { p_token: token }),
       db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+      db.rpc('list_partner_closures',             { p_token: token }),
     ]);
+    const listingRes  = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
+    const capsRes     = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
+    const closuresRes = results[2].status === 'fulfilled' ? results[2].value : { error: results[2].reason };
 
     const data = listingRes.data;
     const caps = capsRes.data;
+
+    console.log('[partner-listing] listingRes:', listingRes);
+    console.log('[partner-listing] capsRes:',    capsRes);
+    console.log('[partner-listing] closuresRes:',closuresRes);
+
     if (listingRes.error || !data || !data.place) {
-      console.error('listing error', listingRes.error);
+      const rawMsg = (listingRes.error && (listingRes.error.message || listingRes.error.code))
+        || (data && data.error)
+        || (!data ? 'RPC returned no data' : 'RPC returned data but no place field');
+      console.error('[partner-listing] failing because:', rawMsg, 'full:', listingRes);
+      const errBox = document.querySelector('#view-error .state-msg');
+      if (errBox) {
+        errBox.innerHTML = errBox.innerHTML
+          + `<div style="margin-top:14px; padding:10px 14px; background:#fdecea; border-radius:6px; font-size:11px; color:#c0392b; text-align:left; font-family:monospace; word-break:break-word;">${String(rawMsg).replace(/[<>]/g,'')}</div>`;
+      }
       hide('view-loading'); show('view-error');
       return;
     }
 
-    applyBrand(data.program);
-    renderHero(data.place);
-    renderPreview(data.place);
-    renderSummary(data);
-    renderStats(data);
-    renderRatings(data);
-    renderFeedback(data);
-    setupHoursEditor(data.place, data.closures || []);
+    // Closures: optional, fail-soft.
+    data.closures = (closuresRes && closuresRes.data && closuresRes.data.closures) || [];
+
+    // Wrap each render in its own try/catch so one failure doesn't cascade.
+    const safe = (name, fn) => {
+      try { fn(); }
+      catch (e) { console.error('[partner-listing] ' + name + ' failed:', e); }
+    };
+    safe('applyBrand',       () => applyBrand(data.program));
+    safe('renderHero',       () => renderHero(data.place));
+    safe('renderPreview',    () => renderPreview(data.place));
+    safe('renderSummary',    () => renderSummary(data));
+    safe('renderStats',      () => renderStats(data));
+    safe('renderRatings',    () => renderRatings(data));
+    safe('renderFeedback',   () => renderFeedback(data));
+    safe('setupHoursEditor', () => setupHoursEditor(data.place, data.closures || []));
 
     hide('view-loading');
     show('view-dashboard');
-    renderEntityPicker(caps && caps.partner);
-    setupSidebar(caps && caps.capabilities);
+    safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));
+    safe('setupSidebar',       () => setupSidebar(caps && caps.capabilities));
   }
 
   load();

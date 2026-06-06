@@ -3021,29 +3021,38 @@
         !data
           ? "We couldn't find this event from your link. It may have moved or the link may have expired."
           : "We couldn't load this dashboard right now. Please try again, or send us a message.");
-      $('error-detail').textContent = friendly;
+      const rawMsg = (error && (error.message || error.code))
+        || (data && data.error)
+        || null;
+      $('error-detail').innerHTML = friendly + (rawMsg
+        ? `<div style="margin-top:14px; padding:10px 14px; background:#fdecea; border-radius:6px; font-size:11px; color:#c0392b; text-align:left; font-family:monospace; word-break:break-word;">${rawMsg.toString().replace(/[<>]/g,'')}</div>`
+        : '');
       hide('view-loading'); show('view-error');
       return;
     }
 
-    renderHero(data.event, data.stats);
-    renderEventStatus(data.event, data.stats);
-    renderFunnel(data.stats, data.event.slug);
-    renderPreview(data.event, data.tabs);
-    renderStats(data.stats, data.event.slug);
-    renderAudience(data);
-    renderSchedule(data);
-    renderUpdates(data);
-    renderVendors(data);
-    renderSponsors(data);
-    buildActions(data);
-    renderEditForm(data.event);
-    renderLocked(data);
+    const safe = (name, fn) => {
+      try { fn(); }
+      catch (e) { console.error('[partner-event] ' + name + ' failed:', e); }
+    };
+    safe('renderHero',        () => renderHero(data.event, data.stats));
+    safe('renderEventStatus', () => renderEventStatus(data.event, data.stats));
+    safe('renderFunnel',      () => renderFunnel(data.stats, data.event.slug));
+    safe('renderPreview',     () => renderPreview(data.event, data.tabs));
+    safe('renderStats',       () => renderStats(data.stats, data.event.slug));
+    safe('renderAudience',    () => renderAudience(data));
+    safe('renderSchedule',    () => renderSchedule(data));
+    safe('renderUpdates',     () => renderUpdates(data));
+    safe('renderVendors',     () => renderVendors(data));
+    safe('renderSponsors',    () => renderSponsors(data));
+    safe('buildActions',      () => buildActions(data));
+    safe('renderEditForm',    () => renderEditForm(data.event));
+    safe('renderLocked',      () => renderLocked(data));
 
     hide('view-loading');
     show('view-dashboard');
-    renderEntityPicker(caps && caps.partner);
-    setupSidebar();
+    safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));
+    safe('setupSidebar',       () => setupSidebar());
   }
 
   load();
