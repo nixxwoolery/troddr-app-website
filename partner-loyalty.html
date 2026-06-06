@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TRODDR · Loyalty Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/partner-shared.css">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/troddr-config.js"></script>
-<script src="js/partner-auth.js"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -1486,13 +1486,14 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      window.PartnerAuth?.navigate(path, token);
+      if (window.PartnerAuth) window.PartnerAuth.navigate(path, token);
+      else location.href = `${path}?token=${encodeURIComponent(token)}`;
     });
   }
 
   // ── Sidebar: wire cross-page links + intra-page scroll-spy ─
   function setupSidebar(capabilities) {
-    const token = window.PartnerAuth?.getToken({ require: false }) || '';
+    const token = window.PartnerAuth?.getToken({ require: false }) || new URLSearchParams(location.search).get('token') || '';
     const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
 
     // Cross-page nav: append token to each page link + hide unavailable.
@@ -1520,7 +1521,7 @@
 
   // ── Load ────────────────────────────────────────────────
   async function load() {
-    const token = window.PartnerAuth?.getToken() || '';
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
     const [analyticsRes, capsRes] = await Promise.all([
@@ -1556,7 +1557,7 @@
   load();
 </script>
 
-<script src="js/partner-errors.js"></script>
-<script src="js/partner-messages.js" defer></script>
+<script src="/js/partner-errors.js"></script>
+<script src="/js/partner-messages.js" defer></script>
 </body>
 </html>

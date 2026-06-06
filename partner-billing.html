@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TRODDR · Billing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/partner-shared.css">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/troddr-config.js"></script>
-<script src="js/partner-auth.js"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -324,8 +324,8 @@
       <div class="billing-summary">
         <div class="b-stat">
           <div class="lbl">Current Plan</div>
-          <div class="val">Free</div>
-          <div class="sub">Listing + loyalty included</div>
+          <div class="val">Foundation</div>
+          <div class="sub">2 included specials per location</div>
         </div>
         <div class="b-stat">
           <div class="lbl">Outstanding</div>
@@ -333,9 +333,9 @@
           <div class="sub">no balance due</div>
         </div>
         <div class="b-stat">
-          <div class="lbl">Active Specials</div>
+          <div class="lbl">Included Specials</div>
           <div class="val">0</div>
-          <div class="sub">none on a paid tier</div>
+          <div class="sub">tracked per restaurant/location</div>
         </div>
         <div class="b-stat">
           <div class="lbl">Next Charge</div>
@@ -349,30 +349,30 @@
       <div class="section-head">
         <div>
           <h2 class="section-title">Pricing Tiers</h2>
-          <div class="section-sub">What's free, and what specials placements cost when billing goes live.</div>
+          <div class="section-sub">Foundation includes two standard specials per restaurant/location each billing cycle. Extras roll up to the partner billing account.</div>
         </div>
       </div>
       <div class="tier-grid">
         <div class="tier-card">
-          <div class="tier-name">Standard</div>
-          <div class="tier-headline">Free</div>
-          <div class="tier-price">J$0<span class="unit">/special</span></div>
+          <div class="tier-name">Foundation</div>
+          <div class="tier-headline">Included allowance</div>
+          <div class="tier-price">2<span class="unit">/location</span></div>
           <ul class="tier-features">
-            <li>Listed in your TRODDR profile</li>
-            <li>Surfaces in the Specials feed</li>
-            <li>Visible for the run dates</li>
+            <li>Two included standard specials per restaurant/location</li>
+            <li>Allowance resets each billing cycle</li>
+            <li>Rejected specials do not become billable</li>
             <li>Basic analytics in this dashboard</li>
           </ul>
         </div>
         <div class="tier-card featured">
-          <div class="tier-name featured">Boosted</div>
-          <div class="tier-headline">Prioritized placement</div>
-          <div class="tier-price">TBD<span class="unit">/week</span></div>
+          <div class="tier-name featured">Extra Standard</div>
+          <div class="tier-headline">After included specials</div>
+          <div class="tier-price">TBD<span class="unit">/special</span></div>
           <ul class="tier-features">
-            <li>Prioritized in the feed</li>
-            <li>Surfaces in "Nearby" recommendations</li>
-            <li>Push notification eligibility</li>
-            <li>Standard analytics + traffic source breakdown</li>
+            <li>Automatically tracked after the two included specials</li>
+            <li>Charged to the partner billing account after approval</li>
+            <li>Usage separated by restaurant/location</li>
+            <li>Visible in monthly billing history</li>
           </ul>
         </div>
         <div class="tier-card">
@@ -397,7 +397,7 @@
       <div class="billing-card">
         <div class="empty-state">
           <strong>No invoices yet</strong>
-          Invoices for boosted or featured specials, and any other billable services, will appear here once billing is live. You'll be notified by email before any charge.
+          Extra specials, boosted placements, featured campaigns, and any other billable services will appear here by restaurant/location once billing is live.
         </div>
       </div>
     </section>
@@ -410,9 +410,8 @@
       <div class="billing-card">
         <div class="lead">No payment method on file</div>
         <div class="desc">
-          You don't need a payment method yet. TRODDR's Standard tier is free.
-          When you upgrade a special to Boosted or Featured, we'll ask you to add one
-          and you'll only be charged for what you opt into.
+          Foundation partners get two included specials per restaurant/location.
+          Any additional approved special is tracked automatically and billed to the partner account once payment collection is active.
         </div>
         <button type="button" class="cta-button" id="contact-billing-cta">
           Have questions? Message us
@@ -473,12 +472,13 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback', 'specials', 'billing'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      window.PartnerAuth?.navigate(path, token);
+      if (window.PartnerAuth) window.PartnerAuth.navigate(path, token);
+      else location.href = `${path}?token=${encodeURIComponent(token)}`;
     });
   }
 
   function setupSidebar(capabilities) {
-    const token = window.PartnerAuth?.getToken({ require: false }) || '';
+    const token = window.PartnerAuth?.getToken({ require: false }) || new URLSearchParams(location.search).get('token') || '';
     const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true, specials: true, billing: true };
 
     document.querySelectorAll('.page-link').forEach(a => {
@@ -501,7 +501,7 @@
   }
 
   async function load() {
-    const token = window.PartnerAuth?.getToken() || '';
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
     const { data, error } = await db.rpc('get_partner_capabilities_by_token', { p_token: token });
@@ -538,7 +538,7 @@
   load();
 </script>
 
-<script src="js/partner-errors.js"></script>
-<script src="js/partner-messages.js" defer></script>
+<script src="/js/partner-errors.js"></script>
+<script src="/js/partner-messages.js" defer></script>
 </body>
 </html>

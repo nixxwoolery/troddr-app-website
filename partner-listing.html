@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TRODDR · Listing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/partner-shared.css">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/troddr-config.js"></script>
-<script src="js/partner-auth.js"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -1370,7 +1370,8 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      window.PartnerAuth?.navigate(path, token);
+      if (window.PartnerAuth) window.PartnerAuth.navigate(path, token);
+      else location.href = `${path}?token=${encodeURIComponent(token)}`;
     });
   }
 
@@ -1556,7 +1557,7 @@
 
     $('hours-save').addEventListener('click', async () => {
       statusBox.className = 'hours-status';
-      const token = window.PartnerAuth?.getToken() || '';
+      const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
       const openingStruct = readHoursGrid('hours-grid');
       const kitchenStruct = sameToggle.checked ? openingStruct : readHoursGrid('kitchen-grid');
 
@@ -1631,7 +1632,7 @@
   }
 
   async function refreshClosures() {
-    const token = window.PartnerAuth?.getToken() || '';
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     const { data } = await db.rpc('list_partner_closures', { p_token: token });
     if (data && data.ok) renderClosures(data.closures || []);
   }
@@ -1641,7 +1642,7 @@
     const statusBox = $('closure-status');
     statusBox.className = 'hours-status';
 
-    const token   = window.PartnerAuth?.getToken() || '';
+    const token   = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     const date    = $('closure-date').value;
     const closed  = $('closure-closed').checked;
     const open    = $('closure-open').value  || null;
@@ -1698,7 +1699,7 @@
   }
 
   async function deleteClosure(id) {
-    const token = window.PartnerAuth?.getToken() || '';
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     const { data } = await db.rpc('delete_partner_closure', {
       p_token: token, p_closure_id: id
     });
@@ -1707,7 +1708,7 @@
 
   // ── Discovery (PostHog via Edge Function) ────────────────
   async function loadDiscovery() {
-    const token = window.PartnerAuth?.getToken() || '';
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     if (!token) return;
 
     try {
@@ -1837,7 +1838,7 @@
     const statusBox = $('contact-status');
 
     $('contact-save').addEventListener('click', async () => {
-      const token = window.PartnerAuth?.getToken() || '';
+      const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
       statusBox.className = 'hours-status';
       const btn = $('contact-save');
       btn.disabled = true;
@@ -1874,7 +1875,7 @@
 
   // ── Sidebar wiring ───────────────────────────────────────
   function setupSidebar(capabilities) {
-    const token = window.PartnerAuth?.getToken({ require: false }) || '';
+    const token = window.PartnerAuth?.getToken({ require: false }) || new URLSearchParams(location.search).get('token') || '';
     const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
 
     document.querySelectorAll('.page-link').forEach(a => {
@@ -1900,7 +1901,7 @@
 
   // ── Load ─────────────────────────────────────────────────
   async function load() {
-    const token = window.PartnerAuth?.getToken() || '';
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     if (!token) { hide('view-loading'); show('view-error'); return; }
 
     // Use allSettled so a single failed RPC doesn't take down the page.
@@ -1968,7 +1969,7 @@
   load();
 </script>
 
-<script src="js/partner-errors.js"></script>
-<script src="js/partner-messages.js" defer></script>
+<script src="/js/partner-errors.js"></script>
+<script src="/js/partner-messages.js" defer></script>
 </body>
 </html>

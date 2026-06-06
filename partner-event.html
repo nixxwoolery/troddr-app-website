@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TRODDR · Event Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/partner-shared.css">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/troddr-config.js"></script>
-<script src="js/partner-auth.js"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/partner-errors.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -2670,7 +2671,8 @@
         const placeSections = ['listing', 'bookings', 'loyalty', 'feedback'];
         path = placeSections.includes(current) ? `/partner/${current}` : '/partner/listing';
       }
-      window.PartnerAuth?.navigate(path, token);
+      if (window.PartnerAuth) window.PartnerAuth.navigate(path, token);
+      else location.href = `${path}?token=${encodeURIComponent(token)}`;
     });
   }
 
@@ -2952,7 +2954,7 @@
 
     $('edit-save').addEventListener('click', async () => {
       hideStatus();
-      const token = window.PartnerAuth?.getToken() || '';
+      const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
       if (!token) { showStatus("We couldn't find your account from this link. Open the dashboard from your bookmarked URL.", 'error'); return; }
 
       const num = (v) => v === '' || v == null ? null : Number(v);
@@ -3024,7 +3026,7 @@
 
   // ── Discovery (PostHog via Edge Function) ────────────────
   async function loadDiscovery() {
-    const token = window.PartnerAuth?.getToken() || '';
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     if (!token) return;
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/posthog-stats`, {
@@ -3140,30 +3142,61 @@
   }
 
   // ── Load ─────────────────────────────────────────────────
-  async function load() {
-    const token = window.PartnerAuth?.getToken() || '';
-    if (!token) { hide('view-loading'); show('view-error'); return; }
+  function showLoadError(err, fallback) {
+    const friendly = window.friendlyError
+      ? window.friendlyError(err, fallback)
+      : fallback;
+    const raw = err && (err.message || err.code || err.error || err.details || err.hint)
+      ? (err.message || err.code || err.error || err.details || err.hint)
+      : (typeof err === 'string' ? err : '');
+    const detail = $('error-detail');
+    if (detail) {
+      detail.innerHTML = `${friendly || "We couldn't load this dashboard right now. Please try again."}${
+        raw
+          ? `<div style="margin-top:14px; padding:10px 14px; background:#fdecea; border-radius:6px; font-size:11px; color:#c0392b; text-align:left; font-family:monospace; word-break:break-word;">${String(raw).replace(/[<>]/g,'')}</div>`
+          : ''
+      }`;
+    }
+    hide('view-loading');
+    show('view-error');
+  }
 
-    const [eventRes, capsRes] = await Promise.all([
-      db.rpc('get_partner_event_by_token',        { p_token: token }),
-      db.rpc('get_partner_capabilities_by_token', { p_token: token }),
-    ]);
+  async function load() {
+    const token = window.PartnerAuth?.getToken({ require: false }) || new URLSearchParams(location.search).get('token') || '';
+    if (!token) {
+      if (window.PartnerAuth) window.PartnerAuth.getToken({ require: true });
+      else showLoadError('Missing token', "We couldn't find an event access token in this link.");
+      hide('view-loading');
+      return;
+    }
+
+    let eventRes;
+    let capsRes;
+    try {
+      const results = await Promise.allSettled([
+        db.rpc('get_partner_event_by_token',        { p_token: token }),
+        db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+      ]);
+      eventRes = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
+      capsRes  = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
+    } catch (err) {
+      showLoadError(err, "We couldn't reach the dashboard service. Refresh the page, or open the latest dashboard link from TRODDR.");
+      return;
+    }
+
     const { data, error } = eventRes;
-    const caps = capsRes.data;
+    const caps = capsRes && capsRes.data;
     if (error || !data || !data.event) {
       console.error('event error', error, 'data:', data);
-      const fe2 = window.friendlyError || ((err, fb) => fb);
-      const friendly = fe2(error || data,
+      const rawMsg = (error && (error.message || error.code || error.details || error.hint))
+        || (data && data.error)
+        || (!data ? 'RPC returned no data' : 'RPC returned data but no event field');
+      showLoadError(
+        error || rawMsg,
         !data
           ? "We couldn't find this event from your link. It may have moved or the link may have expired."
-          : "We couldn't load this dashboard right now. Please try again, or send us a message.");
-      const rawMsg = (error && (error.message || error.code))
-        || (data && data.error)
-        || null;
-      $('error-detail').innerHTML = friendly + (rawMsg
-        ? `<div style="margin-top:14px; padding:10px 14px; background:#fdecea; border-radius:6px; font-size:11px; color:#c0392b; text-align:left; font-family:monospace; word-break:break-word;">${rawMsg.toString().replace(/[<>]/g,'')}</div>`
-        : '');
-      hide('view-loading'); show('view-error');
+          : "We couldn't load this dashboard right now. Please try again, or send us a message."
+      );
       return;
     }
 
@@ -3197,7 +3230,6 @@
   load();
 </script>
 
-<script src="js/partner-errors.js"></script>
-<script src="js/partner-messages.js" defer></script>
+<script src="/js/partner-messages.js" defer></script>
 </body>
 </html>
