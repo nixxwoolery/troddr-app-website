@@ -30,6 +30,22 @@ begin
        where p.id = v_place_id
     ),
 
+    'closures', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'id',            id,
+        'date',          date,
+        'is_closed',     is_closed,
+        'open_time',     open_time,
+        'close_time',    close_time,
+        'kitchen_open',  kitchen_open,
+        'kitchen_close', kitchen_close,
+        'reason',        reason
+      ) order by date), '[]'::jsonb)
+      from public.place_special_hours
+      where place_id = v_place_id
+        and date >= current_date - interval '7 days'
+    ),
+
     -- Loyalty program (for brand colors, if one exists)
     'program', (
       select jsonb_build_object(

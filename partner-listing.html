@@ -487,6 +487,155 @@
     letter-spacing: 0.06em;
   }
 
+  /* ── HOURS EDITOR ── */
+  .hours-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+  }
+  .hours-section-title {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin: 18px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .hours-section-title:first-child { margin-top: 0; }
+  .hours-grid {
+    display: grid;
+    grid-template-columns: 70px 1fr 1fr 90px;
+    gap: 8px 12px;
+    align-items: center;
+  }
+  .hours-grid .hg-day {
+    font-size: 13px; font-weight: 600;
+    color: var(--grey-dark);
+  }
+  .hours-grid input[type=time] {
+    width: 100%; padding: 8px 10px;
+    font-family: inherit; font-size: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+  }
+  .hours-grid input[type=time]:focus { outline: none; border-color: var(--brand-primary); }
+  .hours-grid input[type=time]:disabled { background: var(--bg-soft); color: var(--grey-light); }
+  .hours-closed-toggle {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px;
+    color: var(--grey-mid);
+    cursor: pointer;
+  }
+  .hours-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .hours-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--grey-dark);
+  }
+  .hours-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .hours-btn.primary {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
+  }
+  .hours-btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .hours-btn.link {
+    background: transparent;
+    border: none;
+    color: var(--brand-primary);
+    font-size: 12px;
+    padding: 6px 0;
+  }
+  .hours-status {
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-top: 8px;
+    display: none;
+  }
+  .hours-status.show { display: block; }
+  .hours-status.error { color: var(--red); background: var(--red-light); }
+  .hours-status.success { color: var(--green); background: var(--green-light); }
+
+  /* Closures list */
+  .closure-list {
+    display: grid; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .closure-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-soft);
+    border-radius: 8px;
+    border-left: 3px solid var(--amber);
+  }
+  .closure-row.scheduled-open { border-left-color: var(--brand-primary); }
+  .closure-row.past { opacity: 0.55; }
+  .closure-date {
+    font-size: 13px; font-weight: 700;
+    color: var(--black);
+    white-space: nowrap;
+  }
+  .closure-detail {
+    font-size: 12px; color: var(--grey-dark);
+  }
+  .closure-detail .reason {
+    color: var(--grey-mid);
+    font-style: italic;
+  }
+  .closure-remove {
+    background: transparent;
+    border: none;
+    color: var(--red);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+  }
+  .closure-add-form {
+    display: grid;
+    grid-template-columns: 140px auto 1fr 1fr 1fr auto;
+    gap: 8px;
+    align-items: end;
+    padding: 14px;
+    background: var(--bg-soft);
+    border-radius: 8px;
+    border: 1px dashed var(--border);
+  }
+  .closure-add-form .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .closure-add-form label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .closure-add-form input {
+    padding: 8px 10px;
+    font-family: inherit; font-size: 12px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff;
+  }
+  .closure-add-form input:focus { outline: none; border-color: var(--brand-primary); }
+  .closure-add-form input:disabled { background: var(--bg-soft); color: var(--grey-light); }
+
+  @media (max-width: 720px) {
+    .hours-grid { grid-template-columns: 60px 1fr 1fr 80px; gap: 6px 8px; }
+    .closure-add-form { grid-template-columns: 1fr 1fr; }
+  }
+
   /* ── FEEDBACK FEED ── */
   .feedback-feed {
     display: grid; gap: 10px;
@@ -765,6 +914,9 @@
     <a href="#feedback" class="jump-link" data-section="feedback">
       <svg><use href="#ic-chat"/></svg> Recent Feedback
     </a>
+    <a href="#hours" class="jump-link" data-section="hours">
+      <svg><use href="#ic-calendar"/></svg> Operating Hours
+    </a>
   </aside>
 
   <main class="main">
@@ -808,6 +960,66 @@
         </div>
       </div>
       <div class="feedback-feed" id="feedback-feed"></div>
+    </section>
+
+    <section class="section" id="hours">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Operating Hours</h2>
+          <div class="section-sub">Set your regular weekly hours, kitchen hours, and add one-off closures for holidays or special events.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="hours-card">
+
+        <div class="hours-section-title">Regular weekly hours</div>
+        <div class="hours-grid" id="hours-grid"></div>
+
+        <div class="hours-section-title">
+          <span>Kitchen hours</span>
+          <label class="hours-closed-toggle" style="font-weight: 500; text-transform: none; letter-spacing: 0;">
+            <input id="kitchen-same" type="checkbox" />
+            <span style="font-size: 12px;">Same as opening hours</span>
+          </label>
+        </div>
+        <div class="hours-grid" id="kitchen-grid"></div>
+
+        <div class="hours-status" id="hours-status"></div>
+        <div class="hours-actions">
+          <span style="font-size: 11px; color: var(--grey-light);">Changes save to the public listing on TRODDR.</span>
+          <button type="button" class="hours-btn primary" id="hours-save">Save hours</button>
+        </div>
+
+        <div class="hours-section-title" style="margin-top: 24px;">Holidays &amp; special closures</div>
+        <div class="closure-list" id="closure-list"></div>
+        <div class="closure-add-form">
+          <div class="form-field">
+            <label for="closure-date">Date</label>
+            <input id="closure-date" type="date" />
+          </div>
+          <div class="form-field">
+            <label>Type</label>
+            <label class="hours-closed-toggle" style="padding-top: 6px;">
+              <input id="closure-closed" type="checkbox" checked />
+              <span>Closed all day</span>
+            </label>
+          </div>
+          <div class="form-field">
+            <label for="closure-open">Open</label>
+            <input id="closure-open" type="time" disabled />
+          </div>
+          <div class="form-field">
+            <label for="closure-close">Close</label>
+            <input id="closure-close" type="time" disabled />
+          </div>
+          <div class="form-field">
+            <label for="closure-reason">Reason (optional)</label>
+            <input id="closure-reason" type="text" maxlength="120" placeholder="e.g. Christmas Day" />
+          </div>
+          <button type="button" class="hours-btn primary" id="closure-add">Add</button>
+        </div>
+        <div class="hours-status" id="closure-status"></div>
+      </div>
     </section>
 
   </main>
@@ -1114,6 +1326,240 @@
     });
   }
 
+  // ── Hours editor ─────────────────────────────────────────
+  const DAYS = [
+    { key: 'mon', label: 'Mon' },
+    { key: 'tue', label: 'Tue' },
+    { key: 'wed', label: 'Wed' },
+    { key: 'thu', label: 'Thu' },
+    { key: 'fri', label: 'Fri' },
+    { key: 'sat', label: 'Sat' },
+    { key: 'sun', label: 'Sun' },
+  ];
+
+  function renderHoursGrid(gridId, struct) {
+    const s = struct || {};
+    $(gridId).innerHTML = DAYS.map(d => {
+      const entry  = s[d.key] || {};
+      const closed = !!entry.closed;
+      const open   = entry.open  || '';
+      const close  = entry.close || '';
+      return `
+        <div class="hg-day">${d.label}</div>
+        <div><input type="time" data-day="${d.key}" data-field="open"  value="${open}"  ${closed ? 'disabled' : ''} /></div>
+        <div><input type="time" data-day="${d.key}" data-field="close" value="${close}" ${closed ? 'disabled' : ''} /></div>
+        <label class="hours-closed-toggle">
+          <input type="checkbox" data-day="${d.key}" data-field="closed" ${closed ? 'checked' : ''} />
+          Closed
+        </label>
+      `;
+    }).join('');
+
+    // Wire closed-checkbox toggling
+    $(gridId).querySelectorAll('input[data-field="closed"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const day = cb.dataset.day;
+        const isClosed = cb.checked;
+        $(gridId).querySelectorAll(`input[data-day="${day}"]`).forEach(inp => {
+          if (inp.dataset.field !== 'closed') inp.disabled = isClosed;
+        });
+      });
+    });
+  }
+
+  function readHoursGrid(gridId) {
+    const result = {};
+    DAYS.forEach(d => {
+      const closedEl = $(gridId).querySelector(`input[data-day="${d.key}"][data-field="closed"]`);
+      const openEl   = $(gridId).querySelector(`input[data-day="${d.key}"][data-field="open"]`);
+      const closeEl  = $(gridId).querySelector(`input[data-day="${d.key}"][data-field="close"]`);
+      if (closedEl && closedEl.checked) {
+        result[d.key] = { closed: true };
+      } else if (openEl && closeEl && openEl.value && closeEl.value) {
+        result[d.key] = { open: openEl.value, close: closeEl.value };
+      }
+    });
+    return result;
+  }
+
+  function setupHoursEditor(place, closures) {
+    const opening = place.opening_hours_struct || {};
+    const kitchen = place.kitchen_hours_struct || {};
+    renderHoursGrid('hours-grid',   opening);
+    renderHoursGrid('kitchen-grid', kitchen);
+
+    // "Kitchen same as opening" toggle
+    const sameToggle = $('kitchen-same');
+    sameToggle.checked = (Object.keys(kitchen).length === 0);
+    function syncKitchenDisabled() {
+      const sync = sameToggle.checked;
+      $('kitchen-grid').querySelectorAll('input').forEach(i => i.disabled = sync || (sync ? false : i.disabled));
+      // simpler: when synced, disable all
+      $('kitchen-grid').style.opacity = sync ? '0.5' : '1';
+      $('kitchen-grid').style.pointerEvents = sync ? 'none' : 'auto';
+    }
+    sameToggle.addEventListener('change', syncKitchenDisabled);
+    syncKitchenDisabled();
+
+    // Save handler
+    const statusBox = $('hours-status');
+    const fe = window.friendlyError || ((err, fb) => fb || 'Something went wrong.');
+    function showStatus(msg, kind) {
+      statusBox.textContent = msg;
+      statusBox.className = `hours-status show ${kind}`;
+    }
+
+    $('hours-save').addEventListener('click', async () => {
+      statusBox.className = 'hours-status';
+      const token = new URLSearchParams(location.search).get('token');
+      const openingStruct = readHoursGrid('hours-grid');
+      const kitchenStruct = sameToggle.checked ? openingStruct : readHoursGrid('kitchen-grid');
+
+      const btn = $('hours-save');
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Saving...';
+
+      try {
+        const { data, error } = await db.rpc('update_partner_hours', {
+          p_token:                token,
+          p_opening_hours_struct: openingStruct,
+          p_kitchen_hours_struct: kitchenStruct,
+        });
+        if (error || !data || !data.ok) {
+          showStatus(fe(error || (data && data.error) || data,
+            "We couldn't save those hours. Please try again."), 'error');
+        } else {
+          showStatus('Hours updated.', 'success');
+          setTimeout(() => statusBox.classList.remove('show'), 3000);
+        }
+      } catch (err) {
+        showStatus(fe(err, "Couldn't reach our servers. Check your connection and try again."), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+
+    // Closures
+    renderClosures(closures || []);
+    setupClosureForm();
+  }
+
+  function renderClosures(closures) {
+    const list = $('closure-list');
+    if (!closures.length) {
+      list.innerHTML = `<div style="font-size: 12px; color: var(--grey-mid); padding: 8px 4px;">No closures scheduled. Add holidays or early-close days below.</div>`;
+      return;
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    list.innerHTML = closures.map(c => {
+      const isPast = c.date < today;
+      const fmtDate = new Date(c.date + 'T00:00:00').toLocaleDateString('en-US',
+        { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      const detail = c.is_closed
+        ? `<span style="color: var(--red); font-weight: 700;">Closed all day</span>`
+        : `Open ${c.open_time ? c.open_time.slice(0,5) : '?'} to ${c.close_time ? c.close_time.slice(0,5) : '?'}`;
+      const reason = c.reason ? ` · <span class="reason">${escapeHtml(c.reason)}</span>` : '';
+      return `
+        <div class="closure-row ${c.is_closed ? '' : 'scheduled-open'} ${isPast ? 'past' : ''}">
+          <div class="closure-date">${fmtDate}</div>
+          <div class="closure-detail">${detail}${reason}</div>
+          <button type="button" class="closure-remove" data-closure-id="${c.id}">Remove</button>
+        </div>`;
+    }).join('');
+    list.querySelectorAll('.closure-remove').forEach(btn => {
+      btn.addEventListener('click', () => deleteClosure(btn.dataset.closureId));
+    });
+  }
+
+  function setupClosureForm() {
+    const closedCb = $('closure-closed');
+    const openIn   = $('closure-open');
+    const closeIn  = $('closure-close');
+    closedCb.addEventListener('change', () => {
+      openIn.disabled  = closedCb.checked;
+      closeIn.disabled = closedCb.checked;
+      if (closedCb.checked) { openIn.value = ''; closeIn.value = ''; }
+    });
+    $('closure-add').addEventListener('click', addClosure);
+  }
+
+  async function refreshClosures() {
+    const token = new URLSearchParams(location.search).get('token');
+    const { data } = await db.rpc('list_partner_closures', { p_token: token });
+    if (data && data.ok) renderClosures(data.closures || []);
+  }
+
+  async function addClosure() {
+    const fe = window.friendlyError || ((err, fb) => fb || 'Something went wrong.');
+    const statusBox = $('closure-status');
+    statusBox.className = 'hours-status';
+
+    const token   = new URLSearchParams(location.search).get('token');
+    const date    = $('closure-date').value;
+    const closed  = $('closure-closed').checked;
+    const open    = $('closure-open').value  || null;
+    const close   = $('closure-close').value || null;
+    const reason  = $('closure-reason').value.trim() || null;
+
+    if (!date) {
+      statusBox.textContent = 'Please pick a date.';
+      statusBox.className = 'hours-status show error';
+      return;
+    }
+    if (!closed && (!open || !close)) {
+      statusBox.textContent = 'For a non-closed day, please give open and close times.';
+      statusBox.className = 'hours-status show error';
+      return;
+    }
+
+    const btn = $('closure-add');
+    btn.disabled = true;
+    btn.textContent = 'Adding...';
+    try {
+      const { data, error } = await db.rpc('upsert_partner_closure', {
+        p_token:      token,
+        p_date:       date,
+        p_is_closed:  closed,
+        p_open_time:  open,
+        p_close_time: close,
+        p_reason:     reason,
+      });
+      if (error || !data || !data.ok) {
+        statusBox.textContent = fe(error || (data && data.error) || data,
+          "Couldn't save that closure. Please try again.");
+        statusBox.className = 'hours-status show error';
+      } else {
+        // Reset form
+        $('closure-date').value = '';
+        $('closure-open').value = '';
+        $('closure-close').value = '';
+        $('closure-reason').value = '';
+        $('closure-closed').checked = true;
+        $('closure-closed').dispatchEvent(new Event('change'));
+        statusBox.textContent = 'Closure added.';
+        statusBox.className = 'hours-status show success';
+        setTimeout(() => statusBox.classList.remove('show'), 2500);
+        refreshClosures();
+      }
+    } catch (err) {
+      statusBox.textContent = fe(err, "Couldn't reach our servers. Try again.");
+      statusBox.className = 'hours-status show error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Add';
+    }
+  }
+
+  async function deleteClosure(id) {
+    const token = new URLSearchParams(location.search).get('token');
+    const { data } = await db.rpc('delete_partner_closure', {
+      p_token: token, p_closure_id: id
+    });
+    if (data && data.ok) refreshClosures();
+  }
+
   // ── Sidebar wiring ───────────────────────────────────────
   function setupSidebar(capabilities) {
     const token = new URLSearchParams(location.search).get('token') || '';
@@ -1166,6 +1612,7 @@
     renderStats(data);
     renderRatings(data);
     renderFeedback(data);
+    setupHoursEditor(data.place, data.closures || []);
 
     hide('view-loading');
     show('view-dashboard');

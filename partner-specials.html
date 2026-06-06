@@ -374,6 +374,150 @@
     .form-grid { grid-template-columns: 1fr; }
   }
 
+  /* ── TOGGLES / CONDITIONAL SECTIONS ── */
+  .form-toggle-row {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .form-toggle-row input[type=checkbox] {
+    width: auto; padding: 0;
+    cursor: pointer;
+  }
+  .form-toggle-row label {
+    font-size: 13px; font-weight: 600;
+    color: var(--grey-dark);
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 0;
+    cursor: pointer;
+    flex: 1;
+  }
+  .form-toggle-row .sub {
+    font-size: 11px; color: var(--grey-mid);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  .conditional-section {
+    grid-column: 1 / -1;
+    padding: 14px;
+    background: var(--bg-soft);
+    border-radius: 8px;
+    border-left: 3px solid var(--brand-primary);
+    display: none;
+  }
+  .conditional-section.show { display: block; }
+
+  /* Price-type radio group */
+  .price-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    grid-column: 1 / -1;
+    margin-bottom: 6px;
+  }
+  .price-option {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: #fff;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .price-option:hover { border-color: var(--brand-primary); }
+  .price-option.selected {
+    border-color: var(--brand-primary);
+    background: var(--blue-light, var(--bg-soft));
+    box-shadow: 0 0 0 1px var(--brand-primary);
+  }
+  .price-option .name {
+    font-size: 12px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 2px;
+  }
+  .price-option .desc {
+    font-size: 10px; color: var(--grey-mid);
+  }
+  .price-option input { display: none; }
+  .price-input-row {
+    display: grid;
+    grid-template-columns: 1fr 100px;
+    gap: 8px;
+    align-items: end;
+    grid-column: 1 / -1;
+  }
+
+  /* Day-of-week picker */
+  .day-picker {
+    display: flex; flex-wrap: wrap;
+    gap: 6px;
+    grid-column: 1 / -1;
+  }
+  .day-chip {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: #fff;
+    font-size: 12px; font-weight: 600;
+    color: var(--grey-mid);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .day-chip:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
+  .day-chip.selected {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
+  }
+  .day-chip input { display: none; }
+
+  /* Capacity display on existing cards */
+  .capacity-bar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-soft);
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+  .capacity-meter {
+    height: 8px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .capacity-fill {
+    height: 100%;
+    background: var(--brand-primary);
+    border-radius: 100px;
+  }
+  .capacity-fill.full { background: var(--red); }
+  .capacity-fill.high { background: var(--amber); }
+  .capacity-text {
+    font-size: 12px; font-weight: 700;
+    color: var(--grey-dark);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .capacity-text .remaining { color: var(--brand-primary); }
+  .capacity-text .remaining.full { color: var(--red); }
+  .capacity-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 4px;
+  }
+
   /* ── IMAGE UPLOAD ── */
   .image-upload { display: grid; grid-template-columns: 120px 1fr; gap: 14px; align-items: start; }
   .image-preview {
@@ -756,6 +900,8 @@
           <small>We'll review within 1 business day and publish it automatically once approved. You'll see it appear in <strong>Pending Review</strong> above.</small>
         </div>
         <div class="form-grid" id="submit-form-grid">
+
+          <!-- Basics -->
           <div class="form-field full">
             <label for="sp-title">Title *</label>
             <input id="sp-title" type="text" maxlength="120" placeholder="e.g. Half-price Soup Tuesday" />
@@ -776,50 +922,14 @@
             <label for="sp-category">Event category (optional)</label>
             <input id="sp-category" type="text" maxlength="60" placeholder="e.g. Lunch, Drinks, Brunch" />
           </div>
-          <div class="form-field">
-            <label for="sp-start-date">Start date *</label>
-            <input id="sp-start-date" type="date" />
-          </div>
-          <div class="form-field">
-            <label for="sp-end-date">End date *</label>
-            <input id="sp-end-date" type="date" />
-          </div>
-          <div class="form-field">
-            <label for="sp-start-time">Start time (optional)</label>
-            <input id="sp-start-time" type="time" />
-          </div>
-          <div class="form-field">
-            <label for="sp-end-time">End time (optional)</label>
-            <input id="sp-end-time" type="time" />
-          </div>
           <div class="form-field full">
             <label for="sp-description">Description</label>
             <textarea id="sp-description" maxlength="800" placeholder="One paragraph describing the offer."></textarea>
           </div>
-          <div class="form-field">
-            <label for="sp-discount-pct">Discount %</label>
-            <input id="sp-discount-pct" type="number" min="1" max="100" step="1" placeholder="e.g. 20" />
-            <div class="hint">For "% off" specials.</div>
-          </div>
-          <div class="form-field">
-            <label for="sp-discount-amt">Discount amount</label>
-            <input id="sp-discount-amt" type="number" min="0" step="1" placeholder="e.g. 500" />
-            <div class="hint">For "$ off" specials.</div>
-          </div>
-          <div class="form-field">
-            <label for="sp-price">Price</label>
-            <input id="sp-price" type="number" min="0" step="1" placeholder="e.g. 1500" />
-            <div class="hint">For flat-price specials.</div>
-          </div>
-          <div class="form-field">
-            <label for="sp-currency">Currency</label>
-            <select id="sp-currency">
-              <option value="JMD">JMD</option>
-              <option value="USD">USD</option>
-            </select>
-          </div>
+
+          <!-- Image (single, with upload) -->
           <div class="form-field full">
-            <label>Image (optional)</label>
+            <label>Featured image</label>
             <div class="image-upload">
               <div class="image-preview" id="sp-image-preview">No image</div>
               <div class="image-upload-body">
@@ -835,6 +945,146 @@
               </div>
             </div>
           </div>
+
+          <!-- When -->
+          <div class="form-field">
+            <label for="sp-start-date">Start date *</label>
+            <input id="sp-start-date" type="date" />
+          </div>
+          <div class="form-field">
+            <label for="sp-end-date">End date *</label>
+            <input id="sp-end-date" type="date" />
+          </div>
+
+          <div class="form-toggle-row">
+            <input id="sp-times-enabled" type="checkbox" />
+            <label for="sp-times-enabled">
+              This special has a specific time of day
+              <div class="sub">e.g. Happy hour 5–7 PM, brunch 11 AM–2 PM</div>
+            </label>
+          </div>
+          <div class="conditional-section" id="sp-times-section">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-field">
+                <label for="sp-start-time">Start time</label>
+                <input id="sp-start-time" type="time" />
+              </div>
+              <div class="form-field">
+                <label for="sp-end-time">End time</label>
+                <input id="sp-end-time" type="time" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-toggle-row">
+            <input id="sp-recurring-enabled" type="checkbox" />
+            <label for="sp-recurring-enabled">
+              Repeats on specific days of the week
+              <div class="sub">Only the days you pick will be active during the date range</div>
+            </label>
+          </div>
+          <div class="conditional-section" id="sp-recurring-section">
+            <div class="capacity-label" style="margin-bottom: 8px;">Pick days</div>
+            <div class="day-picker" id="sp-day-picker">
+              <label class="day-chip" data-day="mon"><input type="checkbox"> Mon</label>
+              <label class="day-chip" data-day="tue"><input type="checkbox"> Tue</label>
+              <label class="day-chip" data-day="wed"><input type="checkbox"> Wed</label>
+              <label class="day-chip" data-day="thu"><input type="checkbox"> Thu</label>
+              <label class="day-chip" data-day="fri"><input type="checkbox"> Fri</label>
+              <label class="day-chip" data-day="sat"><input type="checkbox"> Sat</label>
+              <label class="day-chip" data-day="sun"><input type="checkbox"> Sun</label>
+            </div>
+          </div>
+
+          <!-- Pricing -->
+          <div class="form-field full" style="margin-top: 4px;">
+            <label>Pricing *</label>
+            <div class="price-options" id="sp-price-options">
+              <label class="price-option selected" data-pricing="discount_pct">
+                <input type="radio" name="sp-pricing" value="discount_pct" checked />
+                <div class="name">% off</div>
+                <div class="desc">e.g. 20% off</div>
+              </label>
+              <label class="price-option" data-pricing="discount_amt">
+                <input type="radio" name="sp-pricing" value="discount_amt" />
+                <div class="name">Amount off</div>
+                <div class="desc">e.g. J$500 off</div>
+              </label>
+              <label class="price-option" data-pricing="flat">
+                <input type="radio" name="sp-pricing" value="flat" />
+                <div class="name">Flat price</div>
+                <div class="desc">e.g. J$1,500</div>
+              </label>
+              <label class="price-option" data-pricing="free">
+                <input type="radio" name="sp-pricing" value="free" />
+                <div class="name">Free</div>
+                <div class="desc">No charge</div>
+              </label>
+            </div>
+            <div class="price-input-row" id="sp-price-input-row">
+              <div class="form-field" id="sp-price-value-field">
+                <label id="sp-price-value-label" for="sp-price-value">Discount percentage</label>
+                <input id="sp-price-value" type="number" min="1" step="1" placeholder="e.g. 20" />
+              </div>
+              <div class="form-field">
+                <label for="sp-currency">Currency</label>
+                <select id="sp-currency">
+                  <option value="JMD">JMD</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reservations (capacity) -->
+          <div class="form-toggle-row">
+            <input id="sp-reservations-enabled" type="checkbox" />
+            <label for="sp-reservations-enabled">
+              Limited spots / requires reservation
+              <div class="sub">Guests claim a spot in the app. You'll see remaining count in real time.</div>
+            </label>
+          </div>
+          <div class="conditional-section" id="sp-reservations-section">
+            <div class="form-field">
+              <label for="sp-capacity">Available spots</label>
+              <input id="sp-capacity" type="number" min="1" step="1" placeholder="e.g. 20" />
+              <div class="hint">Once claimed, no more guests can reserve.</div>
+            </div>
+          </div>
+
+          <!-- Advanced -->
+          <div class="form-toggle-row">
+            <input id="sp-advanced-enabled" type="checkbox" />
+            <label for="sp-advanced-enabled">
+              More options (age, host, tickets, tied event)
+            </label>
+          </div>
+          <div class="conditional-section" id="sp-advanced-section">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-field">
+                <label for="sp-age">Age restriction</label>
+                <input id="sp-age" type="text" maxlength="40" placeholder="e.g. 21+" />
+              </div>
+              <div class="form-field">
+                <label for="sp-host">Host name</label>
+                <input id="sp-host" type="text" maxlength="100" placeholder="For partnerships" />
+              </div>
+              <div class="form-field">
+                <label for="sp-event-slug">Tied event slug</label>
+                <input id="sp-event-slug" type="text" maxlength="120" placeholder="e.g. reggae-sumfest" />
+              </div>
+              <div class="form-field">
+                <label for="sp-ticket">Ticket link</label>
+                <input id="sp-ticket" type="url" placeholder="https://..." />
+              </div>
+              <div class="form-field full">
+                <label for="sp-rsvp">RSVP link</label>
+                <input id="sp-rsvp" type="url" placeholder="https://..." />
+              </div>
+            </div>
+          </div>
+
+          <!-- Tags -->
           <div class="form-field full">
             <label for="sp-tags">Tags (optional, comma-separated)</label>
             <input id="sp-tags" type="text" maxlength="200" placeholder="lunch, family-friendly, vegan" />
@@ -942,6 +1192,39 @@
          </div>`
       : '';
 
+    // Capacity bar (only when reservations are enabled for this special)
+    let capacityHtml = '';
+    if (sp.capacity != null && sp.capacity > 0) {
+      const claimed = sp.claimed_count || 0;
+      const remaining = sp.remaining != null ? sp.remaining : Math.max(0, sp.capacity - claimed);
+      const pct = Math.min(100, Math.round((claimed / sp.capacity) * 100));
+      const fillClass = pct >= 100 ? 'full' : (pct >= 75 ? 'high' : '');
+      const remainingClass = remaining === 0 ? 'full' : '';
+      capacityHtml = `
+        <div class="capacity-bar">
+          <div>
+            <div class="capacity-label">Reservations</div>
+            <div class="capacity-meter">
+              <div class="capacity-fill ${fillClass}" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <div class="capacity-text">
+            <span class="remaining ${remainingClass}">${remaining}</span>
+            <span style="color:var(--grey-mid); font-weight:600;"> of ${sp.capacity} left</span>
+            <br>
+            <span style="font-size:10px; font-weight:600; color:var(--grey-mid); letter-spacing:0.04em;">${claimed} claimed</span>
+          </div>
+        </div>`;
+    }
+
+    // Recurring days indicator
+    let recurringHtml = '';
+    if (sp.recurring_days && sp.recurring_days.length) {
+      const dayMap = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
+      const days = sp.recurring_days.map(d => dayMap[d.toLowerCase()] || d).join(' · ');
+      recurringHtml = `<div style="font-size:11px; color:var(--grey-mid); margin-top:4px;"><strong style="color:var(--brand-primary);">Repeats:</strong> ${days}</div>`;
+    }
+
     const pricing = pricingLine(sp);
     const dates = sp.start_date && sp.end_date
       ? (sp.start_date === sp.end_date ? fmtDate(sp.start_date) : `${fmtDate(sp.start_date)} → ${fmtDate(sp.end_date)}`)
@@ -964,7 +1247,9 @@
             ${sp.event_category ? `<span>${escapeHtml(sp.event_category)}</span>` : ''}
           </div>
           ${sp.description ? `<div class="special-desc">${escapeHtml(sp.description)}</div>` : ''}
+          ${recurringHtml}
           ${tagsHtml ? `<div class="special-tags">${tagsHtml}</div>` : ''}
+          ${capacityHtml}
           <div class="special-stats">
             ${stats.map(st => `
               <div class="special-stat">
@@ -1036,12 +1321,86 @@
 
     function clearForm() {
       ['sp-title','sp-category','sp-start-date','sp-end-date','sp-start-time','sp-end-time',
-       'sp-description','sp-discount-pct','sp-discount-amt','sp-price','sp-image','sp-tags'
+       'sp-description','sp-price-value','sp-image','sp-tags',
+       'sp-capacity','sp-age','sp-host','sp-event-slug','sp-ticket','sp-rsvp'
       ].forEach(id => { const el = $(id); if (el) el.value = ''; });
       $('sp-type').value = '';
       $('sp-currency').value = 'JMD';
+      // Reset toggles
+      ['sp-times-enabled','sp-recurring-enabled','sp-reservations-enabled','sp-advanced-enabled'].forEach(id => {
+        const el = $(id); if (el) { el.checked = false; el.dispatchEvent(new Event('change')); }
+      });
+      // Reset price type to default (% off)
+      document.querySelectorAll('input[name=sp-pricing]').forEach(r => r.checked = (r.value === 'discount_pct'));
+      document.querySelectorAll('.price-option').forEach(o => o.classList.toggle('selected', o.dataset.pricing === 'discount_pct'));
+      updatePriceLabel('discount_pct');
+      // Reset day chips
+      document.querySelectorAll('#sp-day-picker .day-chip').forEach(c => {
+        c.classList.remove('selected');
+        const cb = c.querySelector('input'); if (cb) cb.checked = false;
+      });
       clearError();
     }
+
+    // ── Conditional sections (toggles) ──
+    function bindToggle(toggleId, sectionId) {
+      const t = $(toggleId);
+      const s = $(sectionId);
+      if (!t || !s) return;
+      t.addEventListener('change', () => s.classList.toggle('show', t.checked));
+    }
+    bindToggle('sp-times-enabled',         'sp-times-section');
+    bindToggle('sp-recurring-enabled',     'sp-recurring-section');
+    bindToggle('sp-reservations-enabled',  'sp-reservations-section');
+    bindToggle('sp-advanced-enabled',      'sp-advanced-section');
+
+    // ── Price-type radio handling ──
+    function updatePriceLabel(type) {
+      const label = $('sp-price-value-label');
+      const input = $('sp-price-value');
+      const field = $('sp-price-value-field');
+      if (!label || !input || !field) return;
+      if (type === 'free') {
+        field.style.display = 'none';
+        input.value = '';
+        return;
+      }
+      field.style.display = '';
+      if (type === 'discount_pct') {
+        label.textContent = 'Discount percentage';
+        input.placeholder = 'e.g. 20';
+        input.max = 100;
+      } else if (type === 'discount_amt') {
+        label.textContent = 'Amount off';
+        input.placeholder = 'e.g. 500';
+        input.removeAttribute('max');
+      } else if (type === 'flat') {
+        label.textContent = 'Flat price';
+        input.placeholder = 'e.g. 1500';
+        input.removeAttribute('max');
+      }
+    }
+    document.querySelectorAll('.price-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.price-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        const radio = opt.querySelector('input');
+        if (radio) radio.checked = true;
+        updatePriceLabel(opt.dataset.pricing);
+      });
+    });
+
+    // ── Day-of-week chips ──
+    document.querySelectorAll('#sp-day-picker .day-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        if (e.target.tagName === 'INPUT') return; // let native checkbox toggle handle
+        const cb = chip.querySelector('input');
+        cb.checked = !cb.checked;
+        chip.classList.toggle('selected', cb.checked);
+      });
+      const cb = chip.querySelector('input');
+      cb.addEventListener('change', () => chip.classList.toggle('selected', cb.checked));
+    });
 
     resetBtn.addEventListener('click', clearForm);
 
@@ -1125,23 +1484,58 @@
       const type        = $('sp-type').value;
       const startDate   = $('sp-start-date').value;
       const endDate     = $('sp-end-date').value;
-      const startTime   = $('sp-start-time').value || null;
-      const endTime     = $('sp-end-time').value || null;
+      const timesOn     = $('sp-times-enabled').checked;
+      const startTime   = timesOn ? ($('sp-start-time').value || null) : null;
+      const endTime     = timesOn ? ($('sp-end-time').value || null) : null;
       const description = $('sp-description').value.trim() || null;
-      const discountPct = $('sp-discount-pct').value ? Number($('sp-discount-pct').value) : null;
-      const discountAmt = $('sp-discount-amt').value ? Number($('sp-discount-amt').value) : null;
-      const price       = $('sp-price').value ? Number($('sp-price').value) : null;
+
+      // Pricing
+      const pricingType = document.querySelector('input[name=sp-pricing]:checked').value;
+      const priceVal    = $('sp-price-value').value ? Number($('sp-price-value').value) : null;
+      let discountPct = null, discountAmt = null, priceAmt = null;
+      if (pricingType === 'discount_pct') discountPct = priceVal;
+      else if (pricingType === 'discount_amt') discountAmt = priceVal;
+      else if (pricingType === 'flat') priceAmt = priceVal;
+      // 'free' leaves all three null
+
       const currency    = $('sp-currency').value || 'JMD';
       const imageUrl    = $('sp-image').value.trim() || null;
       const category    = $('sp-category').value.trim() || null;
       const tagsRaw     = $('sp-tags').value.trim();
       const tags        = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : null;
 
+      // Recurring days
+      const recurringOn = $('sp-recurring-enabled').checked;
+      const recurringDays = recurringOn
+        ? Array.from(document.querySelectorAll('#sp-day-picker .day-chip.selected')).map(c => c.dataset.day)
+        : null;
+
+      // Reservations
+      const resvOn = $('sp-reservations-enabled').checked;
+      const capacity = resvOn && $('sp-capacity').value ? Number($('sp-capacity').value) : null;
+
+      // Advanced
+      const advOn = $('sp-advanced-enabled').checked;
+      const ageRestriction = advOn ? ($('sp-age').value.trim() || null) : null;
+      const hostName       = advOn ? ($('sp-host').value.trim() || null) : null;
+      const eventSlug      = advOn ? ($('sp-event-slug').value.trim() || null) : null;
+      const ticketLink     = advOn ? ($('sp-ticket').value.trim() || null) : null;
+      const rsvpLink       = advOn ? ($('sp-rsvp').value.trim() || null) : null;
+
       if (!title)     { showError('Please add a title.'); return; }
       if (!type)      { showError('Please pick a special type.'); return; }
       if (!startDate) { showError('Please pick a start date.'); return; }
       if (!endDate)   { showError('Please pick an end date.'); return; }
       if (endDate < startDate) { showError('End date must be on or after start date.'); return; }
+      if (pricingType !== 'free' && (priceVal == null || isNaN(priceVal) || priceVal < 0)) {
+        showError('Please enter a valid pricing value.'); return;
+      }
+      if (resvOn && (!capacity || capacity < 1)) {
+        showError('Please enter the number of available spots.'); return;
+      }
+      if (recurringOn && (!recurringDays || recurringDays.length === 0)) {
+        showError('Please select at least one day of the week.'); return;
+      }
 
       submitBtn.disabled = true;
       const original = submitBtn.textContent;
@@ -1160,10 +1554,18 @@
           p_image_url:           imageUrl,
           p_discount_percentage: discountPct,
           p_discount_amount:     discountAmt,
-          p_price_amount:        price,
+          p_price_amount:        priceAmt,
           p_currency:            currency,
           p_event_category:      category,
           p_tags:                tags,
+          p_capacity:            capacity,
+          p_recurring_days:      recurringDays,
+          p_age_restriction:     ageRestriction,
+          p_host_name:           hostName,
+          p_event_slug:          eventSlug,
+          p_ticket_link:         ticketLink,
+          p_rsvp_link:           rsvpLink,
+          p_image_urls:          null,
         });
         if (error || !data || !data.ok) {
           showError(fe(error || (data && data.error) || data,
