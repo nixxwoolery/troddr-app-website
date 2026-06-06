@@ -6,8 +6,10 @@
 <title>TRODDR · Event Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/troddr-config.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -1564,9 +1566,26 @@
 <div class="layout" id="view-loading">
   <div></div>
   <div class="main">
-    <div class="state">
-      <div class="spinner"></div>
-      <div class="state-msg">Loading your event dashboard…</div>
+    <div class="skeleton-card" style="margin-bottom: 14px;">
+      <span class="skeleton skeleton-title" style="width: 30%;"></span>
+      <span class="skeleton skeleton-text med"></span>
+      <span class="skeleton skeleton-text long"></span>
+    </div>
+    <div class="skeleton-card" style="margin-bottom: 14px;">
+      <span class="skeleton skeleton-text short" style="height: 12px;"></span>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px;">
+        <div><span class="skeleton skeleton-text" style="height: 30px;"></span><span class="skeleton skeleton-text short"></span></div>
+        <div><span class="skeleton skeleton-text" style="height: 30px;"></span><span class="skeleton skeleton-text short"></span></div>
+        <div><span class="skeleton skeleton-text" style="height: 30px;"></span><span class="skeleton skeleton-text short"></span></div>
+        <div><span class="skeleton skeleton-text" style="height: 30px;"></span><span class="skeleton skeleton-text short"></span></div>
+        <div><span class="skeleton skeleton-text" style="height: 30px;"></span><span class="skeleton skeleton-text short"></span></div>
+      </div>
+    </div>
+    <div class="skeleton-grid">
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span></div>
     </div>
   </div>
 </div>

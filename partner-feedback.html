@@ -6,8 +6,10 @@
 <title>TRODDR · Feedback</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/troddr-config.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -624,9 +626,15 @@
 <div class="layout" id="view-loading">
   <div></div>
   <div class="main">
-    <div class="state">
-      <div class="spinner"></div>
-      <div class="state-msg">Loading feedback…</div>
+    <div class="skeleton-grid" style="grid-template-columns: 1.1fr 1fr 1fr;">
+      <div class="skeleton-card"><span class="skeleton skeleton-text short"></span><span class="skeleton" style="height: 44px; width: 60%; margin: 8px 0;"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-card"><span class="skeleton skeleton-text short"></span><span class="skeleton" style="height: 44px; width: 60%; margin: 8px 0;"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-card"><span class="skeleton skeleton-text short"></span><span class="skeleton" style="height: 44px; width: 60%; margin: 8px 0;"></span><span class="skeleton skeleton-text short"></span></div>
+    </div>
+    <div class="skeleton-card" style="margin-top: 14px;">
+      <span class="skeleton skeleton-text med" style="height: 18px;"></span>
+      <div class="skeleton-row" style="margin-top: 14px;"><div class="skeleton-row-body"><span class="skeleton skeleton-text med"></span><span class="skeleton skeleton-text short"></span></div></div>
+      <div class="skeleton-row"><div class="skeleton-row-body"><span class="skeleton skeleton-text med"></span><span class="skeleton skeleton-text short"></span></div></div>
     </div>
   </div>
 </div>

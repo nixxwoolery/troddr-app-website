@@ -1,0 +1,265 @@
+/* ============================================================
+ * Shared partner-dashboard polish:
+ *   - skeleton loading placeholders
+ *   - improved empty states
+ *   - print stylesheet
+ * Included on every partner-* and admin-* page.
+ * ============================================================ */
+
+/* ── SKELETON LOADING ───────────────────────────────────── */
+@keyframes troddr-skeleton-shimmer {
+  0%   { background-position: -468px 0; }
+  100% { background-position: 468px 0; }
+}
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #f8f8f8 50%,
+    #f0f0f0 100%
+  );
+  background-size: 468px 100%;
+  animation: troddr-skeleton-shimmer 1.4s linear infinite;
+  border-radius: 6px;
+  color: transparent;
+  user-select: none;
+}
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+.skeleton-text.short { width: 40%; }
+.skeleton-text.med   { width: 70%; }
+.skeleton-text.long  { width: 90%; }
+.skeleton-title {
+  height: 28px;
+  width: 60%;
+  margin-bottom: 16px;
+  border-radius: 8px;
+}
+.skeleton-pill {
+  height: 18px;
+  width: 80px;
+  border-radius: 100px;
+}
+.skeleton-card {
+  background: #fff;
+  border: 1px solid var(--border, #e8e8e8);
+  border-radius: 16px;
+  padding: 22px;
+}
+.skeleton-stat {
+  background: #fff;
+  border: 1px solid var(--border, #e8e8e8);
+  border-radius: 16px;
+  padding: 16px 14px 14px;
+}
+.skeleton-stat .skeleton-text { height: 10px; }
+.skeleton-stat .skeleton-stat-num {
+  height: 30px; width: 50%;
+  margin: 8px 0 8px;
+  border-radius: 6px;
+}
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.skeleton-row {
+  display: flex; gap: 14px; align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-soft, #f0f0f0);
+}
+.skeleton-row:last-child { border-bottom: none; }
+.skeleton-avatar {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.skeleton-row-body { flex: 1; min-width: 0; }
+.skeleton-row-body .skeleton-text:last-child { margin-bottom: 0; }
+
+/* ── EMPTY STATES ───────────────────────────────────────── */
+.empty-state-card {
+  text-align: center;
+  background: #fff;
+  border: 1px dashed var(--border, #e8e8e8);
+  border-radius: 16px;
+  padding: 40px 28px;
+  color: var(--grey-mid, #666);
+}
+.empty-state-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--bg-soft, #f8f9fa);
+  color: var(--brand-primary, #0077CC);
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+.empty-state-icon svg { width: 24px; height: 24px; }
+.empty-state-title {
+  font-size: 16px; font-weight: 700;
+  color: var(--black, #111);
+  margin-bottom: 6px;
+}
+.empty-state-body {
+  font-size: 13px; color: var(--grey-mid, #666);
+  line-height: 1.55;
+  max-width: 380px;
+  margin: 0 auto 14px;
+}
+.empty-state-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--brand-primary, #0077CC);
+  color: var(--brand-text, #fff);
+  padding: 9px 18px;
+  border-radius: 100px;
+  font-size: 12px; font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+.empty-state-cta:hover { filter: brightness(1.08); }
+
+/* ── OPTIMISTIC ACTION INDICATORS ───────────────────────── */
+.action-optimistic {
+  position: relative;
+  overflow: hidden;
+}
+.action-optimistic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 127, 78, 0.08);
+  pointer-events: none;
+  animation: troddr-optimistic-fade 1.6s ease-out forwards;
+}
+@keyframes troddr-optimistic-fade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+.action-optimistic-fail::after {
+  background: rgba(192, 57, 43, 0.12);
+  animation-duration: 2s;
+}
+
+/* ── PRINT STYLESHEET ───────────────────────────────────── */
+@media print {
+  /* Page setup */
+  @page {
+    margin: 0.6in;
+    size: auto;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+
+  /* Hide chrome that doesn't belong in a printout */
+  .header,
+  .sidebar,
+  .msg-fab,
+  .msg-overlay,
+  .nav-badge,
+  .page-foot,
+  .hours-actions,
+  .form-actions,
+  .edit-actions,
+  .action-btn,
+  .placeholder-cta,
+  .cta-button,
+  .image-pick-btn,
+  .hours-btn,
+  .form-btn,
+  .edit-btn,
+  .closure-add-form,
+  .closure-remove,
+  .upload-card .placeholder-grid,
+  #submit-form-grid,
+  .filter-bar,
+  .chip,
+  .entity-picker,
+  .entity-picker-divider,
+  .sidebar-divider,
+  .stat-cta,
+  .hero-eyebrow,
+  .pill,
+  .special-edit-btn {
+    display: none !important;
+  }
+
+  /* Layout adjusts */
+  .layout {
+    display: block !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .main {
+    padding: 0 !important;
+  }
+  .page-hero {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 0 16pt 0 !important;
+    text-align: left !important;
+    border-bottom: 2pt solid #000;
+    margin-bottom: 18pt !important;
+    overflow: visible !important;
+  }
+  .page-hero::before,
+  .page-hero::after,
+  .hero-deco { display: none !important; }
+  .page-hero h1 {
+    font-size: 24pt !important;
+    color: #000 !important;
+    margin: 6pt 0 4pt 0 !important;
+  }
+  .hero-sub,
+  .hero-meta,
+  .hero-reward {
+    color: #333 !important;
+    font-size: 10pt !important;
+  }
+  .section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 18pt !important;
+  }
+  .section-title {
+    border-bottom: 1pt solid #999;
+    padding-bottom: 4pt;
+    margin-bottom: 8pt;
+  }
+  .stat, .card, .billing-card, .hours-card, .funnel,
+  .preview-card, .summary-card, .ratings-card,
+  .schedule-card, .countries-card, .updates-list,
+  .vendor-list, .sponsors-grid, .special-card,
+  .tier-card, .b-stat, .form-card, .skeleton-card,
+  .skeleton-stat, .upload-card {
+    background: #fff !important;
+    border: 1pt solid #ccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+  /* Don't print background colors for general elements */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* But DO preserve brand-colored elements that matter */
+  .stat-value, .b-stat .val, .summary-big, .funnel-step-value,
+  .stat-delta, .vendor-head-stat-cell .num,
+  .saved-item-count .num, .capacity-text .remaining {
+    color: #000 !important;
+  }
+}

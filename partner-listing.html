@@ -6,8 +6,10 @@
 <title>TRODDR · Listing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/troddr-config.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -851,9 +853,25 @@
 <div class="layout" id="view-loading">
   <div></div>
   <div class="main">
-    <div class="state">
-      <div class="spinner"></div>
-      <div class="state-msg">Loading your listing…</div>
+    <div class="skeleton-card" style="margin-bottom: 14px;">
+      <span class="skeleton skeleton-title"></span>
+      <span class="skeleton skeleton-text long"></span>
+      <span class="skeleton skeleton-text med"></span>
+      <span class="skeleton skeleton-text short"></span>
+    </div>
+    <div class="skeleton-grid">
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+    </div>
+    <div class="skeleton-card">
+      <span class="skeleton skeleton-text med" style="height: 18px;"></span>
+      <div style="margin-top: 14px;">
+        <div class="skeleton-row"><span class="skeleton skeleton-avatar"></span><div class="skeleton-row-body"><span class="skeleton skeleton-text med"></span><span class="skeleton skeleton-text short"></span></div></div>
+        <div class="skeleton-row"><span class="skeleton skeleton-avatar"></span><div class="skeleton-row-body"><span class="skeleton skeleton-text med"></span><span class="skeleton skeleton-text short"></span></div></div>
+        <div class="skeleton-row"><span class="skeleton skeleton-avatar"></span><div class="skeleton-row-body"><span class="skeleton skeleton-text med"></span><span class="skeleton skeleton-text short"></span></div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -917,6 +935,9 @@
     <a href="#hours" class="jump-link" data-section="hours">
       <svg><use href="#ic-calendar"/></svg> Operating Hours
     </a>
+    <a href="#contact" class="jump-link" data-section="contact">
+      <svg><use href="#ic-doc"/></svg> Contact Info
+    </a>
   </aside>
 
   <main class="main">
@@ -960,6 +981,17 @@
         </div>
       </div>
       <div class="feedback-feed" id="feedback-feed"></div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Contact Info &amp; Links</h2>
+          <div class="section-sub">Update phone, website, social, and booking links. Curated content (description, photos, address) is locked. Request a revision via the message button if those need to change.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="hours-card" id="contact-card"></div>
     </section>
 
     <section class="section" id="hours">
@@ -1657,6 +1689,78 @@
     if (data && data.ok) refreshClosures();
   }
 
+  // ── Contact info editor ──────────────────────────────────
+  function setupContactEditor(place) {
+    const fields = [
+      { id: 'ct-phone',    key: 'phone_number',          label: 'Phone',                placeholder: '+1 876 ...' },
+      { id: 'ct-website',  key: 'website',               label: 'Website',              placeholder: 'https://...' },
+      { id: 'ct-ig',       key: 'instagram_url',         label: 'Instagram URL',        placeholder: 'https://instagram.com/...' },
+      { id: 'ct-menu',     key: 'menu_link',             label: 'Menu link',            placeholder: 'https://...' },
+      { id: 'ct-booking',  key: 'booking_link',          label: 'Booking link',         placeholder: 'https://...' },
+      { id: 'ct-bookmail', key: 'bookings_email',        label: 'Bookings inbox email', placeholder: 'bookings@...' },
+      { id: 'ct-bcontact', key: 'booking_contact_email', label: 'Booking contact email', placeholder: 'team@...' },
+      { id: 'ct-dpass',    key: 'day_pass_link',         label: 'Day pass link',        placeholder: 'https://...' },
+      { id: 'ct-dnotes',   key: 'day_pass_notes',        label: 'Day pass notes',       placeholder: '',                  multiline: true },
+    ];
+
+    $('contact-card').innerHTML = `
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px;">
+        ${fields.map(f => `
+          <div class="form-field" ${f.multiline ? 'style="grid-column: 1 / -1;"' : ''}>
+            <label for="${f.id}" style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-mid); margin-bottom: 4px; display: block;">${f.label}</label>
+            ${f.multiline
+              ? `<textarea id="${f.id}" maxlength="500" placeholder="${f.placeholder}" style="width: 100%; padding: 9px 11px; font-family: inherit; font-size: 13px; border: 1px solid var(--border); border-radius: 8px; min-height: 60px; resize: vertical; box-sizing: border-box;">${escapeHtml(place[f.key] || '')}</textarea>`
+              : `<input id="${f.id}" type="text" maxlength="200" placeholder="${f.placeholder}" value="${escapeHtml(place[f.key] || '')}" style="width: 100%; padding: 9px 11px; font-family: inherit; font-size: 13px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box;" />`
+            }
+          </div>
+        `).join('')}
+      </div>
+      <div class="hours-status" id="contact-status"></div>
+      <div class="hours-actions">
+        <span style="font-size: 11px; color: var(--grey-light);">Curated content (description, address, photos) is locked. Send us a message to request a revision.</span>
+        <button type="button" class="hours-btn primary" id="contact-save">Save contact info</button>
+      </div>
+    `;
+
+    const fe = window.friendlyError || ((err, fb) => fb || 'Something went wrong.');
+    const statusBox = $('contact-status');
+
+    $('contact-save').addEventListener('click', async () => {
+      const token = new URLSearchParams(location.search).get('token');
+      statusBox.className = 'hours-status';
+      const btn = $('contact-save');
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Saving...';
+
+      const payload = { p_token: token };
+      fields.forEach(f => {
+        const el = $(f.id);
+        // Map field key → RPC param name (all prefixed with p_)
+        payload['p_' + f.key] = el ? el.value.trim() : null;
+      });
+
+      try {
+        const { data, error } = await db.rpc('update_partner_place_contact', payload);
+        if (error || !data || !data.ok) {
+          statusBox.textContent = fe(error || (data && data.error) || data,
+            "Couldn't save those changes. Please try again.");
+          statusBox.className = 'hours-status show error';
+        } else {
+          statusBox.textContent = 'Contact info updated.';
+          statusBox.className = 'hours-status show success';
+          setTimeout(() => statusBox.classList.remove('show'), 3000);
+        }
+      } catch (err) {
+        statusBox.textContent = fe(err, "Couldn't reach our servers.");
+        statusBox.className = 'hours-status show error';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+  }
+
   // ── Sidebar wiring ───────────────────────────────────────
   function setupSidebar(capabilities) {
     const token = new URLSearchParams(location.search).get('token') || '';
@@ -1735,7 +1839,8 @@
     safe('renderStats',      () => renderStats(data));
     safe('renderRatings',    () => renderRatings(data));
     safe('renderFeedback',   () => renderFeedback(data));
-    safe('setupHoursEditor', () => setupHoursEditor(data.place, data.closures || []));
+    safe('setupHoursEditor',   () => setupHoursEditor(data.place, data.closures || []));
+    safe('setupContactEditor', () => setupContactEditor(data.place));
 
     hide('view-loading');
     show('view-dashboard');

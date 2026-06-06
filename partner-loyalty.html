@@ -6,8 +6,10 @@
 <title>TRODDR · Loyalty Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/troddr-config.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -807,9 +809,20 @@
 <div class="layout" id="view-loading">
   <div></div>
   <div class="main">
-    <div class="state">
-      <div class="spinner"></div>
-      <div class="state-msg">Loading your analytics…</div>
+    <div class="skeleton-grid">
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
+    </div>
+    <div class="skeleton-card" style="margin-top: 14px;">
+      <span class="skeleton skeleton-text med" style="height: 18px;"></span>
+      <div style="margin-top: 14px;">
+        <div class="skeleton-row"><span class="skeleton skeleton-avatar"></span><div class="skeleton-row-body"><span class="skeleton skeleton-text med"></span><span class="skeleton skeleton-text short"></span></div></div>
+        <div class="skeleton-row"><span class="skeleton skeleton-avatar"></span><div class="skeleton-row-body"><span class="skeleton skeleton-text med"></span><span class="skeleton skeleton-text short"></span></div></div>
+        <div class="skeleton-row"><span class="skeleton skeleton-avatar"></span><div class="skeleton-row-body"><span class="skeleton skeleton-text med"></span><span class="skeleton skeleton-text short"></span></div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1239,17 +1252,25 @@
     return badges;
   }
 
+  let memberSearchTerm = '';
+
   function renderMemberFilters(data) {
     const program = data.program;
     const members = data.members || [];
-    $('member-filters').innerHTML = FILTERS.map(f => {
-      const n = members.filter(m => f.match(m, program)).length;
-      return `
-        <button class="chip ${f.id === activeFilter ? 'active' : ''}" data-filter="${f.id}">
-          ${f.label}
-          <span class="chip-count">${n}</span>
-        </button>`;
-    }).join('');
+    $('member-filters').innerHTML = `
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; width: 100%;">
+        ${FILTERS.map(f => {
+          const n = members.filter(m => f.match(m, program)).length;
+          return `
+            <button class="chip ${f.id === activeFilter ? 'active' : ''}" data-filter="${f.id}">
+              ${f.label}
+              <span class="chip-count">${n}</span>
+            </button>`;
+        }).join('')}
+        <input type="text" id="member-search" placeholder="Search member ID..." value="${memberSearchTerm.replace(/"/g, '&quot;')}"
+          style="flex: 1; min-width: 180px; padding: 7px 12px; font-family: inherit; font-size: 12px; border: 1px solid var(--border); border-radius: 100px; background: #fff;" />
+      </div>
+    `;
     document.querySelectorAll('#member-filters .chip').forEach(c => {
       c.addEventListener('click', () => {
         activeFilter = c.dataset.filter;
@@ -1258,6 +1279,18 @@
         renderMembers(data);
       });
     });
+    const searchEl = document.getElementById('member-search');
+    if (searchEl) {
+      searchEl.addEventListener('input', () => {
+        memberSearchTerm = searchEl.value.trim().toLowerCase();
+        renderMembers(data);
+      });
+      // Keep focus after re-render
+      if (memberSearchTerm) {
+        searchEl.focus();
+        searchEl.setSelectionRange(memberSearchTerm.length, memberSearchTerm.length);
+      }
+    }
   }
 
   function bowlsHtml(filled, total) {
@@ -1273,7 +1306,13 @@
     const members = data.members || [];
     const required = program.required_stamps || 10;
     const filter = FILTERS.find(f => f.id === activeFilter) || FILTERS[0];
-    const filtered = members.filter(m => filter.match(m, program));
+    let filtered = members.filter(m => filter.match(m, program));
+    if (memberSearchTerm) {
+      filtered = filtered.filter(m => {
+        const tail = (m.user_id || '').replace(/-/g, '').slice(-4).toLowerCase();
+        return tail.includes(memberSearchTerm) || (m.user_id || '').toLowerCase().includes(memberSearchTerm);
+      });
+    }
 
     const card = $('members-card');
 

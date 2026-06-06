@@ -6,7 +6,9 @@
 <title>TRODDR Admin · Review Queue</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/partner-shared.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/troddr-config.js"></script>
 <meta name="robots" content="noindex,nofollow" />
 
 <script>
@@ -516,7 +518,17 @@
     const action = btn.dataset.action;
     const note = card.querySelector('.reject-note').value.trim() || null;
     const status = action === 'approve' ? 'approved' : 'rejected';
+
+    // OPTIMISTIC: update UI immediately, revert on failure
+    const pill = card.querySelector('.item-status-pill');
+    const prevText = pill.textContent;
+    const prevClass = pill.className;
+    pill.textContent = status;
+    pill.className = `item-status-pill ${status}`;
+    card.classList.add('action-optimistic');
+    card.style.opacity = '0.6';
     card.querySelectorAll('.action-btn').forEach(b => b.classList.add('disabled'));
+
     const { data, error } = await db.rpc('admin_set_special_status', {
       p_admin_token: adminToken,
       p_special_id:  id,
@@ -526,13 +538,18 @@
     if (error || !data || !data.ok) {
       console.error('special action failed', error, data);
       const raw = (data && data.error) || (error && error.message) || 'unknown';
-      alert("Couldn't update this special.\n\nDetails: " + raw);
+      // REVERT
+      pill.textContent = prevText;
+      pill.className = prevClass;
+      card.style.opacity = '1';
+      card.classList.remove('action-optimistic');
+      card.classList.add('action-optimistic-fail');
+      setTimeout(() => card.classList.remove('action-optimistic-fail'), 2000);
       card.querySelectorAll('.action-btn').forEach(b => b.classList.remove('disabled'));
+      alert("Couldn't update this special.\n\nDetails: " + raw);
       return;
     }
     card.style.opacity = '0.4';
-    card.querySelector('.item-status-pill').textContent = status;
-    card.querySelector('.item-status-pill').className = `item-status-pill ${status}`;
     setTimeout(loadQueue, 600);
   }
 
@@ -596,7 +613,17 @@
     const card = btn.closest('.item');
     const id = btn.dataset.id;
     const status = btn.dataset.action;
+
+    // OPTIMISTIC
+    const pill = card.querySelector('.item-status-pill');
+    const prevText = pill.textContent;
+    const prevClass = pill.className;
+    pill.textContent = status;
+    pill.className = `item-status-pill ${status}`;
+    card.classList.add('action-optimistic');
+    card.style.opacity = '0.6';
     card.querySelectorAll('.action-btn').forEach(b => b.classList.add('disabled'));
+
     const { data, error } = await db.rpc('admin_set_submission_status', {
       p_admin_token:   adminToken,
       p_submission_id: id,
@@ -605,8 +632,15 @@
     if (error || !data || !data.ok) {
       console.error('submission action failed', error, data);
       const raw = (data && data.error) || (error && error.message) || 'unknown';
-      alert("Couldn't update this submission.\n\nDetails: " + raw);
+      // REVERT
+      pill.textContent = prevText;
+      pill.className = prevClass;
+      card.style.opacity = '1';
+      card.classList.remove('action-optimistic');
+      card.classList.add('action-optimistic-fail');
+      setTimeout(() => card.classList.remove('action-optimistic-fail'), 2000);
       card.querySelectorAll('.action-btn').forEach(b => b.classList.remove('disabled'));
+      alert("Couldn't update this submission.\n\nDetails: " + raw);
       return;
     }
     card.style.opacity = '0.4';
@@ -663,7 +697,18 @@
     const card = btn.closest('.item');
     const id = btn.dataset.id;
     const status = btn.dataset.action;
+
+    // OPTIMISTIC
+    const pill = card.querySelector('.item-status-pill');
+    const prevText = pill ? pill.textContent : null;
+    const prevClass = pill ? pill.className : null;
+    if (pill) {
+      pill.textContent = status.replace('_', ' ');
+      pill.className = `item-status-pill ${status}`;
+    }
+    card.classList.add('action-optimistic');
     btn.classList.add('disabled');
+
     const { data, error } = await db.rpc('admin_set_message_status', {
       p_admin_token: adminToken,
       p_message_id:  id,
@@ -672,8 +717,15 @@
     if (error || !data || !data.ok) {
       console.error('message action failed', error, data);
       const raw = (data && data.error) || (error && error.message) || 'unknown';
-      alert("Couldn't update this message.\n\nDetails: " + raw);
+      if (pill) {
+        pill.textContent = prevText;
+        pill.className = prevClass;
+      }
+      card.classList.remove('action-optimistic');
+      card.classList.add('action-optimistic-fail');
+      setTimeout(() => card.classList.remove('action-optimistic-fail'), 2000);
       btn.classList.remove('disabled');
+      alert("Couldn't update this message.\n\nDetails: " + raw);
       return;
     }
     setTimeout(loadQueue, 600);

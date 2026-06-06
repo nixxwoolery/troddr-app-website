@@ -6,8 +6,10 @@
 <title>TRODDR · Specials</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/partner-shared.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/troddr-config.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -634,6 +636,43 @@
   }
   .special-tag .n { color: var(--brand-primary); font-weight: 700; margin-left: 4px; }
 
+  .special-edit-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    background: #fff;
+    color: var(--brand-primary);
+    border: 1px solid var(--brand-primary);
+    cursor: pointer;
+    margin-top: 4px;
+    align-self: flex-start;
+  }
+  .special-edit-btn:hover { background: var(--brand-primary); color: var(--brand-text); }
+
+  .form-edit-banner {
+    grid-column: 1 / -1;
+    padding: 12px 14px;
+    background: var(--amber-light);
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--grey-dark);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .form-edit-banner strong { color: var(--amber); }
+  .form-edit-banner button {
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px; font-weight: 700;
+    cursor: pointer;
+  }
+
   /* ── BILLING / UPLOAD PLACEHOLDERS ── */
   .upload-card, .billing-card {
     background: #fff;
@@ -782,7 +821,16 @@
 <div class="layout" id="view-loading">
   <div></div>
   <div class="main">
-    <div class="state"><div class="spinner"></div><div class="state-msg">Loading your specials…</div></div>
+    <div class="skeleton-grid">
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span></div>
+      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span></div>
+    </div>
+    <div class="skeleton-card" style="margin-top: 14px; display: grid; grid-template-columns: 140px 1fr; gap: 16px;">
+      <span class="skeleton" style="height: 100px; border-radius: 8px;"></span>
+      <div><span class="skeleton skeleton-text med" style="height: 18px;"></span><span class="skeleton skeleton-text long"></span><span class="skeleton skeleton-text short"></span></div>
+    </div>
   </div>
 </div>
 
@@ -900,6 +948,11 @@
           <small>We'll review within 1 business day and publish it automatically once approved. You'll see it appear in <strong>Pending Review</strong> above.</small>
         </div>
         <div class="form-grid" id="submit-form-grid">
+
+          <div class="form-edit-banner hidden" id="edit-banner">
+            <span>Editing existing special: <strong id="edit-banner-title"></strong></span>
+            <button type="button" id="edit-cancel">Cancel edit</button>
+          </div>
 
           <!-- Basics -->
           <div class="form-field full">
@@ -1250,6 +1303,10 @@
           ${recurringHtml}
           ${tagsHtml ? `<div class="special-tags">${tagsHtml}</div>` : ''}
           ${capacityHtml}
+          <button type="button" class="special-edit-btn" data-edit-id="${sp.id}">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
           <div class="special-stats">
             ${stats.map(st => `
               <div class="special-stat">
@@ -1284,6 +1341,17 @@
       $('pending-pill').textContent = bits.join(' · ') || 'Pending';
     }
 
+    // Wire edit buttons after list renders
+    function wireEditButtons() {
+      document.querySelectorAll('.special-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.editId;
+          const sp = specials.find(s => s.id === id);
+          if (sp) startEditMode(sp);
+        });
+      });
+    }
+
     if (buckets.active.length) {
       $('active-list').innerHTML = buckets.active.map(specialCard).join('');
     } else {
@@ -1303,7 +1371,103 @@
       const all = [...buckets.ended, ...buckets.inactive];
       $('ended-list').innerHTML = all.map(specialCard).join('');
     }
+    wireEditButtons();
   }
+
+  // ── Edit mode (populate form from existing special) ──
+  let editingSpecialId = null;
+
+  function startEditMode(sp) {
+    editingSpecialId = sp.id;
+
+    $('edit-banner').classList.remove('hidden');
+    $('edit-banner-title').textContent = sp.title || 'this special';
+    $('submit-special').textContent = 'Save changes';
+    $('submit-reset').textContent = 'Discard';
+
+    // Populate fields
+    $('sp-title').value       = sp.title || '';
+    $('sp-type').value        = sp.special_type || '';
+    $('sp-category').value    = sp.event_category || '';
+    $('sp-description').value = sp.description || '';
+
+    $('sp-start-date').value  = sp.start_date ? new Date(sp.start_date).toISOString().slice(0, 10) : '';
+    $('sp-end-date').value    = sp.end_date   ? new Date(sp.end_date).toISOString().slice(0, 10)   : '';
+
+    // Times
+    const hasTimes = !!(sp.start_time || sp.end_time);
+    $('sp-times-enabled').checked = hasTimes;
+    $('sp-times-enabled').dispatchEvent(new Event('change'));
+    if (hasTimes) {
+      $('sp-start-time').value = sp.start_time ? sp.start_time.slice(0,5) : '';
+      $('sp-end-time').value   = sp.end_time   ? sp.end_time.slice(0,5)   : '';
+    }
+
+    // Recurring
+    const hasRecurring = sp.recurring_days && sp.recurring_days.length > 0;
+    $('sp-recurring-enabled').checked = hasRecurring;
+    $('sp-recurring-enabled').dispatchEvent(new Event('change'));
+    document.querySelectorAll('#sp-day-picker .day-chip').forEach(chip => {
+      const cb = chip.querySelector('input');
+      const isSel = hasRecurring && sp.recurring_days.includes(chip.dataset.day);
+      cb.checked = isSel;
+      chip.classList.toggle('selected', isSel);
+    });
+
+    // Pricing
+    let pricingType = 'discount_pct';
+    let priceVal = '';
+    if (sp.discount_percentage != null) { pricingType = 'discount_pct'; priceVal = sp.discount_percentage; }
+    else if (sp.discount_amount != null) { pricingType = 'discount_amt'; priceVal = sp.discount_amount; }
+    else if (sp.price_amount != null)    { pricingType = 'flat';         priceVal = sp.price_amount; }
+    else                                  { pricingType = 'free';         priceVal = ''; }
+    document.querySelectorAll('input[name=sp-pricing]').forEach(r => r.checked = (r.value === pricingType));
+    document.querySelectorAll('.price-option').forEach(o => o.classList.toggle('selected', o.dataset.pricing === pricingType));
+    updatePriceLabel(pricingType);
+    $('sp-price-value').value = priceVal;
+    $('sp-currency').value    = sp.currency || 'JMD';
+
+    // Capacity
+    const hasCapacity = sp.capacity != null;
+    $('sp-reservations-enabled').checked = hasCapacity;
+    $('sp-reservations-enabled').dispatchEvent(new Event('change'));
+    if (hasCapacity) $('sp-capacity').value = sp.capacity;
+
+    // Advanced
+    const hasAdvanced = !!(sp.age_restriction || sp.host_name || sp.event_slug || sp.ticket_link || sp.rsvp_link);
+    $('sp-advanced-enabled').checked = hasAdvanced;
+    $('sp-advanced-enabled').dispatchEvent(new Event('change'));
+    if (hasAdvanced) {
+      $('sp-age').value         = sp.age_restriction || '';
+      $('sp-host').value        = sp.host_name || '';
+      $('sp-event-slug').value  = sp.event_slug || '';
+      $('sp-ticket').value      = sp.ticket_link || '';
+      $('sp-rsvp').value        = sp.rsvp_link || '';
+    }
+
+    // Image (dispatch input event so the preview updates via the form's own handler)
+    $('sp-image').value = sp.image_url || '';
+    $('sp-image').dispatchEvent(new Event('input'));
+
+    // Tags
+    $('sp-tags').value = (sp.event_tags || []).join(', ');
+
+    // Scroll the form into view
+    document.getElementById('upload').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function exitEditMode() {
+    editingSpecialId = null;
+    $('edit-banner').classList.add('hidden');
+    $('submit-special').textContent = 'Submit for approval';
+    $('submit-reset').textContent = 'Clear';
+  }
+
+  document.getElementById('edit-cancel').addEventListener('click', () => {
+    exitEditMode();
+    // Reset form by reusing existing reset path
+    document.getElementById('submit-reset').click();
+  });
 
   // ── Submit form wiring ───────────────────────────────────
   function setupSubmitForm() {
@@ -1541,32 +1705,45 @@
       const original = submitBtn.textContent;
       submitBtn.textContent = 'Submitting...';
 
+      const isEdit = !!window.editingSpecialId || !!editingSpecialId;
+      const editId = window.editingSpecialId || editingSpecialId;
+
+      const sharedPayload = {
+        p_token:               token,
+        p_title:               title,
+        p_description:         description,
+        p_special_type:        type,
+        p_start_date:          new Date(startDate + 'T00:00:00').toISOString(),
+        p_end_date:            new Date(endDate   + 'T23:59:59').toISOString(),
+        p_start_time:          startTime,
+        p_end_time:            endTime,
+        p_image_url:           imageUrl,
+        p_discount_percentage: discountPct,
+        p_discount_amount:     discountAmt,
+        p_price_amount:        priceAmt,
+        p_currency:            currency,
+        p_event_category:      category,
+        p_tags:                tags,
+        p_capacity:            capacity,
+        p_recurring_days:      recurringDays,
+        p_age_restriction:     ageRestriction,
+        p_host_name:           hostName,
+        p_event_slug:          eventSlug,
+        p_ticket_link:         ticketLink,
+        p_rsvp_link:           rsvpLink,
+      };
+
+      let rpcName, rpcPayload;
+      if (isEdit) {
+        rpcName    = 'update_partner_special';
+        rpcPayload = Object.assign({}, sharedPayload, { p_special_id: editId });
+      } else {
+        rpcName    = 'submit_partner_special';
+        rpcPayload = Object.assign({}, sharedPayload, { p_image_urls: null });
+      }
+
       try {
-        const { data, error } = await db.rpc('submit_partner_special', {
-          p_token:               token,
-          p_title:               title,
-          p_description:         description,
-          p_special_type:        type,
-          p_start_date:          new Date(startDate + 'T00:00:00').toISOString(),
-          p_end_date:            new Date(endDate   + 'T23:59:59').toISOString(),
-          p_start_time:          startTime,
-          p_end_time:            endTime,
-          p_image_url:           imageUrl,
-          p_discount_percentage: discountPct,
-          p_discount_amount:     discountAmt,
-          p_price_amount:        priceAmt,
-          p_currency:            currency,
-          p_event_category:      category,
-          p_tags:                tags,
-          p_capacity:            capacity,
-          p_recurring_days:      recurringDays,
-          p_age_restriction:     ageRestriction,
-          p_host_name:           hostName,
-          p_event_slug:          eventSlug,
-          p_ticket_link:         ticketLink,
-          p_rsvp_link:           rsvpLink,
-          p_image_urls:          null,
-        });
+        const { data, error } = await db.rpc(rpcName, rpcPayload);
         if (error || !data || !data.ok) {
           showError(fe(error || (data && data.error) || data,
             "We couldn't submit that just now. Please try again, or send us a message."));
