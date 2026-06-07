@@ -993,9 +993,7 @@
     return new Date(ts).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
   function maskedLabel(userId) {
-    if (!userId) return 'Member';
-    const tail = userId.replace(/-/g, '').slice(-4);
-    return `Member ••${tail}`;
+    return 'Loyalty member';
   }
   function pluralize(n, s, p) { return n === 1 ? s : (p || s + 's'); }
   function fmtMoney(n) {
@@ -1268,7 +1266,7 @@
               <span class="chip-count">${n}</span>
             </button>`;
         }).join('')}
-        <input type="text" id="member-search" placeholder="Search member ID..." value="${memberSearchTerm.replace(/"/g, '&quot;')}"
+        <input type="text" id="member-search" placeholder="Search member segment..." value="${memberSearchTerm.replace(/"/g, '&quot;')}"
           style="flex: 1; min-width: 180px; padding: 7px 12px; font-family: inherit; font-size: 12px; border: 1px solid var(--border); border-radius: 100px; background: #fff;" />
       </div>
     `;
@@ -1310,8 +1308,9 @@
     let filtered = members.filter(m => filter.match(m, program));
     if (memberSearchTerm) {
       filtered = filtered.filter(m => {
-        const tail = (m.user_id || '').replace(/-/g, '').slice(-4).toLowerCase();
-        return tail.includes(memberSearchTerm) || (m.user_id || '').toLowerCase().includes(memberSearchTerm);
+        const seg = memberSegment(m, program).label.toLowerCase();
+        const lastSeen = m.last_stamped_at ? fmtRelative(m.last_stamped_at).toLowerCase() : 'no visits yet';
+        return seg.includes(memberSearchTerm) || lastSeen.includes(memberSearchTerm);
       });
     }
 
@@ -1326,7 +1325,7 @@
           <div class="empty-state-body">${isEmpty
             ? "When a guest signs up for your loyalty card in the TRODDR app, they'll appear here with their stamp progress."
             : memberSearchTerm
-              ? "No member ID matches that search. Try a different search or clear it."
+              ? "No member segment matches that search. Try a different search or clear it."
               : "Try a different filter chip, or share your loyalty card link to bring more guests in."}</div>
         </div>`;
       return;

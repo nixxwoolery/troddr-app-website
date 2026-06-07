@@ -124,7 +124,6 @@ begin
         jsonb_agg(
           jsonb_build_object(
             'card_id',           c.id,
-            'user_id',           c.user_id,
             'current_stamps',    c.current_stamps,
             'completed_cycles',  c.completed_cycles,
             'is_redeemed',       c.is_redeemed,

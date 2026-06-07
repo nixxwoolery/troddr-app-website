@@ -143,12 +143,19 @@
   /* ── LAYOUT ── */
   .layout {
     max-width: 1320px;
-    margin: -32px auto 0;
+    margin: -24px auto 0;
     padding: 0 16px;
     display: grid;
     grid-template-columns: 240px 1fr;
     gap: 24px;
     position: relative; z-index: 10;
+  }
+  .main {
+    display: grid;
+    gap: 24px;
+  }
+  .section {
+    margin-bottom: 0;
   }
   .sidebar {
     position: sticky; top: 76px;
@@ -374,9 +381,14 @@
   }
   .image-status.error { color: var(--red); }
   .image-status.success { color: var(--green); }
-  .main { min-width: 0; padding-bottom: 80px; }
+  .main {
+    min-width: 0;
+    padding-bottom: 80px;
+    display: grid;
+    gap: 24px;
+  }
 
-  .section { margin-bottom: 36px; scroll-margin-top: 80px; }
+  .section { margin-bottom: 0; scroll-margin-top: 80px; }
   .section-head {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 14px;

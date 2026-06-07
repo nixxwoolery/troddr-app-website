@@ -1101,9 +1101,7 @@
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
   function maskedLabel(userId) {
-    if (!userId) return 'Member';
-    const tail = userId.replace(/-/g, '').slice(-4);
-    return `Member ••${tail}`;
+    return 'Anonymous guest';
   }
   function escapeHtml(s) {
     if (s == null) return '';
@@ -1258,8 +1256,12 @@
   // ── Stats strip ──────────────────────────────────────────
   function renderStats(data) {
     const s = data.stats;
+    const metricValue = (value) => value == null ? 'Soon' : value;
+    const metricSub = (value, readyText) => value == null ? 'needs app tracking' : readyText;
     const cards = [
       { label: 'Marked Visits',       value: s.marked_visits,    sub: s.marked_visits_30d > 0 ? `${s.marked_visits_30d} in last 30d` : 'all-time' },
+      { label: 'Added to Itinerary',  value: metricValue(s.itinerary_adds), sub: metricSub(s.itinerary_adds, 'saved into trip plans') },
+      { label: 'Favourites',          value: metricValue(s.favourites_count), sub: metricSub(s.favourites_count, 'saved by guests') },
       { label: 'Unique Visitors',     value: s.unique_visitors,  sub: 'distinct guests' },
       { label: 'Feedback Submitted',  value: s.feedback_count,   sub: s.feedback_30d > 0 ? `${s.feedback_30d} in last 30d` : (s.feedback_count ? 'all-time' : 'none yet') },
       { label: 'Overall Rating',      value: s.overall_rating != null ? s.overall_rating : 'N/A',

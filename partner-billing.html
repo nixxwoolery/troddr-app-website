@@ -138,8 +138,8 @@
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 18px 18px 16px;
-    display: flex; flex-direction: column; gap: 8px;
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 6px;
   }
   .tier-card.featured {
     border-color: var(--brand-primary);
@@ -147,14 +147,14 @@
   }
   .tier-name { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey-mid); }
   .tier-name.featured { color: var(--brand-primary); }
-  .tier-headline { font-size: 18px; font-weight: 700; color: var(--black); letter-spacing: -0.3px; }
+  .tier-headline { font-size: 16px; font-weight: 700; color: var(--black); letter-spacing: -0.2px; }
   .tier-price {
-    font-size: 24px; font-weight: 800;
+    font-size: 22px; font-weight: 800;
     color: var(--brand-primary); letter-spacing: -0.6px;
     margin-top: 4px;
   }
   .tier-price .unit { font-size: 12px; color: var(--grey-mid); font-weight: 500; margin-left: 4px; }
-  .tier-features { display: grid; gap: 4px; margin-top: 8px; font-size: 12px; color: var(--grey-dark); line-height: 1.5; }
+  .tier-features { display: grid; gap: 3px; margin-top: 4px; font-size: 12px; color: var(--grey-dark); line-height: 1.45; }
   .tier-features li { list-style: none; padding-left: 16px; position: relative; }
   .tier-features li::before { content: ''; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; background: var(--brand-primary); border-radius: 50%; }
 
@@ -309,9 +309,9 @@
     <div class="sidebar-divider"></div>
     <div class="sidebar-title">On this page</div>
     <a href="#summary"  class="jump-link" data-section="summary"><svg><use href="#ic-bolt-nav"/></svg> Summary</a>
-    <a href="#tiers"    class="jump-link" data-section="tiers"><svg><use href="#ic-tag"/></svg> Pricing tiers</a>
     <a href="#invoices" class="jump-link" data-section="invoices"><svg><use href="#ic-doc"/></svg> Invoices</a>
     <a href="#payment"  class="jump-link" data-section="payment"><svg><use href="#ic-dollar"/></svg> Payment method</a>
+    <a href="#tiers"    class="jump-link" data-section="tiers"><svg><use href="#ic-tag"/></svg> Plan rules</a>
   </aside>
 
   <main class="main">
@@ -345,10 +345,40 @@
       </div>
     </section>
 
+    <section class="section" id="invoices">
+      <div class="section-head">
+        <h2 class="section-title">Invoices</h2>
+        <span class="pill soon">Coming soon</span>
+      </div>
+      <div class="billing-card">
+        <div class="empty-state">
+          <strong>No invoices yet</strong>
+          Extra specials, boosted placements, featured campaigns, and any other billable services will appear here by restaurant/location once billing is live.
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="payment">
+      <div class="section-head">
+        <h2 class="section-title">Payment Method</h2>
+        <span class="pill soon">Coming soon</span>
+      </div>
+      <div class="billing-card">
+        <div class="lead">No payment method on file</div>
+        <div class="desc">
+          Foundation partners get two included specials per restaurant/location.
+          Any additional approved special is tracked automatically and billed to the partner account once payment collection is active.
+        </div>
+        <button type="button" class="cta-button" id="contact-billing-cta">
+          Have questions? Message us
+        </button>
+      </div>
+    </section>
+
     <section class="section" id="tiers">
       <div class="section-head">
         <div>
-          <h2 class="section-title">Pricing Tiers</h2>
+          <h2 class="section-title">Plan Rules</h2>
           <div class="section-sub">Foundation includes two standard specials per restaurant/location each billing cycle. Extras roll up to the partner billing account.</div>
         </div>
       </div>
@@ -386,36 +416,6 @@
             <li>Full attribution analytics</li>
           </ul>
         </div>
-      </div>
-    </section>
-
-    <section class="section" id="invoices">
-      <div class="section-head">
-        <h2 class="section-title">Invoices</h2>
-        <span class="pill soon">Coming soon</span>
-      </div>
-      <div class="billing-card">
-        <div class="empty-state">
-          <strong>No invoices yet</strong>
-          Extra specials, boosted placements, featured campaigns, and any other billable services will appear here by restaurant/location once billing is live.
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="payment">
-      <div class="section-head">
-        <h2 class="section-title">Payment Method</h2>
-        <span class="pill soon">Coming soon</span>
-      </div>
-      <div class="billing-card">
-        <div class="lead">No payment method on file</div>
-        <div class="desc">
-          Foundation partners get two included specials per restaurant/location.
-          Any additional approved special is tracked automatically and billed to the partner account once payment collection is active.
-        </div>
-        <button type="button" class="cta-button" id="contact-billing-cta">
-          Have questions? Message us
-        </button>
       </div>
     </section>
 
