@@ -88,7 +88,7 @@
   .page-hero {
     background: var(--brand-primary) center / cover no-repeat;
     color: var(--brand-text);
-    padding: 24px 24px 32px;
+    padding: 16px 24px 20px;
     text-align: left;
     position: relative; overflow: hidden;
   }
@@ -101,7 +101,7 @@
   .hero-inner {
     position: relative; max-width: 1280px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 8px;
     z-index: 2;
   }
   .hero-eyebrow {
@@ -110,15 +110,15 @@
     color: var(--brand-text);
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.14em; text-transform: uppercase;
-    padding: 5px 12px; border-radius: 4px;
-    margin-bottom: 14px;
+    padding: 4px 10px; border-radius: 4px;
+    margin-bottom: 8px;
     border: 1px solid rgba(255,255,255,0.22);
   }
   .page-hero h1 {
-    font-size: clamp(28px, 4.5vw, 42px);
-    font-weight: 800; line-height: 1.1;
-    margin-bottom: 12px;
-    letter-spacing: -0.8px;
+    font-size: clamp(22px, 3.2vw, 30px);
+    font-weight: 800; line-height: 1.15;
+    margin-bottom: 6px;
+    letter-spacing: -0.6px;
     max-width: 760px;
   }
   .hero-meta {
@@ -144,15 +144,15 @@
   .layout {
     max-width: 1320px;
     margin: 0 auto;
-    padding: 18px 16px 0;
+    padding: 12px 16px 0;
     display: grid;
     grid-template-columns: 240px 1fr;
-    gap: 24px;
+    gap: 18px;
     position: relative; z-index: 10;
   }
   .main {
     display: grid;
-    gap: 18px;
+    gap: 14px;
   }
   .section {
     margin-bottom: 0;
@@ -692,11 +692,12 @@
     padding: 18px;
   }
   .funnel-hero-head {
-    display: grid;
-    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.8fr);
-    align-items: start;
-    margin-bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 14px;
     gap: 18px;
+    flex-wrap: wrap;
   }
   .funnel-hero-tag {
     font-size: 10px; font-weight: 700;
@@ -2104,7 +2105,7 @@
           <div class="funnel-hero-title">How guests move through your event</div>
           <div class="funnel-hero-sub">From first impression in the TRODDR app, through commitment, to attendance and return visits.</div>
         </div>
-        <div class="funnel-right-slot"></div>
+        ${chipsHtml}
       </div>`;
 
     // If no live data at all, show one centered empty state with a single CTA.
@@ -2117,7 +2118,6 @@
           Your funnel will populate once guests find your event.<br>
           ${linkLine}
         </div>`;
-      $('funnel-body').querySelector('.funnel-right-slot').innerHTML = chipsHtml;
       return;
     }
 
@@ -2149,8 +2149,7 @@
         </div>`;
     }).join('');
 
-    $('funnel-body').innerHTML = headHtml;
-    $('funnel-body').querySelector('.funnel-right-slot').innerHTML = `<div class="funnel-steps">${stepsHtml}</div>`;
+    $('funnel-body').innerHTML = headHtml + `<div class="funnel-steps">${stepsHtml}</div>`;
   }
 
   // ── Vendors (per-vendor card with menu + per-item ratings) ──
