@@ -414,6 +414,65 @@
   .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
   .pill.soon { background: var(--bg-soft); }
 
+  /* ── FUNNEL FLOW (clean horizontal layout) ── */
+  .funnel-flow {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    align-items: stretch;
+  }
+  .ff-step {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    min-width: 0;
+    position: relative;
+  }
+  .ff-step.live {
+    background: #fff;
+    border-color: var(--brand-primary);
+  }
+  .ff-step.muted {
+    background: var(--bg-soft);
+    border-style: dashed;
+  }
+  .ff-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ff-value {
+    font-size: 24px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .ff-step.muted .ff-value {
+    color: var(--grey-light);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .ff-conv {
+    font-size: 10px; font-weight: 600;
+    color: var(--brand-primary);
+    letter-spacing: 0.04em;
+    margin-top: auto;
+  }
+  .ff-conv.muted { color: var(--grey-light); }
+  @media (max-width: 1100px) {
+    .funnel-flow { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 700px) {
+    .funnel-flow { grid-template-columns: 1fr 1fr; }
+  }
+
   /* ── EVENT STATUS CARD ── */
   .event-status {
     background: #fff;
@@ -454,7 +513,7 @@
   /* ── STATS GRID ── */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 10px;
   }
   .stat {
@@ -488,17 +547,7 @@
   }
   .stat-sub.good { color: var(--green); }
   .stat-sub.warn { color: var(--amber); }
-  /* Empty-state stat (no number) */
-  .stat.empty .stat-empty-msg {
-    font-size: 12px; color: var(--grey-dark);
-    line-height: 1.5;
-    margin-top: 4px;
-    overflow-wrap: anywhere;
-  }
-  .stat.empty .stat-empty-msg strong {
-    color: var(--brand-primary);
-    font-weight: 700;
-  }
+  .stat.empty .stat-value { color: var(--grey-light); }
 
   /* ── EVENT PREVIEW ── */
   .preview-grid {
@@ -679,81 +728,6 @@
     margin-top: 4px;
   }
 
-  /* ── FUNNEL (hero) ── */
-  .funnel {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-  }
-  .funnel.hero {
-    background: #fff;
-    border: 1px solid var(--border);
-    padding: 18px;
-  }
-  .funnel-hero-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 14px;
-    gap: 18px;
-    flex-wrap: wrap;
-  }
-  .funnel-hero-tag {
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--brand-primary);
-    margin-bottom: 4px;
-  }
-  .funnel-hero-title {
-    font-size: 16px; font-weight: 700;
-    color: var(--black);
-    letter-spacing: -0.2px;
-  }
-  .funnel-hero-sub {
-    font-size: 12px; color: var(--grey-mid);
-    margin-top: 4px;
-    line-height: 1.5;
-    max-width: 480px;
-  }
-  .funnel-empty {
-    text-align: center;
-    padding: 28px 20px;
-    font-size: 13px; color: var(--grey-mid);
-    background: var(--bg-soft);
-    border-radius: var(--radius);
-    line-height: 1.6;
-  }
-  .funnel-empty strong { color: var(--brand-primary); }
-
-  /* Funnel header supplementary chips (shares, bookmarks) */
-  .funnel-hero-chips {
-    display: flex; gap: 8px;
-    flex-wrap: wrap;
-    align-self: start;
-  }
-  .hero-chip {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
-    text-align: center;
-    min-width: 76px;
-  }
-  .hero-chip .num {
-    font-size: 18px; font-weight: 800;
-    color: var(--black);
-    letter-spacing: -0.3px;
-    line-height: 1;
-  }
-  .hero-chip .num.muted { color: var(--grey-light); }
-  .hero-chip .lbl {
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--grey-mid);
-    margin-top: 4px;
-  }
-
   /* Stat delta indicator (e.g. "+12 this week") */
   .stat-delta {
     display: inline-flex; align-items: center; gap: 4px;
@@ -833,58 +807,6 @@
     font-size: 10px; color: var(--grey-mid);
     font-weight: 600;
   }
-  .funnel-steps {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-    align-items: stretch;
-  }
-  .funnel-step {
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 12px 10px;
-    display: flex; flex-direction: column; gap: 4px;
-    min-width: 0;
-  }
-  .funnel-step.live {
-    background: #fff;
-    border-color: var(--brand-primary);
-  }
-  .funnel-step.muted {
-    background: var(--bg-soft);
-    border-style: dashed;
-  }
-  .funnel-step-label {
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--grey-mid);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .funnel-step-value {
-    font-size: 22px; font-weight: 800;
-    color: var(--black);
-    letter-spacing: -0.8px;
-    line-height: 1.1;
-  }
-  .funnel-step.muted .funnel-step-value {
-    color: var(--grey-light);
-    font-weight: 700;
-    font-size: 16px;
-  }
-  .funnel-step-note {
-    font-size: 10px; font-weight: 600;
-    color: var(--grey-light);
-    letter-spacing: 0.04em;
-  }
-  .funnel-conv {
-    font-size: 10px; font-weight: 700;
-    color: var(--brand-primary);
-    letter-spacing: 0.05em;
-    margin-top: 2px;
-  }
-  .funnel-conv.muted { color: var(--grey-light); }
-
   /* ── VENDORS ── */
   .vendor-stats {
     display: grid;
@@ -1471,9 +1393,6 @@
   .page-foot a { color: var(--grey-mid); }
 
   /* ── RESPONSIVE ── */
-  @media (max-width: 1200px) {
-    .funnel-steps { grid-template-columns: repeat(3, 1fr); }
-  }
   @media (max-width: 1100px) {
     .stats-grid { grid-template-columns: repeat(3, 1fr); }
     .preview-grid { grid-template-columns: 1fr; }
@@ -1493,12 +1412,6 @@
     .sidebar a svg { display: none; }
     .page-hero { padding: 44px 20px 76px; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .funnel-hero-head {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .funnel-steps { grid-template-columns: 1fr 1fr; }
     .stat-value { font-size: 22px; }
   }
   @media (max-width: 480px) {
@@ -1531,9 +1444,6 @@
     </symbol>
     <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-    </symbol>
-    <symbol id="ic-funnel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 4h18l-7 9v7l-4-2v-5L3 4z"/>
     </symbol>
     <symbol id="ic-shop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 7l2-4h14l2 4M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7M3 7h18M9 11a3 3 0 0 0 6 0"/>
@@ -1686,7 +1596,14 @@
     </section>
 
     <section class="section" id="funnel">
-      <div class="funnel hero" id="funnel-body"></div>
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Discovery → Attendance</h2>
+          <div class="section-sub">How guests move through your event, from first impression to attendance.</div>
+        </div>
+        <span class="pill live">Live</span>
+      </div>
+      <div class="funnel-flow" id="funnel-flow"></div>
     </section>
 
     <section class="section" id="discovery" style="display:none">
@@ -1716,7 +1633,7 @@
 
     <section class="section" id="engagement">
       <div class="section-head">
-        <h2 class="section-title">Engagement Snapshot</h2>
+        <h2 class="section-title">Guest Engagement</h2>
         <span class="pill live">Live</span>
       </div>
       <div class="stats-grid" id="stats-grid"></div>
@@ -1994,63 +1911,78 @@
     `;
   }
 
+  // ── Discovery → Attendance funnel (clean horizontal flow) ─
+  function renderFunnel(stats) {
+    const views    = stats.view_count || stats.unique_viewers || 0;
+    const attended = stats.checkin_count || stats.went_count || 0;
+    const steps = [
+      { label: 'Listing Views', value: views,                       live: true },
+      { label: 'Saved',         value: stats.saved_count || 0,      live: true },
+      { label: 'Interested',    value: stats.interested_count || 0, live: true },
+      { label: 'Going / RSVP',  value: stats.going_count || 0,      live: true },
+      { label: 'Attended',      value: attended,                    live: true },
+      { label: 'Returned via Loyalty', muted: true },
+    ];
+
+    $('funnel-flow').innerHTML = steps.map((step, i) => {
+      const prev = i > 0 ? steps[i - 1] : null;
+      let convHtml = '';
+      if (!step.muted && prev && prev.value > 0 && step.value != null) {
+        const pct = Math.round((step.value / prev.value) * 100);
+        convHtml = `<div class="ff-conv">${pct}% from prev</div>`;
+      } else if (prev && !step.muted) {
+        convHtml = `<div class="ff-conv muted">no prior data</div>`;
+      } else if (step.muted) {
+        convHtml = `<div class="ff-conv muted">coming soon</div>`;
+      }
+      const valueDisplay = step.muted ? 'Soon' : step.value;
+      const cls = step.muted ? 'muted' : 'live';
+      return `
+        <div class="ff-step ${cls}">
+          <div class="ff-label">${step.label}</div>
+          <div class="ff-value">${valueDisplay}</div>
+          ${convHtml}
+        </div>`;
+    }).join('');
+  }
+
   // ── Engagement stats with empty-state guidance ──────────
   function renderStats(stats, eventSlug) {
-    const shareLine = `Share your event link to start collecting views.`;
-
     // Prefer the explicit view_count counter; fall back to unique viewers.
     const views = stats.view_count || stats.unique_viewers || 0;
 
     const cards = [
       { label: 'Views',
         value: views,
-        emptyMsg: shareLine,
         sub: stats.unique_viewers
           ? `${stats.unique_viewers} unique ${stats.unique_viewers === 1 ? 'viewer' : 'viewers'}`
           : 'across the app' },
       { label: 'Saved',
         value: stats.saved_count,
-        emptyMsg: 'Saves appear here when guests bookmark your event in the app.',
         sub: 'bookmarked in the app',
         delta: stats.saves_7d },
       { label: 'Interested',
         value: stats.interested_count,
-        emptyMsg: 'Guests can tap <strong>Interested</strong> to follow updates. Counts appear as guests engage.',
-        sub: stats.view_to_interest_rate != null ? `${stats.view_to_interest_rate}% of views` : null,
+        sub: stats.view_to_interest_rate != null ? `${stats.view_to_interest_rate}% of views` : 'event follows',
         delta: stats.interests_7d },
       { label: 'Going',
         value: stats.going_count,
-        emptyMsg: 'Once guests mark <strong>Going</strong> or RSVP, you\'ll see commitment counts here.',
-        sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : null,
+        sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : 'RSVP / commitment',
         delta: stats.going_7d },
-      { label: 'Checked In',
+      { label: 'Attended',
         value: stats.checkin_count,
-        emptyMsg: stats.is_past
-          ? 'No check-ins were captured for this event.'
-          : 'Check-in counts appear here on event day via QR, NFC, or self check-in.',
         sub: stats.going_to_attended_rate != null
           ? `${stats.going_to_attended_rate}% of going attended`
-          : (stats.checkin_count ? 'live attendance' : null) },
+          : 'check-ins captured' },
+      { label: 'Shares',
+        value: stats.shares_count || 0,
+        sub: 'shared by guests' },
+      { label: 'Bookmarks',
+        value: stats.bookmarks_count || 0,
+        sub: 'saved for later' },
     ];
 
     $('stats-grid').innerHTML = cards.map(c => {
-      // Ticket card is always present
-      if (c.labelOverride) {
-        return `
-          <div class="stat">
-            <div class="stat-label">${c.label}</div>
-            <div class="stat-value"><span>${c.rawValue}</span></div>
-            ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
-          </div>`;
-      }
-      // Empty state when value is 0 or null
-      if (!c.value || c.value === 0) {
-        return `
-          <div class="stat empty">
-            <div class="stat-label">${c.label}</div>
-            <div class="stat-empty-msg">${c.emptyMsg}</div>
-          </div>`;
-      }
       const deltaHtml = c.delta > 0
         ? `<div class="stat-delta">
              <svg><use href="#ic-trend-up"/></svg>
@@ -2058,98 +1990,13 @@
            </div>`
         : '';
       return `
-        <div class="stat">
+        <div class="stat ${c.value ? '' : 'empty'}">
           <div class="stat-label">${c.label}</div>
-          <div class="stat-value"><span>${c.value}</span></div>
+          <div class="stat-value"><span>${c.value || 0}</span></div>
           ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
           ${deltaHtml}
         </div>`;
     }).join('');
-  }
-
-  // ── Funnel (hero) ────────────────────────────────────────
-  function renderFunnel(stats, eventSlug) {
-    const views = stats.view_count || stats.unique_viewers || 0;
-    const attended = stats.checkin_count || stats.went_count || 0;
-    const liveSteps = [
-      { label: 'Listing Views', value: views },
-      { label: 'Saved',         value: stats.saved_count || 0 },
-      { label: 'Interested',    value: stats.interested_count || 0 },
-      { label: 'Going / RSVP',  value: stats.going_count || 0 },
-      { label: 'Attended',      value: attended },
-    ];
-    const futureSteps = [
-      { label: 'Returned via Loyalty', note: 'Coming soon' },
-    ];
-
-    const liveTotal = liveSteps.reduce((a, s) => a + s.value, 0);
-
-    // Supplementary signals (right-side chips on the header)
-    const chips = [
-      { num: stats.shares_count    || 0, lbl: 'Shares' },
-      { num: stats.bookmarks_count || 0, lbl: 'Bookmarks' },
-    ];
-    const chipsHtml = `
-      <div class="funnel-hero-chips">
-        ${chips.map(c => `
-          <div class="hero-chip">
-            <div class="num ${c.num === 0 ? 'muted' : ''}">${c.num}</div>
-            <div class="lbl">${c.lbl}</div>
-          </div>`).join('')}
-      </div>`;
-
-    const headHtml = `
-      <div class="funnel-hero-head">
-        <div>
-          <div class="funnel-hero-tag">Discovery → Attendance</div>
-          <div class="funnel-hero-title">How guests move through your event</div>
-          <div class="funnel-hero-sub">From first impression in the TRODDR app, through commitment, to attendance and return visits.</div>
-        </div>
-        ${chipsHtml}
-      </div>`;
-
-    // If no live data at all, show one centered empty state with a single CTA.
-    if (liveTotal === 0) {
-      const linkLine = eventSlug
-        ? `Share <strong>troddr.com/events/${escapeHtml(eventSlug)}</strong> on Instagram, WhatsApp, or your website.`
-        : 'Share your event link on Instagram, WhatsApp, or your website.';
-      $('funnel-body').innerHTML = headHtml + `
-        <div class="funnel-empty">
-          Your funnel will populate once guests find your event.<br>
-          ${linkLine}
-        </div>`;
-      return;
-    }
-
-    const steps = [
-      ...liveSteps.map(s => ({ ...s, live: true })),
-      ...futureSteps.map(s => ({ ...s, muted: true, value: null })),
-    ];
-
-    const stepsHtml = steps.map((step, i) => {
-      const prev = i > 0 ? steps[i - 1] : null;
-      let convHtml = '';
-      if (prev && prev.value !== null && step.value !== null && prev.value > 0) {
-        const pct = Math.round((step.value / prev.value) * 100);
-        convHtml = `<div class="funnel-conv">${pct}% from prev</div>`;
-      } else if (prev) {
-        convHtml = `<div class="funnel-conv muted">conv. soon</div>`;
-      }
-      const cls = step.muted ? 'muted' : 'live';
-      const valueDisplay = step.value === null
-        ? '<span style="font-size:14px; color:var(--grey-light);">Soon</span>'
-        : step.value;
-      const note = step.muted ? `<div class="funnel-step-note">${step.note}</div>` : '';
-      return `
-        <div class="funnel-step ${cls}">
-          <div class="funnel-step-label">${step.label}</div>
-          <div class="funnel-step-value">${valueDisplay}</div>
-          ${note}
-          ${convHtml}
-        </div>`;
-    }).join('');
-
-    $('funnel-body').innerHTML = headHtml + `<div class="funnel-steps">${stepsHtml}</div>`;
   }
 
   // ── Vendors (per-vendor card with menu + per-item ratings) ──
@@ -3248,7 +3095,7 @@
     };
     safe('renderHero',        () => renderHero(data.event, data.stats));
     safe('renderEventStatus', () => renderEventStatus(data.event, data.stats));
-    safe('renderFunnel',      () => renderFunnel(data.stats, data.event.slug));
+    safe('renderFunnel',      () => renderFunnel(data.stats));
     safe('renderPreview',     () => renderPreview(data.event, data.tabs));
     safe('renderStats',       () => renderStats(data.stats, data.event.slug));
     safe('renderAudience',    () => renderAudience(data));

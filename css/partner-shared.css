@@ -151,30 +151,33 @@
   background: #fff;
   border: 1px solid var(--border, #e8e8e8);
   border-radius: 16px;
-  padding: 22px 24px;
+  padding: 18px 20px;
 }
 .discovery-totals {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
 }
 .discovery-totals .ds-stat {
   background: var(--bg-soft, #f8f9fa);
   border-radius: 10px;
-  padding: 14px 16px;
+  padding: 12px 14px;
 }
 .discovery-totals .ds-num {
-  font-size: 26px; font-weight: 800;
+  font-size: 22px; font-weight: 800;
   color: var(--brand-primary, #0077CC);
-  letter-spacing: -0.6px;
+  letter-spacing: -0.5px;
   line-height: 1;
 }
 .discovery-totals .ds-lbl {
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--grey-mid, #666);
-  margin-top: 6px;
+  margin-top: 4px;
+}
+@media (max-width: 880px) {
+  .discovery-totals { grid-template-columns: repeat(2, 1fr); }
 }
 .discovery-section-title {
   font-size: 11px; font-weight: 700;
