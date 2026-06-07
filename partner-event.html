@@ -3184,7 +3184,9 @@
   }
 
   async function load() {
-    const token = window.PartnerAuth?.getToken({ require: false }) || new URLSearchParams(location.search).get('token') || '';
+    const urlParams = new URLSearchParams(location.search);
+    const hasUrlToken = urlParams.has('token') || urlParams.has('access_token');
+    const token = window.PartnerAuth?.getToken({ require: false }) || urlParams.get('token') || '';
     if (!token) {
       if (window.PartnerAuth) window.PartnerAuth.getToken({ require: true });
       else showLoadError('Missing token', "We couldn't find an event access token in this link.");
@@ -3209,6 +3211,23 @@
     const { data, error } = eventRes;
     const caps = capsRes && capsRes.data;
     if (error || !data || !data.event) {
+      if (!error && caps && caps.type === 'place') {
+        window.PartnerAuth?.navigate('/partner/listing', token);
+        return;
+      }
+      const firstEvent = caps && caps.partner && Array.isArray(caps.partner.entities)
+        ? caps.partner.entities.find(e => e.type === 'event' && e.token)
+        : null;
+      if (!error && firstEvent) {
+        window.PartnerAuth?.navigate('/partner/event', firstEvent.token);
+        return;
+      }
+      if (!error && !caps && !hasUrlToken && window.PartnerAuth) {
+        window.PartnerAuth.clearToken();
+        window.PartnerAuth.getToken({ require: true });
+        hide('view-loading');
+        return;
+      }
       console.error('event error', error, 'data:', data);
       const rawMsg = (error && (error.message || error.code || error.details || error.hint))
         || (data && data.error)
