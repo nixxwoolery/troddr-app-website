@@ -1924,6 +1924,17 @@
     console.log('[partner-listing] closuresRes:',closuresRes);
 
     if (listingRes.error || !data || !data.place) {
+      if (!listingRes.error && caps && caps.type === 'event' && caps.capabilities && caps.capabilities.event) {
+        window.PartnerAuth?.navigate('/partner/event', token);
+        return;
+      }
+      const firstPlace = caps && caps.partner && Array.isArray(caps.partner.entities)
+        ? caps.partner.entities.find(e => e.type === 'place' && e.token)
+        : null;
+      if (!listingRes.error && firstPlace) {
+        window.PartnerAuth?.navigate('/partner/listing', firstPlace.token);
+        return;
+      }
       const rawMsg = (listingRes.error && (listingRes.error.message || listingRes.error.code))
         || (data && data.error)
         || (!data ? 'RPC returned no data' : 'RPC returned data but no place field');
