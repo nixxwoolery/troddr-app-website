@@ -88,7 +88,7 @@
   .page-hero {
     background: var(--brand-primary) center / cover no-repeat;
     color: var(--brand-text);
-    padding: 28px 24px 44px;
+    padding: 24px 24px 32px;
     text-align: left;
     position: relative; overflow: hidden;
   }
@@ -143,8 +143,8 @@
   /* ── LAYOUT ── */
   .layout {
     max-width: 1320px;
-    margin: -18px auto 0;
-    padding: 0 16px;
+    margin: 0 auto;
+    padding: 18px 16px 0;
     display: grid;
     grid-template-columns: 240px 1fr;
     gap: 24px;
@@ -152,7 +152,7 @@
   }
   .main {
     display: grid;
-    gap: 24px;
+    gap: 18px;
   }
   .section {
     margin-bottom: 0;
@@ -834,7 +834,7 @@
   }
   .funnel-steps {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 8px;
     align-items: stretch;
   }
@@ -1470,9 +1470,11 @@
   .page-foot a { color: var(--grey-mid); }
 
   /* ── RESPONSIVE ── */
+  @media (max-width: 1200px) {
+    .funnel-steps { grid-template-columns: repeat(3, 1fr); }
+  }
   @media (max-width: 1100px) {
     .stats-grid { grid-template-columns: repeat(3, 1fr); }
-    .funnel-steps { grid-template-columns: repeat(3, 1fr); }
     .preview-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 880px) {
