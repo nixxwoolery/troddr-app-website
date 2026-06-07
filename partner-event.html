@@ -88,7 +88,7 @@
   .page-hero {
     background: var(--brand-primary) center / cover no-repeat;
     color: var(--brand-text);
-    padding: 16px 24px 20px;
+    padding: 28px 24px 36px;
     text-align: left;
     position: relative; overflow: hidden;
   }
@@ -144,11 +144,121 @@
   .layout {
     max-width: 1320px;
     margin: 0 auto;
-    padding: 12px 16px 0;
+    padding: 14px 18px 0;
     display: grid;
     grid-template-columns: 240px 1fr;
-    gap: 18px;
+    gap: 16px;
     position: relative; z-index: 10;
+  }
+
+  /* ── PAGE TABS (Overview / Insights) ── */
+  .page-tabs {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 14px 18px 0;
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 60px;
+    background: var(--bg, #f7f7f7);
+    z-index: 20;
+  }
+  .page-tab {
+    background: none;
+    border: none;
+    padding: 12px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--grey-mid);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .page-tab:hover { color: var(--brand-primary); }
+  .page-tab.active {
+    color: var(--brand-primary);
+    border-bottom-color: var(--brand-primary);
+  }
+  .page-pane { display: none; }
+  .page-pane.active { display: block; }
+
+  /* ── EDIT EVENT TABS ── */
+  .edit-tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    margin: -4px -4px 18px;
+    padding: 0 4px;
+    scrollbar-width: none;
+  }
+  .edit-tabs::-webkit-scrollbar { display: none; }
+  .edit-tab {
+    background: none;
+    border: none;
+    padding: 10px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--grey-mid);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  .edit-tab:hover { color: var(--brand-primary); }
+  .edit-tab.active {
+    color: var(--brand-primary);
+    border-bottom-color: var(--brand-primary);
+  }
+  .edit-pane { display: none; }
+  .edit-pane.active { display: block; }
+  .edit-pane > .edit-grid:not(:first-child) { margin-top: 14px; }
+
+  /* ── EVENT LINK / COPY (Action Center) ── */
+  .event-link-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 22px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+  }
+  .event-link-row .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--grey-mid);
+    flex-shrink: 0;
+  }
+  .event-link-row .url {
+    flex: 1;
+    font-size: 12px;
+    color: var(--grey-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .event-link-row .copy-btn {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .event-link-row .copy-btn:hover { filter: brightness(1.1); }
+  .event-link-row .copy-btn.copied {
+    background: var(--green);
+    color: #fff;
   }
   .main {
     display: grid;
@@ -1435,6 +1545,14 @@
     <symbol id="ic-trend-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 17l6-6 4 4 8-8M14 7h7v7"/>
     </symbol>
+    <symbol id="ic-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </symbol>
+    <symbol id="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -1452,6 +1570,11 @@
     <div class="hero-meta" id="hero-meta"></div>
   </div>
 </section>
+
+<nav class="page-tabs" id="page-tabs" style="display:none">
+  <button class="page-tab active" type="button" data-pane="overview">Overview</button>
+  <button class="page-tab" type="button" data-pane="insights">Insights</button>
+</nav>
 
 <!-- LOADING -->
 <div class="layout" id="view-loading">
@@ -1503,168 +1626,158 @@
       <select class="entity-select" id="entity-select" aria-label="Switch entity"></select>
     </div>
     <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
-    <div class="sidebar-title">On this page</div>
-    <a href="#status"     class="jump-link" data-section="status">
-      <svg><use href="#ic-info"/></svg> Status
+
+    <div class="sidebar-title" data-pane-nav="overview">On this page</div>
+    <a href="#overview"   class="jump-link" data-section="overview" data-pane-nav="overview">
+      <svg><use href="#ic-info"/></svg> Event Overview
     </a>
-    <a href="#discovery"  class="jump-link" data-section="discovery" id="nav-discovery" style="display:none">
-      <svg><use href="#ic-eye"/></svg> Web Traffic
-    </a>
-    <a href="#overview"   class="jump-link" data-section="overview">
-      <svg><use href="#ic-info"/></svg> Overview
-    </a>
-    <a href="#engagement" class="jump-link" data-section="engagement">
-      <svg><use href="#ic-bolt"/></svg> Engagement
-    </a>
-    <a href="#audience"   class="jump-link" data-section="audience" id="nav-audience" style="display:none">
-      <svg><use href="#ic-users"/></svg> Audience
-    </a>
-    <a href="#schedule"   class="jump-link" data-section="schedule" id="nav-schedule" style="display:none">
-      <svg><use href="#ic-calendar"/></svg> Schedule
-    </a>
-    <a href="#updates"    class="jump-link" data-section="updates" id="nav-updates" style="display:none">
-      <svg><use href="#ic-chat"/></svg> Updates
-    </a>
-    <a href="#vendors"    class="jump-link" data-section="vendors" id="nav-vendors" style="display:none">
+    <a href="#vendors"    class="jump-link" data-section="vendors" id="nav-vendors" data-pane-nav="overview" style="display:none">
       <svg><use href="#ic-shop"/></svg> Vendors
     </a>
-    <a href="#sponsors"   class="jump-link" data-section="sponsors" id="nav-sponsors" style="display:none">
+    <a href="#sponsors"   class="jump-link" data-section="sponsors" id="nav-sponsors" data-pane-nav="overview" style="display:none">
       <svg><use href="#ic-bolt"/></svg> Sponsors
     </a>
-    <a href="#actions"    class="jump-link" data-section="actions">
+    <a href="#actions"    class="jump-link" data-section="actions" data-pane-nav="overview">
       <svg><use href="#ic-bolt"/></svg> Action Center
     </a>
-    <a href="#edit"       class="jump-link" data-section="edit">
-      <svg><use href="#ic-doc"/></svg> Edit Event
+    <a href="#schedule"   class="jump-link" data-section="schedule" id="nav-schedule" data-pane-nav="overview" style="display:none">
+      <svg><use href="#ic-calendar"/></svg> Schedule
     </a>
-    <a href="#unlocks"    class="jump-link" data-section="unlocks">
+    <a href="#updates"    class="jump-link" data-section="updates" id="nav-updates" data-pane-nav="overview" style="display:none">
+      <svg><use href="#ic-chat"/></svg> Updates
+    </a>
+    <a href="#edit"       class="jump-link" data-section="edit" data-pane-nav="overview">
+      <svg><use href="#ic-edit"/></svg> Edit Event
+    </a>
+
+    <div class="sidebar-title" data-pane-nav="insights">On this page</div>
+    <a href="#status"     class="jump-link" data-section="status" data-pane-nav="insights">
+      <svg><use href="#ic-info"/></svg> Status
+    </a>
+    <a href="#engagement" class="jump-link" data-section="engagement" data-pane-nav="insights">
+      <svg><use href="#ic-bolt"/></svg> Engagement
+    </a>
+    <a href="#audience"   class="jump-link" data-section="audience" id="nav-audience" data-pane-nav="insights" style="display:none">
+      <svg><use href="#ic-users"/></svg> Audience
+    </a>
+    <a href="#unlocks"    class="jump-link" data-section="unlocks" data-pane-nav="insights">
       <svg><use href="#ic-lock"/></svg> Unlocks
     </a>
   </aside>
 
   <main class="main">
 
-    <section class="section" id="status">
-      <div class="event-status" id="event-status"></div>
-    </section>
+    <!-- ── OVERVIEW PANE ── -->
+    <div class="page-pane active" data-pane="overview">
 
-    <section class="section" id="discovery" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Web Traffic</h2>
-          <div class="section-sub">Where guests are discovering your event page across the web.</div>
+      <section class="section" id="overview">
+        <div class="section-head">
+          <h2 class="section-title">Event Overview</h2>
         </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div id="discovery-card"></div>
-    </section>
-
-    <section class="section" id="overview">
-      <div class="section-head">
-        <h2 class="section-title">Event Overview</h2>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="preview-grid">
-        <div class="preview-card" id="preview-card"></div>
-        <div class="actions-card" id="actions-card-top">
-          <div class="preview-section-label" style="margin-bottom:8px;">Quick Insights</div>
-          <div id="actions-top"></div>
+        <div class="preview-grid">
+          <div class="preview-card" id="preview-card"></div>
+          <div class="actions-card" id="actions-card-top">
+            <div class="preview-section-label" style="margin-bottom:8px;">Quick Insights</div>
+            <div id="actions-top"></div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" id="engagement">
-      <div class="section-head">
-        <h2 class="section-title">Guest Engagement</h2>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="stats-grid" id="stats-grid"></div>
-    </section>
-
-    <section class="section" id="audience" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Audience Location</h2>
-          <div class="section-sub">Where engaged guests are coming from, based on interactions.</div>
+      <section class="section" id="vendors" style="display:none">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Vendors</h2>
+            <div class="section-sub">Lineup, menus, and what guests actually rated.</div>
+          </div>
         </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="countries-card" id="countries-card"></div>
-    </section>
+        <div class="vendor-stats" id="vendor-stats"></div>
+        <div class="vendor-list" id="vendor-list"></div>
+      </section>
 
-    <section class="section" id="schedule" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Schedule</h2>
-          <div class="section-sub">Days, set times, and must-see moments.</div>
+      <section class="section" id="sponsors" style="display:none">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Sponsors</h2>
+            <div class="section-sub">Active sponsor lineup for this event.</div>
+          </div>
         </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="schedule-card" id="schedule-card"></div>
-    </section>
+        <div class="sponsors-grid" id="sponsors-grid"></div>
+      </section>
 
-    <section class="section" id="updates" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Event Updates</h2>
-          <div class="section-sub">Announcements pushed to attendees through the TRODDR app.</div>
+      <section class="section" id="actions">
+        <div class="section-head">
+          <h2 class="section-title">Action Center</h2>
         </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="updates-list" id="updates-list"></div>
-    </section>
+        <div class="action-center-list" id="actions-list"></div>
+      </section>
 
-    <section class="section" id="vendors" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Vendors</h2>
-          <div class="section-sub">Lineup, menus, and what guests actually rated.</div>
+      <section class="section" id="schedule" style="display:none">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Schedule</h2>
+            <div class="section-sub">Days, set times, and must-see moments.</div>
+          </div>
         </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="vendor-stats" id="vendor-stats"></div>
-      <div class="vendor-list" id="vendor-list"></div>
-    </section>
+        <div class="schedule-card" id="schedule-card"></div>
+      </section>
 
-    <section class="section" id="sponsors" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Sponsors</h2>
-          <div class="section-sub">Active sponsor lineup for this event.</div>
+      <section class="section" id="updates" style="display:none">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Event Updates</h2>
+            <div class="section-sub">Announcements pushed to attendees through the TRODDR app.</div>
+          </div>
         </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="sponsors-grid" id="sponsors-grid"></div>
-    </section>
+        <div class="updates-list" id="updates-list"></div>
+      </section>
 
-    <section class="section" id="actions">
-      <div class="section-head">
-        <h2 class="section-title">Action Center</h2>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="action-center-list" id="actions-list"></div>
-    </section>
-
-    <section class="section" id="edit">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Edit Event Details</h2>
-          <div class="section-sub">Changes save immediately and reflect across the TRODDR app.</div>
+      <section class="section" id="edit">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Edit Event Details</h2>
+            <div class="section-sub">Changes save immediately and reflect across the TRODDR app.</div>
+          </div>
         </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="edit-card" id="edit-card"></div>
-    </section>
+        <div class="edit-card" id="edit-card"></div>
+      </section>
 
-    <section class="section" id="unlocks">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Unlocks</h2>
-          <div class="section-sub">More analytics open up as the event approaches, runs, and wraps.</div>
+    </div>
+
+    <!-- ── INSIGHTS PANE ── -->
+    <div class="page-pane" data-pane="insights">
+
+      <section class="section" id="status">
+        <div class="event-status" id="event-status"></div>
+      </section>
+
+      <section class="section" id="engagement">
+        <div class="section-head">
+          <h2 class="section-title">Guest Engagement</h2>
         </div>
-      </div>
-      <div class="locked-grid" id="locked-grid"></div>
-    </section>
+        <div class="stats-grid" id="stats-grid"></div>
+      </section>
+
+      <section class="section" id="audience" style="display:none">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Audience Location</h2>
+            <div class="section-sub">Where engaged guests are coming from, based on interactions.</div>
+          </div>
+        </div>
+        <div class="countries-card" id="countries-card"></div>
+      </section>
+
+      <section class="section" id="unlocks">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Unlocks</h2>
+            <div class="section-sub">More analytics open up as the event approaches, runs, and wraps.</div>
+          </div>
+        </div>
+        <div class="locked-grid" id="locked-grid"></div>
+      </section>
+
+    </div>
 
   </main>
 
@@ -2460,7 +2573,16 @@
     const toTime = (t) => t ? String(t).slice(0, 5) : '';
 
     $('edit-card').innerHTML = `
-      <div class="edit-section-title">Basics</div>
+      <div class="edit-tabs" role="tablist">
+        <button type="button" class="edit-tab active" data-edit-pane="basics">Basics</button>
+        <button type="button" class="edit-tab" data-edit-pane="when">When</button>
+        <button type="button" class="edit-tab" data-edit-pane="where">Where</button>
+        <button type="button" class="edit-tab" data-edit-pane="tickets">Tickets &amp; Capacity</button>
+        <button type="button" class="edit-tab" data-edit-pane="restrictions">Restrictions</button>
+        <button type="button" class="edit-tab" data-edit-pane="contact">Contact &amp; Links</button>
+      </div>
+
+      <div class="edit-pane active" data-edit-pane="basics">
       <div class="edit-grid">
         <div class="edit-field full">
           <label for="ed-title">Title</label>
@@ -2503,7 +2625,9 @@
         </div>
       </div>
 
-      <div class="edit-section-title">When</div>
+      </div>
+
+      <div class="edit-pane" data-edit-pane="when">
       <div class="edit-grid">
         <div class="edit-field">
           <label for="ed-start-date">Start date</label>
@@ -2531,7 +2655,9 @@
         </div>
       </div>
 
-      <div class="edit-section-title">Where</div>
+      </div>
+
+      <div class="edit-pane" data-edit-pane="where">
       <div class="edit-grid">
         <div class="edit-field full">
           <label for="ed-venue">Venue name</label>
@@ -2555,7 +2681,9 @@
         </div>
       </div>
 
-      <div class="edit-section-title">Tickets &amp; Capacity</div>
+      </div>
+
+      <div class="edit-pane" data-edit-pane="tickets">
       <div class="edit-grid">
         <div class="edit-field checkbox">
           <input id="ed-free" type="checkbox" ${e.is_free ? 'checked' : ''} />
@@ -2591,7 +2719,9 @@
         </div>
       </div>
 
-      <div class="edit-section-title">Restrictions &amp; Amenities</div>
+      </div>
+
+      <div class="edit-pane" data-edit-pane="restrictions">
       <div class="edit-grid">
         <div class="edit-field">
           <label for="ed-minage">Minimum age</label>
@@ -2611,7 +2741,9 @@
         </div>
       </div>
 
-      <div class="edit-section-title">Contact &amp; Links</div>
+      </div>
+
+      <div class="edit-pane" data-edit-pane="contact">
       <div class="edit-grid">
         <div class="edit-field">
           <label for="ed-contact-email">Contact email</label>
@@ -2639,12 +2771,25 @@
         </div>
       </div>
 
+      </div>
+
       <div class="edit-status" id="edit-status"></div>
       <div class="edit-actions">
         <button type="button" class="edit-btn" id="edit-reset">Reset</button>
         <button type="button" class="edit-btn primary" id="edit-save">Save changes</button>
       </div>
     `;
+
+    // Wire edit tabs
+    $('edit-card').querySelectorAll('.edit-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.editPane;
+        $('edit-card').querySelectorAll('.edit-tab').forEach(b => b.classList.toggle('active', b === btn));
+        $('edit-card').querySelectorAll('.edit-pane').forEach(p =>
+          p.classList.toggle('active', p.dataset.editPane === target)
+        );
+      });
+    });
 
     const statusBox = $('edit-status');
     function showStatus(msg, kind) {
@@ -2801,105 +2946,57 @@
     });
   }
 
-  // ── Discovery (PostHog via Edge Function) ────────────────
-  async function loadDiscovery() {
-    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
-    if (!token) return;
-    try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/posthog-stats`, {
-        method:  'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'apikey':        SUPABASE_ANON,
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-        },
-        body: JSON.stringify({ token, range_days: 30 }),
-      });
-      if (!res.ok) {
-        console.warn('[discovery] non-ok:', res.status);
-        return;
+  // ── Action Center event link (prepended to the actions list) ──
+  function renderActionEventLink(event) {
+    const list = $('actions-list');
+    if (!list || !event || !event.slug) return;
+    const url = `${location.origin.replace(/\/$/, '')}/events/${event.slug}`;
+    const row = document.createElement('div');
+    row.className = 'event-link-row';
+    row.innerHTML = `
+      <span class="lbl">Event link</span>
+      <span class="url" title="${escapeHtml(url)}">${escapeHtml(url)}</span>
+      <button type="button" class="copy-btn">
+        <svg style="width:11px;height:11px;vertical-align:-1px;margin-right:4px;"><use href="#ic-copy"/></svg>Copy
+      </button>
+    `;
+    const btn = row.querySelector('.copy-btn');
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        btn.classList.add('copied');
+        const original = btn.innerHTML;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = original; }, 1600);
+      } catch (e) {
+        console.warn('copy failed', e);
       }
-      const data = await res.json();
-      if (!data || data.ok === false) {
-        console.warn('[discovery] not configured or rejected:', data && data.error);
-        return;
-      }
-      renderDiscovery(data);
-      $('discovery').style.display = '';
-      $('nav-discovery').style.display = '';
-    } catch (e) {
-      console.warn('[discovery] failed to load:', e);
-    }
+    });
+    list.prepend(row);
   }
 
-  function renderDiscovery(data) {
-    let html = `
-      <div class="discovery-card">
-        <div class="discovery-totals">
-          <div class="ds-stat">
-            <div class="ds-num">${data.total_views || 0}</div>
-            <div class="ds-lbl">Total views (last ${data.range_days || 30}d)</div>
-          </div>
-          <div class="ds-stat">
-            <div class="ds-num">${data.unique_visitors || 0}</div>
-            <div class="ds-lbl">Unique visitors</div>
-          </div>
-        </div>
-    `;
-
-    if (data.trend && data.trend.length) {
-      const max = Math.max(1, ...data.trend.map(d => d.views || 0));
-      const bars = data.trend.map(d => {
-        const pct = (d.views / max) * 100;
-        return `<div class="ds-trend-bar ${d.views === 0 ? 'empty' : ''}" style="height:${pct}%" title="${d.day}: ${d.views} views"></div>`;
-      }).join('');
-      html += `
-        <div class="discovery-section-title">Daily views</div>
-        <div class="ds-trend">${bars}</div>
-      `;
+  // ── Page tabs (Overview / Insights) ──────────────────────
+  function setupPageTabs() {
+    const tabs  = document.querySelectorAll('.page-tab');
+    const panes = document.querySelectorAll('.page-pane');
+    function activate(target) {
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.pane === target));
+      panes.forEach(p => p.classList.toggle('active', p.dataset.pane === target));
+      document.querySelectorAll('[data-pane-nav]').forEach(el => {
+        const matches = el.dataset.paneNav === target;
+        const wasHidden = el.dataset.origHidden === '1';
+        if (!matches) { el.style.display = 'none'; }
+        else if (wasHidden) { el.style.display = 'none'; }
+        else { el.style.display = ''; }
+      });
+      window.scrollTo({ top: 0 });
     }
-
-    if (data.top_referrers && data.top_referrers.length) {
-      const max = Math.max(...data.top_referrers.map(r => r.views));
-      html += `<div class="discovery-section-title">Top traffic sources</div>`;
-      html += data.top_referrers.slice(0, 6).map(r => `
-        <div class="ds-bar-row">
-          <span class="name">${escapeHtml(r.source)}</span>
-          <div class="ds-bar"><div class="ds-bar-fill" style="width:${(r.views / max) * 100}%"></div></div>
-          <span class="n">${r.views}</span>
-        </div>
-      `).join('');
-    }
-
-    if (data.top_utm_sources && data.top_utm_sources.length > 1) {
-      const filtered = data.top_utm_sources.filter(u => u.utm_source !== '(none)');
-      if (filtered.length) {
-        const max = Math.max(...filtered.map(u => u.views));
-        html += `<div class="discovery-section-title">Campaign attribution</div>`;
-        html += filtered.slice(0, 6).map(u => `
-          <div class="ds-bar-row">
-            <span class="name">${escapeHtml(u.utm_source)}</span>
-            <div class="ds-bar"><div class="ds-bar-fill" style="width:${(u.views / max) * 100}%"></div></div>
-            <span class="n">${u.views}</span>
-          </div>
-        `).join('');
-      }
-    }
-
-    if (data.top_countries && data.top_countries.length) {
-      const max = Math.max(...data.top_countries.map(c => c.views));
-      html += `<div class="discovery-section-title">Web visitors by country</div>`;
-      html += data.top_countries.slice(0, 6).map(c => `
-        <div class="ds-bar-row">
-          <span class="name">${escapeHtml(c.country)}</span>
-          <div class="ds-bar"><div class="ds-bar-fill" style="width:${(c.views / max) * 100}%"></div></div>
-          <span class="n">${c.views}</span>
-        </div>
-      `).join('');
-    }
-
-    html += `</div>`;
-    $('discovery-card').innerHTML = html;
+    // Snapshot which nav items were intentionally hidden (e.g. nav-vendors)
+    document.querySelectorAll('[data-pane-nav]').forEach(el => {
+      if (el.style.display === 'none') el.dataset.origHidden = '1';
+    });
+    tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.pane)));
+    activate('overview');
   }
 
   // ── Sidebar wiring (event partner = jump-links only) ─────
@@ -3012,14 +3109,15 @@
     safe('buildActions',      () => buildActions(data));
     safe('renderEditForm',    () => renderEditForm(data.event));
     safe('renderLocked',      () => renderLocked(data));
-    // Discovery loads async via PostHog Edge Function. Stays hidden if not configured.
-    loadDiscovery();
+    safe('renderActionEventLink', () => renderActionEventLink(data.event));
 
     hide('view-loading');
     show('view-dashboard');
+    document.getElementById('page-tabs').style.display = '';
     window.PartnerAuth?.mountSessionControl('partner');
     safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));
     safe('setupSidebar',       () => setupSidebar());
+    setupPageTabs();
   }
 
   load();

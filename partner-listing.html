@@ -88,11 +88,11 @@
   .page-hero {
     background: var(--brand-primary);
     color: var(--brand-text);
-    padding: 32px 24px 56px;
-    text-align: center;
+    padding: 32px 24px 44px;
+    text-align: left;
     position: relative; overflow: hidden;
   }
-  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; z-index: 1; }
+  .hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 0 8px; z-index: 1; }
   .hero-eyebrow {
     display: inline-block;
     background: rgba(255,255,255,0.12);
@@ -215,6 +215,9 @@
     font-size: 12px; color: var(--grey-mid);
     font-weight: 500;
   }
+  /* The "Preview" section sits on top of the blue hero (.layout margin-top: -32px). */
+  #preview .section-title { color: #fff; }
+  #preview .section-sub { color: rgba(255,255,255,0.85); }
   .pill {
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
@@ -879,11 +882,19 @@
 
 <!-- ERROR -->
 <div class="layout hidden" id="view-error">
-  <div></div>
+  <aside class="sidebar">
+    <div class="sidebar-title">Dashboard</div>
+    <a class="page-link active" data-href="/partner/listing"><svg><use href="#ic-doc"/></svg> Listing</a>
+    <a class="page-link" data-href="/partner/bookings"><svg><use href="#ic-calendar"/></svg> Bookings</a>
+    <a class="page-link" data-href="/partner/loyalty"><svg><use href="#ic-bolt"/></svg> Loyalty</a>
+    <a class="page-link" data-href="/partner/feedback"><svg><use href="#ic-star-nav"/></svg> Feedback</a>
+    <a class="page-link" data-href="/partner/specials"><svg><use href="#ic-doc"/></svg> Specials</a>
+    <a class="page-link" data-href="/partner/billing"><svg><use href="#ic-doc"/></svg> Billing</a>
+  </aside>
   <div class="main">
     <div class="state">
       <div class="state-title">We couldn't load this listing</div>
-      <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.</p>
+      <p class="state-msg">This link may have expired or been revoked. Try another section from the sidebar, or reply to any TRODDR email if you think this is a mistake.</p>
     </div>
   </div>
 </div>
@@ -925,13 +936,10 @@
       <svg><use href="#ic-doc"/></svg> Preview
     </a>
     <a href="#metrics"  class="jump-link" data-section="metrics">
-      <svg><use href="#ic-eye"/></svg> Discovery Metrics
-    </a>
-    <a href="#ratings"  class="jump-link" data-section="ratings">
-      <svg><use href="#ic-star-nav"/></svg> Ratings
-    </a>
-    <a href="#discovery" class="jump-link" data-section="discovery" id="nav-discovery" style="display:none">
       <svg><use href="#ic-eye"/></svg> Discovery
+    </a>
+    <a href="#ratings"  class="jump-link" data-section="ratings" id="nav-ratings" style="display:none">
+      <svg><use href="#ic-star-nav"/></svg> Ratings
     </a>
     <a href="#feedback" class="jump-link" data-section="feedback">
       <svg><use href="#ic-chat"/></svg> Recent Feedback
@@ -961,13 +969,13 @@
 
     <section class="section" id="metrics">
       <div class="section-head">
-        <h2 class="section-title">Discovery Metrics</h2>
-        <span class="pill live">Live</span>
+        <h2 class="section-title">Discovery</h2>
       </div>
       <div class="stats-grid" id="stats-grid"></div>
+      <div id="discovery-card" style="margin-top:14px;"></div>
     </section>
 
-    <section class="section" id="ratings">
+    <section class="section" id="ratings" style="display:none">
       <div class="section-head">
         <div>
           <h2 class="section-title">Rating Breakdown</h2>
@@ -975,17 +983,6 @@
         </div>
       </div>
       <div class="ratings-card" id="ratings-card"></div>
-    </section>
-
-    <section class="section" id="discovery" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Discovery</h2>
-          <div class="section-sub">Where guests are finding your listing across the TRODDR app, search, and shared links.</div>
-        </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div id="discovery-card"></div>
     </section>
 
     <section class="section" id="feedback">
@@ -998,24 +995,12 @@
       <div class="feedback-feed" id="feedback-feed"></div>
     </section>
 
-    <section class="section" id="contact">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Contact Info &amp; Links</h2>
-          <div class="section-sub">Update phone, website, social, and booking links. Curated content (description, photos, address) is locked. Request a revision via the message button if those need to change.</div>
-        </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="hours-card" id="contact-card"></div>
-    </section>
-
     <section class="section" id="hours">
       <div class="section-head">
         <div>
           <h2 class="section-title">Operating Hours</h2>
           <div class="section-sub">Set your regular weekly hours, kitchen hours, and add one-off closures for holidays or special events.</div>
         </div>
-        <span class="pill live">Live</span>
       </div>
       <div class="hours-card">
 
@@ -1067,6 +1052,16 @@
         </div>
         <div class="hours-status" id="closure-status"></div>
       </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Contact Info &amp; Links</h2>
+          <div class="section-sub">Update phone, website, social, and booking links. Curated content (description, photos, address) is locked. Request a revision via the message button if those need to change.</div>
+        </div>
+      </div>
+      <div class="hours-card" id="contact-card"></div>
     </section>
 
   </main>
@@ -1160,8 +1155,19 @@
   // ── Hero ─────────────────────────────────────────────────
   function renderHero(place) {
     $('hero-title').textContent = place.name || 'Your Listing';
-    const parts = [place.category, place.town, place.parish].filter(Boolean);
-    $('hero-sub').textContent = parts.join(' · ');
+    const catKey = String(place.category || '').toLowerCase().trim();
+    const catIcons = { eat: '#ic-cat-eat', drink: '#ic-cat-drink', sleep: '#ic-cat-sleep', do: '#ic-cat-do' };
+    const catIcon = catIcons[catKey];
+    const sub = $('hero-sub');
+    sub.innerHTML = '';
+    if (catIcon) {
+      sub.insertAdjacentHTML('beforeend',
+        `<svg aria-label="${escapeHtml(place.category)}" style="width:16px;height:16px;vertical-align:-3px;margin-right:8px;"><use href="${catIcon}"/></svg>`);
+    } else if (place.category) {
+      sub.insertAdjacentHTML('beforeend', `<span>${escapeHtml(place.category)}</span><span class="dot"> · </span>`);
+    }
+    const parts = [place.town, place.parish].filter(Boolean).map(escapeHtml);
+    sub.insertAdjacentHTML('beforeend', parts.join(' · '));
   }
 
   // ── Preview card ─────────────────────────────────────────
@@ -1295,6 +1301,8 @@
   function renderRatings(data) {
     const r = data.stats.avg_ratings || {};
     const DIMENSIONS = ['taste', 'service', 'value', 'vibe', 'ambiance', 'cleanliness', 'wait_time', 'speed'];
+    const hasAny = DIMENSIONS.some(dim => r[dim] != null);
+    if (!hasAny) return; // Stay hidden until at least one rating exists
 
     const html = DIMENSIONS.map(dim => {
       const score = r[dim];
@@ -1316,6 +1324,8 @@
     }).join('');
 
     $('ratings-card').innerHTML = html;
+    $('ratings').style.display = '';
+    const nav = $('nav-ratings'); if (nav) nav.style.display = '';
   }
 
   // ── Feedback feed ────────────────────────────────────────
@@ -1761,8 +1771,6 @@
         return; // silently hide
       }
       renderDiscovery(data);
-      $('discovery').style.display = '';
-      $('nav-discovery').style.display = '';
     } catch (e) {
       console.warn('[discovery] failed to load:', e);
       // Silent fail. The section just stays hidden.
@@ -1933,7 +1941,12 @@
   // ── Load ─────────────────────────────────────────────────
   async function load() {
     const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
-    if (!token) { hide('view-loading'); show('view-error'); return; }
+    if (!token) {
+      hide('view-loading'); show('view-error');
+      window.PartnerAuth?.mountSessionControl('partner');
+      window.PartnerAuth?.setupPageLinks();
+      return;
+    }
 
     // Use allSettled so a single failed RPC doesn't take down the page.
     const results = await Promise.allSettled([
@@ -1978,6 +1991,8 @@
           <div style="margin-top:14px; padding:10px 14px; background:#fdecea; border-radius:6px; font-size:11px; color:#c0392b; text-align:left; font-family:monospace; word-break:break-word;">${String(rawMsg).replace(/[<>]/g,'')}</div>`;
       }
       hide('view-loading'); show('view-error');
+      window.PartnerAuth?.mountSessionControl('partner');
+      window.PartnerAuth?.setupPageLinks(caps && caps.capabilities);
       return;
     }
 

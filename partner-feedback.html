@@ -642,11 +642,19 @@
 
 <!-- ERROR -->
 <div class="layout hidden" id="view-error">
-  <div></div>
+  <aside class="sidebar">
+    <div class="sidebar-title">Dashboard</div>
+    <a class="page-link" data-href="/partner/listing"><svg><use href="#ic-doc"/></svg> Listing</a>
+    <a class="page-link" data-href="/partner/bookings"><svg><use href="#ic-calendar"/></svg> Bookings</a>
+    <a class="page-link" data-href="/partner/loyalty"><svg><use href="#ic-bolt"/></svg> Loyalty</a>
+    <a class="page-link active" data-href="/partner/feedback"><svg><use href="#ic-star"/></svg> Feedback</a>
+    <a class="page-link" data-href="/partner/specials"><svg><use href="#ic-doc"/></svg> Specials</a>
+    <a class="page-link" data-href="/partner/billing"><svg><use href="#ic-doc"/></svg> Billing</a>
+  </aside>
   <div class="main">
     <div class="state">
       <div class="state-title">We couldn't load this page</div>
-      <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.</p>
+      <p class="state-msg">This link may have expired or been revoked. Try another section from the sidebar, or reply to any TRODDR email if you think this is a mistake.</p>
     </div>
   </div>
 </div>
@@ -702,7 +710,6 @@
     <section class="section" id="summary">
       <div class="section-head">
         <h2 class="section-title">Summary</h2>
-        <span class="pill live">Live</span>
       </div>
       <div class="summary-grid" id="summary-grid"></div>
     </section>
@@ -730,7 +737,6 @@
     <section class="section" id="feed">
       <div class="section-head">
         <h2 class="section-title">All Feedback</h2>
-        <span class="pill live">Live</span>
       </div>
       <div class="filter-bar" id="filter-bar"></div>
       <div class="feedback-feed" id="feedback-feed"></div>
@@ -1177,7 +1183,12 @@
   // ── Load ─────────────────────────────────────────────────
   async function load() {
     const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
-    if (!token) { hide('view-loading'); show('view-error'); return; }
+    const showError = (caps) => {
+      hide('view-loading'); show('view-error');
+      window.PartnerAuth?.mountSessionControl('partner');
+      window.PartnerAuth?.setupPageLinks(caps);
+    };
+    if (!token) { showError(); return; }
 
     const [feedbackRes, capsRes] = await Promise.all([
       db.rpc('get_partner_feedback_by_token',     { p_token: token }),
@@ -1188,7 +1199,7 @@
     const caps = capsRes.data;
     if (feedbackRes.error || !data || !data.place) {
       console.error('feedback error', feedbackRes.error);
-      hide('view-loading'); show('view-error');
+      showError(caps && caps.capabilities);
       return;
     }
 

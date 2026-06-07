@@ -242,7 +242,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        margin-left: 0;
+        margin-left: auto;
       }
       .partner-session-btn {
         border: 1px solid var(--border, #e8e8e8);
