@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -201,18 +202,22 @@
 
   .section { margin-bottom: 36px; scroll-margin-top: 80px; }
   .section-head {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: flex-start;
     margin-bottom: 14px;
     gap: 12px;
+    text-align: left;
   }
+  .section-head > div { text-align: left; }
   .section-title {
     font-size: 18px; font-weight: 700;
     color: var(--black);
     letter-spacing: -0.3px;
+    text-align: left;
   }
   .section-sub {
     font-size: 12px; color: var(--grey-mid);
     font-weight: 500;
+    text-align: left;
   }
   .pill {
     font-size: 10px; font-weight: 700;
@@ -642,15 +647,7 @@
 
 <!-- ERROR -->
 <div class="layout hidden" id="view-error">
-  <aside class="sidebar">
-    <div class="sidebar-title">Dashboard</div>
-    <a class="page-link" data-href="/partner/listing"><svg><use href="#ic-doc"/></svg> Listing</a>
-    <a class="page-link" data-href="/partner/bookings"><svg><use href="#ic-calendar"/></svg> Bookings</a>
-    <a class="page-link" data-href="/partner/loyalty"><svg><use href="#ic-bolt"/></svg> Loyalty</a>
-    <a class="page-link active" data-href="/partner/feedback"><svg><use href="#ic-star"/></svg> Feedback</a>
-    <a class="page-link" data-href="/partner/specials"><svg><use href="#ic-doc"/></svg> Specials</a>
-    <a class="page-link" data-href="/partner/billing"><svg><use href="#ic-doc"/></svg> Billing</a>
-  </aside>
+  <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
   <div class="main">
     <div class="state">
       <div class="state-title">We couldn't load this page</div>
@@ -662,48 +659,7 @@
 <!-- DASHBOARD -->
 <div class="layout hidden" id="view-dashboard">
 
-  <aside class="sidebar">
-    <div class="entity-picker hidden" id="entity-picker">
-      <div class="partner-tag">Partner</div>
-      <div class="partner-name" id="partner-name"></div>
-      <select class="entity-select" id="entity-select" aria-label="Switch entity"></select>
-    </div>
-    <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
-    <div class="sidebar-title">Dashboard</div>
-    <a class="page-link" data-href="/partner/listing">
-      <svg><use href="#ic-doc"/></svg> Listing
-    </a>
-    <a class="page-link" data-href="/partner/bookings">
-      <svg><use href="#ic-calendar"/></svg> Bookings
-    </a>
-    <a class="page-link" data-href="/partner/loyalty">
-      <svg><use href="#ic-bolt"/></svg> Loyalty
-    </a>
-    <a class="page-link active" data-href="/partner/feedback">
-      <svg><use href="#ic-star-nav"/></svg> Feedback
-    </a>
-    <a class="page-link" data-href="/partner/specials">
-      <svg><use href="#ic-doc"/></svg> Specials
-    </a>
-    <a class="page-link" data-href="/partner/billing">
-      <svg><use href="#ic-doc"/></svg> Billing
-    </a>
-
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-title">On this page</div>
-    <a href="#summary"      class="jump-link" data-section="summary">
-      <svg><use href="#ic-chart"/></svg> Summary
-    </a>
-    <a href="#distribution" class="jump-link" data-section="distribution">
-      <svg><use href="#ic-chart"/></svg> Distribution
-    </a>
-    <a href="#tags"         class="jump-link" data-section="tags">
-      <svg><use href="#ic-tag"/></svg> Tags
-    </a>
-    <a href="#feed"         class="jump-link" data-section="feed">
-      <svg><use href="#ic-chat"/></svg> All Feedback
-    </a>
-  </aside>
+  <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
 
   <main class="main">
 
@@ -1154,30 +1110,19 @@
     });
   }
 
-  // ── Sidebar wiring ───────────────────────────────────────
+  // ── Sidebar: mount unified sidebar with this page's jump-links ─
   function setupSidebar(capabilities) {
-    const token = window.PartnerAuth?.getToken({ require: false }) || new URLSearchParams(location.search).get('token') || '';
-    const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
-
-    document.querySelectorAll('.page-link').forEach(a => {
-      const key = a.dataset.href.split('/').pop();
-      if (!caps[key]) { a.style.display = 'none'; return; }
-      const url = new URL(a.dataset.href, location.origin);
-      a.href = url.toString();
+    window.PartnerSidebar?.mount({
+      active: '/partner/feedback',
+      capabilities: capabilities,
+      jumpLinks: [
+        { section: 'summary',      icon: 'ic-chart', label: 'Summary' },
+        { section: 'distribution', icon: 'ic-chart', label: 'Distribution' },
+        { section: 'tags',         icon: 'ic-tag',   label: 'Tags' },
+        { section: 'feed',         icon: 'ic-chat',  label: 'All Feedback' },
+      ],
     });
-
-    const jumpLinks = document.querySelectorAll('.jump-link');
-    const sections  = Array.from(jumpLinks).map(l => $(l.dataset.section)).filter(Boolean);
-    function update() {
-      const scrollY = window.scrollY + 120;
-      let activeId = sections[0]?.id;
-      for (const sec of sections) {
-        if (sec.offsetTop <= scrollY) activeId = sec.id;
-      }
-      jumpLinks.forEach(l => l.classList.toggle('active', l.dataset.section === activeId));
-    }
-    window.addEventListener('scroll', update, { passive: true });
-    update();
+    window.PartnerSidebar?.setupScrollspy();
   }
 
   // ── Load ─────────────────────────────────────────────────
@@ -1186,7 +1131,7 @@
     const showError = (caps) => {
       hide('view-loading'); show('view-error');
       window.PartnerAuth?.mountSessionControl('partner');
-      window.PartnerAuth?.setupPageLinks(caps);
+      setupSidebar(caps);
     };
     if (!token) { showError(); return; }
 
@@ -1197,6 +1142,14 @@
 
     const data = feedbackRes.data;
     const caps = capsRes.data;
+
+    // If this is an event token, send the user to the event dashboard first.
+    const intentional = window.PartnerAuth?.consumeIntent('/partner/feedback');
+    if (!intentional && caps && caps.type === 'event' && caps.capabilities && caps.capabilities.event) {
+      window.PartnerAuth?.navigate('/partner/event', token);
+      return;
+    }
+
     if (feedbackRes.error || !data || !data.place) {
       console.error('feedback error', feedbackRes.error);
       showError(caps && caps.capabilities);
@@ -1217,8 +1170,8 @@
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
-    renderEntityPicker(caps && caps.partner);
     setupSidebar(caps && caps.capabilities);
+    renderEntityPicker(caps && caps.partner);
   }
 
   load();

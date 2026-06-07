@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
 <script src="/js/partner-errors.js"></script>
 
 <script>
@@ -151,40 +152,6 @@
     position: relative; z-index: 10;
   }
 
-  /* ── PAGE TABS (Overview / Insights) ── */
-  .page-tabs {
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: 14px 18px 0;
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 60px;
-    background: var(--bg, #f7f7f7);
-    z-index: 20;
-  }
-  .page-tab {
-    background: none;
-    border: none;
-    padding: 12px 18px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--grey-mid);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .page-tab:hover { color: var(--brand-primary); }
-  .page-tab.active {
-    color: var(--brand-primary);
-    border-bottom-color: var(--brand-primary);
-  }
-  .page-pane { display: none; }
-  .page-pane.active { display: block; }
-
   /* ── EDIT EVENT TABS ── */
   .edit-tabs {
     display: flex;
@@ -299,10 +266,34 @@
     font-weight: 600;
   }
   .sidebar a svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar a.jump-link { font-size: 12px; padding: 7px 12px; color: var(--grey-mid); }
   .sidebar a.jump-link.active {
     background: transparent;
     color: var(--brand-primary);
     font-weight: 700;
+  }
+  .sidebar a .nav-count {
+    margin-left: auto;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px;
+    background: var(--brand-primary); color: var(--brand-text);
+    min-width: 18px; text-align: center;
+  }
+  .sidebar a .nav-count.muted   { background: var(--border); color: var(--grey-mid); }
+  .sidebar a .nav-count.success { background: #dcfce7; color: #15803d; }
+  .sidebar a .nav-count.alert   { background: #ef4444; color: #fff; }
+  .sidebar a.coming-soon {
+    pointer-events: none;
+    color: var(--grey-light);
+    cursor: not-allowed;
+  }
+  .sidebar a.coming-soon::after {
+    content: 'Soon';
+    margin-left: auto;
+    font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+    background: var(--bg-soft); color: var(--grey-light);
+    letter-spacing: 0.06em; text-transform: uppercase;
   }
   .sidebar-divider {
     height: 1px;
@@ -504,13 +495,15 @@
     scroll-margin-top: 80px;
   }
   .section-head {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: flex-start;
     margin-bottom: 14px;
     gap: 12px;
+    text-align: left;
   }
   .section-head > div {
     margin: 0;
     padding: 0;
+    text-align: left;
   }
   .section-title {
     margin: 0;
@@ -519,6 +512,7 @@
     font-weight: 700;
     color: var(--black);
     letter-spacing: -0.3px;
+    text-align: left;
   }
   .section-sub {
     margin: 4px 0 0 0;
@@ -526,7 +520,10 @@
     font-size: 12px;
     color: var(--grey-mid);
     font-weight: 500;
+    text-align: left;
   }
+  /* Give Edit Event Details room to breathe from the preceding section */
+  .section.section-edit { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
   .pill {
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
@@ -1553,6 +1550,32 @@
       <rect x="9" y="9" width="13" height="13" rx="2"/>
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
     </symbol>
+    <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+      <path d="M14 3v6h6M8 13h8M8 17h8M8 9h2"/>
+    </symbol>
+    <symbol id="ic-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+    </symbol>
+    <symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+    </symbol>
+    <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/>
+    </symbol>
+    <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/>
+      <path d="M6 6h.008v.008H6V6z"/>
+    </symbol>
+    <symbol id="ic-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+    </symbol>
+    <symbol id="ic-dollar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2v20M17 6H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H7"/>
+    </symbol>
+    <symbol id="ic-floorplan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -1571,10 +1594,6 @@
   </div>
 </section>
 
-<nav class="page-tabs" id="page-tabs" style="display:none">
-  <button class="page-tab active" type="button" data-pane="overview">Overview</button>
-  <button class="page-tab" type="button" data-pane="insights">Insights</button>
-</nav>
 
 <!-- LOADING -->
 <div class="layout" id="view-loading">
@@ -1606,11 +1625,11 @@
 
 <!-- ERROR -->
 <div class="layout hidden" id="view-error">
-  <div></div>
+  <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
   <div class="main">
     <div class="state">
       <div class="state-title">We couldn't load this event</div>
-      <p class="state-msg">This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.</p>
+      <p class="state-msg">This link may have expired or been revoked. Try another section from the sidebar, or reply to any TRODDR email if you think this is a mistake.</p>
       <pre id="error-detail" style="margin-top:18px; padding:10px 14px; background:var(--bg-soft); border:1px solid var(--border); border-radius:8px; font-size:11px; color:var(--grey-mid); text-align:left; max-width:560px; margin-left:auto; margin-right:auto; white-space:pre-wrap; overflow:auto;"></pre>
     </div>
   </div>
@@ -1619,56 +1638,13 @@
 <!-- DASHBOARD -->
 <div class="layout hidden" id="view-dashboard">
 
-  <aside class="sidebar">
-    <div class="entity-picker hidden" id="entity-picker">
-      <div class="partner-tag">Partner</div>
-      <div class="partner-name" id="partner-name"></div>
-      <select class="entity-select" id="entity-select" aria-label="Switch entity"></select>
-    </div>
-    <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
-
-    <div class="sidebar-title" data-pane-nav="overview">On this page</div>
-    <a href="#overview"   class="jump-link" data-section="overview" data-pane-nav="overview">
-      <svg><use href="#ic-info"/></svg> Event Overview
-    </a>
-    <a href="#vendors"    class="jump-link" data-section="vendors" id="nav-vendors" data-pane-nav="overview" style="display:none">
-      <svg><use href="#ic-shop"/></svg> Vendors
-    </a>
-    <a href="#sponsors"   class="jump-link" data-section="sponsors" id="nav-sponsors" data-pane-nav="overview" style="display:none">
-      <svg><use href="#ic-bolt"/></svg> Sponsors
-    </a>
-    <a href="#actions"    class="jump-link" data-section="actions" data-pane-nav="overview">
-      <svg><use href="#ic-bolt"/></svg> Action Center
-    </a>
-    <a href="#schedule"   class="jump-link" data-section="schedule" id="nav-schedule" data-pane-nav="overview" style="display:none">
-      <svg><use href="#ic-calendar"/></svg> Schedule
-    </a>
-    <a href="#updates"    class="jump-link" data-section="updates" id="nav-updates" data-pane-nav="overview" style="display:none">
-      <svg><use href="#ic-chat"/></svg> Updates
-    </a>
-    <a href="#edit"       class="jump-link" data-section="edit" data-pane-nav="overview">
-      <svg><use href="#ic-edit"/></svg> Edit Event
-    </a>
-
-    <div class="sidebar-title" data-pane-nav="insights">On this page</div>
-    <a href="#status"     class="jump-link" data-section="status" data-pane-nav="insights">
-      <svg><use href="#ic-info"/></svg> Status
-    </a>
-    <a href="#engagement" class="jump-link" data-section="engagement" data-pane-nav="insights">
-      <svg><use href="#ic-bolt"/></svg> Engagement
-    </a>
-    <a href="#audience"   class="jump-link" data-section="audience" id="nav-audience" data-pane-nav="insights" style="display:none">
-      <svg><use href="#ic-users"/></svg> Audience
-    </a>
-    <a href="#unlocks"    class="jump-link" data-section="unlocks" data-pane-nav="insights">
-      <svg><use href="#ic-lock"/></svg> Unlocks
-    </a>
-  </aside>
+  <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
 
   <main class="main">
 
-    <!-- ── OVERVIEW PANE ── -->
-    <div class="page-pane active" data-pane="overview">
+      <section class="section" id="status">
+        <div class="event-status" id="event-status"></div>
+      </section>
 
       <section class="section" id="overview">
         <div class="section-head">
@@ -1731,7 +1707,7 @@
         <div class="updates-list" id="updates-list"></div>
       </section>
 
-      <section class="section" id="edit">
+      <section class="section section-edit" id="edit">
         <div class="section-head">
           <div>
             <h2 class="section-title">Edit Event Details</h2>
@@ -1739,15 +1715,6 @@
           </div>
         </div>
         <div class="edit-card" id="edit-card"></div>
-      </section>
-
-    </div>
-
-    <!-- ── INSIGHTS PANE ── -->
-    <div class="page-pane" data-pane="insights">
-
-      <section class="section" id="status">
-        <div class="event-status" id="event-status"></div>
       </section>
 
       <section class="section" id="engagement">
@@ -1776,8 +1743,6 @@
         </div>
         <div class="locked-grid" id="locked-grid"></div>
       </section>
-
-    </div>
 
   </main>
 
@@ -2079,7 +2044,7 @@
     if (!hasVendorTab && !vendors.length) return;
 
     $('vendors').style.display = '';
-    $('nav-vendors').style.display = '';
+    const nv = $('nav-vendors'); if (nv) nv.style.display = '';
 
     // Stats strip
     const cards = [
@@ -2204,7 +2169,7 @@
     if (!sponsors.length) return;
 
     $('sponsors').style.display = '';
-    $('nav-sponsors').style.display = '';
+    const ns = $('nav-sponsors'); if (ns) ns.style.display = '';
 
     $('sponsors-grid').innerHTML = sponsors.map(s => {
       const acts = s.activations || [];
@@ -2261,7 +2226,7 @@
     const countries = data.top_countries || [];
     if (!countries.length) return;
     $('audience').style.display = '';
-    $('nav-audience').style.display = '';
+    const na = $('nav-audience'); if (na) na.style.display = '';
 
     const max = Math.max(...countries.map(c => c.count));
     $('countries-card').innerHTML = countries.map(c => {
@@ -2280,7 +2245,7 @@
     const sch = data.schedule || {};
     if (!sch.days_count) return;
     $('schedule').style.display = '';
-    $('nav-schedule').style.display = '';
+    const nsch = $('nav-schedule'); if (nsch) nsch.style.display = '';
 
     const summary = `
       <div class="schedule-summary">
@@ -2388,7 +2353,7 @@
     const updates = data.updates || [];
     if (!updates.length) return;
     $('updates').style.display = '';
-    $('nav-updates').style.display = '';
+    const nu = $('nav-updates'); if (nu) nu.style.display = '';
 
     $('updates-list').innerHTML = updates.map(u => `
       <div class="update-card">
@@ -2975,44 +2940,27 @@
     list.prepend(row);
   }
 
-  // ── Page tabs (Overview / Insights) ──────────────────────
-  function setupPageTabs() {
-    const tabs  = document.querySelectorAll('.page-tab');
-    const panes = document.querySelectorAll('.page-pane');
-    function activate(target) {
-      tabs.forEach(t => t.classList.toggle('active', t.dataset.pane === target));
-      panes.forEach(p => p.classList.toggle('active', p.dataset.pane === target));
-      document.querySelectorAll('[data-pane-nav]').forEach(el => {
-        const matches = el.dataset.paneNav === target;
-        const wasHidden = el.dataset.origHidden === '1';
-        if (!matches) { el.style.display = 'none'; }
-        else if (wasHidden) { el.style.display = 'none'; }
-        else { el.style.display = ''; }
-      });
-      window.scrollTo({ top: 0 });
-    }
-    // Snapshot which nav items were intentionally hidden (e.g. nav-vendors)
-    document.querySelectorAll('[data-pane-nav]').forEach(el => {
-      if (el.style.display === 'none') el.dataset.origHidden = '1';
+  // ── Sidebar wiring ───────────────────────────────────────
+  function setupSidebar(capabilities, opts) {
+    opts = opts || {};
+    window.PartnerSidebar?.mount({
+      active: '/partner/event',
+      capabilities: capabilities,
+      jumpLinks: [
+        { section: 'status',     icon: 'ic-info',     label: 'Status' },
+        { section: 'overview',   icon: 'ic-info',     label: 'Event Overview' },
+        { section: 'actions',    icon: 'ic-bolt',     label: 'Action Center' },
+        { section: 'vendors',    icon: 'ic-shop',     label: 'Vendors',  id: 'nav-vendors',  hidden: !opts.hasVendors },
+        { section: 'sponsors',   icon: 'ic-bolt',     label: 'Sponsors', id: 'nav-sponsors', hidden: !opts.hasSponsors },
+        { section: 'schedule',   icon: 'ic-calendar', label: 'Schedule', id: 'nav-schedule', hidden: !opts.hasSchedule },
+        { section: 'updates',    icon: 'ic-chat',     label: 'Updates',  id: 'nav-updates',  hidden: !opts.hasUpdates },
+        { section: 'edit',       icon: 'ic-edit',     label: 'Edit Event' },
+        { section: 'engagement', icon: 'ic-bolt',     label: 'Engagement' },
+        { section: 'audience',   icon: 'ic-users',    label: 'Audience', id: 'nav-audience', hidden: !opts.hasAudience },
+        { section: 'unlocks',    icon: 'ic-lock',     label: 'Unlocks' },
+      ],
     });
-    tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.pane)));
-    activate('overview');
-  }
-
-  // ── Sidebar wiring (event partner = jump-links only) ─────
-  function setupSidebar() {
-    const jumpLinks = document.querySelectorAll('.jump-link');
-    const sections  = Array.from(jumpLinks).map(l => $(l.dataset.section)).filter(Boolean);
-    function update() {
-      const scrollY = window.scrollY + 120;
-      let activeId = sections[0]?.id;
-      for (const sec of sections) {
-        if (sec.offsetTop <= scrollY) activeId = sec.id;
-      }
-      jumpLinks.forEach(l => l.classList.toggle('active', l.dataset.section === activeId));
-    }
-    window.addEventListener('scroll', update, { passive: true });
-    update();
+    window.PartnerSidebar?.setupScrollspy();
   }
 
   // ── Load ─────────────────────────────────────────────────
@@ -3033,6 +2981,8 @@
     }
     hide('view-loading');
     show('view-error');
+    window.PartnerAuth?.mountSessionControl('partner');
+    setupSidebar();
   }
 
   async function load() {
@@ -3111,13 +3061,19 @@
     safe('renderLocked',      () => renderLocked(data));
     safe('renderActionEventLink', () => renderActionEventLink(data.event));
 
+    const sidebarOpts = {
+      hasVendors:  !!(data.vendors && data.vendors.length),
+      hasSponsors: !!(data.sponsors && data.sponsors.length),
+      hasSchedule: !!(data.schedule && data.schedule.days_count),
+      hasUpdates:  !!(data.updates && data.updates.length),
+      hasAudience: !!(data.top_countries && data.top_countries.length),
+    };
+
     hide('view-loading');
     show('view-dashboard');
-    document.getElementById('page-tabs').style.display = '';
     window.PartnerAuth?.mountSessionControl('partner');
+    safe('setupSidebar',       () => setupSidebar(caps && caps.capabilities, sidebarOpts));
     safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));
-    safe('setupSidebar',       () => setupSidebar());
-    setupPageTabs();
   }
 
   load();

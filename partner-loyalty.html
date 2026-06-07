@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
@@ -223,19 +224,23 @@
     scroll-margin-top: 80px;
   }
   .section-head {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: flex-start;
     margin-bottom: 14px;
     gap: 12px;
+    text-align: left;
   }
+  .section-head > div { text-align: left; }
   .section-title {
     font-size: 18px; font-weight: 700;
     color: var(--black);
     letter-spacing: -0.3px;
     display: flex; align-items: center; gap: 10px;
+    text-align: left;
   }
   .section-sub {
     font-size: 12px; color: var(--grey-mid);
     font-weight: 500;
+    text-align: left;
   }
   .pill {
     font-size: 10px; font-weight: 700;
@@ -830,17 +835,12 @@
 
 <!-- ERROR -->
 <div class="layout hidden" id="view-error">
-  <div></div>
+  <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
   <div class="main">
     <div class="state">
-      <div class="state-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 9v4M12 17h.01M10.3 3.86l-8.4 14a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3l-8.4-14a2 2 0 0 0-3.4 0z"/>
-        </svg>
-      </div>
       <div class="state-title">We couldn't load this dashboard</div>
       <p class="state-msg">
-        This link may have expired or been revoked. Reply to any TRODDR email if you think this is a mistake.
+        This link may have expired or been revoked. Try another section from the sidebar, or reply to any TRODDR email if you think this is a mistake.
       </p>
     </div>
   </div>
@@ -850,54 +850,7 @@
 <div class="layout hidden" id="view-dashboard">
 
   <!-- ── SIDEBAR ── -->
-  <aside class="sidebar">
-    <div class="entity-picker hidden" id="entity-picker">
-      <div class="partner-tag">Partner</div>
-      <div class="partner-name" id="partner-name"></div>
-      <select class="entity-select" id="entity-select" aria-label="Switch entity"></select>
-    </div>
-    <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
-    <div class="sidebar-title">Dashboard</div>
-    <a class="page-link" data-href="/partner/listing">
-      <svg><use href="#ic-doc"/></svg> Listing
-    </a>
-    <a class="page-link" data-href="/partner/bookings">
-      <svg><use href="#ic-calendar"/></svg> Bookings
-    </a>
-    <a class="page-link active" data-href="/partner/loyalty">
-      <svg><use href="#ic-bolt"/></svg> Loyalty
-    </a>
-    <a class="page-link" data-href="/partner/feedback">
-      <svg><use href="#ic-star"/></svg> Feedback
-    </a>
-    <a class="page-link" data-href="/partner/specials">
-      <svg><use href="#ic-doc"/></svg> Specials
-    </a>
-    <a class="page-link" data-href="/partner/billing">
-      <svg><use href="#ic-doc"/></svg> Billing
-    </a>
-
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-title">On this page</div>
-    <a href="#health" data-section="health" class="jump-link">
-      <svg><use href="#ic-health"/></svg> Program Health
-    </a>
-    <a href="#actions" data-section="actions" class="jump-link">
-      <svg><use href="#ic-bolt"/></svg> Action Center
-    </a>
-    <a href="#funnel" data-section="funnel" class="jump-link">
-      <svg><use href="#ic-funnel"/></svg> Loyalty Funnel
-    </a>
-    <a href="#members" data-section="members" class="jump-link">
-      <svg><use href="#ic-users"/></svg> Members
-    </a>
-    <a href="#revenue" data-section="revenue" class="jump-link">
-      <svg><use href="#ic-dollar"/></svg> Estimated Impact
-    </a>
-    <a href="#unlocks" data-section="unlocks" class="jump-link">
-      <svg><use href="#ic-lock"/></svg> Unlocks
-    </a>
-  </aside>
+  <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
 
   <!-- ── MAIN ── -->
   <main class="main">
@@ -1487,38 +1440,32 @@
     });
   }
 
-  // ── Sidebar: wire cross-page links + intra-page scroll-spy ─
+  // ── Sidebar: mount unified sidebar with this page's jump-links ─
   function setupSidebar(capabilities) {
-    const token = window.PartnerAuth?.getToken({ require: false }) || new URLSearchParams(location.search).get('token') || '';
-    const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true };
-
-    // Cross-page nav: append token to each page link + hide unavailable.
-    document.querySelectorAll('.page-link').forEach(a => {
-      const key = a.dataset.href.split('/').pop();   // listing | bookings | loyalty | feedback
-      if (!caps[key]) { a.style.display = 'none'; return; }
-      const url = new URL(a.dataset.href, location.origin);
-      a.href = url.toString();
+    window.PartnerSidebar?.mount({
+      active: '/partner/loyalty',
+      capabilities: capabilities,
+      jumpLinks: [
+        { section: 'health',  icon: 'ic-shield', label: 'Program Health' },
+        { section: 'actions', icon: 'ic-bolt',   label: 'Action Center' },
+        { section: 'funnel',  icon: 'ic-chart',  label: 'Loyalty Funnel' },
+        { section: 'members', icon: 'ic-users',  label: 'Members' },
+        { section: 'revenue', icon: 'ic-dollar', label: 'Estimated Impact' },
+        { section: 'unlocks', icon: 'ic-lock',   label: 'Unlocks' },
+      ],
     });
-
-    // Intra-page scroll-spy on jump-links.
-    const jumpLinks = document.querySelectorAll('.jump-link');
-    const sections = Array.from(jumpLinks).map(l => $(l.dataset.section)).filter(Boolean);
-    function update() {
-      const scrollY = window.scrollY + 120;
-      let activeId = sections[0]?.id;
-      for (const sec of sections) {
-        if (sec.offsetTop <= scrollY) activeId = sec.id;
-      }
-      jumpLinks.forEach(l => l.classList.toggle('active', l.dataset.section === activeId));
-    }
-    window.addEventListener('scroll', update, { passive: true });
-    update();
+    window.PartnerSidebar?.setupScrollspy();
   }
 
   // ── Load ────────────────────────────────────────────────
   async function load() {
     const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
-    if (!token) { hide('view-loading'); show('view-error'); return; }
+    const showError = (caps) => {
+      hide('view-loading'); show('view-error');
+      window.PartnerAuth?.mountSessionControl('partner');
+      setupSidebar(caps);
+    };
+    if (!token) { showError(); return; }
 
     const [analyticsRes, capsRes] = await Promise.all([
       db.rpc('get_loyalty_analytics_by_token',      { p_token: token }),
@@ -1527,9 +1474,17 @@
 
     const data = analyticsRes.data;
     const caps = capsRes.data;
+
+    // If this is an event token, send the user to the event dashboard first.
+    const intentional = window.PartnerAuth?.consumeIntent('/partner/loyalty');
+    if (!intentional && caps && caps.type === 'event' && caps.capabilities && caps.capabilities.event) {
+      window.PartnerAuth?.navigate('/partner/event', token);
+      return;
+    }
+
     if (analyticsRes.error || !data || !data.program) {
       console.error('analytics error', analyticsRes.error);
-      hide('view-loading'); show('view-error');
+      showError(caps && caps.capabilities);
       return;
     }
 
@@ -1546,8 +1501,8 @@
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
-    renderEntityPicker(caps && caps.partner);
     setupSidebar(caps && caps.capabilities);
+    renderEntityPicker(caps && caps.partner);
   }
 
   load();

@@ -111,7 +111,16 @@
 
   function navigate(path, token) {
     const saved = token ? writeStored(PARTNER_TOKEN_KEY, token) : true;
+    try { sessionStorage.setItem('__partner_intent', path); } catch (e) {}
     window.location.href = pageUrl(path, saved ? null : token);
+  }
+
+  function consumeIntent(path) {
+    try {
+      const intent = sessionStorage.getItem('__partner_intent');
+      sessionStorage.removeItem('__partner_intent');
+      return intent === path;
+    } catch (e) { return false; }
   }
 
   function signOut(kind) {
@@ -242,7 +251,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        margin-left: auto;
+        margin-left: 0;
       }
       .partner-session-btn {
         border: 1px solid var(--border, #e8e8e8);
@@ -299,6 +308,7 @@
     clearAdminToken: () => clearStored(ADMIN_TOKEN_KEY),
     pageUrl,
     navigate,
+    consumeIntent,
     signOut,
     mountSessionControl,
     setupPageLinks,
