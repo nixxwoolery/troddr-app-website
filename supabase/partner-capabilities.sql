@@ -1,8 +1,9 @@
 -- ============================================================
 -- Partner Capabilities RPC (polymorphic + partner-aware)
 -- Resolves either a place or an event token, and if the resolved
--- entity has a partner_id, also returns all sibling entities owned
--- by that partner so the dashboard can show an entity picker.
+-- entity has a partner_id, hospitality_group, or parent_place_id,
+-- also returns sibling entities so the dashboard can show a group
+-- / location picker.
 -- ============================================================
 
 create or replace function public.get_partner_capabilities_by_token(p_token text)
@@ -20,6 +21,8 @@ declare
   v_partner_name text;
   v_partner_jsonb jsonb;
   v_current_id   uuid;
+  v_group_key    text;
+  v_root_place_id uuid;
 begin
   ------------------------------------------------------------
   -- 1. Resolve token to entity (place first, then event)
@@ -40,32 +43,48 @@ begin
 
   v_partner_id := coalesce(v_place.partner_id, v_event.partner_id);
   v_current_id := coalesce(v_place.id, v_event.id);
+  v_group_key := nullif(trim(coalesce(v_place.hospitality_group, '')), '');
+  v_root_place_id := coalesce(v_place.parent_place_id, v_place.id);
 
   ------------------------------------------------------------
   -- 2. Build the partner block (sibling entity picker)
   ------------------------------------------------------------
-  if v_partner_id is not null then
-    select name into v_partner_name from public.partners where id = v_partner_id;
+  if v_partner_id is not null or v_group_key is not null or v_place.parent_place_id is not null then
+    if v_partner_id is not null then
+      select name into v_partner_name from public.partners where id = v_partner_id;
+    end if;
+    if v_partner_name is null and v_group_key is not null then
+      v_partner_name := v_group_key;
+    end if;
+    if v_partner_name is null and v_root_place_id is not null then
+      select name into v_partner_name from public.places where id = v_root_place_id;
+    end if;
 
     v_partner_jsonb := jsonb_build_object(
       'id',         v_partner_id,
       'name',       v_partner_name,
       'current_id', v_current_id,
+      'hospitality_group', v_group_key,
+      'root_place_id', v_root_place_id,
       'entities', (
         with all_e as (
           select 'place'      as type,
                  id, name, slug,
                  partner_access_token as token,
-                 category as label
+                 coalesce(nullif(place_role, ''), category) as label
             from public.places
-           where partner_id = v_partner_id
+           where (
+             (v_partner_id is not null and partner_id = v_partner_id)
+             or (v_group_key is not null and hospitality_group = v_group_key)
+             or (v_root_place_id is not null and (id = v_root_place_id or parent_place_id = v_root_place_id))
+           )
           union all
           select 'event'      as type,
                  id, title as name, slug,
                  partner_access_token as token,
                  event_type as label
             from public.events
-           where partner_id = v_partner_id
+           where v_partner_id is not null and partner_id = v_partner_id
         )
         select coalesce(
           jsonb_agg(

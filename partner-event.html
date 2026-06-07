@@ -428,65 +428,6 @@
   .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
   .pill.soon { background: var(--bg-soft); }
 
-  /* ── FUNNEL FLOW (clean horizontal layout) ── */
-  .funnel-flow {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 18px 20px;
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
-    align-items: stretch;
-  }
-  .ff-step {
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 14px 12px;
-    display: flex; flex-direction: column; gap: 6px;
-    min-width: 0;
-    position: relative;
-  }
-  .ff-step.live {
-    background: #fff;
-    border-color: var(--brand-primary);
-  }
-  .ff-step.muted {
-    background: var(--bg-soft);
-    border-style: dashed;
-  }
-  .ff-label {
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--grey-mid);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .ff-value {
-    font-size: 24px; font-weight: 800;
-    color: var(--black);
-    letter-spacing: -0.5px;
-    line-height: 1;
-  }
-  .ff-step.muted .ff-value {
-    color: var(--grey-light);
-    font-size: 14px;
-    font-weight: 700;
-  }
-  .ff-conv {
-    font-size: 10px; font-weight: 600;
-    color: var(--brand-primary);
-    letter-spacing: 0.04em;
-    margin-top: auto;
-  }
-  .ff-conv.muted { color: var(--grey-light); }
-  @media (max-width: 1100px) {
-    .funnel-flow { grid-template-columns: repeat(3, 1fr); }
-  }
-  @media (max-width: 700px) {
-    .funnel-flow { grid-template-columns: 1fr 1fr; }
-  }
-
   /* ── EVENT STATUS CARD ── */
   .event-status {
     background: #fff;
@@ -1565,9 +1506,6 @@
     <a href="#status"     class="jump-link" data-section="status">
       <svg><use href="#ic-info"/></svg> Status
     </a>
-    <a href="#funnel"     class="jump-link" data-section="funnel">
-      <svg><use href="#ic-funnel"/></svg> Discovery Funnel
-    </a>
     <a href="#discovery"  class="jump-link" data-section="discovery" id="nav-discovery" style="display:none">
       <svg><use href="#ic-eye"/></svg> Web Traffic
     </a>
@@ -1607,17 +1545,6 @@
 
     <section class="section" id="status">
       <div class="event-status" id="event-status"></div>
-    </section>
-
-    <section class="section" id="funnel">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Discovery → Attendance</h2>
-          <div class="section-sub">How guests move through your event, from first impression to attendance.</div>
-        </div>
-        <span class="pill live">Live</span>
-      </div>
-      <div class="funnel-flow" id="funnel-flow"></div>
     </section>
 
     <section class="section" id="discovery" style="display:none">
@@ -1923,41 +1850,6 @@
         ${links.length ? `<div class="preview-links">${links.join('')}</div>` : ''}
       </div>
     `;
-  }
-
-  // ── Discovery → Attendance funnel (clean horizontal flow) ─
-  function renderFunnel(stats) {
-    const views    = stats.view_count || stats.unique_viewers || 0;
-    const attended = stats.checkin_count || stats.went_count || 0;
-    const steps = [
-      { label: 'Listing Views', value: views,                       live: true },
-      { label: 'Saved',         value: stats.saved_count || 0,      live: true },
-      { label: 'Interested',    value: stats.interested_count || 0, live: true },
-      { label: 'Going / RSVP',  value: stats.going_count || 0,      live: true },
-      { label: 'Attended',      value: attended,                    live: true },
-      { label: 'Returned via Loyalty', muted: true },
-    ];
-
-    $('funnel-flow').innerHTML = steps.map((step, i) => {
-      const prev = i > 0 ? steps[i - 1] : null;
-      let convHtml = '';
-      if (!step.muted && prev && prev.value > 0 && step.value != null) {
-        const pct = Math.round((step.value / prev.value) * 100);
-        convHtml = `<div class="ff-conv">${pct}% from prev</div>`;
-      } else if (prev && !step.muted) {
-        convHtml = `<div class="ff-conv muted">no prior data</div>`;
-      } else if (step.muted) {
-        convHtml = `<div class="ff-conv muted">coming soon</div>`;
-      }
-      const valueDisplay = step.muted ? 'Soon' : step.value;
-      const cls = step.muted ? 'muted' : 'live';
-      return `
-        <div class="ff-step ${cls}">
-          <div class="ff-label">${step.label}</div>
-          <div class="ff-value">${valueDisplay}</div>
-          ${convHtml}
-        </div>`;
-    }).join('');
   }
 
   // ── Engagement stats with empty-state guidance ──────────
@@ -3109,7 +3001,6 @@
     };
     safe('renderHero',        () => renderHero(data.event, data.stats));
     safe('renderEventStatus', () => renderEventStatus(data.event, data.stats));
-    safe('renderFunnel',      () => renderFunnel(data.stats));
     safe('renderPreview',     () => renderPreview(data.event, data.tabs));
     safe('renderStats',       () => renderStats(data.stats, data.event.slug));
     safe('renderAudience',    () => renderAudience(data));

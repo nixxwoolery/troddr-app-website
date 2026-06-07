@@ -779,6 +779,21 @@
   function humanizeTag(raw) {
     if (!raw) return '';
     let s = String(raw).toLowerCase().replace(/[-_]/g, ' ').trim();
+    const known = {
+      greatvibe: 'Great Vibe',
+      instagrammable: 'Instagrammable',
+      amazingview: 'Amazing View',
+      familyfriendly: 'Family Friendly',
+      goodforsolo: 'Good for Solo',
+      goodforgroups: 'Good for Groups',
+      veryclean: 'Very Clean',
+      longwait: 'Long Wait',
+      flavourpacked: 'Flavour Packed',
+      comfortfood: 'Comfort Food',
+      freshingredients: 'Fresh Ingredients',
+      friendlystaff: 'Friendly Staff'
+    };
+    if (known[s.replace(/\s/g, '')]) return known[s.replace(/\s/g, '')];
     if (s.includes(' ')) {
       return s.replace(/\b\w/g, c => c.toUpperCase());
     }

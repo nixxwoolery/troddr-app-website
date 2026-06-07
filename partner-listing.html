@@ -1112,6 +1112,21 @@
   function humanizeTag(raw) {
     if (!raw) return '';
     let s = String(raw).toLowerCase().replace(/[-_]/g, ' ').trim();
+    const known = {
+      greatvibe: 'Great Vibe',
+      instagrammable: 'Instagrammable',
+      amazingview: 'Amazing View',
+      familyfriendly: 'Family Friendly',
+      goodforsolo: 'Good for Solo',
+      goodforgroups: 'Good for Groups',
+      veryclean: 'Very Clean',
+      longwait: 'Long Wait',
+      flavourpacked: 'Flavour Packed',
+      comfortfood: 'Comfort Food',
+      freshingredients: 'Fresh Ingredients',
+      friendlystaff: 'Friendly Staff'
+    };
+    if (known[s.replace(/\s/g, '')]) return known[s.replace(/\s/g, '')];
     if (s.includes(' ')) return s.replace(/\b\w/g, c => c.toUpperCase());
     const parts = [
       'ingredients','food','packed','staff','service','drinks','drink','options',
@@ -1323,7 +1338,7 @@
         .map(([k, v]) => `<span class="fb-rating-pill"><span class="name">${titleCase(k)}</span> <strong>${v}</strong></span>`)
         .join('');
 
-      const tags = (fb.quick_tags || []).map(t => `<span class="fb-tag">${escapeHtml(t)}</span>`).join('');
+      const tags = (fb.quick_tags || []).map(t => `<span class="fb-tag">${escapeHtml(humanizeTag(t))}</span>`).join('');
       const wr = fb.would_return === true  ? `<div class="fb-return yes">✓ Would visit again</div>`
               : fb.would_return === false ? `<div class="fb-return no">Would not return</div>`
               : '';
@@ -1508,6 +1523,13 @@
   }
 
   function setupHoursEditor(place, closures) {
+    const isEatPlace = String(place.category || '').toLowerCase().trim() === 'eat';
+    const kitchenTitle = document.querySelector('#kitchen-grid')?.previousElementSibling;
+    if (!isEatPlace) {
+      if (kitchenTitle) kitchenTitle.style.display = 'none';
+      if ($('kitchen-grid')) $('kitchen-grid').style.display = 'none';
+    }
+
     // Fall back to parsing the legacy text columns when the struct
     // is empty (e.g. Soup King already has opening_hours set as text
     // but hasn't filled in the new struct yet).
@@ -1527,8 +1549,8 @@
     opening = opening || {};
     kitchen = kitchen || {};
 
-    renderHoursGrid('hours-grid',   opening);
-    renderHoursGrid('kitchen-grid', kitchen);
+    renderHoursGrid('hours-grid', opening);
+    if (isEatPlace) renderHoursGrid('kitchen-grid', kitchen);
 
     if (openingImported || kitchenImported) {
       const statusBox = $('hours-status');
@@ -1538,8 +1560,12 @@
 
     // "Kitchen same as opening" toggle
     const sameToggle = $('kitchen-same');
-    sameToggle.checked = isEmptyStruct(place.kitchen_hours_struct) && !place.kitchen_hours;
+    sameToggle.checked = isEatPlace
+      ? (isEmptyStruct(place.kitchen_hours_struct) && !place.kitchen_hours)
+      : true;
+    sameToggle.disabled = !isEatPlace;
     function syncKitchenDisabled() {
+      if (!isEatPlace) return;
       const sync = sameToggle.checked;
       $('kitchen-grid').querySelectorAll('input').forEach(i => i.disabled = sync || (sync ? false : i.disabled));
       // simpler: when synced, disable all
@@ -1561,7 +1587,9 @@
       statusBox.className = 'hours-status';
       const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
       const openingStruct = readHoursGrid('hours-grid');
-      const kitchenStruct = sameToggle.checked ? openingStruct : readHoursGrid('kitchen-grid');
+      const kitchenStruct = isEatPlace
+        ? (sameToggle.checked ? openingStruct : readHoursGrid('kitchen-grid'))
+        : null;
 
       const btn = $('hours-save');
       btn.disabled = true;
@@ -1805,6 +1833,7 @@
 
   // ── Contact info editor ──────────────────────────────────
   function setupContactEditor(place) {
+    const isEatPlace = String(place.category || '').toLowerCase().trim() === 'eat';
     const fields = [
       { id: 'ct-phone',    key: 'phone_number',          label: 'Phone',                placeholder: '+1 876 ...' },
       { id: 'ct-website',  key: 'website',               label: 'Website',              placeholder: 'https://...' },
@@ -1815,7 +1844,7 @@
       { id: 'ct-bcontact', key: 'booking_contact_email', label: 'Booking contact email', placeholder: 'team@...' },
       { id: 'ct-dpass',    key: 'day_pass_link',         label: 'Day pass link',        placeholder: 'https://...' },
       { id: 'ct-dnotes',   key: 'day_pass_notes',        label: 'Day pass notes',       placeholder: '',                  multiline: true },
-    ];
+    ].filter(f => !isEatPlace || !['day_pass_link', 'day_pass_notes'].includes(f.key));
 
     $('contact-card').innerHTML = `
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px;">
