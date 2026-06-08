@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/troddr-config.js"></script>
   <script src="/js/partner-auth.js"></script>
+  <script src="/js/partner-errors.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -73,24 +74,75 @@
       <h1 id="msg-title">Signing you in…</h1>
       <p id="msg-body">We're routing you to your dashboard based on your access token.</p>
       <div class="spinner" id="spinner"></div>
+      <pre id="msg-raw" style="display:none; margin-top:14px; padding:10px 14px; background:#fdecea; border-radius:6px; font-size:11px; color:#c0392b; text-align:left; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; word-break:break-word; white-space:pre-wrap;"></pre>
     </div>
   </div>
 
   <script>
     (async function init() {
-      const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || '';
-      const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || '';
+      // Hardcoded fallback URL/key so the page still works if troddr-config.js
+      // is blocked by a content blocker or never loads. Other partner pages
+      // already have this fallback — dashboard.html was the outlier.
+      const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+      const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
       const { createClient } = supabase;
       const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+      function showError(err, fallbackTitle, fallbackBody) {
+        const friendly = window.friendlyError
+          ? window.friendlyError(err, fallbackBody)
+          : fallbackBody;
+        const raw = (err && (err.message || err.code || err.error)) || String(err || '');
+        document.getElementById('msg-title').textContent = fallbackTitle;
+        document.getElementById('msg-body').textContent  = friendly;
+        const rawBox = document.getElementById('msg-raw');
+        if (rawBox && raw) {
+          rawBox.textContent = String(raw).slice(0, 400);
+          rawBox.style.display = 'block';
+        }
+        document.getElementById('spinner').style.display = 'none';
+      }
+
+      // Treat Safari's "Load failed", Chrome's "Failed to fetch", and ad-blocker
+      // errors as transient — retry once before giving up.
+      const isNetErr = (e) => {
+        const s = String((e && (e.message || e.code)) || e || '').toLowerCase();
+        return /load failed|failed to fetch|networkerror|\bnetwork\b|err_blocked_by_client/.test(s);
+      };
+      async function callCaps(token) {
+        try {
+          const res = await db.rpc('get_partner_capabilities_by_token', { p_token: token });
+          return res;
+        } catch (e) {
+          return { error: e };
+        }
+      }
 
       // getToken() with require:true will show the access gate if no token is present.
       const token = window.PartnerAuth?.getToken({ require: true });
       if (!token) return; // access gate is now showing
 
-      try {
-        const { data, error } = await db.rpc('get_partner_capabilities_by_token', { p_token: token });
-        if (error || !data) throw error || new Error('No capabilities returned');
+      let res = await callCaps(token);
+      if (res.error && isNetErr(res.error)) {
+        console.warn('[dashboard] first attempt failed with network error; retrying once...');
+        await new Promise(r => setTimeout(r, 800));
+        res = await callCaps(token);
+      }
 
+      const { data, error } = res;
+      if (error) {
+        showError(error, "We couldn't sign you in", "Something blocked the request to our backend. See the details below.");
+        return;
+      }
+      if (!data) {
+        // No row matched the token : it's either expired, revoked, or never existed.
+        showError(new Error('No capabilities returned for this token'),
+          "We couldn't sign you in",
+          "Your access token may have expired or been revoked. Reply to any TRODDR email and we'll send a fresh link.");
+        return;
+      }
+
+      try {
         // Group / hospitality partners with more than one entity land on the group
         // overview, where they pick which restaurant/event to open.
         const entities = (data.partner && data.partner.entities) || [];
@@ -105,10 +157,9 @@
           : '/partner/listing';
         window.PartnerAuth?.navigate(target, token);
       } catch (e) {
-        console.error('[dashboard] failed:', e);
-        document.getElementById('msg-title').textContent = "We couldn't sign you in";
-        document.getElementById('msg-body').textContent = "Your access token may have expired. Reply to any TRODDR email and we'll send a fresh link.";
-        document.getElementById('spinner').style.display = 'none';
+        console.error('[dashboard] navigate failed:', e);
+        showError(e, "We couldn't redirect you",
+          "We found your account but couldn't open the dashboard. Try refreshing.");
       }
     })();
   </script>

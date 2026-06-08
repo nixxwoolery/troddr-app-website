@@ -14,8 +14,8 @@
 <script src="/js/partner-sidebar.js"></script>
 
 <script>
-  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || '';
-  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || '';
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
 </script>
 
 <style>
@@ -416,7 +416,28 @@
     };
     if (!token) { showError(); return; }
 
-    const { data, error } = await db.rpc('get_partner_capabilities_by_token', { p_token: token });
+    // Single retry on transient network errors (Safari Load failed / Chrome
+    // Failed to fetch / content blockers).
+    const isNetErr = (e) => {
+      const s = String((e && (e.message || e.code)) || e || '').toLowerCase();
+      return /load failed|failed to fetch|networkerror|\bnetwork\b|err_blocked_by_client/.test(s);
+    };
+    let capsRes;
+    try {
+      capsRes = await db.rpc('get_partner_capabilities_by_token', { p_token: token });
+    } catch (e) {
+      capsRes = { error: e };
+    }
+    if (capsRes && capsRes.error && isNetErr(capsRes.error)) {
+      console.warn('[partner-group] first attempt failed with network error; retrying once...');
+      await new Promise(r => setTimeout(r, 800));
+      try {
+        capsRes = await db.rpc('get_partner_capabilities_by_token', { p_token: token });
+      } catch (e) {
+        capsRes = { error: e };
+      }
+    }
+    const { data, error } = capsRes;
     if (error || !data) {
       console.error('caps error', error);
       showError(data && data.capabilities);
