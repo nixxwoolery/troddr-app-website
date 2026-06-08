@@ -2062,11 +2062,24 @@
     }
 
     // Use allSettled so a single failed RPC doesn't take down the page.
-    const results = await Promise.allSettled([
+    // We retry once on transient network failures (Safari's "Load failed",
+    // Chrome's "Failed to fetch") since those frequently self-resolve.
+    const isNetErr = (e) => {
+      const s = String((e && (e.message || e.code || e.error)) || e || '').toLowerCase();
+      return /load failed|failed to fetch|networkerror|\bnetwork\b|err_blocked_by_client/.test(s);
+    };
+    const fetchAll = () => Promise.allSettled([
       db.rpc('get_partner_listing_by_token',      { p_token: token }),
       db.rpc('get_partner_capabilities_by_token', { p_token: token }),
       db.rpc('list_partner_closures',             { p_token: token }),
     ]);
+    let results = await fetchAll();
+    const allNetFailed = results.every(r => r.status === 'rejected' && isNetErr(r.reason));
+    if (allNetFailed) {
+      console.warn('[partner-listing] first attempt failed with network error; retrying once...');
+      await new Promise(r => setTimeout(r, 800));
+      results = await fetchAll();
+    }
     const listingRes  = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
     const capsRes     = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
     const closuresRes = results[2].status === 'fulfilled' ? results[2].value : { error: results[2].reason };

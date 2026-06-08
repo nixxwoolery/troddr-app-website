@@ -97,9 +97,18 @@
     },
 
     // ── Network / connectivity ────────────────────────────
+    // "Load failed" is Safari's wording for a fetch that never reached the
+    // server. Usually means a content blocker / Safari extension / VPN /
+    // corporate firewall / Private Relay is blocking *.supabase.co.
     {
-      test: (s) => /network/.test(s) || /failed to fetch/.test(s) || /\btimeout/.test(s) || /timed out/.test(s),
-      msg:  "Couldn't reach our servers. Check your connection and try again.",
+      test: (s) => /load failed/i.test(s)
+                || /networkerror/i.test(s)
+                || /\bnetwork\b/i.test(s)
+                || /failed to fetch/i.test(s)
+                || /\btimeout/i.test(s)
+                || /timed out/i.test(s)
+                || /err_blocked_by_client/i.test(s),
+      msg:  "We couldn't reach our backend (Supabase). On Safari this is usually a content blocker, Safari extension, VPN, or iCloud Private Relay blocking the request. Try: (1) disabling content blockers / extensions for this site, (2) switching to a different network (cellular tether, different WiFi), or (3) opening the link in a different browser. The same link works on iPad / iPhone for most users.",
     },
     {
       test: (s) => /not found/.test(s) || /\b404\b/.test(s),
