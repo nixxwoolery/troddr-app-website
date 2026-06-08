@@ -1166,18 +1166,25 @@
     allFeedback = data.feedback || [];
     window._tagData = data;
 
-    renderHero(data.place, data.stats);
-    renderSummary(data);
-    renderDistribution(data);
-    renderTags(data);
-    renderFilters();
-    renderFeed();
-
+    // Reveal the dashboard view + mount the sidebar FIRST. This way the user
+    // always sees the navigation even if a later render call throws (e.g. a
+    // missing field on data.stats). Each renderer is then individually guarded.
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
     setupSidebar(caps && caps.capabilities, { partner: caps && caps.partner });
     renderEntityPicker(caps && caps.partner);
+
+    const safe = (name, fn) => {
+      try { fn(); }
+      catch (e) { console.error('[partner-feedback] ' + name + ' failed:', e); }
+    };
+    safe('renderHero',         () => renderHero(data.place, data.stats));
+    safe('renderSummary',      () => renderSummary(data));
+    safe('renderDistribution', () => renderDistribution(data));
+    safe('renderTags',         () => renderTags(data));
+    safe('renderFilters',      () => renderFilters());
+    safe('renderFeed',         () => renderFeed());
   }
 
   load();

@@ -1813,21 +1813,26 @@
     }
 
     window.__partnerSlug = data.place && data.place.slug;
-    applyBrand(data.program);
-    renderHero(data.place, data.summary);
-    renderSummary(data.summary);
-    renderLists(data.specials || []);
-    setupSubmitForm();
-
     // Surface the Pending sidebar link if there are pending/rejected/draft specials.
     const hasPending = (data.specials || []).some(s =>
       ['pending','rejected','draft'].includes(s.lifecycle));
 
+    // Reveal the dashboard view + sidebar FIRST so the user always sees nav,
+    // even if a later renderer fails.
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
     setupSidebar(caps && caps.capabilities, { hasPending: hasPending, partner: caps && caps.partner });
     renderEntityPicker(caps && caps.partner);
+
+    const safe = (name, fn) => {
+      try { fn(); } catch (e) { console.error('[partner-specials] ' + name + ' failed:', e); }
+    };
+    safe('applyBrand',      () => applyBrand(data.program));
+    safe('renderHero',      () => renderHero(data.place, data.summary));
+    safe('renderSummary',   () => renderSummary(data.summary));
+    safe('renderLists',     () => renderLists(data.specials || []));
+    safe('setupSubmitForm', () => setupSubmitForm());
   }
 
   load();

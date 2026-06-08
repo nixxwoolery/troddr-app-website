@@ -1494,21 +1494,26 @@
       return;
     }
 
-    applyBrand(data.program);
-    renderHero(data.place, data.program);
-    renderStats(data);
-    buildActions(data);
-    renderFunnel(data);
-    renderRevenue(data);
-    renderMemberFilters(data);
-    renderMembers(data);
-    renderLocked(data);
-
+    // Reveal the dashboard view + sidebar FIRST so the user always sees nav,
+    // even if a later renderer fails.
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
     setupSidebar(caps && caps.capabilities, { partner: caps && caps.partner });
     renderEntityPicker(caps && caps.partner);
+
+    const safe = (name, fn) => {
+      try { fn(); } catch (e) { console.error('[partner-loyalty] ' + name + ' failed:', e); }
+    };
+    safe('applyBrand',          () => applyBrand(data.program));
+    safe('renderHero',          () => renderHero(data.place, data.program));
+    safe('renderStats',         () => renderStats(data));
+    safe('buildActions',        () => buildActions(data));
+    safe('renderFunnel',        () => renderFunnel(data));
+    safe('renderRevenue',       () => renderRevenue(data));
+    safe('renderMemberFilters', () => renderMemberFilters(data));
+    safe('renderMembers',       () => renderMembers(data));
+    safe('renderLocked',        () => renderLocked(data));
   }
 
   load();

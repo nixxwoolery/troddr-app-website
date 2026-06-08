@@ -681,24 +681,31 @@
 
     const place = partnerRes.data[0];
     allBookings = bookingsRes.data || [];
-    applyBrand(caps && caps.program);
-
-    $('hero-title').textContent = place.place_name;
-    $('hero-sub').textContent   = allBookings.length === 1
-      ? '1 booking request'
-      : `${allBookings.length} booking requests`;
-
-    if (!FILTERS.find((f) => f.id === activeFilter && allBookings.some(f.match))) {
-      activeFilter = (FILTERS.find((f) => allBookings.some(f.match)) || FILTERS[FILTERS.length - 1]).id;
-    }
-
-    renderFilters();
-    renderList();
+    // Reveal the dashboard view + sidebar FIRST so the user always sees nav,
+    // even if a later renderer fails.
     hide('view-loading');
     show('view-inbox');
     window.PartnerAuth?.mountSessionControl('partner');
     setupSidebar(caps && caps.capabilities, { partner: caps && caps.partner });
     renderEntityPicker(caps && caps.partner);
+
+    const safe = (name, fn) => {
+      try { fn(); } catch (e) { console.error('[partner-bookings] ' + name + ' failed:', e); }
+    };
+    safe('applyBrand', () => applyBrand(caps && caps.program));
+    safe('renderHero', () => {
+      $('hero-title').textContent = place.place_name;
+      $('hero-sub').textContent   = allBookings.length === 1
+        ? '1 booking request'
+        : `${allBookings.length} booking requests`;
+    });
+    safe('chooseFilter', () => {
+      if (!FILTERS.find((f) => f.id === activeFilter && allBookings.some(f.match))) {
+        activeFilter = (FILTERS.find((f) => allBookings.some(f.match)) || FILTERS[FILTERS.length - 1]).id;
+      }
+    });
+    safe('renderFilters', () => renderFilters());
+    safe('renderList',    () => renderList());
   }
 
   function renderFilters() {
