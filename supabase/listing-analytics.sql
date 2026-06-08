@@ -123,6 +123,7 @@ begin
         jsonb_agg(
           jsonb_build_object(
             'id',          id,
+            'user_id',     user_id,
             'created_at',  created_at,
             'context',     context,
             'would_return', would_return,

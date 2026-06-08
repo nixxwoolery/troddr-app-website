@@ -1067,7 +1067,7 @@
       return `
         <div class="fb-card">
           <div class="fb-head">
-            <div class="fb-id">${maskedLabel(fb.user_id)} ${ctx}</div>
+            <div class="fb-id">${maskedLabel(fb.user_id || fb.id)} ${ctx}</div>
             <div class="fb-time">${fmtRelative(fb.created_at)}</div>
           </div>
           ${pills ? `<div class="fb-ratings">${pills}</div>` : ''}
