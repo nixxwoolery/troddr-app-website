@@ -256,6 +256,62 @@
   }
   .pill.live { background: var(--green-light); color: var(--green); border-color: transparent; }
 
+  /* ── FEATURED IN GUIDES ── */
+  .guides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+  }
+  .guide-card {
+    display: flex; flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  }
+  .guide-card:hover {
+    border-color: var(--brand-primary);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    transform: translateY(-1px);
+  }
+  .guide-card .img {
+    aspect-ratio: 16 / 9;
+    background: var(--bg-soft) center / cover no-repeat;
+  }
+  .guide-card .body {
+    padding: 14px 16px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+    flex: 1;
+  }
+  .guide-card .title {
+    font-weight: 700;
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
+  }
+  .guide-card .meta {
+    font-size: 11px;
+    color: var(--grey-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .guide-card .blurb {
+    font-size: 12px;
+    color: var(--grey-dark);
+    line-height: 1.45;
+    margin-top: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   /* ── LISTING PREVIEW (2-col on desktop) ── */
   .preview-grid {
     display: grid;
@@ -1000,6 +1056,26 @@
       <div class="feedback-feed" id="feedback-feed"></div>
     </section>
 
+    <section class="section" id="guides" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Featured in Guides</h2>
+          <div class="section-sub">TRODDR curated guides that include your listing.</div>
+        </div>
+      </div>
+      <div class="guides-grid" id="guides-grid"></div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Contact Info &amp; Links</h2>
+          <div class="section-sub">Update phone, website, social, and booking links. Curated content (description, photos, address) is locked. Request a revision via the message button if those need to change.</div>
+        </div>
+      </div>
+      <div class="hours-card" id="contact-card"></div>
+    </section>
+
     <section class="section" id="hours">
       <div class="section-head">
         <div>
@@ -1057,16 +1133,6 @@
         </div>
         <div class="hours-status" id="closure-status"></div>
       </div>
-    </section>
-
-    <section class="section" id="contact">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Contact Info &amp; Links</h2>
-          <div class="section-sub">Update phone, website, social, and booking links. Curated content (description, photos, address) is locked. Request a revision via the message button if those need to change.</div>
-        </div>
-      </div>
-      <div class="hours-card" id="contact-card"></div>
     </section>
 
   </main>
@@ -1309,22 +1375,16 @@
   }
 
   // ── Ratings breakdown ────────────────────────────────────
+  // Only render dimensions that actually have data : guests don't see
+  // empty "Speed" / "Ambiance" rows just because the column exists.
   function renderRatings(data) {
     const r = data.stats.avg_ratings || {};
     const DIMENSIONS = ['taste', 'service', 'value', 'vibe', 'ambiance', 'cleanliness', 'wait_time', 'speed'];
-    const hasAny = DIMENSIONS.some(dim => r[dim] != null);
-    if (!hasAny) return; // Stay hidden until at least one rating exists
+    const populated = DIMENSIONS.filter((dim) => r[dim] != null);
+    if (!populated.length) return; // Hidden until at least one rating exists
 
-    const html = DIMENSIONS.map(dim => {
+    const html = populated.map((dim) => {
       const score = r[dim];
-      if (score == null) {
-        return `
-          <div class="rating-row">
-            <div class="rating-name">${titleCase(dim)}</div>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width:0%"></div></div>
-            <div class="rating-value empty">No data</div>
-          </div>`;
-      }
       const pct = (score / 5) * 100;
       return `
         <div class="rating-row">
@@ -1379,7 +1439,7 @@
 
   // ── Entity picker (multi-domain partners) ────────────────
   function renderEntityPicker(partner) {
-    if (!partner || !partner.entities || partner.entities.length <= 1) return;
+    if (!partner || !partner.entities || partner.entities.length < 1) return;
     const picker = $('entity-picker'); if (!picker) return;
     picker.classList.remove('hidden');
     const div = $('entity-picker-divider'); if (div) div.style.display = '';
@@ -1757,6 +1817,47 @@
     if (data && data.ok) refreshClosures();
   }
 
+  // ── Featured in Guides ───────────────────────────────────
+  async function loadGuides() {
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    if (!token) return;
+    try {
+      const { data, error } = await db.rpc('get_partner_guides_by_token', { p_token: token });
+      if (error) {
+        // RPC may not be deployed yet; fail silently and leave the section hidden.
+        console.warn('[guides] RPC not available:', error.message || error);
+        return;
+      }
+      const guides = Array.isArray(data) ? data : [];
+      if (!guides.length) return; // section stays hidden when there are no featurings
+      renderGuides(guides);
+    } catch (e) {
+      console.warn('[guides] failed to load:', e);
+    }
+  }
+
+  function renderGuides(guides) {
+    const grid = $('guides-grid');
+    if (!grid) return;
+    grid.innerHTML = guides.map((g) => {
+      const href = g.slug ? `/guides/${escapeHtml(g.slug)}` : '#';
+      const img = g.image_url ? `<div class="img" style="background-image:url('${escapeHtml(g.image_url)}');"></div>` : `<div class="img"></div>`;
+      const meta = [g.category, g.location, g.country].filter(Boolean).map(escapeHtml).join(' · ');
+      const blurb = g.custom_blurb || g.description || '';
+      return `
+        <a class="guide-card" href="${href}" target="_blank" rel="noopener">
+          ${img}
+          <div class="body">
+            ${meta ? `<div class="meta">${meta}</div>` : ''}
+            <div class="title">${escapeHtml(g.title || 'Untitled guide')}</div>
+            ${blurb ? `<div class="blurb">${escapeHtml(blurb)}</div>` : ''}
+          </div>
+        </a>`;
+    }).join('');
+    $('guides').style.display = '';
+    const nav = $('nav-guides'); if (nav) nav.style.display = '';
+  }
+
   // ── Discovery (PostHog via Edge Function) ────────────────
   async function loadDiscovery() {
     const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
@@ -1932,10 +2033,11 @@
       jumpLinks: [
         { section: 'preview',  icon: 'ic-eye',      label: 'Preview' },
         { section: 'metrics',  icon: 'ic-chart',    label: 'Discovery' },
-        { section: 'ratings',  icon: 'ic-shield',   label: 'Ratings', id: 'nav-ratings', hidden: !showRatings },
+        { section: 'ratings',  icon: 'ic-list',     label: 'Ratings Breakdown', id: 'nav-ratings', hidden: !showRatings },
         { section: 'feedback', icon: 'ic-chat',     label: 'Recent Feedback' },
-        { section: 'hours',    icon: 'ic-calendar', label: 'Operating Hours' },
+        { section: 'guides',   icon: 'ic-grid',     label: 'Featured in Guides', id: 'nav-guides', hidden: true },
         { section: 'contact',  icon: 'ic-doc',      label: 'Contact Info' },
+        { section: 'hours',    icon: 'ic-calendar', label: 'Operating Hours' },
       ],
     });
     window.PartnerSidebar?.setupScrollspy();
@@ -2021,8 +2123,9 @@
     safe('renderFeedback',   () => renderFeedback(data));
     safe('setupHoursEditor',   () => setupHoursEditor(data.place, data.closures || []));
     safe('setupContactEditor', () => setupContactEditor(data.place));
-    // Discovery loads async (PostHog) without blocking the rest of the page
+    // Discovery (PostHog) + Featured in Guides load async without blocking
     loadDiscovery();
+    loadGuides();
 
     hide('view-loading');
     show('view-dashboard');

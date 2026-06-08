@@ -91,7 +91,15 @@
         const { data, error } = await db.rpc('get_partner_capabilities_by_token', { p_token: token });
         if (error || !data) throw error || new Error('No capabilities returned');
 
-        // Route based on token type: event tokens → /partner/event, place tokens → /partner/listing.
+        // Group / hospitality partners with more than one entity land on the group
+        // overview, where they pick which restaurant/event to open.
+        const entities = (data.partner && data.partner.entities) || [];
+        if (entities.length > 1) {
+          window.PartnerAuth?.navigate('/partner/group', token);
+          return;
+        }
+
+        // Single-entity partner : route straight to that entity's dashboard.
         const target = data.type === 'event'
           ? '/partner/event'
           : '/partner/listing';

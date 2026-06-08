@@ -332,6 +332,101 @@
   .entity-select:hover { border-color: var(--brand-primary); }
   .entity-select optgroup { font-weight: 700; }
 
+  /* ── SECTION-LEVEL EDIT BUTTON (view-only sections) ── */
+  .section-head-with-edit {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .section-edit-btn {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--grey-dark);
+    cursor: pointer;
+  }
+  .section-edit-btn:hover:not(:disabled) {
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    border-color: var(--brand-primary);
+  }
+  .section-edit-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* Info / view-only card shared by Map, Passes, Info, Tickets, Transportation, Bands */
+  .info-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+  }
+  .info-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .lbl {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .info-row .val {
+    color: var(--grey-dark);
+    word-break: break-word;
+  }
+  .info-row .val a {
+    color: var(--brand-primary);
+    text-decoration: none;
+  }
+  .info-row .val a:hover { text-decoration: underline; }
+
+  .info-list {
+    list-style: none;
+    margin: 0; padding: 0;
+  }
+  .info-list-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .info-list-item:last-child { border-bottom: none; }
+  .info-list-item .name {
+    font-weight: 600;
+    color: var(--black);
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .info-list-item .meta {
+    font-size: 12px;
+    color: var(--grey-mid);
+    line-height: 1.5;
+  }
+
+  .section-empty {
+    background: var(--bg-soft);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    text-align: center;
+    color: var(--grey-mid);
+    font-size: 13px;
+  }
+
   /* ── EVENT EDIT FORM ── */
   .edit-card {
     background: #fff;
@@ -1659,25 +1754,106 @@
         </div>
       </section>
 
-      <section class="section" id="vendors" style="display:none">
-        <div class="section-head">
+      <section class="section" id="vendors">
+        <div class="section-head section-head-with-edit">
           <div>
             <h2 class="section-title">Vendors</h2>
             <div class="section-sub">Lineup, menus, and what guests actually rated.</div>
           </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
         </div>
         <div class="vendor-stats" id="vendor-stats"></div>
         <div class="vendor-list" id="vendor-list"></div>
       </section>
 
-      <section class="section" id="sponsors" style="display:none">
-        <div class="section-head">
+      <section class="section" id="schedule">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Schedule</h2>
+            <div class="section-sub">Days, set times, and must-see moments.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="schedule-card" id="schedule-card"></div>
+      </section>
+
+      <section class="section" id="map">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Map</h2>
+            <div class="section-sub">Venue location and any zone markers shown inside the app.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="info-card" id="map-card"></div>
+      </section>
+
+      <section class="section" id="passes">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Passes</h2>
+            <div class="section-sub">Access passes, wristbands, or VIP perks issued to attendees.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="info-card" id="passes-card">
+          <div class="section-empty">No passes configured yet.</div>
+        </div>
+      </section>
+
+      <section class="section" id="info">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Info</h2>
+            <div class="section-sub">Organizer, dress code, age restriction, amenities, and other public facts.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon · use Edit Core Details for now">Edit</button>
+        </div>
+        <div class="info-card" id="info-card"></div>
+      </section>
+
+      <section class="section" id="sponsors">
+        <div class="section-head section-head-with-edit">
           <div>
             <h2 class="section-title">Sponsors</h2>
             <div class="section-sub">Active sponsor lineup for this event.</div>
           </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
         </div>
         <div class="sponsors-grid" id="sponsors-grid"></div>
+      </section>
+
+      <section class="section" id="tickets">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Tickets</h2>
+            <div class="section-sub">Online ticket links and physical pickup locations.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="info-card" id="tickets-card"></div>
+      </section>
+
+      <section class="section" id="transportation">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Transportation</h2>
+            <div class="section-sub">Bus routes, stops, and times for getting attendees to and from the event.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="info-card" id="transportation-card"></div>
+      </section>
+
+      <section class="section" id="bands" style="display:none">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Bands</h2>
+            <div class="section-sub">Mas bands and band launches tied to this carnival season.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="info-card" id="bands-card"></div>
       </section>
 
       <section class="section" id="actions">
@@ -1685,16 +1861,6 @@
           <h2 class="section-title">Action Center</h2>
         </div>
         <div class="action-center-list" id="actions-list"></div>
-      </section>
-
-      <section class="section" id="schedule" style="display:none">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">Schedule</h2>
-            <div class="section-sub">Days, set times, and must-see moments.</div>
-          </div>
-        </div>
-        <div class="schedule-card" id="schedule-card"></div>
       </section>
 
       <section class="section" id="updates" style="display:none">
@@ -2472,6 +2638,161 @@
     `).join('');
   }
 
+  // ── Helpers for view-only sections ─────────────────────
+  function infoRow(label, value) {
+    if (value == null || value === '') return '';
+    return `<div class="info-row"><div class="lbl">${escapeHtml(label)}</div><div class="val">${value}</div></div>`;
+  }
+  function showEmpty(emptyId) {
+    const el = $(emptyId);
+    if (el) el.style.display = '';
+  }
+  function hideEmpty(emptyId) {
+    const el = $(emptyId);
+    if (el) el.style.display = 'none';
+  }
+
+  // ── Map ────────────────────────────────────────────────
+  function renderMap(event) {
+    const card = $('map-card');
+    if (!card) return;
+    const hasVenue = event && (event.venue_name || event.venue_address || (event.venue_lat && event.venue_lng));
+    if (!hasVenue) {
+      card.innerHTML = `<div class="section-empty">No venue location set yet.</div>`;
+      return;
+    }
+    const mapsLink = (event.venue_lat && event.venue_lng)
+      ? `https://www.google.com/maps?q=${event.venue_lat},${event.venue_lng}`
+      : (event.venue_address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue_address)}` : null);
+    card.innerHTML = `
+      ${infoRow('Venue',   escapeHtml(event.venue_name || '—'))}
+      ${infoRow('Address', escapeHtml(event.venue_address || '—'))}
+      ${infoRow('Town',    escapeHtml(event.town || '—'))}
+      ${infoRow('Parish',  escapeHtml(event.parish || '—'))}
+      ${infoRow('Country', escapeHtml(event.country || '—'))}
+      ${event.venue_lat && event.venue_lng
+        ? infoRow('Coordinates', `${event.venue_lat}, ${event.venue_lng}`)
+        : ''}
+      ${mapsLink
+        ? infoRow('Open in Maps', `<a href="${escapeHtml(mapsLink)}" target="_blank" rel="noopener">View on Google Maps</a>`)
+        : ''}
+    `;
+  }
+
+  // ── Info ───────────────────────────────────────────────
+  function renderInfo(event) {
+    const card = $('info-card');
+    if (!card) return;
+    const e = event || {};
+    const rows = [
+      infoRow('Organizer',     escapeHtml(e.organizer_name || '—')),
+      infoRow('Event type',    escapeHtml(e.event_type || '—')),
+      infoRow('Description',   e.description ? escapeHtml(e.description).replace(/\n/g, '<br>') : '—'),
+      infoRow('Dress code',    escapeHtml(e.dress_code || '—')),
+      infoRow('Minimum age',   e.min_age != null ? `${e.min_age}+` : '—'),
+      infoRow('Food',          e.food_available ? 'Available' : 'Not specified'),
+      infoRow('Alcohol',       e.alcohol_served ? 'Served' : 'Not specified'),
+      infoRow('Contact email', e.contact_email ? `<a href="mailto:${escapeHtml(e.contact_email)}">${escapeHtml(e.contact_email)}</a>` : '—'),
+      infoRow('Contact phone', escapeHtml(e.contact_phone || '—')),
+      infoRow('Website',       e.website_url ? `<a href="${escapeHtml(e.website_url)}" target="_blank" rel="noopener">${escapeHtml(e.website_url)}</a>` : '—'),
+      infoRow('Instagram',     e.instagram_url ? `<a href="${escapeHtml(e.instagram_url)}" target="_blank" rel="noopener">${escapeHtml(e.instagram_url)}</a>` : '—'),
+    ].filter(Boolean).join('');
+    card.innerHTML = rows || `<div class="section-empty">No info set yet.</div>`;
+  }
+
+  // ── Tickets ────────────────────────────────────────────
+  function renderTickets(event, ticketLocations) {
+    const card = $('tickets-card');
+    if (!card) return;
+    const e = event || {};
+    const locations = Array.isArray(ticketLocations) ? ticketLocations : [];
+
+    const onlineRows = [
+      infoRow('Online tickets', e.has_online_tickets ? 'Available' : 'Not available'),
+      e.ticket_url ? infoRow('Ticket URL', `<a href="${escapeHtml(e.ticket_url)}" target="_blank" rel="noopener">${escapeHtml(e.ticket_url)}</a>`) : '',
+      e.is_free ? infoRow('Pricing', 'This event is free') :
+        (e.ticket_price_min != null
+          ? infoRow('Price', `${escapeHtml(e.currency || 'JMD')} ${e.ticket_price_min}${e.ticket_price_max && e.ticket_price_max !== e.ticket_price_min ? ' – ' + e.ticket_price_max : ''}`)
+          : ''),
+      e.capacity ? infoRow('Capacity', e.capacity) : '',
+      e.is_sold_out ? infoRow('Status', '<strong style="color:var(--red);">Sold out</strong>') : '',
+    ].filter(Boolean).join('');
+
+    const locationsHtml = locations.length
+      ? `<div style="margin-top:14px;"><div class="lbl" style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--grey-mid);margin-bottom:8px;">Pickup locations</div>
+        <ul class="info-list">
+          ${locations.map((loc) => `
+            <li class="info-list-item">
+              <div class="name">${escapeHtml(loc.name || 'Location')}</div>
+              <div class="meta">
+                ${loc.address ? escapeHtml(loc.address) : ''}
+                ${loc.town ? ' · ' + escapeHtml(loc.town) : ''}
+                ${loc.parish ? ' · ' + escapeHtml(loc.parish) : ''}
+                ${loc.contact_phone ? '<br>Phone: ' + escapeHtml(loc.contact_phone) : ''}
+                ${loc.opening_hours ? '<br>Hours: ' + escapeHtml(loc.opening_hours) : ''}
+                ${loc.is_online ? '<br><em>Online provider</em>' : ''}
+              </div>
+            </li>`).join('')}
+        </ul></div>`
+      : '';
+
+    card.innerHTML = (onlineRows + locationsHtml) || `<div class="section-empty">No ticket details added yet.</div>`;
+  }
+
+  // ── Transportation ─────────────────────────────────────
+  function renderTransportation(routes) {
+    const card = $('transportation-card');
+    if (!card) return;
+    const list = Array.isArray(routes) ? routes : [];
+    if (!list.length) {
+      card.innerHTML = `<div class="section-empty">No transportation routes added yet.</div>`;
+      return;
+    }
+    card.innerHTML = `<ul class="info-list">${list.map((r) => {
+      const dir = r.direction === 'to_event' ? 'To event' :
+                  r.direction === 'return' ? 'Return' : 'Both directions';
+      const stops = (r.stops || r.stops_count || 0);
+      return `
+        <li class="info-list-item">
+          <div class="name">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${escapeHtml(r.color || '#0077CC')};margin-right:6px;vertical-align:middle;"></span>
+            ${escapeHtml(r.name || 'Route')}
+          </div>
+          <div class="meta">
+            ${dir}
+            ${r.frequency ? ' · ' + escapeHtml(r.frequency) : ''}
+            ${stops ? ` · ${stops} stop${stops === 1 ? '' : 's'}` : ''}
+          </div>
+        </li>`;
+    }).join('')}</ul>`;
+  }
+
+  // ── Bands (carnival only) ──────────────────────────────
+  function renderBands(bandsList, isCarnival) {
+    const section = $('bands');
+    const card = $('bands-card');
+    if (!section || !card) return;
+    if (!isCarnival) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = '';
+    const list = Array.isArray(bandsList) ? bandsList : [];
+    if (!list.length) {
+      card.innerHTML = `<div class="section-empty">No bands linked to this carnival season yet.</div>`;
+      return;
+    }
+    card.innerHTML = `<ul class="info-list">${list.map((b) => `
+      <li class="info-list-item">
+        <div class="name">${escapeHtml(b.name || 'Band')}</div>
+        <div class="meta">
+          ${b.tagline ? escapeHtml(b.tagline) : ''}
+          ${b.registration_deadline ? '<br>Registration: ' + escapeHtml(b.registration_deadline) : ''}
+          ${b.website_url ? `<br><a href="${escapeHtml(b.website_url)}" target="_blank" rel="noopener">Website</a>` : ''}
+        </div>
+      </li>`).join('')}</ul>`;
+  }
+
   // ── Unlocks (partner-friendly roadmap cards) ────────────
   function renderLocked(data) {
     const locked = [
@@ -2498,7 +2819,7 @@
 
   // ── Entity picker (multi-domain partners) ────────────────
   function renderEntityPicker(partner) {
-    if (!partner || !partner.entities || partner.entities.length <= 1) return;
+    if (!partner || !partner.entities || partner.entities.length < 1) return;
     const picker = $('entity-picker'); if (!picker) return;
     picker.classList.remove('hidden');
     const div = $('entity-picker-divider'); if (div) div.style.display = '';
@@ -2947,17 +3268,23 @@
       active: '/partner/event',
       capabilities: capabilities,
       jumpLinks: [
-        { section: 'status',     icon: 'ic-info',     label: 'Status' },
-        { section: 'overview',   icon: 'ic-info',     label: 'Event Overview' },
-        { section: 'actions',    icon: 'ic-bolt',     label: 'Action Center' },
-        { section: 'vendors',    icon: 'ic-shop',     label: 'Vendors',  id: 'nav-vendors',  hidden: !opts.hasVendors },
-        { section: 'sponsors',   icon: 'ic-bolt',     label: 'Sponsors', id: 'nav-sponsors', hidden: !opts.hasSponsors },
-        { section: 'schedule',   icon: 'ic-calendar', label: 'Schedule', id: 'nav-schedule', hidden: !opts.hasSchedule },
-        { section: 'updates',    icon: 'ic-chat',     label: 'Updates',  id: 'nav-updates',  hidden: !opts.hasUpdates },
-        { section: 'edit',       icon: 'ic-edit',     label: 'Edit Event' },
-        { section: 'engagement', icon: 'ic-bolt',     label: 'Engagement' },
-        { section: 'audience',   icon: 'ic-users',    label: 'Audience', id: 'nav-audience', hidden: !opts.hasAudience },
-        { section: 'unlocks',    icon: 'ic-lock',     label: 'Unlocks' },
+        { section: 'overview',       icon: 'ic-info',     label: 'Overview' },
+        { section: 'vendors',        icon: 'ic-shop',     label: 'Vendors' },
+        { section: 'schedule',       icon: 'ic-calendar', label: 'Schedule' },
+        { section: 'map',            icon: 'ic-map',      label: 'Map' },
+        { section: 'passes',         icon: 'ic-pass',     label: 'Passes' },
+        { section: 'info',           icon: 'ic-doc',      label: 'Info' },
+        { section: 'sponsors',       icon: 'ic-bolt',     label: 'Sponsors' },
+        { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
+        { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
+        { section: 'bands',          icon: 'ic-mic',      label: 'Bands', id: 'nav-bands', hidden: !opts.isCarnival },
+        { section: 'status',         icon: 'ic-info',     label: 'Status' },
+        { section: 'actions',        icon: 'ic-bolt',     label: 'Action Center' },
+        { section: 'edit',           icon: 'ic-edit',     label: 'Edit Core Details' },
+        { section: 'engagement',     icon: 'ic-chart',    label: 'Engagement' },
+        { section: 'audience',       icon: 'ic-users',    label: 'Audience', id: 'nav-audience', hidden: !opts.hasAudience },
+        { section: 'updates',        icon: 'ic-chat',     label: 'Updates',  id: 'nav-updates',  hidden: !opts.hasUpdates },
+        { section: 'unlocks',        icon: 'ic-lock',     label: 'Unlocks' },
       ],
     });
     window.PartnerSidebar?.setupScrollspy();
@@ -2998,13 +3325,16 @@
 
     let eventRes;
     let capsRes;
+    let extrasRes;
     try {
       const results = await Promise.allSettled([
-        db.rpc('get_partner_event_by_token',        { p_token: token }),
-        db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+        db.rpc('get_partner_event_by_token',         { p_token: token }),
+        db.rpc('get_partner_capabilities_by_token',  { p_token: token }),
+        db.rpc('get_partner_event_extras_by_token',  { p_token: token }),
       ]);
-      eventRes = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
-      capsRes  = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
+      eventRes  = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
+      capsRes   = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
+      extrasRes = results[2].status === 'fulfilled' ? results[2].value : { error: results[2].reason };
     } catch (err) {
       showLoadError(err, "We couldn't reach the dashboard service. Refresh the page, or open the latest dashboard link from TRODDR.");
       return;
@@ -3012,6 +3342,8 @@
 
     const { data, error } = eventRes;
     const caps = capsRes && capsRes.data;
+    // Extras RPC is optional : if it's not deployed yet, fall through gracefully.
+    const extras = (extrasRes && extrasRes.data) || {};
     if (error || !data || !data.event) {
       if (!error && caps && caps.type === 'place') {
         window.PartnerAuth?.navigate('/partner/listing', token);
@@ -3047,6 +3379,8 @@
       try { fn(); }
       catch (e) { console.error('[partner-event] ' + name + ' failed:', e); }
     };
+    const isCarnival = String((data.event && data.event.event_type) || '').toLowerCase() === 'carnival';
+
     safe('renderHero',        () => renderHero(data.event, data.stats));
     safe('renderEventStatus', () => renderEventStatus(data.event, data.stats));
     safe('renderPreview',     () => renderPreview(data.event, data.tabs));
@@ -3061,10 +3395,30 @@
     safe('renderLocked',      () => renderLocked(data));
     safe('renderActionEventLink', () => renderActionEventLink(data.event));
 
+    // New view-only sections.
+    safe('renderMap',            () => renderMap(data.event));
+    safe('renderInfo',           () => renderInfo(data.event));
+    safe('renderTickets',        () => renderTickets(data.event, extras.ticket_locations || data.ticket_locations));
+    safe('renderTransportation', () => renderTransportation(extras.transport_routes || data.transport_routes));
+    safe('renderBands',          () => renderBands(extras.bands || data.bands || data.mas_bands, isCarnival));
+
+    // Force-show sections that we previously hid until data arrived.
+    // Their renderers (renderVendors/Sponsors/Schedule) emit their own
+    // empty-state cards when there's no data.
+    ['vendors', 'sponsors', 'schedule'].forEach((id) => { const s = $(id); if (s) s.style.display = ''; });
+    // If renderSchedule was a no-op because days_count was 0, drop an empty card in.
+    if (!(data.schedule && data.schedule.days_count)) {
+      const sc = $('schedule-card');
+      if (sc && !sc.innerHTML.trim()) sc.innerHTML = `<div class="section-empty">No schedule published yet.</div>`;
+    }
+    // Same for sponsors : if the grid is still empty, drop in an empty card.
+    if (!(data.sponsors && data.sponsors.length)) {
+      const sg = $('sponsors-grid');
+      if (sg && !sg.innerHTML.trim()) sg.innerHTML = `<div class="section-empty">No sponsors added yet.</div>`;
+    }
+
     const sidebarOpts = {
-      hasVendors:  !!(data.vendors && data.vendors.length),
-      hasSponsors: !!(data.sponsors && data.sponsors.length),
-      hasSchedule: !!(data.schedule && data.schedule.days_count),
+      isCarnival:  isCarnival,
       hasUpdates:  !!(data.updates && data.updates.length),
       hasAudience: !!(data.top_countries && data.top_countries.length),
     };

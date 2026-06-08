@@ -1077,7 +1077,7 @@
 
   // ── Entity picker (multi-domain partners) ────────────────
   function renderEntityPicker(partner) {
-    if (!partner || !partner.entities || partner.entities.length <= 1) return;
+    if (!partner || !partner.entities || partner.entities.length < 1) return;
     const picker = $('entity-picker'); if (!picker) return;
     picker.classList.remove('hidden');
     const div = $('entity-picker-divider'); if (div) div.style.display = '';

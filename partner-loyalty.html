@@ -1402,7 +1402,7 @@
 
   // ── Entity picker (shown only for multi-entity partners) ─
   function renderEntityPicker(partner) {
-    if (!partner || !partner.entities || partner.entities.length <= 1) return;
+    if (!partner || !partner.entities || partner.entities.length < 1) return;
     const picker = $('entity-picker');
     if (!picker) return;
     picker.classList.remove('hidden');

@@ -337,3 +337,41 @@
     color: #000 !important;
   }
 }
+
+/* ============================================================
+ * UNIFIED PARTNER LAYOUT OVERRIDES
+ * These apply to every partner-*.html page and keep the
+ * navbar, sidebar, and section layout consistent across the
+ * dashboard. Page-level styles can still override.
+ * ============================================================ */
+
+/* Navbar: troddr logo left, badge + sign-out pinned right. */
+.nav-badge { margin-left: auto !important; }
+.partner-session-control { margin-left: 0 !important; }
+
+/* Sidebar: scrolls independently of page, jump-links live at the top. */
+.sidebar {
+  max-height: calc(100vh - 88px) !important;
+  overflow-y: auto !important;
+  height: auto !important;
+}
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border, #e8e8e8); border-radius: 3px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background: var(--grey-light, #999); }
+
+/* Section header alignment : always flush-left across all pages. */
+.section-head {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+.section-head > div { text-align: left !important; }
+.section-title, .section-sub { text-align: left !important; }
+
+/* Mobile : sidebar scrolls horizontally as a chip rail. */
+@media (max-width: 720px) {
+  .sidebar {
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+}
+
