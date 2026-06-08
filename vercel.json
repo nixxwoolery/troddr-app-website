@@ -1,6 +1,10 @@
 {
     "rewrites": [
       {
+        "source": "/api/sb/:path*",
+        "destination": "https://rprpwudhplodaqmmwqkf.supabase.co/:path*"
+      },
+      {
         "source": "/listings/:slug",
         "has": [
           {
