@@ -943,7 +943,9 @@
     return new Date(ts).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
   function maskedLabel(userId) {
-    return 'Loyalty member';
+    if (!userId) return 'Loyalty member';
+    const tail = String(userId).replace(/-/g, '').slice(-4);
+    return `Member ••${tail}`;
   }
   function pluralize(n, s, p) { return n === 1 ? s : (p || s + 's'); }
   function fmtMoney(n) {
@@ -1061,7 +1063,7 @@
       const days = Math.floor((Date.now() - new Date(mostRecent.last_stamped_at)) / 86400000);
       if (days <= 1) {
         actions.push({ level: 'positive', tag: 'Engaged',
-          title: `${maskedLabel(mostRecent.user_id)} visited ${fmtRelative(mostRecent.last_stamped_at)}`,
+          title: `${maskedLabel(mostRecent.user_id || mostRecent.card_id)} visited ${fmtRelative(mostRecent.last_stamped_at)}`,
           text: 'Your most recently active member is engaged. A great moment to recognize them in person.'
         });
       }
@@ -1291,7 +1293,7 @@
       return `
         <div class="member-row ${isExpanded ? 'expanded' : ''}" data-card="${m.card_id}">
           <div>
-            <div class="member-id">${maskedLabel(m.user_id)}</div>
+            <div class="member-id">${maskedLabel(m.user_id || m.card_id)}</div>
             <div class="member-meta">
               <span class="badge ${seg.class}">${seg.label}</span>
               <span>Last visit: ${lastSeen}</span>
