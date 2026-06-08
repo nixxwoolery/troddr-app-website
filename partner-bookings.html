@@ -654,8 +654,16 @@
 
     const caps = capsRes.data;
 
-    // If this is an event token, send the user to the event dashboard first.
     const intentional = window.PartnerAuth?.consumeIntent('/partner/bookings');
+    const entities = (caps && caps.partner && caps.partner.entities) || [];
+
+    // Hospitality groups with multiple entities : bounce to the group landing.
+    if (!intentional && entities.length > 1) {
+      window.PartnerAuth?.navigate('/partner/group', token);
+      return;
+    }
+
+    // Event-only token landed on a place page : send them to the event dashboard.
     if (!intentional && caps && caps.type === 'event' && caps.capabilities && caps.capabilities.event) {
       window.PartnerAuth?.navigate('/partner/event', token);
       return;

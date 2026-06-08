@@ -2066,9 +2066,16 @@
     const data = listingRes.data;
     const caps = capsRes.data;
 
-    console.log('[partner-listing] listingRes:', listingRes);
-    console.log('[partner-listing] capsRes:',    capsRes);
-    console.log('[partner-listing] closuresRes:',closuresRes);
+    // Did the user navigate to this exact page intentionally (via the entity
+    // picker or a "Listing" sidebar click) ? If so, no further redirects.
+    const intentional = window.PartnerAuth?.consumeIntent('/partner/listing');
+    const entities = (caps && caps.partner && caps.partner.entities) || [];
+
+    // Hospitality groups with multiple entities : bounce to the group landing.
+    if (!intentional && entities.length > 1) {
+      window.PartnerAuth?.navigate('/partner/group', token);
+      return;
+    }
 
     if (listingRes.error || !data || !data.place) {
       if (!listingRes.error && caps && caps.type === 'event' && caps.capabilities && caps.capabilities.event) {

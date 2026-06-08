@@ -478,9 +478,13 @@
       return;
     }
 
-    // If this is an event token landing on billing without an intentional nav here
-    // (e.g. user just entered the token), send them to the event dashboard first.
     const intentional = window.PartnerAuth?.consumeIntent('/partner/billing');
+    const entities = (data && data.partner && data.partner.entities) || [];
+
+    if (!intentional && entities.length > 1) {
+      window.PartnerAuth?.navigate('/partner/group', token);
+      return;
+    }
     if (!intentional && data.type === 'event' && data.capabilities && data.capabilities.event) {
       window.PartnerAuth?.navigate('/partner/event', token);
       return;

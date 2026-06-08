@@ -123,6 +123,7 @@
     } catch (e) { return false; }
   }
 
+
   function signOut(kind) {
     if (kind === 'admin') clearStored(ADMIN_TOKEN_KEY);
     else clearStored(PARTNER_TOKEN_KEY);

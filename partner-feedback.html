@@ -1143,8 +1143,13 @@
     const data = feedbackRes.data;
     const caps = capsRes.data;
 
-    // If this is an event token, send the user to the event dashboard first.
     const intentional = window.PartnerAuth?.consumeIntent('/partner/feedback');
+    const entities = (caps && caps.partner && caps.partner.entities) || [];
+
+    if (!intentional && entities.length > 1) {
+      window.PartnerAuth?.navigate('/partner/group', token);
+      return;
+    }
     if (!intentional && caps && caps.type === 'event' && caps.capabilities && caps.capabilities.event) {
       window.PartnerAuth?.navigate('/partner/event', token);
       return;

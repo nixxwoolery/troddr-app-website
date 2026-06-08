@@ -3344,6 +3344,16 @@
     const caps = capsRes && capsRes.data;
     // Extras RPC is optional : if it's not deployed yet, fall through gracefully.
     const extras = (extrasRes && extrasRes.data) || {};
+
+    const intentional = window.PartnerAuth?.consumeIntent('/partner/event');
+    const entities = (caps && caps.partner && caps.partner.entities) || [];
+
+    // Hospitality groups with multiple entities : bounce to the group landing.
+    if (!intentional && entities.length > 1) {
+      window.PartnerAuth?.navigate('/partner/group', token);
+      return;
+    }
+
     if (error || !data || !data.event) {
       if (!error && caps && caps.type === 'place') {
         window.PartnerAuth?.navigate('/partner/listing', token);
