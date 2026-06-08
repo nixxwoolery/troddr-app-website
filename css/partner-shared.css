@@ -378,7 +378,7 @@
  *
  * Hero padding-bottom is also reduced so we don't leave a giant blue gutter.
  */
-.layout { margin-top: 0 !important; }
+.layout { margin-top: 0 !important; padding-top: 24px !important; }
 .page-hero { padding-bottom: 32px !important; }
 /* Reset earlier per-page workarounds that flipped the first title white. */
 #preview .section-title,
