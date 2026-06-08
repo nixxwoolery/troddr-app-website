@@ -1402,7 +1402,7 @@
 
   // ── Entity picker (shown only for multi-entity partners) ─
   function renderEntityPicker(partner) {
-    if (!partner || !partner.entities || partner.entities.length < 1) return;
+    if (!partner || !partner.entities || partner.entities.length < 2) return;
     const picker = $('entity-picker');
     if (!picker) return;
     picker.classList.remove('hidden');
@@ -1445,6 +1445,7 @@
     window.PartnerSidebar?.mount({
       active: '/partner/loyalty',
       capabilities: capabilities,
+      partner: opts && opts.partner,
       jumpLinks: [
         { section: 'health',  icon: 'ic-shield', label: 'Program Health' },
         { section: 'actions', icon: 'ic-bolt',   label: 'Action Center' },
@@ -1506,7 +1507,7 @@
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
-    setupSidebar(caps && caps.capabilities);
+    setupSidebar(caps && caps.capabilities, { partner: caps && caps.partner });
     renderEntityPicker(caps && caps.partner);
   }
 

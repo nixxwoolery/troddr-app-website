@@ -592,7 +592,7 @@
   }
 
   function renderEntityPicker(partner) {
-    if (!partner || !partner.entities || partner.entities.length < 1) return;
+    if (!partner || !partner.entities || partner.entities.length < 2) return;
     const picker = $('entity-picker'); if (!picker) return;
     picker.classList.remove('hidden');
     const div = $('entity-picker-divider'); if (div) div.style.display = '';
@@ -629,6 +629,7 @@
     window.PartnerSidebar?.mount({
       active: '/partner/bookings',
       capabilities: capabilities,
+      partner: opts && opts.partner,
       jumpLinks: [
         { section: 'inbox',     icon: 'ic-chat',  label: 'Booking Requests' },
         { section: 'analytics', icon: 'ic-chart', label: 'Booking Analytics' },
@@ -696,7 +697,7 @@
     hide('view-loading');
     show('view-inbox');
     window.PartnerAuth?.mountSessionControl('partner');
-    setupSidebar(caps && caps.capabilities);
+    setupSidebar(caps && caps.capabilities, { partner: caps && caps.partner });
     renderEntityPicker(caps && caps.partner);
   }
 

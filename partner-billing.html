@@ -415,7 +415,7 @@
   }
 
   function renderEntityPicker(partner) {
-    if (!partner || !partner.entities || partner.entities.length < 1) return;
+    if (!partner || !partner.entities || partner.entities.length < 2) return;
     const picker = $('entity-picker'); if (!picker) return;
     picker.classList.remove('hidden');
     const div = $('entity-picker-divider'); if (div) div.style.display = '';
@@ -452,6 +452,7 @@
     window.PartnerSidebar?.mount({
       active: '/partner/billing',
       capabilities: capabilities,
+      partner: opts && opts.partner,
       jumpLinks: [
         { section: 'summary',  icon: 'ic-chart',  label: 'Summary' },
         { section: 'invoices', icon: 'ic-doc',    label: 'Invoices' },
@@ -510,7 +511,7 @@
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
-    setupSidebar(data.capabilities);
+    setupSidebar(data.capabilities, { partner: data && data.partner });
     renderEntityPicker(data.partner);
   }
 

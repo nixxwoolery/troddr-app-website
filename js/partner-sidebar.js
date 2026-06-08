@@ -104,30 +104,38 @@
   function buildHtml(opts) {
     const active = opts.active || '';
     const caps = opts.capabilities || {};
-    const hasGroupLanding = opts.hasGroupLanding === true;
+    // Multi-entity is inferred from the partner blob when the caller passes
+    // it ; otherwise fall back to the explicit hasGroupLanding flag.
+    const partnerEntities = (opts.partner && Array.isArray(opts.partner.entities))
+      ? opts.partner.entities
+      : null;
+    const hasMultipleEntities = (partnerEntities && partnerEntities.length > 1)
+      || opts.hasGroupLanding === true;
 
     let html = '';
 
-    // Entity picker (rendered, populated later by renderEntityPicker).
+    // Entity picker container (revealed + populated by the page's
+    // renderEntityPicker after PartnerSidebar.mount).
     html += `
       <div class="entity-picker hidden" id="entity-picker">
-        <div class="partner-tag">Partner</div>
+        <div class="partner-tag">Switch entity</div>
         <div class="partner-name" id="partner-name"></div>
         <select class="entity-select" id="entity-select" aria-label="Switch entity"></select>
       </div>
       <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
     `;
 
-    // "On this page" jump-links go FIRST so they're visible without scrolling.
-    if (opts.jumpLinks && opts.jumpLinks.length) {
-      html += `<div class="sidebar-title">On this page</div>`;
-      opts.jumpLinks.forEach((link) => { html += jumpLinkHtml(link); });
+    // "All Entities" link back to the group landing, shown on every page
+    // (except the group landing itself) when the partner has more than one.
+    if (hasMultipleEntities && active !== '/partner/group') {
+      html += `<a class="page-link" data-href="/partner/group"><svg><use href="#ic-grid"/></svg> All Entities</a>`;
       html += `<div class="sidebar-divider"></div>`;
     }
 
-    // Group landing link (only when partner has multiple entities and we're not on it).
-    if (hasGroupLanding && active !== '/partner/group') {
-      html += `<a class="page-link" data-href="/partner/group"><svg><use href="#ic-grid"/></svg> All Entities</a>`;
+    // "On this page" jump-links.
+    if (opts.jumpLinks && opts.jumpLinks.length) {
+      html += `<div class="sidebar-title">On this page</div>`;
+      opts.jumpLinks.forEach((link) => { html += jumpLinkHtml(link); });
       html += `<div class="sidebar-divider"></div>`;
     }
 

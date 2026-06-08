@@ -243,9 +243,16 @@
     font-weight: 500;
     text-align: left;
   }
-  /* The "Preview" section sits on top of the blue hero (.layout margin-top: -32px). */
-  #preview .section-title { color: #fff; }
-  #preview .section-sub { color: rgba(255,255,255,0.85); }
+  /* The "Preview" section sits on top of the blue hero (.layout margin-top: -32px).
+     Make its title pop against the brand background. */
+  #preview .section-title {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  }
+  #preview .section-sub {
+    color: rgba(255,255,255,0.95) !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
   .pill {
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
@@ -1439,7 +1446,7 @@
 
   // ── Entity picker (multi-domain partners) ────────────────
   function renderEntityPicker(partner) {
-    if (!partner || !partner.entities || partner.entities.length < 1) return;
+    if (!partner || !partner.entities || partner.entities.length < 2) return;
     const picker = $('entity-picker'); if (!picker) return;
     picker.classList.remove('hidden');
     const div = $('entity-picker-divider'); if (div) div.style.display = '';
@@ -2030,6 +2037,7 @@
     window.PartnerSidebar?.mount({
       active: '/partner/listing',
       capabilities: capabilities,
+      partner: opts && opts.partner,
       jumpLinks: [
         { section: 'preview',  icon: 'ic-eye',      label: 'Preview' },
         { section: 'metrics',  icon: 'ic-chart',    label: 'Discovery' },
@@ -2137,7 +2145,10 @@
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
-    safe('setupSidebar',       () => setupSidebar(caps && caps.capabilities, { hasRatings: hasRatings }));
+    safe('setupSidebar',       () => setupSidebar(caps && caps.capabilities, {
+      hasRatings: hasRatings,
+      partner: caps && caps.partner,
+    }));
     safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));
   }
 
