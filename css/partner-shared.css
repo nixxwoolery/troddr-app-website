@@ -367,6 +367,33 @@
 .section-head > div { text-align: left !important; }
 .section-title, .section-sub { text-align: left !important; }
 
+/*
+ * Stop the .layout from overlapping the page hero.
+ *
+ * Per-page styles used "margin: -32px auto 0" to pull the sidebar / first
+ * section UP into the blue hero, but it forced every page to invent its own
+ * white-text rule for the first section title, which got inconsistent and
+ * unreadable. Removing the overlap entirely means every section title sits
+ * on a plain white background and renders in the default black colour.
+ *
+ * Hero padding-bottom is also reduced so we don't leave a giant blue gutter.
+ */
+.layout { margin-top: 0 !important; }
+.page-hero { padding-bottom: 32px !important; }
+/* Reset earlier per-page workarounds that flipped the first title white. */
+#preview .section-title,
+#preview .section-sub,
+#summary .section-title,
+#summary .section-sub {
+  color: var(--black, #111) !important;
+  text-shadow: none !important;
+}
+#summary .pill {
+  color: var(--grey-mid, #666) !important;
+  border-color: var(--border, #e8e8e8) !important;
+  background: var(--bg-soft, #f8f9fa) !important;
+}
+
 /* Mobile : sidebar scrolls horizontally as a chip rail. */
 @media (max-width: 720px) {
   .sidebar {
