@@ -288,13 +288,19 @@
     const token = getToken({ require: false });
     const caps = capabilities || { listing: true, bookings: true, loyalty: true, feedback: true, specials: true, billing: true };
     document.querySelectorAll('.page-link').forEach((a) => {
-      const key = (a.dataset.href || '').split('/').pop();
+      const target = a.dataset.href || a.getAttribute('href') || '#';
+      const key = target.split('/').pop();
       if (key && caps[key] === false) {
         a.style.display = 'none';
         return;
       }
-      a.href = pageUrl(a.dataset.href || a.getAttribute('href') || '#');
-      a.addEventListener('click', () => { if (token) setToken(token); });
+      a.href = pageUrl(target);
+      a.addEventListener('click', () => {
+        if (token) setToken(token);
+        // Mark this as an intentional cross-page navigation so the destination
+        // page doesn't bounce a group member back to /partner/group.
+        try { sessionStorage.setItem('__partner_intent', target); } catch (e) {}
+      });
     });
   }
 
