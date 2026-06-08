@@ -1174,7 +1174,9 @@
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
   function maskedLabel(userId) {
-    return 'Anonymous guest';
+    if (!userId) return 'Member';
+    const tail = String(userId).replace(/-/g, '').slice(-4);
+    return `Member ••${tail}`;
   }
   function escapeHtml(s) {
     if (s == null) return '';
