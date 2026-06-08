@@ -1441,7 +1441,8 @@
   }
 
   // ── Sidebar: mount unified sidebar with this page's jump-links ─
-  function setupSidebar(capabilities) {
+  function setupSidebar(capabilities, opts) {
+    opts = opts || {};
     window.PartnerSidebar?.mount({
       active: '/partner/loyalty',
       capabilities: capabilities,
