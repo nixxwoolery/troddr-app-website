@@ -965,7 +965,368 @@
     font-size: 10px; color: var(--grey-mid);
     font-weight: 600;
   }
-  /* ── VENDORS ── */
+  /* ── VENDOR INSIGHTS (new layout) ── */
+  .vi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.3fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 980px) {
+    .vi-grid { grid-template-columns: 1fr; }
+  }
+  .vi-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 18px 16px;
+  }
+  .vi-card-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 14px;
+  }
+  .vi-rank-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f0f6ff;
+    margin-bottom: 8px;
+  }
+  .vi-rank-row:last-child { margin-bottom: 0; }
+  .vi-rank-num {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(10,122,255,0.08);
+    color: var(--brand-primary, #0a7aff);
+    font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .vi-rank-body { flex: 1; min-width: 0; }
+  .vi-rank-name {
+    font-size: 14px; font-weight: 700;
+    color: var(--black);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .vi-rank-sub {
+    font-size: 12px;
+    color: var(--grey-mid);
+    margin-top: 1px;
+  }
+  .vi-chart {
+    display: flex; align-items: flex-end; gap: 4px;
+    height: 200px;
+    padding-top: 6px;
+    border-bottom: 1px solid var(--border-soft);
+    position: relative;
+  }
+  .vi-chart .y-axis {
+    position: absolute; left: -2px; top: 0; bottom: 18px;
+    width: 28px;
+    display: flex; flex-direction: column-reverse; justify-content: space-between;
+    font-size: 9px; color: var(--grey-light);
+    text-align: right;
+  }
+  .vi-chart-bars { flex: 1; display: flex; align-items: flex-end; gap: 6px; padding-left: 32px; }
+  .vi-bar {
+    flex: 1;
+    background: rgba(10,122,255,0.25);
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    position: relative;
+    transition: background 0.15s;
+  }
+  .vi-bar.peak { background: var(--brand-primary, #0a7aff); }
+  .vi-bar:hover { background: var(--brand-primary, #0a7aff); }
+  .vi-x-axis {
+    display: flex; justify-content: space-between;
+    padding-left: 32px;
+    margin-top: 6px;
+    font-size: 10px; color: var(--grey-mid);
+  }
+
+  /* ── ALL VENDORS PERFORMANCE TABLE ── */
+  .vi-table-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+  }
+  .vi-table-title {
+    font-size: 16px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 14px;
+  }
+  .vi-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .vi-table thead th {
+    text-align: left;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .vi-table thead th.num { text-align: right; }
+  .vi-table tbody td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--grey-dark);
+    vertical-align: middle;
+  }
+  .vi-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .vi-table tbody td.num.highlight { font-weight: 700; color: var(--black); }
+  .vi-table tbody tr:last-child td { border-bottom: none; }
+  .vi-table .v-name { font-weight: 700; color: var(--black); }
+  .vi-edit-btn {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    color: var(--grey-dark);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .vi-edit-btn:hover { background: var(--brand-primary); color: var(--brand-text); border-color: var(--brand-primary); }
+
+  /* Vendor edit modal */
+  .ve-modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .ve-modal-backdrop.open { display: flex; }
+  .ve-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%; max-width: 460px;
+    padding: 24px 26px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .ve-modal h3 {
+    font-size: 18px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .ve-modal-sub {
+    font-size: 12px;
+    color: var(--grey-mid);
+    margin-bottom: 18px;
+  }
+  .ve-field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+  .ve-field label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .ve-field input, .ve-field select, .ve-field textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--black);
+    outline: none;
+  }
+  .ve-field input:focus, .ve-field select:focus, .ve-field textarea:focus { border-color: var(--brand-primary); }
+  .ve-field.checkbox { flex-direction: row; align-items: center; gap: 8px; }
+  .ve-field.checkbox input { width: auto; }
+  .ve-field.checkbox label { letter-spacing: 0; text-transform: none; font-weight: 500; font-size: 13px; color: var(--grey-dark); }
+  .ve-actions {
+    display: flex; justify-content: flex-end; gap: 8px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .ve-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--grey-dark);
+  }
+  .ve-btn.primary {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
+  }
+  .ve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .ve-status { font-size: 12px; margin-top: 8px; display: none; }
+  .ve-status.error   { color: var(--red); display: block; }
+  .ve-status.success { color: var(--green); display: block; }
+
+  /* ── FLOOR PLAN EDITOR ── */
+  .fp-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    margin-bottom: 14px;
+  }
+  .fp-step-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--brand-primary);
+    margin-bottom: 14px;
+  }
+  .fp-tier-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 720px) { .fp-tier-grid { grid-template-columns: 1fr; } }
+  .fp-tier {
+    display: flex; gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .fp-tier.selected { border-color: var(--brand-primary); background: rgba(10,122,255,0.04); }
+  .fp-tier.disabled { opacity: 0.55; cursor: not-allowed; }
+  .fp-tier input { margin-top: 2px; flex-shrink: 0; }
+  .fp-tier-name { font-weight: 700; font-size: 13px; color: var(--black); margin-bottom: 3px; }
+  .fp-tier-soon {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: var(--bg-soft);
+    color: var(--grey-mid);
+    padding: 2px 6px; border-radius: 4px;
+    margin-left: 4px; vertical-align: middle;
+  }
+  .fp-tier-desc { font-size: 12px; color: var(--grey-mid); line-height: 1.4; }
+
+  .fp-upload-row { display: flex; gap: 10px; align-items: center; }
+  .fp-drop {
+    flex: 1;
+    display: block;
+    padding: 24px 16px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .fp-drop:hover, .fp-drop.dragover { border-color: var(--brand-primary); background: rgba(10,122,255,0.04); }
+  .fp-drop-label { font-size: 13px; color: var(--grey-mid); }
+  .fp-upload-status { font-size: 12px; margin-top: 8px; color: var(--grey-mid); }
+  .fp-upload-status.error { color: var(--red); }
+  .fp-upload-status.success { color: var(--green); }
+
+  .fp-editor-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 980px) { .fp-editor-grid { grid-template-columns: 1fr; } }
+  .fp-canvas-wrap {
+    position: relative;
+    background: var(--bg-soft);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    user-select: none;
+  }
+  .fp-canvas-wrap img { display: block; width: 100%; height: auto; pointer-events: none; }
+  .fp-markers {
+    position: absolute; inset: 0;
+    cursor: crosshair;
+  }
+  .fp-marker {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    cursor: grab;
+    user-select: none;
+  }
+  .fp-marker:active { cursor: grabbing; }
+  .fp-marker.selected .fp-marker-pin { box-shadow: 0 0 0 3px rgba(10,122,255,0.4); }
+  .fp-marker-pin {
+    width: 32px; height: 32px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    background: var(--brand-primary);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+    transition: box-shadow 0.15s;
+  }
+  .fp-marker-pin > span { transform: rotate(45deg); font-size: 14px; }
+  .fp-side { padding: 0; }
+  .fp-side-title {
+    font-size: 13px; font-weight: 700;
+    color: var(--black);
+    margin-bottom: 6px;
+  }
+  .fp-help { font-size: 12px; color: var(--grey-mid); line-height: 1.5; margin-bottom: 10px; }
+  .fp-marker-list { list-style: none; padding: 0; max-height: 240px; overflow-y: auto; }
+  .fp-marker-list li {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .fp-marker-list li:hover { background: var(--bg-soft); }
+  .fp-marker-list li.active { background: rgba(10,122,255,0.06); color: var(--brand-primary); font-weight: 600; }
+  .fp-marker-list li .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--brand-primary); flex-shrink: 0;
+  }
+  .fp-marker-list li .lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fp-marker-list li .pos { font-size: 10px; color: var(--grey-light); }
+
+  .fp-save-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 18px; padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+    gap: 12px;
+  }
+  .fp-save-meta { font-size: 12px; color: var(--grey-mid); }
+  .fp-save-meta.dirty { color: var(--amber); font-weight: 600; }
+  .fp-save-meta.saved { color: var(--green); font-weight: 600; }
+
+  .fp-invite-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .fp-invite-row input {
+    flex: 1; min-width: 180px;
+    padding: 8px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .fp-invite-result {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .fp-invite-result a { color: var(--brand-primary); word-break: break-all; }
+  .fp-invite-list { font-size: 12px; color: var(--grey-mid); }
+  .fp-invite-row-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+
+  /* ── VENDORS legacy stats strip ── */
   .vendor-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1755,16 +2116,81 @@
       </section>
 
       <section class="section" id="vendors">
-        <div class="section-head section-head-with-edit">
+        <div class="section-head">
           <div>
-            <h2 class="section-title">Vendors</h2>
-            <div class="section-sub">Lineup, menus, and what guests actually rated.</div>
+            <h2 class="section-title">Vendor Insights</h2>
+            <div class="section-sub">See which vendors are driving the most engagement at your events.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
         </div>
-        <div class="vendor-stats" id="vendor-stats"></div>
+
+        <!-- Three-up: Most Viewed, Most Saved, Peak Engagement Time -->
+        <div class="vi-grid">
+          <div class="vi-card">
+            <div class="vi-card-label">Most Viewed Vendors</div>
+            <div id="vi-most-viewed"></div>
+          </div>
+          <div class="vi-card">
+            <div class="vi-card-label">Most Saved Vendors</div>
+            <div id="vi-most-saved"></div>
+          </div>
+          <div class="vi-card">
+            <div class="vi-card-label">Peak Engagement Time</div>
+            <div id="vi-engagement-chart"></div>
+          </div>
+        </div>
+
+        <!-- Full vendor performance table -->
+        <div class="vi-table-card">
+          <div class="vi-table-title">All Vendors Performance</div>
+          <div id="vi-table-wrap"></div>
+        </div>
+
+        <!-- Legacy stats strip + per-vendor menu cards still rendered below
+             until per-vendor engagement metrics land on the RPC. -->
+        <div class="vendor-stats" id="vendor-stats" style="margin-top:18px;"></div>
         <div class="vendor-list" id="vendor-list"></div>
       </section>
+
+      <!-- Vendor edit modal -->
+      <div class="ve-modal-backdrop" id="ve-modal-backdrop">
+        <form class="ve-modal" id="ve-modal" autocomplete="off">
+          <h3>Edit vendor</h3>
+          <div class="ve-modal-sub" id="ve-modal-sub"></div>
+          <div class="ve-field">
+            <label for="ve-name">Name</label>
+            <input id="ve-name" type="text" maxlength="200" />
+          </div>
+          <div class="ve-field">
+            <label for="ve-booth">Booth number</label>
+            <input id="ve-booth" type="text" maxlength="40" placeholder="e.g. A-12" />
+          </div>
+          <div class="ve-field">
+            <label for="ve-type">Type</label>
+            <select id="ve-type">
+              <option value="">— Select —</option>
+              <option value="food">Food</option>
+              <option value="drink">Drink</option>
+              <option value="merch">Merch</option>
+              <option value="info">Info</option>
+              <option value="experience">Experience</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="ve-field">
+            <label for="ve-desc">Description</label>
+            <textarea id="ve-desc" rows="3" maxlength="500"></textarea>
+          </div>
+          <div class="ve-field checkbox">
+            <input id="ve-featured" type="checkbox" />
+            <label for="ve-featured">Featured (pin to top of lineup)</label>
+          </div>
+          <div class="ve-status" id="ve-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="ve-cancel">Cancel</button>
+            <button type="submit" class="ve-btn primary" id="ve-save">Save</button>
+          </div>
+        </form>
+      </div>
 
       <section class="section" id="schedule">
         <div class="section-head section-head-with-edit">
@@ -1778,14 +2204,130 @@
       </section>
 
       <section class="section" id="map">
-        <div class="section-head section-head-with-edit">
+        <div class="section-head">
           <div>
             <h2 class="section-title">Map</h2>
-            <div class="section-sub">Venue location and any zone markers shown inside the app.</div>
+            <div class="section-sub">Upload your floor plan, drop markers for vendors and zones, and share with a designer.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
         </div>
-        <div class="info-card" id="map-card"></div>
+
+        <!-- 1. Tier picker -->
+        <div class="fp-card">
+          <div class="fp-step-label">1 · Tier</div>
+          <div class="fp-tier-grid">
+            <label class="fp-tier selected">
+              <input type="radio" name="fp-tier" value="static" checked />
+              <div class="fp-tier-body">
+                <div class="fp-tier-name">Static Map</div>
+                <div class="fp-tier-desc">A floor plan image with vendor markers. Shown in the TRODDR app's Map tab.</div>
+              </div>
+            </label>
+            <label class="fp-tier disabled" title="Coming soon">
+              <input type="radio" name="fp-tier" value="ar_lite" disabled />
+              <div class="fp-tier-body">
+                <div class="fp-tier-name">Indoor Navigation <span class="fp-tier-soon">Coming soon</span></div>
+                <div class="fp-tier-desc">Adds GPS calibration so attendees see their position on the floor plan.</div>
+              </div>
+            </label>
+            <label class="fp-tier disabled" title="Coming soon">
+              <input type="radio" name="fp-tier" value="ar" disabled />
+              <div class="fp-tier-body">
+                <div class="fp-tier-name">AR Experience <span class="fp-tier-soon">Coming soon</span></div>
+                <div class="fp-tier-desc">Augmented-reality overlays for booths, sponsors, and stages.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. Upload floor plan -->
+        <div class="fp-card">
+          <div class="fp-step-label">2 · Upload floor plan</div>
+          <div class="fp-upload-row">
+            <label class="fp-drop" id="fp-drop">
+              <input id="fp-file" type="file" accept="image/png,image/jpeg" hidden />
+              <span class="fp-drop-label">Click to choose, or drop a PNG / JPG (max 8 MB, ≥ 1200px wide recommended)</span>
+            </label>
+            <button type="button" id="fp-clear" class="ve-btn" style="display:none;">Remove</button>
+          </div>
+          <div class="fp-upload-status" id="fp-upload-status"></div>
+        </div>
+
+        <!-- 3. Marker editor -->
+        <div class="fp-card" id="fp-editor-card" style="display:none;">
+          <div class="fp-step-label">3 · Markers</div>
+          <div class="fp-editor-grid">
+            <div class="fp-canvas-wrap" id="fp-canvas-wrap">
+              <img id="fp-img" alt="Floor plan" />
+              <div class="fp-markers" id="fp-markers"></div>
+            </div>
+            <div class="fp-side">
+              <div class="fp-side-title">Add a marker</div>
+              <p class="fp-help">Click anywhere on the floor plan to drop a marker, then fill in details on the right.</p>
+              <div class="fp-marker-form" id="fp-marker-form" style="display:none;">
+                <div class="ve-field">
+                  <label>Label</label>
+                  <input id="fpm-label" type="text" maxlength="100" placeholder="e.g. Jerk Center" />
+                </div>
+                <div class="ve-field">
+                  <label>Icon</label>
+                  <select id="fpm-icon">
+                    <option value="pin">📍 Pin</option>
+                    <option value="food">🍴 Food</option>
+                    <option value="drink">🥤 Drink</option>
+                    <option value="stage">🎤 Stage</option>
+                    <option value="restroom">🚻 Restroom</option>
+                    <option value="info">ℹ️ Info</option>
+                    <option value="exit">🚪 Exit</option>
+                    <option value="parking">🅿️ Parking</option>
+                  </select>
+                </div>
+                <div class="ve-field">
+                  <label>Colour</label>
+                  <input id="fpm-color" type="color" value="#0a7aff" />
+                </div>
+                <div class="ve-field">
+                  <label>Vendor link (optional)</label>
+                  <select id="fpm-vendor">
+                    <option value="">— None —</option>
+                  </select>
+                </div>
+                <div class="ve-field">
+                  <label>Booth number (optional)</label>
+                  <input id="fpm-booth" type="text" maxlength="40" placeholder="e.g. A-12" />
+                </div>
+                <div class="ve-field">
+                  <label>Description (optional)</label>
+                  <textarea id="fpm-desc" rows="2" maxlength="300"></textarea>
+                </div>
+                <div class="ve-actions" style="border-top:none;padding-top:0;margin-top:4px;">
+                  <button type="button" class="ve-btn" id="fpm-delete">Delete</button>
+                  <button type="button" class="ve-btn primary" id="fpm-apply">Apply</button>
+                </div>
+              </div>
+
+              <div class="fp-side-title" style="margin-top:18px;">All markers</div>
+              <ul class="fp-marker-list" id="fp-marker-list"></ul>
+            </div>
+          </div>
+
+          <div class="fp-save-row">
+            <span class="fp-save-meta" id="fp-save-meta">No unsaved changes.</span>
+            <button type="button" class="ve-btn primary" id="fp-save-btn">Save floor plan</button>
+          </div>
+        </div>
+
+        <!-- 4. Share with designer -->
+        <div class="fp-card" id="fp-share-card">
+          <div class="fp-step-label">4 · Share with a designer</div>
+          <p class="fp-help">Generate a link a designer can use to edit your markers without seeing the rest of your dashboard. They get a 14-day editor-only view of this floor plan.</p>
+          <div class="fp-invite-row">
+            <input id="fp-invite-name"  type="text" placeholder="Designer name (optional)" maxlength="120" />
+            <input id="fp-invite-email" type="email" placeholder="Designer email (optional)" maxlength="200" />
+            <button type="button" class="ve-btn primary" id="fp-invite-btn">Generate link</button>
+          </div>
+          <div class="fp-invite-result" id="fp-invite-result" style="display:none;"></div>
+          <div class="fp-invite-list" id="fp-invite-list"></div>
+        </div>
       </section>
 
       <section class="section" id="passes">
@@ -2201,6 +2743,187 @@
     `;
   }
 
+  // ── Vendor Insights : new layout (Most Viewed / Most Saved / Peak / Table) ─
+  function renderVendorInsights(data) {
+    const vendors = data.vendors || [];
+    // Per-vendor engagement metrics (views, saves, menu_clicks) are not yet on
+    // the RPC. We surface what we have today and degrade to 0 / "—" otherwise
+    // so the layout is correct as soon as those fields land.
+    const withMetrics = vendors.map(v => ({
+      ...v,
+      _views:      Number(v.view_count   || v.views       || 0),
+      _saves:      Number(v.save_count   || v.saves       || (v.menu_items || []).reduce((a, it) => a + Number(it.saved_count || 0), 0)),
+      _menuClicks: Number(v.menu_clicks  || v.click_count || 0),
+    }));
+
+    function rankRows(target, sortKey, suffix) {
+      const sorted = [...withMetrics]
+        .sort((a, b) => b[sortKey] - a[sortKey])
+        .filter(v => v[sortKey] > 0)
+        .slice(0, 3);
+      if (!sorted.length) {
+        target.innerHTML = `<div style="font-size:13px;color:var(--grey-mid);padding:8px 4px;">No ${suffix} data yet.</div>`;
+        return;
+      }
+      target.innerHTML = sorted.map((v, i) => `
+        <div class="vi-rank-row">
+          <div class="vi-rank-num">${i + 1}</div>
+          <div class="vi-rank-body">
+            <div class="vi-rank-name">${escapeHtml(v.vendor_name || 'Unnamed vendor')}</div>
+            <div class="vi-rank-sub">${v[sortKey]} ${suffix}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    rankRows($('vi-most-viewed'), '_views', 'views');
+    rankRows($('vi-most-saved'),  '_saves', 'saves');
+
+    // Peak Engagement Time chart : 12pm to 10pm by default. Reads hourly buckets
+    // from data.engagement_by_hour when present, otherwise renders a placeholder.
+    const hours = Array.from({ length: 11 }, (_, i) => 12 + i); // 12pm..10pm
+    const bucket = (h) => (data.engagement_by_hour || {})[h] || 0;
+    const values = hours.map(bucket);
+    const peakVal = Math.max(...values, 1);
+    const maxY = Math.max(50, Math.ceil(peakVal / 50) * 50);
+    const yTicks = [0, Math.round(maxY * 0.25), Math.round(maxY * 0.5), Math.round(maxY * 0.75), maxY];
+    const bars = values.map((v, i) => {
+      const pct = (v / maxY) * 100;
+      const isPeak = v === peakVal && v > 0;
+      return `<div class="vi-bar ${isPeak ? 'peak' : ''}" style="height:${Math.max(pct, v ? 4 : 0)}%" title="${hourLabel(hours[i])}: ${v}"></div>`;
+    }).join('');
+    const xLabels = hours.map(hourLabel).map(l => `<span>${l}</span>`).join('');
+    const yLabels = yTicks.map(t => `<span>${t}</span>`).join('');
+    const totalEngagement = values.reduce((a, b) => a + b, 0);
+    $('vi-engagement-chart').innerHTML = totalEngagement
+      ? `<div class="vi-chart">
+           <div class="y-axis">${yLabels}</div>
+           <div class="vi-chart-bars">${bars}</div>
+         </div>
+         <div class="vi-x-axis">${xLabels}</div>`
+      : `<div style="font-size:13px;color:var(--grey-mid);padding:8px 4px;">Hourly engagement data will appear here once your event has activity.</div>`;
+
+    // All Vendors Performance table
+    if (!withMetrics.length) {
+      $('vi-table-wrap').innerHTML = `
+        <div class="empty-state-card" style="border:none;padding:20px;">
+          <div class="empty-state-title">No vendors added yet</div>
+          <div class="empty-state-body">Send us a message to add your vendor lineup.</div>
+        </div>`;
+      return;
+    }
+    $('vi-table-wrap').innerHTML = `
+      <table class="vi-table">
+        <thead>
+          <tr>
+            <th>Vendor</th>
+            <th>Booth</th>
+            <th>Type</th>
+            <th class="num">Views</th>
+            <th class="num">Saves</th>
+            <th class="num">Menu Clicks</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${withMetrics.map(v => `
+            <tr data-event-vendor-id="${escapeHtml(v.event_vendor_id || '')}">
+              <td class="v-name">${escapeHtml(v.vendor_name || 'Unnamed vendor')}</td>
+              <td>${escapeHtml(v.booth_number || '—')}</td>
+              <td>${escapeHtml(titleCase(v.vendor_type || '—'))}</td>
+              <td class="num ${v._views ? 'highlight' : ''}">${v._views || '—'}</td>
+              <td class="num">${v._saves || '—'}</td>
+              <td class="num">${v._menuClicks || '—'}</td>
+              <td><button type="button" class="vi-edit-btn" data-edit-vendor>Edit</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+
+    // Wire edit buttons
+    $('vi-table-wrap').querySelectorAll('[data-edit-vendor]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('tr');
+        const id = row && row.dataset.eventVendorId;
+        const v = withMetrics.find(x => x.event_vendor_id === id);
+        if (v) openVendorEditor(v);
+      });
+    });
+  }
+
+  function hourLabel(h) {
+    const hh = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+    return `${hh}${h >= 12 ? 'pm' : 'am'}`;
+  }
+
+  // ── Vendor edit modal wiring ───────────────────────────
+  let _editingVendor = null;
+  function openVendorEditor(v) {
+    _editingVendor = v;
+    $('ve-modal-sub').textContent = v.vendor_name ? `Editing : ${v.vendor_name}` : 'New vendor entry';
+    $('ve-name').value     = v.vendor_name || '';
+    $('ve-booth').value    = v.booth_number || '';
+    $('ve-type').value     = v.vendor_type || '';
+    $('ve-desc').value     = v.vendor_description || '';
+    $('ve-featured').checked = !!v.vendor_is_featured;
+    $('ve-status').className = 've-status';
+    $('ve-status').textContent = '';
+    $('ve-modal-backdrop').classList.add('open');
+    setTimeout(() => $('ve-name').focus(), 30);
+  }
+  function closeVendorEditor() {
+    $('ve-modal-backdrop').classList.remove('open');
+    _editingVendor = null;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const cancel  = document.getElementById('ve-cancel');
+    const back    = document.getElementById('ve-modal-backdrop');
+    const form    = document.getElementById('ve-modal');
+    if (cancel) cancel.addEventListener('click', closeVendorEditor);
+    if (back)   back.addEventListener('click', (e) => { if (e.target === back) closeVendorEditor(); });
+    if (form)   form.addEventListener('submit', saveVendorEdit);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && back && back.classList.contains('open')) closeVendorEditor();
+    });
+  });
+
+  async function saveVendorEdit(e) {
+    e.preventDefault();
+    if (!_editingVendor) return;
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    const payload = {
+      p_token:               token,
+      p_event_vendor_id:     _editingVendor.event_vendor_id,
+      p_vendor_name:         $('ve-name').value.trim() || null,
+      p_booth_number:        $('ve-booth').value.trim() || null,
+      p_vendor_type:         $('ve-type').value || null,
+      p_vendor_description:  $('ve-desc').value.trim() || null,
+      p_is_featured:         $('ve-featured').checked,
+    };
+    const status = $('ve-status');
+    const saveBtn = $('ve-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('update_event_vendor', payload);
+      if (error || !data || !data.ok) {
+        const msg = (error && (error.message || error.code)) || (data && data.error) || 'Could not save changes.';
+        status.className = 've-status error';
+        status.textContent = msg;
+        return;
+      }
+      status.className = 've-status success';
+      status.textContent = 'Saved. Refreshing...';
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      status.className = 've-status error';
+      status.textContent = (err && err.message) || 'Network error.';
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    }
+  }
+
   function renderVendors(data) {
     const hasVendorTab = data.capabilities && data.capabilities.vendors;
     const vendors = data.vendors || [];
@@ -2211,6 +2934,9 @@
 
     $('vendors').style.display = '';
     const nv = $('nav-vendors'); if (nv) nv.style.display = '';
+
+    // New Vendor Insights layout (3-up + table at top).
+    renderVendorInsights(data);
 
     // Stats strip
     const cards = [
@@ -2652,32 +3378,364 @@
     if (el) el.style.display = 'none';
   }
 
-  // ── Map ────────────────────────────────────────────────
+  // ── Map / Floor Plan ───────────────────────────────────
+  // Tier 1 (Static Map): upload an image, drop markers on it, save fractions.
+  // Markers are stored as { x, y, label, icon, color, vendor_id, booth, desc }
+  // where x and y are 0..1 fractions of the rendered image (resolution-agnostic).
+  const FloorPlan = {
+    eventId:   null,
+    eventSlug: null,
+    url:       null,
+    markers:   [],   // { id, x, y, label, icon, color, vendor_id, booth, description }
+    selectedId: null,
+    dirty:     false,
+    vendors:   [],   // for the "Vendor link" dropdown
+  };
+
+  function fpUid() { return 'm_' + Math.random().toString(36).slice(2, 9); }
+  function fpMarkDirty(yes) {
+    FloorPlan.dirty = !!yes;
+    const meta = $('fp-save-meta');
+    if (!meta) return;
+    meta.className = 'fp-save-meta' + (yes ? ' dirty' : ' saved');
+    meta.textContent = yes ? 'Unsaved changes' : 'All changes saved.';
+  }
+  function fpIcon(name) {
+    const map = {
+      pin: '📍', food: '🍴', drink: '🥤', stage: '🎤',
+      restroom: '🚻', info: 'ℹ️', exit: '🚪', parking: '🅿️',
+    };
+    return map[name] || '📍';
+  }
+
   function renderMap(event) {
-    const card = $('map-card');
-    if (!card) return;
-    const hasVenue = event && (event.venue_name || event.venue_address || (event.venue_lat && event.venue_lng));
-    if (!hasVenue) {
-      card.innerHTML = `<div class="section-empty">No venue location set yet.</div>`;
+    if (!event) return;
+    FloorPlan.eventId   = event.id;
+    FloorPlan.eventSlug = event.slug;
+    FloorPlan.url       = event.floor_plan_url || null;
+    FloorPlan.markers   = Array.isArray(event.floor_plan_markers)
+      ? event.floor_plan_markers.map(m => ({ ...m, id: m.id || fpUid() }))
+      : [];
+
+    // Populate vendor dropdown with this event's vendors.
+    const select = $('fpm-vendor');
+    if (select) {
+      const opts = ['<option value="">— None —</option>'];
+      (FloorPlan.vendors = (window.__eventData && window.__eventData.vendors) || []).forEach(v => {
+        const n = (v.vendor_name || 'Vendor').replace(/[<>&"]/g, '');
+        opts.push(`<option value="${v.event_vendor_id || v.vendor_id || ''}">${n}</option>`);
+      });
+      select.innerHTML = opts.join('');
+    }
+
+    if (FloorPlan.url) {
+      $('fp-img').src = FloorPlan.url;
+      $('fp-editor-card').style.display = '';
+      $('fp-clear').style.display = '';
+      $('fp-drop').querySelector('.fp-drop-label').textContent = 'Replace floor plan (click or drop a new image)';
+      // Wait for image to lay out before placing markers
+      $('fp-img').addEventListener('load', () => { fpRenderAllMarkers(); }, { once: true });
+      if ($('fp-img').complete) fpRenderAllMarkers();
+    } else {
+      $('fp-editor-card').style.display = 'none';
+    }
+
+    fpMarkDirty(false);
+  }
+
+  function fpRenderAllMarkers() {
+    const layer = $('fp-markers');
+    layer.innerHTML = '';
+    const rect = $('fp-img').getBoundingClientRect();
+    FloorPlan.markers.forEach((m) => {
+      const el = document.createElement('div');
+      el.className = 'fp-marker' + (m.id === FloorPlan.selectedId ? ' selected' : '');
+      el.dataset.id = m.id;
+      el.style.left = `${(m.x || 0) * 100}%`;
+      el.style.top  = `${(m.y || 0) * 100}%`;
+      el.innerHTML = `<div class="fp-marker-pin" style="background:${escapeHtml(m.color || '#0a7aff')};"><span>${fpIcon(m.icon)}</span></div>`;
+      el.addEventListener('mousedown', (e) => fpStartDrag(e, m.id));
+      el.addEventListener('click', (e) => { e.stopPropagation(); fpSelect(m.id); });
+      layer.appendChild(el);
+    });
+    fpRenderList();
+  }
+
+  function fpRenderList() {
+    const ul = $('fp-marker-list');
+    if (!ul) return;
+    if (!FloorPlan.markers.length) {
+      ul.innerHTML = `<li style="cursor:default;color:var(--grey-mid);font-size:12px;">No markers yet — click the floor plan to add one.</li>`;
       return;
     }
-    const mapsLink = (event.venue_lat && event.venue_lng)
-      ? `https://www.google.com/maps?q=${event.venue_lat},${event.venue_lng}`
-      : (event.venue_address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue_address)}` : null);
-    card.innerHTML = `
-      ${infoRow('Venue',   escapeHtml(event.venue_name || '—'))}
-      ${infoRow('Address', escapeHtml(event.venue_address || '—'))}
-      ${infoRow('Town',    escapeHtml(event.town || '—'))}
-      ${infoRow('Parish',  escapeHtml(event.parish || '—'))}
-      ${infoRow('Country', escapeHtml(event.country || '—'))}
-      ${event.venue_lat && event.venue_lng
-        ? infoRow('Coordinates', `${event.venue_lat}, ${event.venue_lng}`)
-        : ''}
-      ${mapsLink
-        ? infoRow('Open in Maps', `<a href="${escapeHtml(mapsLink)}" target="_blank" rel="noopener">View on Google Maps</a>`)
-        : ''}
-    `;
+    ul.innerHTML = FloorPlan.markers.map((m) => `
+      <li data-id="${m.id}" class="${m.id === FloorPlan.selectedId ? 'active' : ''}">
+        <span class="dot" style="background:${escapeHtml(m.color || '#0a7aff')};"></span>
+        <span class="lbl">${escapeHtml(m.label || '(unnamed)')}</span>
+        <span class="pos">${Math.round((m.x || 0) * 100)}%, ${Math.round((m.y || 0) * 100)}%</span>
+      </li>`).join('');
+    ul.querySelectorAll('li[data-id]').forEach((li) => {
+      li.addEventListener('click', () => fpSelect(li.dataset.id));
+    });
   }
+
+  function fpSelect(id) {
+    FloorPlan.selectedId = id;
+    fpRenderAllMarkers();
+    const m = FloorPlan.markers.find(x => x.id === id);
+    if (!m) { $('fp-marker-form').style.display = 'none'; return; }
+    $('fp-marker-form').style.display = '';
+    $('fpm-label').value  = m.label || '';
+    $('fpm-icon').value   = m.icon || 'pin';
+    $('fpm-color').value  = m.color || '#0a7aff';
+    $('fpm-vendor').value = m.vendor_id || '';
+    $('fpm-booth').value  = m.booth || '';
+    $('fpm-desc').value   = m.description || '';
+  }
+
+  function fpApplyMarkerEdit() {
+    const m = FloorPlan.markers.find(x => x.id === FloorPlan.selectedId);
+    if (!m) return;
+    m.label       = $('fpm-label').value.trim();
+    m.icon        = $('fpm-icon').value;
+    m.color       = $('fpm-color').value;
+    m.vendor_id   = $('fpm-vendor').value || null;
+    m.booth       = $('fpm-booth').value.trim();
+    m.description = $('fpm-desc').value.trim();
+    fpMarkDirty(true);
+    fpRenderAllMarkers();
+  }
+  function fpDeleteSelected() {
+    if (!FloorPlan.selectedId) return;
+    FloorPlan.markers = FloorPlan.markers.filter(x => x.id !== FloorPlan.selectedId);
+    FloorPlan.selectedId = null;
+    $('fp-marker-form').style.display = 'none';
+    fpMarkDirty(true);
+    fpRenderAllMarkers();
+  }
+
+  // Click on the image → drop a new marker. Bound once during init.
+  function fpAddMarkerFromClick(e) {
+    if (e.target.closest('.fp-marker')) return; // clicking an existing marker
+    const rect = $('fp-markers').getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top)  / rect.height;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return;
+    const m = { id: fpUid(), x, y, label: '', icon: 'pin', color: '#0a7aff' };
+    FloorPlan.markers.push(m);
+    FloorPlan.selectedId = m.id;
+    fpMarkDirty(true);
+    fpRenderAllMarkers();
+    fpSelect(m.id);
+    setTimeout(() => $('fpm-label').focus(), 30);
+  }
+
+  // Drag a marker to reposition it. Updates 0–1 fractions on drop.
+  let _fpDrag = null;
+  function fpStartDrag(e, id) {
+    e.stopPropagation();
+    _fpDrag = { id, moved: false };
+    document.addEventListener('mousemove', fpOnDrag);
+    document.addEventListener('mouseup', fpEndDrag, { once: true });
+  }
+  function fpOnDrag(e) {
+    if (!_fpDrag) return;
+    const m = FloorPlan.markers.find(x => x.id === _fpDrag.id);
+    if (!m) return;
+    const rect = $('fp-markers').getBoundingClientRect();
+    m.x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    m.y = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
+    _fpDrag.moved = true;
+    fpRenderAllMarkers();
+  }
+  function fpEndDrag() {
+    document.removeEventListener('mousemove', fpOnDrag);
+    if (_fpDrag && _fpDrag.moved) fpMarkDirty(true);
+    _fpDrag = null;
+  }
+
+  // ── Upload : POST the file to Supabase Storage, then store the URL. ──
+  async function fpHandleFile(file) {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g)$/.test(file.type)) {
+      fpUploadStatus('Choose a PNG or JPG.', 'error'); return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      fpUploadStatus('Image too large (max 8 MB).', 'error'); return;
+    }
+    if (!FloorPlan.eventSlug && !FloorPlan.eventId) {
+      fpUploadStatus('Event not loaded yet, try again in a moment.', 'error'); return;
+    }
+    fpUploadStatus('Uploading...', '');
+    const ext = file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg') ? 'jpg' : 'png';
+    const path = `${FloorPlan.eventSlug || FloorPlan.eventId}/floor-plan-${Date.now()}.${ext}`;
+    try {
+      const { data, error } = await db.storage.from('event-floorplans').upload(path, file, {
+        upsert: true, contentType: file.type,
+      });
+      if (error) throw error;
+      const { data: pub } = db.storage.from('event-floorplans').getPublicUrl(data.path);
+      FloorPlan.url = pub.publicUrl;
+      $('fp-img').src = FloorPlan.url;
+      $('fp-editor-card').style.display = '';
+      $('fp-clear').style.display = '';
+      $('fp-drop').querySelector('.fp-drop-label').textContent = 'Replace floor plan (click or drop a new image)';
+      fpUploadStatus('Uploaded. Click the image to start placing markers.', 'success');
+      fpMarkDirty(true);
+      $('fp-img').addEventListener('load', () => fpRenderAllMarkers(), { once: true });
+    } catch (err) {
+      console.error('[floor-plan] upload error', err);
+      const msg = (err && (err.message || err.error)) || 'Upload failed.';
+      const blocked = /not found|policy/i.test(String(msg))
+        ? ' (Make sure the "event-floorplans" bucket exists in Supabase Storage with the right policies — see supabase/event-map.sql.)'
+        : '';
+      fpUploadStatus(msg + blocked, 'error');
+    }
+  }
+  function fpUploadStatus(msg, kind) {
+    const el = $('fp-upload-status');
+    el.textContent = msg;
+    el.className = 'fp-upload-status' + (kind ? ' ' + kind : '');
+  }
+
+  async function fpSaveAll() {
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    const payload = {
+      p_token: token,
+      p_floor_plan_url: FloorPlan.url,
+      p_floor_plan_markers: FloorPlan.markers.map(m => ({
+        id: m.id, x: m.x, y: m.y,
+        label: m.label || '', icon: m.icon || 'pin', color: m.color || '#0a7aff',
+        vendor_id: m.vendor_id || null,
+        booth: m.booth || '',
+        description: m.description || '',
+      })),
+    };
+    const btn = $('fp-save-btn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('update_event_floor_plan', payload);
+      if (error || !data || !data.ok) {
+        const msg = (error && (error.message || error.code)) || (data && data.error) || 'Save failed';
+        alert(msg);
+        return;
+      }
+      fpMarkDirty(false);
+    } catch (err) {
+      console.error('[floor-plan] save error', err);
+      alert((err && err.message) || 'Network error.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save floor plan';
+    }
+  }
+
+  // ── Share with designer ──
+  async function fpCreateInvite() {
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    const name  = $('fp-invite-name').value.trim();
+    const email = $('fp-invite-email').value.trim();
+    const btn   = $('fp-invite-btn');
+    btn.disabled = true; btn.textContent = 'Generating...';
+    try {
+      const { data, error } = await db.rpc('create_event_map_invite', {
+        p_token:          token,
+        p_designer_name:  name || null,
+        p_designer_email: email || null,
+        p_scopes:         ['markers'],
+        p_expires_in_days: 14,
+      });
+      if (error || !data || !data.token) {
+        const msg = (error && (error.message || error.code)) || (data && data.error) || 'Could not create invite.';
+        alert(msg); return;
+      }
+      const url = `${location.origin}/m/${data.token}`;
+      $('fp-invite-result').style.display = 'block';
+      $('fp-invite-result').innerHTML = `
+        <strong>Designer link ready.</strong> Expires ${escapeHtml(new Date(data.expires_at).toLocaleDateString())}.<br>
+        <a href="${url}" target="_blank" rel="noopener">${url}</a>
+        <button type="button" class="ve-btn" style="margin-left:8px;" id="fp-copy-link">Copy</button>`;
+      document.getElementById('fp-copy-link').addEventListener('click', () => {
+        navigator.clipboard.writeText(url).then(() => {
+          document.getElementById('fp-copy-link').textContent = 'Copied';
+        });
+      });
+      $('fp-invite-name').value = '';
+      $('fp-invite-email').value = '';
+      fpLoadInvites();
+    } catch (err) {
+      alert((err && err.message) || 'Network error.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generate link';
+    }
+  }
+  async function fpLoadInvites() {
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    try {
+      const { data, error } = await db.rpc('list_event_map_invites', { p_token: token });
+      if (error || !Array.isArray(data)) return;
+      const list = $('fp-invite-list');
+      if (!data.length) { list.innerHTML = ''; return; }
+      list.innerHTML = '<div style="margin-bottom:6px;font-weight:600;color:var(--grey-dark);">Existing links</div>' +
+        data.map(inv => `
+          <div class="fp-invite-row-item">
+            <span>${escapeHtml(inv.designer_name || inv.designer_email || 'Unnamed designer')} · expires ${escapeHtml(new Date(inv.expires_at).toLocaleDateString())}</span>
+            <button type="button" class="ve-btn" data-revoke="${inv.token}">Revoke</button>
+          </div>`).join('');
+      list.querySelectorAll('[data-revoke]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Revoke this designer link?')) return;
+          await db.rpc('revoke_event_map_invite', { p_token: token, p_invite_token: b.dataset.revoke });
+          fpLoadInvites();
+        });
+      });
+    } catch (e) { console.warn('[floor-plan] list invites failed', e); }
+  }
+
+  // Wire one-time event handlers (run after DOM exists).
+  document.addEventListener('DOMContentLoaded', () => {
+    const drop  = document.getElementById('fp-drop');
+    const file  = document.getElementById('fp-file');
+    if (drop) {
+      drop.addEventListener('click', () => file && file.click());
+      drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('dragover'); });
+      drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+      drop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        drop.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files[0]) fpHandleFile(e.dataTransfer.files[0]);
+      });
+    }
+    if (file) file.addEventListener('change', () => fpHandleFile(file.files[0]));
+    const markers = document.getElementById('fp-markers');
+    if (markers) markers.addEventListener('click', fpAddMarkerFromClick);
+    const apply   = document.getElementById('fpm-apply');
+    const del     = document.getElementById('fpm-delete');
+    const save    = document.getElementById('fp-save-btn');
+    const clearBtn = document.getElementById('fp-clear');
+    const inviteBtn = document.getElementById('fp-invite-btn');
+    if (apply)  apply.addEventListener('click', fpApplyMarkerEdit);
+    if (del)    del.addEventListener('click', fpDeleteSelected);
+    if (save)   save.addEventListener('click', fpSaveAll);
+    if (inviteBtn) inviteBtn.addEventListener('click', fpCreateInvite);
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+      if (!confirm('Remove the current floor plan? This also clears all markers.')) return;
+      FloorPlan.url = null;
+      FloorPlan.markers = [];
+      $('fp-img').removeAttribute('src');
+      $('fp-editor-card').style.display = 'none';
+      clearBtn.style.display = 'none';
+      $('fp-drop').querySelector('.fp-drop-label').textContent =
+        'Click to choose, or drop a PNG / JPG (max 8 MB, ≥ 1200px wide recommended)';
+      fpMarkDirty(true);
+    });
+
+    // Re-place markers if the window resizes (image scales fluidly).
+    window.addEventListener('resize', () => {
+      if (FloorPlan.url) fpRenderAllMarkers();
+    });
+
+    fpLoadInvites();
+  });
 
   // ── Info ───────────────────────────────────────────────
   function renderInfo(event) {
@@ -3397,6 +4455,10 @@
     safe('renderPreview',     () => renderPreview(data.event, data.tabs));
     safe('renderStats',       () => renderStats(data.stats, data.event.slug));
     safe('renderAudience',    () => renderAudience(data));
+    // Stash the loaded event data so renderers (e.g. floor-plan vendor dropdown,
+    // engagement chart) can reach it without re-plumbing parameters.
+    window.__eventData = data;
+
     safe('renderSchedule',    () => renderSchedule(data));
     safe('renderUpdates',     () => renderUpdates(data));
     safe('renderVendors',     () => renderVendors(data));

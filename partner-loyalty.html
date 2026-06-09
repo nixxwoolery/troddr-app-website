@@ -857,7 +857,7 @@
 
     <section class="section" id="health">
       <div class="section-head">
-        <h2 class="section-title">Program Health</h2>
+        <h2 class="section-title">Member Insights</h2>
       </div>
       <div class="stats-grid" id="stats-grid"></div>
     </section>
@@ -973,7 +973,7 @@
     `;
   }
 
-  // ── Stats: Program Health (6 cards) ─────────────────────
+  // ── Stats: Member Insights (6 cards) ────────────────────
   function renderStats(data) {
     const s = data.stats;
     const repeatPct = Math.round((s.repeat_visit_rate || 0) * 100);
@@ -1450,7 +1450,7 @@
       capabilities: capabilities,
       partner: opts && opts.partner,
       jumpLinks: [
-        { section: 'health',  icon: 'ic-shield', label: 'Program Health' },
+        { section: 'health',  icon: 'ic-shield', label: 'Member Insights' },
         { section: 'actions', icon: 'ic-bolt',   label: 'Action Center' },
         { section: 'funnel',  icon: 'ic-chart',  label: 'Loyalty Funnel' },
         { section: 'members', icon: 'ic-users',  label: 'Members' },

@@ -92,6 +92,7 @@
       { "source": "/partner/specials", "destination": "/partner-specials.html" },
       { "source": "/partner/billing",  "destination": "/partner-billing.html" },
       { "source": "/partner/group",    "destination": "/partner-group.html" },
+      { "source": "/m/:token",          "destination": "/m.html?token=:token" },
       { "source": "/admin/review",     "destination": "/admin-review.html" },
       { "source": "/reset-password", "destination": "/reset-password.html" },
       { "source": "/app", "destination": "/app.html" }
