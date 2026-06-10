@@ -176,8 +176,12 @@
       .filter(Boolean);
     function update() {
       const scrollY = window.scrollY + 120;
-      let activeId = sections[0] && sections[0].id;
-      sections.forEach((sec) => { if (sec.offsetTop <= scrollY) activeId = sec.id; });
+      // Skip sections inside hidden ancestors (e.g. inactive view panes).
+      // offsetParent is null for any element with display:none in its
+      // ancestor chain, which gives us a reliable visibility check.
+      const visible = sections.filter((sec) => sec.offsetParent !== null);
+      let activeId = visible[0] && visible[0].id;
+      visible.forEach((sec) => { if (sec.offsetTop <= scrollY) activeId = sec.id; });
       jumpLinks.forEach((l) => l.classList.toggle('active', l.dataset.section === activeId));
     }
     window.addEventListener('scroll', update, { passive: true });

@@ -1189,6 +1189,52 @@
   }
   .chapter-sub { font-size: 13px; color: var(--grey-mid); line-height: 1.4; }
 
+  /* ── VIEW TABS (Overview / Analytics / Details) ── */
+  .view-tabs {
+    display: flex;
+    gap: 4px;
+    margin: 6px 0 20px;
+    padding: 4px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    position: sticky;
+    top: 8px;
+    z-index: 20;
+    backdrop-filter: blur(6px);
+  }
+  .view-tab {
+    flex: 1;
+    appearance: none;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--grey-mid);
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    text-align: center;
+  }
+  .view-tab:hover { color: var(--black); }
+  .view-tab.is-active {
+    background: #fff;
+    color: var(--black);
+    border-color: var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .view-tab:focus-visible {
+    outline: 2px solid var(--brand-primary, #0a7aff);
+    outline-offset: 2px;
+  }
+  .view-pane[hidden] { display: none !important; }
+  @media (max-width: 640px) {
+    .view-tabs { position: static; }
+    .view-tab { font-size: 12px; padding: 9px 8px; }
+  }
+
   /* ── EDIT CARDS (list-with-add pattern) ── */
   .edit-list-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; }
   .edit-list-card .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
@@ -2136,15 +2182,19 @@
   <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
 
   <main class="main">
+
+      <div class="view-tabs" role="tablist" aria-label="Event dashboard sections" id="view-tabs">
+        <button type="button" class="view-tab is-active" data-view="overview" role="tab" aria-selected="true">Overview</button>
+        <button type="button" class="view-tab" data-view="analytics" role="tab" aria-selected="false">Analytics</button>
+        <button type="button" class="view-tab" data-view="details" role="tab" aria-selected="false">Details</button>
+      </div>
+
+      <!-- ============ OVERVIEW ============ -->
+      <div class="view-pane" id="view-pane-overview" data-view="overview" role="tabpanel" aria-labelledby="view-tabs">
+
       <section class="section" id="status">
         <div class="event-status" id="event-status"></div>
       </section>
-
-      <div class="chapter">
-        <div class="chapter-eyebrow">Event Dashboard</div>
-        <div class="chapter-title">Insights</div>
-        <div class="chapter-sub">How your event is performing right now : engagement, audience reach, and recommended actions.</div>
-      </div>
 
       <section class="section" id="actions">
         <div class="section-head">
@@ -2152,40 +2202,11 @@
         </div>
         <div class="action-center-list" id="actions-list"></div>
       </section>
-      <section class="section" id="engagement">
-        <div class="section-head">
-          <h2 class="section-title">Guest Engagement</h2>
-        </div>
-        <div class="stats-grid" id="stats-grid"></div>
-      </section>
-      <section class="section" id="audience" style="display:none">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">Audience Location</h2>
-            <div class="section-sub">Where engaged guests are coming from, based on interactions.</div>
-          </div>
-        </div>
-        <div class="countries-card" id="countries-card"></div>
-      </section>
-      <section class="section" id="unlocks">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">Unlocks</h2>
-            <div class="section-sub">More analytics open up as the event approaches, runs, and wraps.</div>
-          </div>
-        </div>
-        <div class="locked-grid" id="locked-grid"></div>
-      </section>
-
-      <div class="chapter">
-        <div class="chapter-eyebrow">Event Dashboard</div>
-        <div class="chapter-title">View</div>
-        <div class="chapter-sub">Everything attendees see in the TRODDR app : overview, vendors, sponsors, schedule, map, and more.</div>
-      </div>
 
       <section class="section" id="overview">
         <div class="section-head">
-          <h2 class="section-title">Event Overview</h2>
+          <h2 class="section-title">Public Preview</h2>
+          <div class="section-sub">What attendees see in the TRODDR app, plus a quick read of what's working.</div>
         </div>
         <div class="preview-grid">
           <div class="preview-card" id="preview-card"></div>
@@ -2195,16 +2216,25 @@
           </div>
         </div>
       </section>
-      <section class="section" id="info">
-        <div class="section-head section-head-with-edit">
-          <div>
-            <h2 class="section-title">Info</h2>
-            <div class="section-sub">Organizer, dress code, age restriction, amenities, and other public facts.</div>
-          </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon · use Edit Core Details for now">Edit</button>
+
+      </div><!-- /view-pane-overview -->
+
+      <!-- ============ ANALYTICS ============ -->
+      <div class="view-pane" id="view-pane-analytics" data-view="analytics" role="tabpanel" hidden>
+
+      <div class="chapter">
+        <div class="chapter-eyebrow">Event Dashboard</div>
+        <div class="chapter-title">Analytics</div>
+        <div class="chapter-sub">How your event is performing right now: engagement, vendor activity, and audience reach.</div>
+      </div>
+
+      <section class="section" id="engagement">
+        <div class="section-head">
+          <h2 class="section-title">Guest Engagement</h2>
         </div>
-        <div class="info-card" id="info-card"></div>
+        <div class="stats-grid" id="stats-grid"></div>
       </section>
+
       <section class="section" id="vendors">
         <div class="section-head">
           <div>
@@ -2240,25 +2270,46 @@
         <div class="vendor-stats" id="vendor-stats" style="margin-top:18px;"></div>
         <div class="vendor-list" id="vendor-list"></div>
       </section>
-      <section class="section" id="sponsors">
-        <div class="section-head section-head-with-edit">
+
+      <section class="section" id="audience" style="display:none">
+        <div class="section-head">
           <div>
-            <h2 class="section-title">Sponsors</h2>
-            <div class="section-sub">Active sponsor lineup for this event.</div>
+            <h2 class="section-title">Audience Location</h2>
+            <div class="section-sub">Where engaged guests are coming from, based on interactions.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
         </div>
-        <div class="sponsors-grid" id="sponsors-grid"></div>
+        <div class="countries-card" id="countries-card"></div>
       </section>
-      <section class="section" id="tickets">
+      <section class="section" id="unlocks">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Unlocks</h2>
+            <div class="section-sub">More analytics open up as the event approaches, runs, and wraps.</div>
+          </div>
+        </div>
+        <div class="locked-grid" id="locked-grid"></div>
+      </section>
+
+      </div><!-- /view-pane-analytics -->
+
+      <!-- ============ DETAILS ============ -->
+      <div class="view-pane" id="view-pane-details" data-view="details" role="tabpanel" hidden>
+
+      <div class="chapter">
+        <div class="chapter-eyebrow">Event Dashboard</div>
+        <div class="chapter-title">Event Details</div>
+        <div class="chapter-sub">Everything attendees see in the TRODDR app: schedule, map, tickets, sponsors, and more.</div>
+      </div>
+
+      <section class="section" id="info">
         <div class="section-head section-head-with-edit">
           <div>
-            <h2 class="section-title">Tickets</h2>
-            <div class="section-sub">Online ticket links and physical pickup locations.</div>
+            <h2 class="section-title">Info</h2>
+            <div class="section-sub">Organizer, dress code, age restriction, amenities, and other public facts.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon · use Edit Core Details for now">Edit</button>
         </div>
-        <div class="info-card" id="tickets-card"></div>
+        <div class="info-card" id="info-card"></div>
       </section>
       <section class="section" id="schedule">
         <div class="section-head section-head-with-edit">
@@ -2396,6 +2447,26 @@
           <div class="fp-invite-list" id="fp-invite-list"></div>
         </div>
       </section>
+      <section class="section" id="tickets">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Tickets</h2>
+            <div class="section-sub">Online ticket links and physical pickup locations.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="info-card" id="tickets-card"></div>
+      </section>
+      <section class="section" id="sponsors">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Sponsors</h2>
+            <div class="section-sub">Active sponsor lineup for this event.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="sponsors-grid" id="sponsors-grid"></div>
+      </section>
       <section class="section" id="transportation">
         <div class="section-head section-head-with-edit">
           <div>
@@ -2516,6 +2587,8 @@
           <div id="edit-transport-list"></div>
         </div>
       </section>
+
+      </div><!-- /view-pane-details -->
 
       <!-- ── Vendor edit modal ── -->
       <div class="ve-modal-backdrop" id="ve-modal-backdrop">
@@ -4990,22 +5063,23 @@
       capabilities: capabilities,
       partner: opts.partner,
       jumpLinks: [
+        { header: 'Overview' },
         { section: 'status',         icon: 'ic-info',     label: 'Status' },
-
-        { header: 'Insights' },
         { section: 'actions',        icon: 'ic-bolt',     label: 'Action Center' },
+        { section: 'overview',       icon: 'ic-info',     label: 'Public Preview' },
+
+        { header: 'Analytics' },
         { section: 'engagement',     icon: 'ic-chart',    label: 'Engagement' },
+        { section: 'vendors',        icon: 'ic-shop',     label: 'Vendor Insights' },
         { section: 'audience',       icon: 'ic-users',    label: 'Audience', id: 'nav-audience', hidden: !opts.hasAudience },
         { section: 'unlocks',        icon: 'ic-lock',     label: 'Unlocks' },
 
-        { header: 'View' },
-        { section: 'overview',       icon: 'ic-info',     label: 'Overview' },
+        { header: 'Details' },
         { section: 'info',           icon: 'ic-doc',      label: 'Info' },
-        { section: 'vendors',        icon: 'ic-shop',     label: 'Vendors' },
-        { section: 'sponsors',       icon: 'ic-bolt',     label: 'Sponsors' },
-        { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
         { section: 'schedule',       icon: 'ic-calendar', label: 'Schedule' },
         { section: 'map',            icon: 'ic-map',      label: 'Map' },
+        { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
+        { section: 'sponsors',       icon: 'ic-bolt',     label: 'Sponsors' },
         { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
         { section: 'passes',         icon: 'ic-pass',     label: 'Passes' },
         { section: 'bands',          icon: 'ic-mic',      label: 'Bands', id: 'nav-bands', hidden: !opts.isCarnival },
@@ -5020,6 +5094,33 @@
       ],
     });
     window.PartnerSidebar?.setupScrollspy();
+    wireSidebarJumpLinks();
+  }
+
+  // Map each jump-link target section to the view-pane that contains it,
+  // so a sidebar click switches view first, then scrolls.
+  function viewForSection(sectionId) {
+    const el = document.getElementById(sectionId);
+    if (!el) return null;
+    const pane = el.closest('.view-pane');
+    return pane ? pane.getAttribute('data-view') : null;
+  }
+
+  function wireSidebarJumpLinks() {
+    document.querySelectorAll('.sidebar .jump-link').forEach((link) => {
+      if (link.dataset.viewWired) return;
+      link.dataset.viewWired = '1';
+      link.addEventListener('click', (e) => {
+        const sectionId = link.dataset.section;
+        const view = viewForSection(sectionId);
+        if (!view) return; // let default anchor behaviour run
+        e.preventDefault();
+        const tab = document.querySelector(`#view-tabs .view-tab[data-view="${view}"]`);
+        if (tab && !tab.classList.contains('is-active')) tab.click();
+        const target = document.getElementById(sectionId);
+        if (target) requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      });
+    });
   }
 
   // ── Load ─────────────────────────────────────────────────
@@ -5187,5 +5288,67 @@
 </script>
 
 <script src="/js/partner-messages.js" defer></script>
+
+<script>
+  // View routing: ?view=overview | analytics | details
+  (function () {
+    const VIEWS = ['overview', 'analytics', 'details'];
+    const DEFAULT_VIEW = 'overview';
+
+    function resolveView(name) {
+      return VIEWS.includes(name) ? name : DEFAULT_VIEW;
+    }
+
+    function paramView() {
+      const params = new URLSearchParams(location.search);
+      return resolveView(params.get('view'));
+    }
+
+    function applyView(view, opts) {
+      view = resolveView(view);
+      document.querySelectorAll('.view-pane').forEach(pane => {
+        const match = pane.getAttribute('data-view') === view;
+        pane.hidden = !match;
+      });
+      document.querySelectorAll('.view-tab').forEach(tab => {
+        const match = tab.getAttribute('data-view') === view;
+        tab.classList.toggle('is-active', match);
+        tab.setAttribute('aria-selected', match ? 'true' : 'false');
+      });
+      if (opts && opts.scrollTop) window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+      // Nudge the sidebar scrollspy to recompute now that visible
+      // sections have changed.
+      window.dispatchEvent(new Event('scroll'));
+    }
+
+    function navigateTo(view, replace) {
+      view = resolveView(view);
+      const params = new URLSearchParams(location.search);
+      if (view === DEFAULT_VIEW) params.delete('view');
+      else params.set('view', view);
+      const qs = params.toString();
+      const url = location.pathname + (qs ? '?' + qs : '') + location.hash;
+      const method = replace ? 'replaceState' : 'pushState';
+      history[method]({ view }, '', url);
+      applyView(view, { scrollTop: true });
+    }
+
+    function wireTabs() {
+      document.querySelectorAll('#view-tabs .view-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          navigateTo(tab.getAttribute('data-view'), false);
+        });
+      });
+    }
+
+    window.addEventListener('popstate', () => applyView(paramView()));
+
+    document.addEventListener('DOMContentLoaded', () => {
+      wireTabs();
+      applyView(paramView());
+    });
+  })();
+</script>
+
 </body>
 </html>
