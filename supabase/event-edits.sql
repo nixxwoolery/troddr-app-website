@@ -1,0 +1,369 @@
+-- ============================================================
+-- event-edits : RPCs for the Manage Sponsors / Tickets /
+-- Transportation / Schedule editors on the partner-event
+-- dashboard's Edits chapter. All token-gated to the event.
+-- ============================================================
+
+-- ── Helper : resolve token → event_id ───────────────────────
+create or replace function public._partner_event_id_from_token(p_token text)
+returns uuid
+language sql
+security definer
+set search_path = public
+as $$
+  select id from public.events where partner_access_token = p_token limit 1;
+$$;
+
+grant execute on function public._partner_event_id_from_token(text) to anon, authenticated;
+
+
+-- ============================================================
+-- SPONSORS
+-- ============================================================
+
+-- Upsert : if p_event_sponsor_id is null, INSERT a new sponsor + event_sponsor.
+-- Otherwise UPDATE the existing rows.
+create or replace function public.upsert_event_sponsor(
+  p_token              text,
+  p_event_sponsor_id   uuid default null,
+  p_sponsor_name       text default null,
+  p_tier               text default null,
+  p_display_tier_label text default null,
+  p_custom_tagline     text default null,
+  p_logo_url           text default null,
+  p_website            text default null,
+  p_instagram          text default null,
+  p_is_featured        boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event_id   uuid;
+  v_sponsor_id uuid;
+  v_es_id      uuid;
+  v_slug       text;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then
+    return jsonb_build_object('ok', false, 'error', 'invalid_token');
+  end if;
+  if p_sponsor_name is null or btrim(p_sponsor_name) = '' then
+    return jsonb_build_object('ok', false, 'error', 'sponsor_name_required');
+  end if;
+
+  if p_event_sponsor_id is null then
+    -- Create a sponsor row + event_sponsor link
+    v_slug := lower(regexp_replace(p_sponsor_name || '-' || substr(encode(gen_random_bytes(3), 'hex'), 1, 6), '[^a-z0-9-]+', '-', 'g'));
+    insert into public.sponsors (name, slug, logo_url, website, description, instagram, is_active)
+         values (p_sponsor_name, v_slug, p_logo_url, p_website, p_custom_tagline, p_instagram, true)
+      returning id into v_sponsor_id;
+
+    insert into public.event_sponsors (event_id, sponsor_id, tier, display_tier_label, custom_tagline, is_featured, is_active)
+         values (v_event_id, v_sponsor_id, coalesce(p_tier, 'partner'), p_display_tier_label, p_custom_tagline, coalesce(p_is_featured, false), true)
+      returning id into v_es_id;
+  else
+    -- Update : confirm ownership, then update both tables
+    select id, sponsor_id into v_es_id, v_sponsor_id
+      from public.event_sponsors
+     where id = p_event_sponsor_id and event_id = v_event_id;
+    if v_es_id is null then
+      return jsonb_build_object('ok', false, 'error', 'sponsor_not_on_event');
+    end if;
+
+    update public.event_sponsors
+       set tier               = coalesce(p_tier,               tier),
+           display_tier_label = coalesce(p_display_tier_label, display_tier_label),
+           custom_tagline     = coalesce(p_custom_tagline,     custom_tagline),
+           is_featured        = coalesce(p_is_featured,        is_featured),
+           updated_at         = now()
+     where id = v_es_id;
+
+    update public.sponsors
+       set name        = coalesce(p_sponsor_name, name),
+           logo_url    = coalesce(p_logo_url,     logo_url),
+           website     = coalesce(p_website,      website),
+           instagram   = coalesce(p_instagram,    instagram),
+           description = coalesce(p_custom_tagline, description),
+           updated_at  = now()
+     where id = v_sponsor_id;
+  end if;
+
+  return jsonb_build_object('ok', true, 'event_sponsor_id', v_es_id, 'sponsor_id', v_sponsor_id);
+exception when others then
+  return jsonb_build_object('ok', false, 'error', SQLERRM);
+end;
+$$;
+
+grant execute on function public.upsert_event_sponsor(text, uuid, text, text, text, text, text, text, text, boolean)
+  to anon, authenticated;
+
+
+create or replace function public.delete_event_sponsor(
+  p_token            text,
+  p_event_sponsor_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_event_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
+  delete from public.event_sponsors where id = p_event_sponsor_id and event_id = v_event_id;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+grant execute on function public.delete_event_sponsor(text, uuid) to anon, authenticated;
+
+
+-- ============================================================
+-- TICKET LOCATIONS
+-- ============================================================
+
+create or replace function public.upsert_ticket_location(
+  p_token         text,
+  p_id            uuid default null,
+  p_name          text default null,
+  p_is_online     boolean default false,
+  p_ticket_url    text default null,
+  p_provider_type text default null,
+  p_address       text default null,
+  p_town          text default null,
+  p_parish        text default null,
+  p_contact_phone text default null,
+  p_opening_hours text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event_id uuid;
+  v_id       uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
+  if p_name is null or btrim(p_name) = '' then
+    return jsonb_build_object('ok', false, 'error', 'name_required');
+  end if;
+
+  if p_id is null then
+    insert into public.ticket_locations (
+      event_id, name, address, parish, town, contact_phone, opening_hours,
+      is_online, ticket_url, provider_type, is_active
+    ) values (
+      v_event_id, p_name, p_address, p_parish, p_town, p_contact_phone, p_opening_hours,
+      coalesce(p_is_online, false), p_ticket_url, p_provider_type, true
+    ) returning id into v_id;
+  else
+    update public.ticket_locations
+       set name           = coalesce(p_name,          name),
+           address        = coalesce(p_address,       address),
+           parish         = coalesce(p_parish,        parish),
+           town           = coalesce(p_town,          town),
+           contact_phone  = coalesce(p_contact_phone, contact_phone),
+           opening_hours  = coalesce(p_opening_hours, opening_hours),
+           is_online      = coalesce(p_is_online,     is_online),
+           ticket_url     = coalesce(p_ticket_url,    ticket_url),
+           provider_type  = coalesce(p_provider_type, provider_type),
+           updated_at     = now()
+     where id = p_id and event_id = v_event_id
+     returning id into v_id;
+    if v_id is null then return jsonb_build_object('ok', false, 'error', 'not_on_event'); end if;
+  end if;
+
+  return jsonb_build_object('ok', true, 'id', v_id);
+exception when others then
+  return jsonb_build_object('ok', false, 'error', SQLERRM);
+end;
+$$;
+grant execute on function public.upsert_ticket_location(text, uuid, text, boolean, text, text, text, text, text, text, text)
+  to anon, authenticated;
+
+
+create or replace function public.delete_ticket_location(p_token text, p_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_event_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
+  delete from public.ticket_locations where id = p_id and event_id = v_event_id;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+grant execute on function public.delete_ticket_location(text, uuid) to anon, authenticated;
+
+
+-- ============================================================
+-- TRANSPORT ROUTES
+-- ============================================================
+
+create or replace function public.upsert_transport_route(
+  p_token     text,
+  p_id        uuid default null,
+  p_name      text default null,
+  p_color     text default '#0a7aff',
+  p_direction text default 'both',
+  p_frequency text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event_id uuid; v_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
+  if p_name is null or btrim(p_name) = '' then
+    return jsonb_build_object('ok', false, 'error', 'name_required');
+  end if;
+  if p_direction not in ('both', 'to_event', 'return') then
+    return jsonb_build_object('ok', false, 'error', 'invalid_direction');
+  end if;
+
+  if p_id is null then
+    insert into public.event_transport_routes (event_id, name, color, direction, frequency)
+         values (v_event_id, p_name, coalesce(p_color, '#0a7aff'), p_direction, p_frequency)
+      returning id into v_id;
+  else
+    update public.event_transport_routes
+       set name      = coalesce(p_name,      name),
+           color     = coalesce(p_color,     color),
+           direction = coalesce(p_direction, direction),
+           frequency = coalesce(p_frequency, frequency)
+     where id = p_id and event_id = v_event_id
+     returning id into v_id;
+    if v_id is null then return jsonb_build_object('ok', false, 'error', 'not_on_event'); end if;
+  end if;
+
+  return jsonb_build_object('ok', true, 'id', v_id);
+exception when others then
+  return jsonb_build_object('ok', false, 'error', SQLERRM);
+end;
+$$;
+grant execute on function public.upsert_transport_route(text, uuid, text, text, text, text)
+  to anon, authenticated;
+
+
+create or replace function public.delete_transport_route(p_token text, p_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_event_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
+  delete from public.event_transport_routes where id = p_id and event_id = v_event_id;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+grant execute on function public.delete_transport_route(text, uuid) to anon, authenticated;
+
+
+-- ============================================================
+-- SCHEDULE DAYS
+-- ============================================================
+
+create or replace function public.upsert_schedule_day(
+  p_token        text,
+  p_id           uuid default null,
+  p_date         date default null,
+  p_label        text default null,
+  p_description  text default null,
+  p_gates_open   time default null,
+  p_gates_close  time default null,
+  p_is_cancelled boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event_id uuid; v_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
+  if p_date is null then return jsonb_build_object('ok', false, 'error', 'date_required'); end if;
+
+  if p_id is null then
+    insert into public.event_schedule_days (event_id, date, label, description, gates_open, gates_close, is_cancelled)
+         values (v_event_id, p_date, p_label, p_description, p_gates_open, p_gates_close, coalesce(p_is_cancelled, false))
+      returning id into v_id;
+  else
+    update public.event_schedule_days
+       set date         = coalesce(p_date,         date),
+           label        = coalesce(p_label,        label),
+           description  = coalesce(p_description,  description),
+           gates_open   = coalesce(p_gates_open,   gates_open),
+           gates_close  = coalesce(p_gates_close,  gates_close),
+           is_cancelled = coalesce(p_is_cancelled, is_cancelled),
+           updated_at   = now()
+     where id = p_id and event_id = v_event_id
+     returning id into v_id;
+    if v_id is null then return jsonb_build_object('ok', false, 'error', 'not_on_event'); end if;
+  end if;
+
+  return jsonb_build_object('ok', true, 'id', v_id);
+exception when others then
+  return jsonb_build_object('ok', false, 'error', SQLERRM);
+end;
+$$;
+grant execute on function public.upsert_schedule_day(text, uuid, date, text, text, time, time, boolean)
+  to anon, authenticated;
+
+
+create or replace function public.delete_schedule_day(p_token text, p_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_event_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
+  delete from public.event_schedule_days where id = p_id and event_id = v_event_id;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+grant execute on function public.delete_schedule_day(text, uuid) to anon, authenticated;
+
+
+-- ============================================================
+-- EXTEND partner-event-extras RPC TO INCLUDE schedule_days
+--
+-- The dashboard's "Manage Schedule" editor reads from
+-- extras.schedule_days. Add this aggregation to your existing
+-- get_partner_event_extras_by_token RPC:
+--
+--   'schedule_days', coalesce((
+--     select jsonb_agg(jsonb_build_object(
+--       'id',           d.id,
+--       'date',         d.date,
+--       'date_display', d.date_display,
+--       'label',        d.label,
+--       'description',  d.description,
+--       'gates_open',   d.gates_open,
+--       'gates_close',  d.gates_close,
+--       'is_cancelled', d.is_cancelled,
+--       'items_count',  (select count(*) from public.event_schedule_items i where i.day_id = d.id)
+--     ) order by d.date)
+--     from public.event_schedule_days d
+--     where d.event_id = v_event_id
+--   ), '[]'::jsonb),
+-- ============================================================

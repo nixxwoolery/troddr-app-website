@@ -1165,6 +1165,45 @@
   .ve-status.error   { color: var(--red); display: block; }
   .ve-status.success { color: var(--green); display: block; }
 
+  /* ── CHAPTER DIVIDERS (Insights / View / Edits) ── */
+  .chapter {
+    margin: 28px 0 18px;
+    padding: 18px 22px;
+    background: linear-gradient(180deg, var(--bg-soft) 0%, #fff 100%);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--brand-primary, #0a7aff);
+    border-radius: 12px;
+  }
+  .chapter:first-child { margin-top: 6px; }
+  .chapter-eyebrow {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--brand-primary, #0a7aff);
+    margin-bottom: 4px;
+  }
+  .chapter-title {
+    font-size: 22px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.4px;
+    margin-bottom: 4px;
+  }
+  .chapter-sub { font-size: 13px; color: var(--grey-mid); line-height: 1.4; }
+
+  /* ── EDIT CARDS (list-with-add pattern) ── */
+  .edit-list-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; }
+  .edit-list-card .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+  .edit-list-card .head .lead { font-size: 13px; color: var(--grey-mid); }
+  .edit-list-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: #fff; }
+  .edit-list-row:last-child { margin-bottom: 0; }
+  .edit-list-row .body { flex: 1; min-width: 0; }
+  .edit-list-row .name { font-weight: 700; color: var(--black); font-size: 14px; }
+  .edit-list-row .meta { font-size: 12px; color: var(--grey-mid); margin-top: 2px; }
+  .edit-list-row .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .edit-list-empty { padding: 24px 16px; text-align: center; color: var(--grey-mid); font-size: 13px; background: var(--bg-soft); border: 1px dashed var(--border); border-radius: 10px; }
+  .add-btn { background: var(--brand-primary); color: var(--brand-text); border: 1px solid var(--brand-primary); padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+  .add-btn:hover:not(:disabled) { filter: brightness(1.08); }
+  .add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
   /* ── FLOOR PLAN EDITOR ── */
   .fp-card {
     background: #fff;
@@ -2097,10 +2136,52 @@
   <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
 
   <main class="main">
-
       <section class="section" id="status">
         <div class="event-status" id="event-status"></div>
       </section>
+
+      <div class="chapter">
+        <div class="chapter-eyebrow">Event Dashboard</div>
+        <div class="chapter-title">Insights</div>
+        <div class="chapter-sub">How your event is performing right now : engagement, audience reach, and recommended actions.</div>
+      </div>
+
+      <section class="section" id="actions">
+        <div class="section-head">
+          <h2 class="section-title">Action Center</h2>
+        </div>
+        <div class="action-center-list" id="actions-list"></div>
+      </section>
+      <section class="section" id="engagement">
+        <div class="section-head">
+          <h2 class="section-title">Guest Engagement</h2>
+        </div>
+        <div class="stats-grid" id="stats-grid"></div>
+      </section>
+      <section class="section" id="audience" style="display:none">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Audience Location</h2>
+            <div class="section-sub">Where engaged guests are coming from, based on interactions.</div>
+          </div>
+        </div>
+        <div class="countries-card" id="countries-card"></div>
+      </section>
+      <section class="section" id="unlocks">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Unlocks</h2>
+            <div class="section-sub">More analytics open up as the event approaches, runs, and wraps.</div>
+          </div>
+        </div>
+        <div class="locked-grid" id="locked-grid"></div>
+      </section>
+
+      <div class="chapter">
+        <div class="chapter-eyebrow">Event Dashboard</div>
+        <div class="chapter-title">View</div>
+        <div class="chapter-sub">Everything attendees see in the TRODDR app : overview, vendors, sponsors, schedule, map, and more.</div>
+      </div>
 
       <section class="section" id="overview">
         <div class="section-head">
@@ -2114,7 +2195,16 @@
           </div>
         </div>
       </section>
-
+      <section class="section" id="info">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Info</h2>
+            <div class="section-sub">Organizer, dress code, age restriction, amenities, and other public facts.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon · use Edit Core Details for now">Edit</button>
+        </div>
+        <div class="info-card" id="info-card"></div>
+      </section>
       <section class="section" id="vendors">
         <div class="section-head">
           <div>
@@ -2150,48 +2240,26 @@
         <div class="vendor-stats" id="vendor-stats" style="margin-top:18px;"></div>
         <div class="vendor-list" id="vendor-list"></div>
       </section>
-
-      <!-- Vendor edit modal -->
-      <div class="ve-modal-backdrop" id="ve-modal-backdrop">
-        <form class="ve-modal" id="ve-modal" autocomplete="off">
-          <h3>Edit vendor</h3>
-          <div class="ve-modal-sub" id="ve-modal-sub"></div>
-          <div class="ve-field">
-            <label for="ve-name">Name</label>
-            <input id="ve-name" type="text" maxlength="200" />
+      <section class="section" id="sponsors">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Sponsors</h2>
+            <div class="section-sub">Active sponsor lineup for this event.</div>
           </div>
-          <div class="ve-field">
-            <label for="ve-booth">Booth number</label>
-            <input id="ve-booth" type="text" maxlength="40" placeholder="e.g. A-12" />
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="sponsors-grid" id="sponsors-grid"></div>
+      </section>
+      <section class="section" id="tickets">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Tickets</h2>
+            <div class="section-sub">Online ticket links and physical pickup locations.</div>
           </div>
-          <div class="ve-field">
-            <label for="ve-type">Type</label>
-            <select id="ve-type">
-              <option value="">— Select —</option>
-              <option value="food">Food</option>
-              <option value="drink">Drink</option>
-              <option value="merch">Merch</option>
-              <option value="info">Info</option>
-              <option value="experience">Experience</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="ve-field">
-            <label for="ve-desc">Description</label>
-            <textarea id="ve-desc" rows="3" maxlength="500"></textarea>
-          </div>
-          <div class="ve-field checkbox">
-            <input id="ve-featured" type="checkbox" />
-            <label for="ve-featured">Featured (pin to top of lineup)</label>
-          </div>
-          <div class="ve-status" id="ve-status"></div>
-          <div class="ve-actions">
-            <button type="button" class="ve-btn" id="ve-cancel">Cancel</button>
-            <button type="submit" class="ve-btn primary" id="ve-save">Save</button>
-          </div>
-        </form>
-      </div>
-
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="info-card" id="tickets-card"></div>
+      </section>
       <section class="section" id="schedule">
         <div class="section-head section-head-with-edit">
           <div>
@@ -2202,7 +2270,6 @@
         </div>
         <div class="schedule-card" id="schedule-card"></div>
       </section>
-
       <section class="section" id="map">
         <div class="section-head">
           <div>
@@ -2329,7 +2396,16 @@
           <div class="fp-invite-list" id="fp-invite-list"></div>
         </div>
       </section>
-
+      <section class="section" id="transportation">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Transportation</h2>
+            <div class="section-sub">Bus routes, stops, and times for getting attendees to and from the event.</div>
+          </div>
+          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+        </div>
+        <div class="info-card" id="transportation-card"></div>
+      </section>
       <section class="section" id="passes">
         <div class="section-head section-head-with-edit">
           <div>
@@ -2342,51 +2418,6 @@
           <div class="section-empty">No passes configured yet.</div>
         </div>
       </section>
-
-      <section class="section" id="info">
-        <div class="section-head section-head-with-edit">
-          <div>
-            <h2 class="section-title">Info</h2>
-            <div class="section-sub">Organizer, dress code, age restriction, amenities, and other public facts.</div>
-          </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon · use Edit Core Details for now">Edit</button>
-        </div>
-        <div class="info-card" id="info-card"></div>
-      </section>
-
-      <section class="section" id="sponsors">
-        <div class="section-head section-head-with-edit">
-          <div>
-            <h2 class="section-title">Sponsors</h2>
-            <div class="section-sub">Active sponsor lineup for this event.</div>
-          </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
-        </div>
-        <div class="sponsors-grid" id="sponsors-grid"></div>
-      </section>
-
-      <section class="section" id="tickets">
-        <div class="section-head section-head-with-edit">
-          <div>
-            <h2 class="section-title">Tickets</h2>
-            <div class="section-sub">Online ticket links and physical pickup locations.</div>
-          </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
-        </div>
-        <div class="info-card" id="tickets-card"></div>
-      </section>
-
-      <section class="section" id="transportation">
-        <div class="section-head section-head-with-edit">
-          <div>
-            <h2 class="section-title">Transportation</h2>
-            <div class="section-sub">Bus routes, stops, and times for getting attendees to and from the event.</div>
-          </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
-        </div>
-        <div class="info-card" id="transportation-card"></div>
-      </section>
-
       <section class="section" id="bands" style="display:none">
         <div class="section-head section-head-with-edit">
           <div>
@@ -2397,14 +2428,6 @@
         </div>
         <div class="info-card" id="bands-card"></div>
       </section>
-
-      <section class="section" id="actions">
-        <div class="section-head">
-          <h2 class="section-title">Action Center</h2>
-        </div>
-        <div class="action-center-list" id="actions-list"></div>
-      </section>
-
       <section class="section" id="updates" style="display:none">
         <div class="section-head">
           <div>
@@ -2415,6 +2438,12 @@
         <div class="updates-list" id="updates-list"></div>
       </section>
 
+      <div class="chapter">
+        <div class="chapter-eyebrow">Event Dashboard</div>
+        <div class="chapter-title">Edits</div>
+        <div class="chapter-sub">Add, change, or remove content. Updates publish to the TRODDR app immediately.</div>
+      </div>
+
       <section class="section section-edit" id="edit">
         <div class="section-head">
           <div>
@@ -2424,33 +2453,221 @@
         </div>
         <div class="edit-card" id="edit-card"></div>
       </section>
-
-      <section class="section" id="engagement">
-        <div class="section-head">
-          <h2 class="section-title">Guest Engagement</h2>
-        </div>
-        <div class="stats-grid" id="stats-grid"></div>
-      </section>
-
-      <section class="section" id="audience" style="display:none">
+      <section class="section" id="edit-sponsors">
         <div class="section-head">
           <div>
-            <h2 class="section-title">Audience Location</h2>
-            <div class="section-sub">Where engaged guests are coming from, based on interactions.</div>
+            <h2 class="section-title">Manage Sponsors</h2>
+            <div class="section-sub">Add, edit, or remove sponsors for this event.</div>
           </div>
         </div>
-        <div class="countries-card" id="countries-card"></div>
+        <div class="edit-list-card">
+          <div class="head">
+            <span class="lead" id="edit-sponsors-lead">Loading...</span>
+            <button type="button" class="add-btn" id="add-sponsor-btn">+ Add sponsor</button>
+          </div>
+          <div id="edit-sponsors-list"></div>
+        </div>
       </section>
 
-      <section class="section" id="unlocks">
+      <section class="section" id="edit-tickets">
         <div class="section-head">
           <div>
-            <h2 class="section-title">Unlocks</h2>
-            <div class="section-sub">More analytics open up as the event approaches, runs, and wraps.</div>
+            <h2 class="section-title">Manage Tickets</h2>
+            <div class="section-sub">Online ticket links and physical pickup locations.</div>
           </div>
         </div>
-        <div class="locked-grid" id="locked-grid"></div>
+        <div class="edit-list-card">
+          <div class="head">
+            <span class="lead" id="edit-tickets-lead">Loading...</span>
+            <button type="button" class="add-btn" id="add-ticket-loc-btn">+ Add ticket location</button>
+          </div>
+          <div id="edit-tickets-list"></div>
+        </div>
       </section>
+
+      <section class="section" id="edit-schedule">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Manage Schedule</h2>
+            <div class="section-sub">Days, set times, and must-see moments.</div>
+          </div>
+        </div>
+        <div class="edit-list-card">
+          <div class="head">
+            <span class="lead" id="edit-schedule-lead">Loading...</span>
+            <button type="button" class="add-btn" id="add-schedule-day-btn">+ Add day</button>
+          </div>
+          <div id="edit-schedule-list"></div>
+        </div>
+      </section>
+
+      <section class="section" id="edit-transportation">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Manage Transportation</h2>
+            <div class="section-sub">Bus routes, stops, and times for getting attendees to and from the event.</div>
+          </div>
+        </div>
+        <div class="edit-list-card">
+          <div class="head">
+            <span class="lead" id="edit-transport-lead">Loading...</span>
+            <button type="button" class="add-btn" id="add-transport-route-btn">+ Add route</button>
+          </div>
+          <div id="edit-transport-list"></div>
+        </div>
+      </section>
+
+      <!-- ── Vendor edit modal ── -->
+      <div class="ve-modal-backdrop" id="ve-modal-backdrop">
+        <form class="ve-modal" id="ve-modal" autocomplete="off">
+          <h3>Edit vendor</h3>
+          <div class="ve-modal-sub" id="ve-modal-sub"></div>
+          <div class="ve-field"><label for="ve-name">Name</label>
+            <input id="ve-name" type="text" maxlength="200" /></div>
+          <div class="ve-field"><label for="ve-booth">Booth number</label>
+            <input id="ve-booth" type="text" maxlength="40" placeholder="e.g. A-12" /></div>
+          <div class="ve-field"><label for="ve-type">Type</label>
+            <select id="ve-type">
+              <option value="">— Select —</option>
+              <option value="food">Food</option><option value="drink">Drink</option>
+              <option value="merch">Merch</option><option value="info">Info</option>
+              <option value="experience">Experience</option><option value="other">Other</option>
+            </select></div>
+          <div class="ve-field"><label for="ve-desc">Description</label>
+            <textarea id="ve-desc" rows="3" maxlength="500"></textarea></div>
+          <div class="ve-field checkbox"><input id="ve-featured" type="checkbox" />
+            <label for="ve-featured">Featured (pin to top of lineup)</label></div>
+          <div class="ve-status" id="ve-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="ve-cancel">Cancel</button>
+            <button type="submit" class="ve-btn primary" id="ve-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Sponsor edit modal ── -->
+      <div class="ve-modal-backdrop" id="sp-modal-backdrop">
+        <form class="ve-modal" id="sp-modal" autocomplete="off">
+          <h3 id="sp-modal-title">Edit sponsor</h3>
+          <div class="ve-modal-sub" id="sp-modal-sub"></div>
+          <div class="ve-field"><label for="sp-name">Sponsor name</label>
+            <input id="sp-name" type="text" maxlength="200" required /></div>
+          <div class="ve-field"><label for="sp-tier">Tier</label>
+            <select id="sp-tier">
+              <option value="">— Select —</option>
+              <option value="presenting">Presenting</option>
+              <option value="title">Title</option>
+              <option value="platinum">Platinum</option>
+              <option value="gold">Gold</option>
+              <option value="silver">Silver</option>
+              <option value="bronze">Bronze</option>
+              <option value="partner">Partner</option>
+              <option value="community">Community</option>
+            </select></div>
+          <div class="ve-field"><label for="sp-tier-label">Custom tier label (optional)</label>
+            <input id="sp-tier-label" type="text" maxlength="60" placeholder="e.g. Refreshment Partner" /></div>
+          <div class="ve-field"><label for="sp-tagline">Tagline / description</label>
+            <textarea id="sp-tagline" rows="2" maxlength="240"></textarea></div>
+          <div class="ve-field"><label for="sp-logo">Logo URL</label>
+            <input id="sp-logo" type="url" maxlength="500" placeholder="https://..." /></div>
+          <div class="ve-field"><label for="sp-website">Website</label>
+            <input id="sp-website" type="url" maxlength="300" placeholder="https://..." /></div>
+          <div class="ve-field"><label for="sp-instagram">Instagram</label>
+            <input id="sp-instagram" type="text" maxlength="100" placeholder="@handle" /></div>
+          <div class="ve-field checkbox"><input id="sp-featured" type="checkbox" />
+            <label for="sp-featured">Featured (pin to top)</label></div>
+          <div class="ve-status" id="sp-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="sp-cancel">Cancel</button>
+            <button type="button" class="ve-btn" id="sp-delete" style="display:none;">Delete</button>
+            <button type="submit" class="ve-btn primary" id="sp-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Ticket location modal ── -->
+      <div class="ve-modal-backdrop" id="tl-modal-backdrop">
+        <form class="ve-modal" id="tl-modal" autocomplete="off">
+          <h3 id="tl-modal-title">Edit ticket location</h3>
+          <div class="ve-modal-sub">Where attendees can pick up or buy tickets for this event.</div>
+          <div class="ve-field"><label for="tl-name">Name</label>
+            <input id="tl-name" type="text" maxlength="200" required /></div>
+          <div class="ve-field checkbox"><input id="tl-online" type="checkbox" />
+            <label for="tl-online">Online provider (not a physical location)</label></div>
+          <div class="ve-field"><label for="tl-url">Ticket URL (for online providers)</label>
+            <input id="tl-url" type="url" maxlength="500" placeholder="https://..." /></div>
+          <div class="ve-field"><label for="tl-provider">Provider type</label>
+            <input id="tl-provider" type="text" maxlength="80" placeholder="e.g. Ticketmaster" /></div>
+          <div class="ve-field"><label for="tl-address">Address</label>
+            <input id="tl-address" type="text" maxlength="300" /></div>
+          <div class="ve-field"><label for="tl-town">Town</label>
+            <input id="tl-town" type="text" maxlength="100" /></div>
+          <div class="ve-field"><label for="tl-parish">Parish</label>
+            <input id="tl-parish" type="text" maxlength="100" /></div>
+          <div class="ve-field"><label for="tl-phone">Contact phone</label>
+            <input id="tl-phone" type="tel" maxlength="40" /></div>
+          <div class="ve-field"><label for="tl-hours">Opening hours</label>
+            <input id="tl-hours" type="text" maxlength="200" placeholder="e.g. Mon-Fri 9am-5pm" /></div>
+          <div class="ve-status" id="tl-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="tl-cancel">Cancel</button>
+            <button type="button" class="ve-btn" id="tl-delete" style="display:none;">Delete</button>
+            <button type="submit" class="ve-btn primary" id="tl-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Transport route modal ── -->
+      <div class="ve-modal-backdrop" id="tr-modal-backdrop">
+        <form class="ve-modal" id="tr-modal" autocomplete="off">
+          <h3 id="tr-modal-title">Edit transport route</h3>
+          <div class="ve-modal-sub">Bus or shuttle route for getting attendees to and from the event.</div>
+          <div class="ve-field"><label for="tr-name">Route name</label>
+            <input id="tr-name" type="text" maxlength="200" required /></div>
+          <div class="ve-field"><label for="tr-color">Route colour</label>
+            <input id="tr-color" type="color" value="#0a7aff" /></div>
+          <div class="ve-field"><label for="tr-direction">Direction</label>
+            <select id="tr-direction">
+              <option value="both">Both ways</option>
+              <option value="to_event">To event only</option>
+              <option value="return">Return only</option>
+            </select></div>
+          <div class="ve-field"><label for="tr-frequency">Frequency</label>
+            <input id="tr-frequency" type="text" maxlength="100" placeholder="e.g. Every 20 minutes" /></div>
+          <div class="ve-status" id="tr-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="tr-cancel">Cancel</button>
+            <button type="button" class="ve-btn" id="tr-delete" style="display:none;">Delete</button>
+            <button type="submit" class="ve-btn primary" id="tr-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Schedule day modal ── -->
+      <div class="ve-modal-backdrop" id="sd-modal-backdrop">
+        <form class="ve-modal" id="sd-modal" autocomplete="off">
+          <h3 id="sd-modal-title">Edit schedule day</h3>
+          <div class="ve-modal-sub">A day in the event schedule. Set times and a label.</div>
+          <div class="ve-field"><label for="sd-date">Date</label>
+            <input id="sd-date" type="date" required /></div>
+          <div class="ve-field"><label for="sd-label">Label</label>
+            <input id="sd-label" type="text" maxlength="50" placeholder="e.g. Opening Night" /></div>
+          <div class="ve-field"><label for="sd-desc">Description</label>
+            <textarea id="sd-desc" rows="2" maxlength="500"></textarea></div>
+          <div class="ve-field"><label for="sd-gates-open">Gates open</label>
+            <input id="sd-gates-open" type="time" /></div>
+          <div class="ve-field"><label for="sd-gates-close">Gates close</label>
+            <input id="sd-gates-close" type="time" /></div>
+          <div class="ve-field checkbox"><input id="sd-cancelled" type="checkbox" />
+            <label for="sd-cancelled">Cancelled</label></div>
+          <div class="ve-status" id="sd-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="sd-cancel">Cancel</button>
+            <button type="button" class="ve-btn" id="sd-delete" style="display:none;">Delete</button>
+            <button type="submit" class="ve-btn primary" id="sd-save">Save</button>
+          </div>
+        </form>
+      </div>
 
   </main>
 
@@ -3054,6 +3271,452 @@
       head.addEventListener('click', () => card.classList.toggle('expanded'));
     });
   }
+
+  // ============================================================
+  // EDIT-LIST EDITORS (Sponsors / Tickets / Schedule / Transport)
+  // Shared pattern : render a list with [Edit]/[Remove] buttons,
+  // call openXEditor to open a modal, save via RPC.
+  // ============================================================
+
+  function _getToken() {
+    return window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+  }
+  function _modalOpen(id)  { document.getElementById(id).classList.add('open'); }
+  function _modalClose(id) { document.getElementById(id).classList.remove('open'); }
+  function _setStatus(id, text, kind) {
+    const el = document.getElementById(id); if (!el) return;
+    el.className = 've-status' + (kind ? ' ' + kind : '');
+    el.textContent = text || '';
+  }
+  function titleCaseSafe(s) { return s ? String(s).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : ''; }
+
+  // ── Sponsors editor ────────────────────────────────────
+  let _editingSponsor = null;
+  function renderSponsorsEditor(data) {
+    const list = (data && data.sponsors) || [];
+    const lead = document.getElementById('edit-sponsors-lead');
+    const wrap = document.getElementById('edit-sponsors-list');
+    if (!lead || !wrap) return;
+    lead.textContent = list.length ? `${list.length} sponsor${list.length === 1 ? '' : 's'} on this event.` : 'No sponsors added yet.';
+    if (!list.length) {
+      wrap.innerHTML = `<div class="edit-list-empty">Click + Add sponsor to create the first one.</div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(s => `
+      <div class="edit-list-row" data-id="${escapeHtml(s.event_sponsor_id || s.id || '')}">
+        <div class="body">
+          <div class="name">${escapeHtml(s.sponsor_name || s.name || 'Unnamed sponsor')}</div>
+          <div class="meta">
+            ${escapeHtml(titleCaseSafe(s.display_tier_label || s.tier || '—'))}
+            ${s.is_featured ? ' · Featured' : ''}
+            ${s.website ? ' · ' + escapeHtml(s.website.replace(/^https?:\/\//, '')) : ''}
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="ve-btn" data-action="edit">Edit</button>
+        </div>
+      </div>`).join('');
+    wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-id]').dataset.id;
+        const s = list.find(x => (x.event_sponsor_id || x.id) === id);
+        if (s) openSponsorEditor(s);
+      });
+    });
+  }
+  function openSponsorEditor(s) {
+    _editingSponsor = s ? { ...s } : { _isNew: true };
+    document.getElementById('sp-modal-title').textContent = s ? 'Edit sponsor' : 'Add sponsor';
+    document.getElementById('sp-modal-sub').textContent = s ? (s.sponsor_name || s.name || '') : 'New sponsor for this event.';
+    document.getElementById('sp-name').value      = s ? (s.sponsor_name || s.name || '') : '';
+    document.getElementById('sp-tier').value      = s ? (s.tier || '') : '';
+    document.getElementById('sp-tier-label').value= s ? (s.display_tier_label || '') : '';
+    document.getElementById('sp-tagline').value   = s ? (s.custom_tagline || s.description || '') : '';
+    document.getElementById('sp-logo').value      = s ? (s.logo_url || '') : '';
+    document.getElementById('sp-website').value   = s ? (s.website || '') : '';
+    document.getElementById('sp-instagram').value = s ? (s.instagram || '') : '';
+    document.getElementById('sp-featured').checked = !!(s && s.is_featured);
+    document.getElementById('sp-delete').style.display = s && !s._isNew ? '' : 'none';
+    _setStatus('sp-status', '');
+    _modalOpen('sp-modal-backdrop');
+    setTimeout(() => document.getElementById('sp-name').focus(), 30);
+  }
+  async function saveSponsor(e) {
+    e.preventDefault();
+    if (!_editingSponsor) return;
+    const payload = {
+      p_token:               _getToken(),
+      p_event_sponsor_id:    _editingSponsor.event_sponsor_id || null,
+      p_sponsor_name:        document.getElementById('sp-name').value.trim() || null,
+      p_tier:                document.getElementById('sp-tier').value || null,
+      p_display_tier_label:  document.getElementById('sp-tier-label').value.trim() || null,
+      p_custom_tagline:      document.getElementById('sp-tagline').value.trim() || null,
+      p_logo_url:            document.getElementById('sp-logo').value.trim() || null,
+      p_website:             document.getElementById('sp-website').value.trim() || null,
+      p_instagram:           document.getElementById('sp-instagram').value.trim() || null,
+      p_is_featured:         document.getElementById('sp-featured').checked,
+    };
+    const saveBtn = document.getElementById('sp-save');
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('upsert_event_sponsor', payload);
+      if (error || !data || !data.ok) {
+        _setStatus('sp-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not save.', 'error');
+        return;
+      }
+      _setStatus('sp-status', 'Saved. Refreshing...', 'success');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      _setStatus('sp-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      saveBtn.disabled = false; saveBtn.textContent = 'Save';
+    }
+  }
+  async function deleteSponsor() {
+    if (!_editingSponsor || !_editingSponsor.event_sponsor_id) return;
+    if (!confirm('Remove this sponsor from the event?')) return;
+    const delBtn = document.getElementById('sp-delete');
+    delBtn.disabled = true;
+    try {
+      const { data, error } = await db.rpc('delete_event_sponsor', {
+        p_token: _getToken(),
+        p_event_sponsor_id: _editingSponsor.event_sponsor_id,
+      });
+      if (error || !data || !data.ok) {
+        _setStatus('sp-status', (error && error.message) || (data && data.error) || 'Could not delete.', 'error');
+        return;
+      }
+      _modalClose('sp-modal-backdrop');
+      location.reload();
+    } catch (err) {
+      _setStatus('sp-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      delBtn.disabled = false;
+    }
+  }
+
+  // ── Ticket-location editor ─────────────────────────────
+  let _editingTicketLoc = null;
+  function renderTicketsEditor(extras, data) {
+    const list = (extras && extras.ticket_locations) || (data && data.ticket_locations) || [];
+    const lead = document.getElementById('edit-tickets-lead');
+    const wrap = document.getElementById('edit-tickets-list');
+    if (!lead || !wrap) return;
+    lead.textContent = list.length
+      ? `${list.length} ticket ${list.length === 1 ? 'location' : 'locations'}.`
+      : 'No ticket locations added yet.';
+    if (!list.length) {
+      wrap.innerHTML = `<div class="edit-list-empty">Click + Add ticket location to add the first one.</div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(t => `
+      <div class="edit-list-row" data-id="${escapeHtml(t.id || '')}">
+        <div class="body">
+          <div class="name">${escapeHtml(t.name || 'Location')} ${t.is_online ? '<span style="font-size:10px;color:var(--brand-primary);">· ONLINE</span>' : ''}</div>
+          <div class="meta">
+            ${t.address ? escapeHtml(t.address) : ''}
+            ${t.town ? ' · ' + escapeHtml(t.town) : ''}
+            ${t.parish ? ' · ' + escapeHtml(t.parish) : ''}
+            ${t.contact_phone ? ' · ' + escapeHtml(t.contact_phone) : ''}
+            ${t.is_online && t.ticket_url ? ' · <a href="' + escapeHtml(t.ticket_url) + '" target="_blank" rel="noopener">link</a>' : ''}
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="ve-btn" data-action="edit">Edit</button>
+        </div>
+      </div>`).join('');
+    wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-id]').dataset.id;
+        const t = list.find(x => x.id === id);
+        if (t) openTicketLocEditor(t);
+      });
+    });
+  }
+  function openTicketLocEditor(t) {
+    _editingTicketLoc = t ? { ...t } : { _isNew: true };
+    document.getElementById('tl-modal-title').textContent = t ? 'Edit ticket location' : 'Add ticket location';
+    document.getElementById('tl-name').value     = t ? (t.name || '')          : '';
+    document.getElementById('tl-online').checked = !!(t && t.is_online);
+    document.getElementById('tl-url').value      = t ? (t.ticket_url || '')    : '';
+    document.getElementById('tl-provider').value = t ? (t.provider_type || '') : '';
+    document.getElementById('tl-address').value  = t ? (t.address || '')       : '';
+    document.getElementById('tl-town').value     = t ? (t.town || '')          : '';
+    document.getElementById('tl-parish').value   = t ? (t.parish || '')        : '';
+    document.getElementById('tl-phone').value    = t ? (t.contact_phone || '') : '';
+    document.getElementById('tl-hours').value    = t ? (t.opening_hours || '') : '';
+    document.getElementById('tl-delete').style.display = t && !t._isNew ? '' : 'none';
+    _setStatus('tl-status', '');
+    _modalOpen('tl-modal-backdrop');
+    setTimeout(() => document.getElementById('tl-name').focus(), 30);
+  }
+  async function saveTicketLoc(e) {
+    e.preventDefault();
+    if (!_editingTicketLoc) return;
+    const payload = {
+      p_token:           _getToken(),
+      p_id:              _editingTicketLoc.id || null,
+      p_name:            document.getElementById('tl-name').value.trim() || null,
+      p_is_online:       document.getElementById('tl-online').checked,
+      p_ticket_url:      document.getElementById('tl-url').value.trim() || null,
+      p_provider_type:   document.getElementById('tl-provider').value.trim() || null,
+      p_address:         document.getElementById('tl-address').value.trim() || null,
+      p_town:            document.getElementById('tl-town').value.trim() || null,
+      p_parish:          document.getElementById('tl-parish').value.trim() || null,
+      p_contact_phone:   document.getElementById('tl-phone').value.trim() || null,
+      p_opening_hours:   document.getElementById('tl-hours').value.trim() || null,
+    };
+    const btn = document.getElementById('tl-save');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('upsert_ticket_location', payload);
+      if (error || !data || !data.ok) {
+        _setStatus('tl-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not save.', 'error'); return;
+      }
+      _setStatus('tl-status', 'Saved. Refreshing...', 'success');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      _setStatus('tl-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save';
+    }
+  }
+  async function deleteTicketLoc() {
+    if (!_editingTicketLoc || !_editingTicketLoc.id) return;
+    if (!confirm('Remove this ticket location?')) return;
+    try {
+      const { data, error } = await db.rpc('delete_ticket_location', {
+        p_token: _getToken(), p_id: _editingTicketLoc.id,
+      });
+      if (error || !data || !data.ok) {
+        _setStatus('tl-status', (error && error.message) || (data && data.error) || 'Could not delete.', 'error'); return;
+      }
+      _modalClose('tl-modal-backdrop'); location.reload();
+    } catch (err) {
+      _setStatus('tl-status', (err && err.message) || 'Network error.', 'error');
+    }
+  }
+
+  // ── Transport-route editor ─────────────────────────────
+  let _editingTransportRoute = null;
+  function renderTransportEditor(extras) {
+    const list = (extras && extras.transport_routes) || [];
+    const lead = document.getElementById('edit-transport-lead');
+    const wrap = document.getElementById('edit-transport-list');
+    if (!lead || !wrap) return;
+    lead.textContent = list.length ? `${list.length} route${list.length === 1 ? '' : 's'}.` : 'No transport routes added yet.';
+    if (!list.length) {
+      wrap.innerHTML = `<div class="edit-list-empty">Click + Add route to create the first one.</div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(r => {
+      const dir = r.direction === 'to_event' ? 'To event' : r.direction === 'return' ? 'Return' : 'Both directions';
+      return `
+        <div class="edit-list-row" data-id="${escapeHtml(r.id || '')}">
+          <div class="body">
+            <div class="name">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${escapeHtml(r.color || '#0a7aff')};margin-right:6px;vertical-align:middle;"></span>
+              ${escapeHtml(r.name || 'Route')}
+            </div>
+            <div class="meta">${dir}${r.frequency ? ' · ' + escapeHtml(r.frequency) : ''}${r.stops_count ? ' · ' + r.stops_count + ' stops' : ''}</div>
+          </div>
+          <div class="actions"><button type="button" class="ve-btn" data-action="edit">Edit</button></div>
+        </div>`;
+    }).join('');
+    wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-id]').dataset.id;
+        const r = list.find(x => x.id === id);
+        if (r) openTransportEditor(r);
+      });
+    });
+  }
+  function openTransportEditor(r) {
+    _editingTransportRoute = r ? { ...r } : { _isNew: true };
+    document.getElementById('tr-modal-title').textContent = r ? 'Edit transport route' : 'Add transport route';
+    document.getElementById('tr-name').value     = r ? (r.name || '') : '';
+    document.getElementById('tr-color').value    = r ? (r.color || '#0a7aff') : '#0a7aff';
+    document.getElementById('tr-direction').value = r ? (r.direction || 'both') : 'both';
+    document.getElementById('tr-frequency').value = r ? (r.frequency || '') : '';
+    document.getElementById('tr-delete').style.display = r && !r._isNew ? '' : 'none';
+    _setStatus('tr-status', '');
+    _modalOpen('tr-modal-backdrop');
+    setTimeout(() => document.getElementById('tr-name').focus(), 30);
+  }
+  async function saveTransport(e) {
+    e.preventDefault();
+    if (!_editingTransportRoute) return;
+    const payload = {
+      p_token:     _getToken(),
+      p_id:        _editingTransportRoute.id || null,
+      p_name:      document.getElementById('tr-name').value.trim() || null,
+      p_color:     document.getElementById('tr-color').value,
+      p_direction: document.getElementById('tr-direction').value,
+      p_frequency: document.getElementById('tr-frequency').value.trim() || null,
+    };
+    const btn = document.getElementById('tr-save');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('upsert_transport_route', payload);
+      if (error || !data || !data.ok) {
+        _setStatus('tr-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not save.', 'error'); return;
+      }
+      _setStatus('tr-status', 'Saved. Refreshing...', 'success');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      _setStatus('tr-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save';
+    }
+  }
+  async function deleteTransport() {
+    if (!_editingTransportRoute || !_editingTransportRoute.id) return;
+    if (!confirm('Remove this transport route?')) return;
+    try {
+      const { data, error } = await db.rpc('delete_transport_route', {
+        p_token: _getToken(), p_id: _editingTransportRoute.id,
+      });
+      if (error || !data || !data.ok) {
+        _setStatus('tr-status', (error && error.message) || (data && data.error) || 'Could not delete.', 'error'); return;
+      }
+      _modalClose('tr-modal-backdrop'); location.reload();
+    } catch (err) {
+      _setStatus('tr-status', (err && err.message) || 'Network error.', 'error');
+    }
+  }
+
+  // ── Schedule-day editor ────────────────────────────────
+  let _editingScheduleDay = null;
+  function renderScheduleEditor(extras, data) {
+    const list = (extras && extras.schedule_days) || (data && data.schedule && data.schedule.days) || [];
+    const lead = document.getElementById('edit-schedule-lead');
+    const wrap = document.getElementById('edit-schedule-list');
+    if (!lead || !wrap) return;
+    lead.textContent = list.length ? `${list.length} day${list.length === 1 ? '' : 's'}.` : 'No schedule days added yet.';
+    if (!list.length) {
+      wrap.innerHTML = `<div class="edit-list-empty">Click + Add day to create your first schedule day.</div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(d => `
+      <div class="edit-list-row" data-id="${escapeHtml(d.id || '')}">
+        <div class="body">
+          <div class="name">${escapeHtml(d.label || 'Day')} ${d.is_cancelled ? '<span style="font-size:10px;color:var(--red);">· CANCELLED</span>' : ''}</div>
+          <div class="meta">
+            ${escapeHtml(d.date_display || d.date || '')}
+            ${d.gates_open ? ' · Gates ' + escapeHtml(String(d.gates_open).slice(0,5)) : ''}
+            ${d.gates_close ? '–' + escapeHtml(String(d.gates_close).slice(0,5)) : ''}
+            ${d.items_count ? ' · ' + d.items_count + ' items' : ''}
+          </div>
+        </div>
+        <div class="actions"><button type="button" class="ve-btn" data-action="edit">Edit</button></div>
+      </div>`).join('');
+    wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-id]').dataset.id;
+        const d = list.find(x => x.id === id);
+        if (d) openScheduleDayEditor(d);
+      });
+    });
+  }
+  function openScheduleDayEditor(d) {
+    _editingScheduleDay = d ? { ...d } : { _isNew: true };
+    document.getElementById('sd-modal-title').textContent = d ? 'Edit schedule day' : 'Add schedule day';
+    document.getElementById('sd-date').value        = d ? (d.date || '') : '';
+    document.getElementById('sd-label').value       = d ? (d.label || '') : '';
+    document.getElementById('sd-desc').value        = d ? (d.description || '') : '';
+    document.getElementById('sd-gates-open').value  = d ? (String(d.gates_open || '').slice(0,5)) : '';
+    document.getElementById('sd-gates-close').value = d ? (String(d.gates_close || '').slice(0,5)) : '';
+    document.getElementById('sd-cancelled').checked = !!(d && d.is_cancelled);
+    document.getElementById('sd-delete').style.display = d && !d._isNew ? '' : 'none';
+    _setStatus('sd-status', '');
+    _modalOpen('sd-modal-backdrop');
+    setTimeout(() => document.getElementById('sd-date').focus(), 30);
+  }
+  async function saveScheduleDay(e) {
+    e.preventDefault();
+    if (!_editingScheduleDay) return;
+    const payload = {
+      p_token:        _getToken(),
+      p_id:           _editingScheduleDay.id || null,
+      p_date:         document.getElementById('sd-date').value || null,
+      p_label:        document.getElementById('sd-label').value.trim() || null,
+      p_description:  document.getElementById('sd-desc').value.trim() || null,
+      p_gates_open:   document.getElementById('sd-gates-open').value || null,
+      p_gates_close:  document.getElementById('sd-gates-close').value || null,
+      p_is_cancelled: document.getElementById('sd-cancelled').checked,
+    };
+    const btn = document.getElementById('sd-save');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('upsert_schedule_day', payload);
+      if (error || !data || !data.ok) {
+        _setStatus('sd-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not save.', 'error'); return;
+      }
+      _setStatus('sd-status', 'Saved. Refreshing...', 'success');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      _setStatus('sd-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save';
+    }
+  }
+  async function deleteScheduleDay() {
+    if (!_editingScheduleDay || !_editingScheduleDay.id) return;
+    if (!confirm('Remove this schedule day? All items will be removed too.')) return;
+    try {
+      const { data, error } = await db.rpc('delete_schedule_day', {
+        p_token: _getToken(), p_id: _editingScheduleDay.id,
+      });
+      if (error || !data || !data.ok) {
+        _setStatus('sd-status', (error && error.message) || (data && data.error) || 'Could not delete.', 'error'); return;
+      }
+      _modalClose('sd-modal-backdrop'); location.reload();
+    } catch (err) {
+      _setStatus('sd-status', (err && err.message) || 'Network error.', 'error');
+    }
+  }
+
+  // ── Modal wiring (one-time, on DOMContentLoaded) ───────
+  document.addEventListener('DOMContentLoaded', () => {
+    // Sponsor
+    document.getElementById('add-sponsor-btn')?.addEventListener('click', () => openSponsorEditor(null));
+    document.getElementById('sp-cancel')?.addEventListener('click', () => _modalClose('sp-modal-backdrop'));
+    document.getElementById('sp-delete')?.addEventListener('click', deleteSponsor);
+    document.getElementById('sp-modal')?.addEventListener('submit', saveSponsor);
+    document.getElementById('sp-modal-backdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'sp-modal-backdrop') _modalClose('sp-modal-backdrop');
+    });
+    // Ticket locations
+    document.getElementById('add-ticket-loc-btn')?.addEventListener('click', () => openTicketLocEditor(null));
+    document.getElementById('tl-cancel')?.addEventListener('click', () => _modalClose('tl-modal-backdrop'));
+    document.getElementById('tl-delete')?.addEventListener('click', deleteTicketLoc);
+    document.getElementById('tl-modal')?.addEventListener('submit', saveTicketLoc);
+    document.getElementById('tl-modal-backdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'tl-modal-backdrop') _modalClose('tl-modal-backdrop');
+    });
+    // Transport
+    document.getElementById('add-transport-route-btn')?.addEventListener('click', () => openTransportEditor(null));
+    document.getElementById('tr-cancel')?.addEventListener('click', () => _modalClose('tr-modal-backdrop'));
+    document.getElementById('tr-delete')?.addEventListener('click', deleteTransport);
+    document.getElementById('tr-modal')?.addEventListener('submit', saveTransport);
+    document.getElementById('tr-modal-backdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'tr-modal-backdrop') _modalClose('tr-modal-backdrop');
+    });
+    // Schedule
+    document.getElementById('add-schedule-day-btn')?.addEventListener('click', () => openScheduleDayEditor(null));
+    document.getElementById('sd-cancel')?.addEventListener('click', () => _modalClose('sd-modal-backdrop'));
+    document.getElementById('sd-delete')?.addEventListener('click', deleteScheduleDay);
+    document.getElementById('sd-modal')?.addEventListener('submit', saveScheduleDay);
+    document.getElementById('sd-modal-backdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'sd-modal-backdrop') _modalClose('sd-modal-backdrop');
+    });
+    // Esc closes any open modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      ['sp-modal-backdrop', 'tl-modal-backdrop', 'tr-modal-backdrop', 'sd-modal-backdrop', 've-modal-backdrop']
+        .forEach(id => { const el = document.getElementById(id); if (el && el.classList.contains('open')) _modalClose(id); });
+    });
+  });
 
   // ── Sponsors with activations + redemption counts ────────
   function renderSponsors(data) {
@@ -4327,23 +4990,33 @@
       capabilities: capabilities,
       partner: opts.partner,
       jumpLinks: [
-        { section: 'overview',       icon: 'ic-info',     label: 'Overview' },
-        { section: 'vendors',        icon: 'ic-shop',     label: 'Vendors' },
-        { section: 'schedule',       icon: 'ic-calendar', label: 'Schedule' },
-        { section: 'map',            icon: 'ic-map',      label: 'Map' },
-        { section: 'passes',         icon: 'ic-pass',     label: 'Passes' },
-        { section: 'info',           icon: 'ic-doc',      label: 'Info' },
-        { section: 'sponsors',       icon: 'ic-bolt',     label: 'Sponsors' },
-        { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
-        { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
-        { section: 'bands',          icon: 'ic-mic',      label: 'Bands', id: 'nav-bands', hidden: !opts.isCarnival },
         { section: 'status',         icon: 'ic-info',     label: 'Status' },
+
+        { header: 'Insights' },
         { section: 'actions',        icon: 'ic-bolt',     label: 'Action Center' },
-        { section: 'edit',           icon: 'ic-edit',     label: 'Edit Core Details' },
         { section: 'engagement',     icon: 'ic-chart',    label: 'Engagement' },
         { section: 'audience',       icon: 'ic-users',    label: 'Audience', id: 'nav-audience', hidden: !opts.hasAudience },
-        { section: 'updates',        icon: 'ic-chat',     label: 'Updates',  id: 'nav-updates',  hidden: !opts.hasUpdates },
         { section: 'unlocks',        icon: 'ic-lock',     label: 'Unlocks' },
+
+        { header: 'View' },
+        { section: 'overview',       icon: 'ic-info',     label: 'Overview' },
+        { section: 'info',           icon: 'ic-doc',      label: 'Info' },
+        { section: 'vendors',        icon: 'ic-shop',     label: 'Vendors' },
+        { section: 'sponsors',       icon: 'ic-bolt',     label: 'Sponsors' },
+        { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
+        { section: 'schedule',       icon: 'ic-calendar', label: 'Schedule' },
+        { section: 'map',            icon: 'ic-map',      label: 'Map' },
+        { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
+        { section: 'passes',         icon: 'ic-pass',     label: 'Passes' },
+        { section: 'bands',          icon: 'ic-mic',      label: 'Bands', id: 'nav-bands', hidden: !opts.isCarnival },
+        { section: 'updates',        icon: 'ic-chat',     label: 'Updates',  id: 'nav-updates',  hidden: !opts.hasUpdates },
+
+        { header: 'Edits' },
+        { section: 'edit',                icon: 'ic-edit', label: 'Edit Core Details' },
+        { section: 'edit-sponsors',       icon: 'ic-bolt', label: 'Manage Sponsors' },
+        { section: 'edit-tickets',        icon: 'ic-ticket', label: 'Manage Tickets' },
+        { section: 'edit-schedule',       icon: 'ic-calendar', label: 'Manage Schedule' },
+        { section: 'edit-transportation', icon: 'ic-bus',  label: 'Manage Transportation' },
       ],
     });
     window.PartnerSidebar?.setupScrollspy();
@@ -4473,6 +5146,12 @@
     safe('renderInfo',           () => renderInfo(data.event));
     safe('renderTickets',        () => renderTickets(data.event, extras.ticket_locations || data.ticket_locations));
     safe('renderTransportation', () => renderTransportation(extras.transport_routes || data.transport_routes));
+
+    // Edit-list editors in the Edits chapter.
+    safe('renderSponsorsEditor',  () => renderSponsorsEditor(data));
+    safe('renderTicketsEditor',   () => renderTicketsEditor(extras, data));
+    safe('renderTransportEditor', () => renderTransportEditor(extras));
+    safe('renderScheduleEditor',  () => renderScheduleEditor(extras, data));
     safe('renderBands',          () => renderBands(extras.bands || data.bands || data.mas_bands, isCarnival));
 
     // Force-show sections that we previously hid until data arrived.

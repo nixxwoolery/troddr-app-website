@@ -89,6 +89,11 @@
   }
 
   function jumpLinkHtml(link) {
+    // Special: header-only entry (no section, just visual group label).
+    if (link.header) {
+      const hidden = link.hidden ? ' style="display:none"' : '';
+      return `<div class="sidebar-title" style="padding-top:14px;"${hidden}>${escapeHtml(link.header)}</div>`;
+    }
     const icon = link.icon ? `<svg><use href="#${link.icon}"/></svg> ` : '';
     const idAttr = link.id ? ` id="${link.id}"` : '';
     const hidden = link.hidden ? ' style="display:none"' : '';
