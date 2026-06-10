@@ -1235,6 +1235,17 @@
     .view-tab { font-size: 12px; padding: 9px 8px; }
   }
 
+  /* Brief highlight after an "Edit" button opens a section in the Editor view. */
+  @keyframes sectionOpenedFlash {
+    0%   { box-shadow: 0 0 0 0 rgba(10, 122, 255, 0.35); }
+    40%  { box-shadow: 0 0 0 6px rgba(10, 122, 255, 0.18); }
+    100% { box-shadow: 0 0 0 0 rgba(10, 122, 255, 0); }
+  }
+  .section-just-opened {
+    border-radius: 12px;
+    animation: sectionOpenedFlash 1.6s ease-out;
+  }
+
   /* ── EDIT CARDS (list-with-add pattern) ── */
   .edit-list-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; }
   .edit-list-card .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
@@ -2187,6 +2198,7 @@
         <button type="button" class="view-tab is-active" data-view="overview" role="tab" aria-selected="true">Overview</button>
         <button type="button" class="view-tab" data-view="analytics" role="tab" aria-selected="false">Analytics</button>
         <button type="button" class="view-tab" data-view="details" role="tab" aria-selected="false">Details</button>
+        <button type="button" class="view-tab" data-view="editor" role="tab" aria-selected="false">Editor</button>
       </div>
 
       <!-- ============ OVERVIEW ============ -->
@@ -2307,7 +2319,7 @@
             <h2 class="section-title">Info</h2>
             <div class="section-sub">Organizer, dress code, age restriction, amenities, and other public facts.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon · use Edit Core Details for now">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit" title="Edit core event details">Edit</button>
         </div>
         <div class="info-card" id="info-card"></div>
       </section>
@@ -2317,7 +2329,7 @@
             <h2 class="section-title">Schedule</h2>
             <div class="section-sub">Days, set times, and must-see moments.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-schedule" title="Manage schedule">Edit</button>
         </div>
         <div class="schedule-card" id="schedule-card"></div>
       </section>
@@ -2453,7 +2465,7 @@
             <h2 class="section-title">Tickets</h2>
             <div class="section-sub">Online ticket links and physical pickup locations.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-tickets" title="Manage tickets">Edit</button>
         </div>
         <div class="info-card" id="tickets-card"></div>
       </section>
@@ -2463,7 +2475,7 @@
             <h2 class="section-title">Sponsors</h2>
             <div class="section-sub">Active sponsor lineup for this event.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-sponsors" title="Manage sponsors">Edit</button>
         </div>
         <div class="sponsors-grid" id="sponsors-grid"></div>
       </section>
@@ -2473,7 +2485,7 @@
             <h2 class="section-title">Transportation</h2>
             <div class="section-sub">Bus routes, stops, and times for getting attendees to and from the event.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-transportation" title="Manage transportation">Edit</button>
         </div>
         <div class="info-card" id="transportation-card"></div>
       </section>
@@ -2483,7 +2495,7 @@
             <h2 class="section-title">Passes</h2>
             <div class="section-sub">Access passes, wristbands, or VIP perks issued to attendees.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-passes" title="Manage passes">Edit</button>
         </div>
         <div class="info-card" id="passes-card">
           <div class="section-empty">No passes configured yet.</div>
@@ -2495,7 +2507,7 @@
             <h2 class="section-title">Bands</h2>
             <div class="section-sub">Mas bands and band launches tied to this carnival season.</div>
           </div>
-          <button type="button" class="section-edit-btn" disabled title="Editor coming soon">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-bands" title="Manage bands">Edit</button>
         </div>
         <div class="info-card" id="bands-card"></div>
       </section>
@@ -2509,9 +2521,14 @@
         <div class="updates-list" id="updates-list"></div>
       </section>
 
+      </div><!-- /view-pane-details -->
+
+      <!-- ============ EDITOR ============ -->
+      <div class="view-pane" id="view-pane-editor" data-view="editor" role="tabpanel" hidden>
+
       <div class="chapter">
         <div class="chapter-eyebrow">Event Dashboard</div>
-        <div class="chapter-title">Edits</div>
+        <div class="chapter-title">Editor</div>
         <div class="chapter-sub">Add, change, or remove content. Updates publish to the TRODDR app immediately.</div>
       </div>
 
@@ -2544,13 +2561,16 @@
         <div class="section-head">
           <div>
             <h2 class="section-title">Manage Tickets</h2>
-            <div class="section-sub">Online ticket links and physical pickup locations.</div>
+            <div class="section-sub">Online ticket links and physical pickup locations. Add as many of each as you need.</div>
           </div>
         </div>
         <div class="edit-list-card">
           <div class="head">
             <span class="lead" id="edit-tickets-lead">Loading...</span>
-            <button type="button" class="add-btn" id="add-ticket-loc-btn">+ Add ticket location</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="add-btn" id="add-ticket-link-btn">+ Add online link</button>
+              <button type="button" class="add-btn" id="add-ticket-loc-btn">+ Add pickup location</button>
+            </div>
           </div>
           <div id="edit-tickets-list"></div>
         </div>
@@ -2588,7 +2608,39 @@
         </div>
       </section>
 
-      </div><!-- /view-pane-details -->
+      <section class="section" id="edit-passes">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Manage Passes</h2>
+            <div class="section-sub">Access passes, wristbands, or VIP perks issued to attendees.</div>
+          </div>
+        </div>
+        <div class="edit-list-card">
+          <div class="head">
+            <span class="lead" id="edit-passes-lead">Loading...</span>
+            <button type="button" class="add-btn" id="add-pass-btn">+ Add pass</button>
+          </div>
+          <div id="edit-passes-list"></div>
+        </div>
+      </section>
+
+      <section class="section" id="edit-bands" style="display:none">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Manage Bands</h2>
+            <div class="section-sub">Mas bands and band launches tied to this carnival season.</div>
+          </div>
+        </div>
+        <div class="edit-list-card">
+          <div class="head">
+            <span class="lead" id="edit-bands-lead">Loading...</span>
+            <button type="button" class="add-btn" id="add-band-btn">+ Add band</button>
+          </div>
+          <div id="edit-bands-list"></div>
+        </div>
+      </section>
+
+      </div><!-- /view-pane-editor -->
 
       <!-- ── Vendor edit modal ── -->
       <div class="ve-modal-backdrop" id="ve-modal-backdrop">
@@ -2738,6 +2790,72 @@
             <button type="button" class="ve-btn" id="sd-cancel">Cancel</button>
             <button type="button" class="ve-btn" id="sd-delete" style="display:none;">Delete</button>
             <button type="submit" class="ve-btn primary" id="sd-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Pass edit modal ── -->
+      <div class="ve-modal-backdrop" id="ps-modal-backdrop">
+        <form class="ve-modal" id="ps-modal" autocomplete="off">
+          <h3 id="ps-modal-title">Edit pass</h3>
+          <div class="ve-modal-sub" id="ps-modal-sub">Access pass, wristband, or VIP perk for this event.</div>
+          <div class="ve-field"><label for="ps-name">Pass name</label>
+            <input id="ps-name" type="text" maxlength="120" required placeholder="e.g. VIP Wristband" /></div>
+          <div class="ve-field"><label for="ps-tier">Tier</label>
+            <select id="ps-tier">
+              <option value="">— Select —</option>
+              <option value="general">General</option>
+              <option value="vip">VIP</option>
+              <option value="backstage">Backstage</option>
+              <option value="press">Press</option>
+              <option value="staff">Staff</option>
+              <option value="other">Other</option>
+            </select></div>
+          <div class="ve-field"><label for="ps-desc">Description</label>
+            <textarea id="ps-desc" rows="3" maxlength="500" placeholder="Perks, restrictions, what attendees get..."></textarea></div>
+          <div class="ve-field"><label for="ps-price">Price</label>
+            <input id="ps-price" type="number" min="0" step="0.01" placeholder="0.00" /></div>
+          <div class="ve-field"><label for="ps-currency">Currency</label>
+            <input id="ps-currency" type="text" maxlength="6" placeholder="JMD" /></div>
+          <div class="ve-field"><label for="ps-color">Wristband colour</label>
+            <input id="ps-color" type="color" value="#0a7aff" /></div>
+          <div class="ve-field checkbox"><input id="ps-featured" type="checkbox" />
+            <label for="ps-featured">Featured (pin to top)</label></div>
+          <div class="ve-status" id="ps-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="ps-cancel">Cancel</button>
+            <button type="button" class="ve-btn" id="ps-delete" style="display:none;">Delete</button>
+            <button type="submit" class="ve-btn primary" id="ps-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Band edit modal ── -->
+      <div class="ve-modal-backdrop" id="bd-modal-backdrop">
+        <form class="ve-modal" id="bd-modal" autocomplete="off">
+          <h3 id="bd-modal-title">Edit band</h3>
+          <div class="ve-modal-sub" id="bd-modal-sub">Mas band tied to this carnival season.</div>
+          <div class="ve-field"><label for="bd-name">Band name</label>
+            <input id="bd-name" type="text" maxlength="200" required /></div>
+          <div class="ve-field"><label for="bd-tagline">Tagline</label>
+            <input id="bd-tagline" type="text" maxlength="200" placeholder="One-line theme or hook" /></div>
+          <div class="ve-field"><label for="bd-website">Website</label>
+            <input id="bd-website" type="url" maxlength="500" placeholder="https://..." /></div>
+          <div class="ve-field"><label for="bd-instagram">Instagram</label>
+            <input id="bd-instagram" type="text" maxlength="100" placeholder="@handle" /></div>
+          <div class="ve-field"><label for="bd-logo">Logo URL</label>
+            <input id="bd-logo" type="url" maxlength="500" placeholder="https://..." /></div>
+          <div class="ve-field"><label for="bd-reg-deadline">Registration deadline</label>
+            <input id="bd-reg-deadline" type="date" /></div>
+          <div class="ve-field"><label for="bd-launch-date">Band launch date</label>
+            <input id="bd-launch-date" type="date" /></div>
+          <div class="ve-field checkbox"><input id="bd-featured" type="checkbox" />
+            <label for="bd-featured">Featured (pin to top)</label></div>
+          <div class="ve-status" id="bd-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="bd-cancel">Cancel</button>
+            <button type="button" class="ve-btn" id="bd-delete" style="display:none;">Delete</button>
+            <button type="submit" class="ve-btn primary" id="bd-save">Save</button>
           </div>
         </form>
       </div>
@@ -3475,29 +3593,41 @@
     const lead = document.getElementById('edit-tickets-lead');
     const wrap = document.getElementById('edit-tickets-list');
     if (!lead || !wrap) return;
-    lead.textContent = list.length
-      ? `${list.length} ticket ${list.length === 1 ? 'location' : 'locations'}.`
-      : 'No ticket locations added yet.';
+    const onlineLinks = list.filter(t => t.is_online);
+    const pickupLocs  = list.filter(t => !t.is_online);
+    const parts = [];
+    if (onlineLinks.length) parts.push(`${onlineLinks.length} online link${onlineLinks.length === 1 ? '' : 's'}`);
+    if (pickupLocs.length)  parts.push(`${pickupLocs.length} pickup location${pickupLocs.length === 1 ? '' : 's'}`);
+    lead.textContent = parts.length ? parts.join(' · ') : 'No tickets added yet.';
     if (!list.length) {
-      wrap.innerHTML = `<div class="edit-list-empty">Click + Add ticket location to add the first one.</div>`;
+      wrap.innerHTML = `<div class="edit-list-empty">Add an online link (Eventbrite, your site, etc.) or a physical pickup location to get started.</div>`;
       return;
     }
-    wrap.innerHTML = list.map(t => `
+    const rowHtml = (t) => `
       <div class="edit-list-row" data-id="${escapeHtml(t.id || '')}">
         <div class="body">
-          <div class="name">${escapeHtml(t.name || 'Location')} ${t.is_online ? '<span style="font-size:10px;color:var(--brand-primary);">· ONLINE</span>' : ''}</div>
+          <div class="name">${escapeHtml(t.name || (t.is_online ? 'Online link' : 'Location'))}</div>
           <div class="meta">
-            ${t.address ? escapeHtml(t.address) : ''}
-            ${t.town ? ' · ' + escapeHtml(t.town) : ''}
-            ${t.parish ? ' · ' + escapeHtml(t.parish) : ''}
-            ${t.contact_phone ? ' · ' + escapeHtml(t.contact_phone) : ''}
-            ${t.is_online && t.ticket_url ? ' · <a href="' + escapeHtml(t.ticket_url) + '" target="_blank" rel="noopener">link</a>' : ''}
+            ${t.is_online
+              ? (t.provider_type ? escapeHtml(t.provider_type) + ' · ' : '') +
+                (t.ticket_url ? '<a href="' + escapeHtml(t.ticket_url) + '" target="_blank" rel="noopener">' + escapeHtml(t.ticket_url.replace(/^https?:\/\//, '')) + '</a>' : 'No URL set')
+              : [
+                  t.address ? escapeHtml(t.address) : '',
+                  t.town ? escapeHtml(t.town) : '',
+                  t.parish ? escapeHtml(t.parish) : '',
+                  t.contact_phone ? escapeHtml(t.contact_phone) : ''
+                ].filter(Boolean).join(' · ') || 'No address yet'}
           </div>
         </div>
         <div class="actions">
           <button type="button" class="ve-btn" data-action="edit">Edit</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    const groupHead = (label) => `<div class="lbl" style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--grey-mid);margin:12px 0 6px;">${label}</div>`;
+    let html = '';
+    if (onlineLinks.length) html += groupHead('Online links') + onlineLinks.map(rowHtml).join('');
+    if (pickupLocs.length)  html += groupHead('Pickup locations') + pickupLocs.map(rowHtml).join('');
+    wrap.innerHTML = html;
     wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.closest('[data-id]').dataset.id;
@@ -3506,11 +3636,16 @@
       });
     });
   }
-  function openTicketLocEditor(t) {
+  function openTicketLocEditor(t, opts) {
+    opts = opts || {};
     _editingTicketLoc = t ? { ...t } : { _isNew: true };
-    document.getElementById('tl-modal-title').textContent = t ? 'Edit ticket location' : 'Add ticket location';
+    const isOnline = t ? !!t.is_online : !!opts.online;
+    const title = t
+      ? (isOnline ? 'Edit online ticket link' : 'Edit pickup location')
+      : (isOnline ? 'Add online ticket link'  : 'Add pickup location');
+    document.getElementById('tl-modal-title').textContent = title;
     document.getElementById('tl-name').value     = t ? (t.name || '')          : '';
-    document.getElementById('tl-online').checked = !!(t && t.is_online);
+    document.getElementById('tl-online').checked = isOnline;
     document.getElementById('tl-url').value      = t ? (t.ticket_url || '')    : '';
     document.getElementById('tl-provider').value = t ? (t.provider_type || '') : '';
     document.getElementById('tl-address').value  = t ? (t.address || '')       : '';
@@ -3749,6 +3884,209 @@
     }
   }
 
+  // ── Passes editor ──────────────────────────────────────
+  let _editingPass = null;
+  function renderPassesEditor(extras, data) {
+    const list = (extras && extras.passes) || (data && data.passes) || [];
+    const lead = document.getElementById('edit-passes-lead');
+    const wrap = document.getElementById('edit-passes-list');
+    if (!lead || !wrap) return;
+    lead.textContent = list.length
+      ? `${list.length} pass${list.length === 1 ? '' : 'es'} configured.`
+      : 'No passes added yet.';
+    if (!list.length) {
+      wrap.innerHTML = `<div class="edit-list-empty">Click + Add pass to create the first one.</div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(p => `
+      <div class="edit-list-row" data-id="${escapeHtml(p.id || '')}">
+        <div class="body">
+          <div class="name">
+            ${p.color ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${escapeHtml(p.color)};margin-right:6px;vertical-align:middle;"></span>` : ''}
+            ${escapeHtml(p.name || 'Pass')}
+            ${p.is_featured ? ' <span style="font-size:10px;color:var(--brand-primary);">· FEATURED</span>' : ''}
+          </div>
+          <div class="meta">
+            ${escapeHtml(titleCaseSafe(p.tier || '—'))}
+            ${p.price != null ? ' · ' + escapeHtml(p.currency || 'JMD') + ' ' + p.price : ''}
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="ve-btn" data-action="edit">Edit</button>
+        </div>
+      </div>`).join('');
+    wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-id]').dataset.id;
+        const p = list.find(x => x.id === id);
+        if (p) openPassEditor(p);
+      });
+    });
+  }
+  function openPassEditor(p) {
+    _editingPass = p ? { ...p } : { _isNew: true };
+    document.getElementById('ps-modal-title').textContent = p ? 'Edit pass' : 'Add pass';
+    document.getElementById('ps-modal-sub').textContent = p ? (p.name || '') : 'New access pass, wristband, or perk.';
+    document.getElementById('ps-name').value     = p ? (p.name || '')        : '';
+    document.getElementById('ps-tier').value     = p ? (p.tier || '')        : '';
+    document.getElementById('ps-desc').value     = p ? (p.description || '') : '';
+    document.getElementById('ps-price').value    = p && p.price != null ? p.price : '';
+    document.getElementById('ps-currency').value = p ? (p.currency || '')    : '';
+    document.getElementById('ps-color').value    = p ? (p.color || '#0a7aff'): '#0a7aff';
+    document.getElementById('ps-featured').checked = !!(p && p.is_featured);
+    document.getElementById('ps-delete').style.display = p && !p._isNew ? '' : 'none';
+    _setStatus('ps-status', '');
+    _modalOpen('ps-modal-backdrop');
+    setTimeout(() => document.getElementById('ps-name').focus(), 30);
+  }
+  async function savePass(e) {
+    e.preventDefault();
+    if (!_editingPass) return;
+    const priceRaw = document.getElementById('ps-price').value;
+    const payload = {
+      p_token:        _getToken(),
+      p_id:           _editingPass.id || null,
+      p_name:         document.getElementById('ps-name').value.trim() || null,
+      p_tier:         document.getElementById('ps-tier').value || null,
+      p_description:  document.getElementById('ps-desc').value.trim() || null,
+      p_price:        priceRaw === '' ? null : Number(priceRaw),
+      p_currency:     document.getElementById('ps-currency').value.trim() || null,
+      p_color:        document.getElementById('ps-color').value || null,
+      p_is_featured:  document.getElementById('ps-featured').checked,
+    };
+    const btn = document.getElementById('ps-save');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('upsert_event_pass', payload);
+      if (error || !data || !data.ok) {
+        _setStatus('ps-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not save.', 'error'); return;
+      }
+      _setStatus('ps-status', 'Saved. Refreshing...', 'success');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      _setStatus('ps-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save';
+    }
+  }
+  async function deletePass() {
+    if (!_editingPass || !_editingPass.id) return;
+    if (!confirm('Remove this pass?')) return;
+    try {
+      const { data, error } = await db.rpc('delete_event_pass', {
+        p_token: _getToken(), p_id: _editingPass.id,
+      });
+      if (error || !data || !data.ok) {
+        _setStatus('ps-status', (error && error.message) || (data && data.error) || 'Could not delete.', 'error'); return;
+      }
+      _modalClose('ps-modal-backdrop'); location.reload();
+    } catch (err) {
+      _setStatus('ps-status', (err && err.message) || 'Network error.', 'error');
+    }
+  }
+
+  // ── Bands editor (carnival only) ───────────────────────
+  let _editingBand = null;
+  function renderBandsEditor(extras, data, isCarnival) {
+    const section = document.getElementById('edit-bands');
+    if (section) section.style.display = isCarnival ? '' : 'none';
+    if (!isCarnival) return;
+    const list = (extras && extras.bands) || (data && (data.bands || data.mas_bands)) || [];
+    const lead = document.getElementById('edit-bands-lead');
+    const wrap = document.getElementById('edit-bands-list');
+    if (!lead || !wrap) return;
+    lead.textContent = list.length
+      ? `${list.length} band${list.length === 1 ? '' : 's'} for this season.`
+      : 'No bands added yet.';
+    if (!list.length) {
+      wrap.innerHTML = `<div class="edit-list-empty">Click + Add band to create the first one.</div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(b => `
+      <div class="edit-list-row" data-id="${escapeHtml(b.id || '')}">
+        <div class="body">
+          <div class="name">${escapeHtml(b.name || 'Band')}${b.is_featured ? ' <span style="font-size:10px;color:var(--brand-primary);">· FEATURED</span>' : ''}</div>
+          <div class="meta">
+            ${b.tagline ? escapeHtml(b.tagline) : ''}
+            ${b.registration_deadline ? ' · Reg by ' + escapeHtml(b.registration_deadline) : ''}
+            ${b.website_url ? ' · ' + escapeHtml(b.website_url.replace(/^https?:\/\//, '')) : ''}
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="ve-btn" data-action="edit">Edit</button>
+        </div>
+      </div>`).join('');
+    wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-id]').dataset.id;
+        const b = list.find(x => x.id === id);
+        if (b) openBandEditor(b);
+      });
+    });
+  }
+  function openBandEditor(b) {
+    _editingBand = b ? { ...b } : { _isNew: true };
+    document.getElementById('bd-modal-title').textContent = b ? 'Edit band' : 'Add band';
+    document.getElementById('bd-modal-sub').textContent = b ? (b.name || '') : 'New mas band for this season.';
+    document.getElementById('bd-name').value         = b ? (b.name || '')                  : '';
+    document.getElementById('bd-tagline').value      = b ? (b.tagline || '')               : '';
+    document.getElementById('bd-website').value      = b ? (b.website_url || '')           : '';
+    document.getElementById('bd-instagram').value    = b ? (b.instagram || '')             : '';
+    document.getElementById('bd-logo').value         = b ? (b.logo_url || '')              : '';
+    document.getElementById('bd-reg-deadline').value = b ? (b.registration_deadline || '') : '';
+    document.getElementById('bd-launch-date').value  = b ? (b.launch_date || '')           : '';
+    document.getElementById('bd-featured').checked   = !!(b && b.is_featured);
+    document.getElementById('bd-delete').style.display = b && !b._isNew ? '' : 'none';
+    _setStatus('bd-status', '');
+    _modalOpen('bd-modal-backdrop');
+    setTimeout(() => document.getElementById('bd-name').focus(), 30);
+  }
+  async function saveBand(e) {
+    e.preventDefault();
+    if (!_editingBand) return;
+    const payload = {
+      p_token:                 _getToken(),
+      p_id:                    _editingBand.id || null,
+      p_name:                  document.getElementById('bd-name').value.trim() || null,
+      p_tagline:               document.getElementById('bd-tagline').value.trim() || null,
+      p_website_url:           document.getElementById('bd-website').value.trim() || null,
+      p_instagram:             document.getElementById('bd-instagram').value.trim() || null,
+      p_logo_url:              document.getElementById('bd-logo').value.trim() || null,
+      p_registration_deadline: document.getElementById('bd-reg-deadline').value || null,
+      p_launch_date:           document.getElementById('bd-launch-date').value || null,
+      p_is_featured:           document.getElementById('bd-featured').checked,
+    };
+    const btn = document.getElementById('bd-save');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('upsert_event_band', payload);
+      if (error || !data || !data.ok) {
+        _setStatus('bd-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not save.', 'error'); return;
+      }
+      _setStatus('bd-status', 'Saved. Refreshing...', 'success');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      _setStatus('bd-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save';
+    }
+  }
+  async function deleteBand() {
+    if (!_editingBand || !_editingBand.id) return;
+    if (!confirm('Remove this band?')) return;
+    try {
+      const { data, error } = await db.rpc('delete_event_band', {
+        p_token: _getToken(), p_id: _editingBand.id,
+      });
+      if (error || !data || !data.ok) {
+        _setStatus('bd-status', (error && error.message) || (data && data.error) || 'Could not delete.', 'error'); return;
+      }
+      _modalClose('bd-modal-backdrop'); location.reload();
+    } catch (err) {
+      _setStatus('bd-status', (err && err.message) || 'Network error.', 'error');
+    }
+  }
+
   // ── Modal wiring (one-time, on DOMContentLoaded) ───────
   document.addEventListener('DOMContentLoaded', () => {
     // Sponsor
@@ -3759,8 +4097,10 @@
     document.getElementById('sp-modal-backdrop')?.addEventListener('click', (e) => {
       if (e.target.id === 'sp-modal-backdrop') _modalClose('sp-modal-backdrop');
     });
-    // Ticket locations
-    document.getElementById('add-ticket-loc-btn')?.addEventListener('click', () => openTicketLocEditor(null));
+    // Ticket locations (physical pickup)
+    document.getElementById('add-ticket-loc-btn')?.addEventListener('click', () => openTicketLocEditor(null, { online: false }));
+    // Ticket links (online providers)
+    document.getElementById('add-ticket-link-btn')?.addEventListener('click', () => openTicketLocEditor(null, { online: true }));
     document.getElementById('tl-cancel')?.addEventListener('click', () => _modalClose('tl-modal-backdrop'));
     document.getElementById('tl-delete')?.addEventListener('click', deleteTicketLoc);
     document.getElementById('tl-modal')?.addEventListener('submit', saveTicketLoc);
@@ -3783,10 +4123,26 @@
     document.getElementById('sd-modal-backdrop')?.addEventListener('click', (e) => {
       if (e.target.id === 'sd-modal-backdrop') _modalClose('sd-modal-backdrop');
     });
+    // Passes
+    document.getElementById('add-pass-btn')?.addEventListener('click', () => openPassEditor(null));
+    document.getElementById('ps-cancel')?.addEventListener('click', () => _modalClose('ps-modal-backdrop'));
+    document.getElementById('ps-delete')?.addEventListener('click', deletePass);
+    document.getElementById('ps-modal')?.addEventListener('submit', savePass);
+    document.getElementById('ps-modal-backdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'ps-modal-backdrop') _modalClose('ps-modal-backdrop');
+    });
+    // Bands
+    document.getElementById('add-band-btn')?.addEventListener('click', () => openBandEditor(null));
+    document.getElementById('bd-cancel')?.addEventListener('click', () => _modalClose('bd-modal-backdrop'));
+    document.getElementById('bd-delete')?.addEventListener('click', deleteBand);
+    document.getElementById('bd-modal')?.addEventListener('submit', saveBand);
+    document.getElementById('bd-modal-backdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'bd-modal-backdrop') _modalClose('bd-modal-backdrop');
+    });
     // Esc closes any open modal
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
-      ['sp-modal-backdrop', 'tl-modal-backdrop', 'tr-modal-backdrop', 'sd-modal-backdrop', 've-modal-backdrop']
+      ['sp-modal-backdrop', 'tl-modal-backdrop', 'tr-modal-backdrop', 'sd-modal-backdrop', 've-modal-backdrop', 'ps-modal-backdrop', 'bd-modal-backdrop']
         .forEach(id => { const el = document.getElementById(id); if (el && el.classList.contains('open')) _modalClose(id); });
     });
   });
@@ -4500,10 +4856,14 @@
     if (!card) return;
     const e = event || {};
     const locations = Array.isArray(ticketLocations) ? ticketLocations : [];
+    const onlineLocs = locations.filter(l => l.is_online);
+    const pickupLocs = locations.filter(l => !l.is_online);
 
-    const onlineRows = [
-      infoRow('Online tickets', e.has_online_tickets ? 'Available' : 'Not available'),
-      e.ticket_url ? infoRow('Ticket URL', `<a href="${escapeHtml(e.ticket_url)}" target="_blank" rel="noopener">${escapeHtml(e.ticket_url)}</a>`) : '',
+    // Pricing / capacity / status row (not link-specific).
+    const pricingRows = [
+      e.has_online_tickets || onlineLocs.length || e.ticket_url
+        ? infoRow('Online tickets', 'Available')
+        : infoRow('Online tickets', 'Not available'),
       e.is_free ? infoRow('Pricing', 'This event is free') :
         (e.ticket_price_min != null
           ? infoRow('Price', `${escapeHtml(e.currency || 'JMD')} ${e.ticket_price_min}${e.ticket_price_max && e.ticket_price_max !== e.ticket_price_min ? ' – ' + e.ticket_price_max : ''}`)
@@ -4512,10 +4872,34 @@
       e.is_sold_out ? infoRow('Status', '<strong style="color:var(--red);">Sold out</strong>') : '',
     ].filter(Boolean).join('');
 
-    const locationsHtml = locations.length
+    // Online links: merge legacy event.ticket_url with any is_online ticket_locations.
+    const onlineLinkItems = [];
+    if (e.ticket_url) {
+      onlineLinkItems.push({ name: 'Primary ticket link', url: e.ticket_url, provider: '' });
+    }
+    onlineLocs.forEach((l) => {
+      if (!l.ticket_url) return;
+      onlineLinkItems.push({ name: l.name || l.provider_type || 'Online link', url: l.ticket_url, provider: l.provider_type || '' });
+    });
+
+    const onlineLinksHtml = onlineLinkItems.length
+      ? `<div style="margin-top:14px;"><div class="lbl" style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--grey-mid);margin-bottom:8px;">Online ticket links</div>
+        <ul class="info-list">
+          ${onlineLinkItems.map((it) => `
+            <li class="info-list-item">
+              <div class="name">${escapeHtml(it.name)}</div>
+              <div class="meta">
+                ${it.provider ? escapeHtml(it.provider) + ' · ' : ''}
+                <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener">${escapeHtml(it.url.replace(/^https?:\/\//, ''))}</a>
+              </div>
+            </li>`).join('')}
+        </ul></div>`
+      : '';
+
+    const pickupHtml = pickupLocs.length
       ? `<div style="margin-top:14px;"><div class="lbl" style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--grey-mid);margin-bottom:8px;">Pickup locations</div>
         <ul class="info-list">
-          ${locations.map((loc) => `
+          ${pickupLocs.map((loc) => `
             <li class="info-list-item">
               <div class="name">${escapeHtml(loc.name || 'Location')}</div>
               <div class="meta">
@@ -4524,13 +4908,12 @@
                 ${loc.parish ? ' · ' + escapeHtml(loc.parish) : ''}
                 ${loc.contact_phone ? '<br>Phone: ' + escapeHtml(loc.contact_phone) : ''}
                 ${loc.opening_hours ? '<br>Hours: ' + escapeHtml(loc.opening_hours) : ''}
-                ${loc.is_online ? '<br><em>Online provider</em>' : ''}
               </div>
             </li>`).join('')}
         </ul></div>`
       : '';
 
-    card.innerHTML = (onlineRows + locationsHtml) || `<div class="section-empty">No ticket details added yet.</div>`;
+    card.innerHTML = (pricingRows + onlineLinksHtml + pickupHtml) || `<div class="section-empty">No ticket details added yet.</div>`;
   }
 
   // ── Transportation ─────────────────────────────────────
@@ -4559,6 +4942,30 @@
           </div>
         </li>`;
     }).join('')}</ul>`;
+  }
+
+  // ── Passes (access passes / wristbands / VIP perks) ────
+  function renderPasses(passesList) {
+    const card = $('passes-card');
+    if (!card) return;
+    const list = Array.isArray(passesList) ? passesList : [];
+    if (!list.length) {
+      card.innerHTML = `<div class="section-empty">No passes configured yet.</div>`;
+      return;
+    }
+    card.innerHTML = `<ul class="info-list">${list.map((p) => `
+      <li class="info-list-item">
+        <div class="name">
+          ${p.color ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${escapeHtml(p.color)};margin-right:6px;vertical-align:middle;"></span>` : ''}
+          ${escapeHtml(p.name || 'Pass')}
+          ${p.is_featured ? ' <span style="font-size:10px;color:var(--brand-primary);">· FEATURED</span>' : ''}
+        </div>
+        <div class="meta">
+          ${p.tier ? escapeHtml(titleCaseSafe(p.tier)) : ''}
+          ${p.price != null ? ' · ' + escapeHtml(p.currency || 'JMD') + ' ' + p.price : ''}
+          ${p.description ? '<br>' + escapeHtml(p.description) : ''}
+        </div>
+      </li>`).join('')}</ul>`;
   }
 
   // ── Bands (carnival only) ──────────────────────────────
@@ -5085,12 +5492,14 @@
         { section: 'bands',          icon: 'ic-mic',      label: 'Bands', id: 'nav-bands', hidden: !opts.isCarnival },
         { section: 'updates',        icon: 'ic-chat',     label: 'Updates',  id: 'nav-updates',  hidden: !opts.hasUpdates },
 
-        { header: 'Edits' },
+        { header: 'Editor' },
         { section: 'edit',                icon: 'ic-edit', label: 'Edit Core Details' },
         { section: 'edit-sponsors',       icon: 'ic-bolt', label: 'Manage Sponsors' },
         { section: 'edit-tickets',        icon: 'ic-ticket', label: 'Manage Tickets' },
         { section: 'edit-schedule',       icon: 'ic-calendar', label: 'Manage Schedule' },
         { section: 'edit-transportation', icon: 'ic-bus',  label: 'Manage Transportation' },
+        { section: 'edit-passes',         icon: 'ic-pass', label: 'Manage Passes' },
+        { section: 'edit-bands',          icon: 'ic-mic',  label: 'Manage Bands', id: 'nav-edit-bands', hidden: !opts.isCarnival },
       ],
     });
     window.PartnerSidebar?.setupScrollspy();
@@ -5253,7 +5662,12 @@
     safe('renderTicketsEditor',   () => renderTicketsEditor(extras, data));
     safe('renderTransportEditor', () => renderTransportEditor(extras));
     safe('renderScheduleEditor',  () => renderScheduleEditor(extras, data));
-    safe('renderBands',          () => renderBands(extras.bands || data.bands || data.mas_bands, isCarnival));
+    safe('renderPassesEditor',    () => renderPassesEditor(extras, data));
+    safe('renderBandsEditor',     () => renderBandsEditor(extras, data, isCarnival));
+
+    // Display renderers for sections wired to the new editors.
+    safe('renderPasses',          () => renderPasses(extras.passes || data.passes));
+    safe('renderBands',           () => renderBands(extras.bands || data.bands || data.mas_bands, isCarnival));
 
     // Force-show sections that we previously hid until data arrived.
     // Their renderers (renderVendors/Sponsors/Schedule) emit their own
@@ -5292,7 +5706,7 @@
 <script>
   // View routing: ?view=overview | analytics | details
   (function () {
-    const VIEWS = ['overview', 'analytics', 'details'];
+    const VIEWS = ['overview', 'analytics', 'details', 'editor'];
     const DEFAULT_VIEW = 'overview';
 
     function resolveView(name) {
@@ -5343,8 +5757,30 @@
 
     window.addEventListener('popstate', () => applyView(paramView()));
 
+    function wireSectionEditButtons() {
+      document.querySelectorAll('.section-edit-btn[data-edit-target]').forEach(btn => {
+        if (btn.dataset.editWired) return;
+        btn.dataset.editWired = '1';
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-edit-target');
+          navigateTo('editor', false);
+          const target = document.getElementById(targetId);
+          if (target) {
+            // After the editor pane is shown, scroll the target into view
+            // and briefly highlight it so it's obvious what was opened.
+            requestAnimationFrame(() => {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              target.classList.add('section-just-opened');
+              setTimeout(() => target.classList.remove('section-just-opened'), 1600);
+            });
+          }
+        });
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       wireTabs();
+      wireSectionEditButtons();
       applyView(paramView());
     });
   })();
