@@ -89,7 +89,7 @@
   .page-hero {
     background: var(--brand-primary) center / cover no-repeat;
     color: var(--brand-text);
-    padding: 28px 24px 36px;
+    padding: 32px 24px 58px;
     text-align: left;
     position: relative; overflow: hidden;
   }
@@ -144,11 +144,11 @@
   /* ── LAYOUT ── */
   .layout {
     max-width: 1320px;
-    margin: 0 auto;
-    padding: 14px 18px 0;
+    margin: -32px auto 0;
+    padding: 0 16px;
     display: grid;
     grid-template-columns: 240px 1fr;
-    gap: 16px;
+    gap: 24px;
     position: relative; z-index: 10;
   }
 
@@ -581,7 +581,7 @@
     min-width: 0;
     padding-bottom: 80px;
     display: grid;
-    gap: 24px;
+    gap: 32px;
   }
 
   .section {
@@ -1167,41 +1167,32 @@
 
   /* ── CHAPTER DIVIDERS (Insights / View / Edits) ── */
   .chapter {
-    margin: 28px 0 18px;
-    padding: 18px 22px;
-    background: linear-gradient(180deg, var(--bg-soft) 0%, #fff 100%);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--brand-primary, #0a7aff);
-    border-radius: 12px;
+    margin: 18px 0 4px;
+    padding: 8px 0 0;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
   }
   .chapter:first-child { margin-top: 6px; }
   .chapter-eyebrow {
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--brand-primary, #0a7aff);
-    margin-bottom: 4px;
+    color: var(--grey-mid);
+    margin-bottom: 3px;
   }
   .chapter-title {
-    font-size: 22px; font-weight: 800;
+    font-size: 20px; font-weight: 800;
     color: var(--black);
     letter-spacing: -0.4px;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
   .chapter-sub { font-size: 13px; color: var(--grey-mid); line-height: 1.4; }
 
-  /* ── VIEW TABS (Overview / Analytics / Details) ── */
+  /* The event dashboard uses the shared sidebar as its single navigation
+     surface. Older tab controls remain in markup for compatibility. */
   .view-tabs {
-    display: flex;
-    gap: 4px;
-    margin: 6px 0 20px;
-    padding: 4px;
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    position: sticky;
-    top: 8px;
-    z-index: 20;
-    backdrop-filter: blur(6px);
+    display: none;
   }
   .view-tab {
     flex: 1;
@@ -1229,12 +1220,8 @@
     outline: 2px solid var(--brand-primary, #0a7aff);
     outline-offset: 2px;
   }
-  /* Panes own the section spacing now that sections are nested inside
-     them instead of being direct children of .main's grid. */
   .view-pane { display: grid; gap: 28px; }
-  .view-pane[hidden] { display: none !important; }
-  /* Grid gap handles the rhythm; strip the chapter card's own margins
-     so spacing stays even instead of doubling up around dividers. */
+  .view-pane[hidden] { display: grid !important; }
   .view-pane > .chapter { margin: 0; }
   @media (max-width: 640px) {
     .view-tabs { position: static; }
@@ -2372,7 +2359,7 @@
       </div><!-- /view-pane-overview -->
 
       <!-- ============ ANALYTICS ============ -->
-      <div class="view-pane" id="view-pane-analytics" data-view="analytics" role="tabpanel" hidden>
+      <div class="view-pane" id="view-pane-analytics" data-view="analytics" role="tabpanel">
 
       <div class="chapter">
         <div class="chapter-eyebrow">Event Dashboard</div>
@@ -2445,7 +2432,7 @@
       </div><!-- /view-pane-analytics -->
 
       <!-- ============ DETAILS ============ -->
-      <div class="view-pane" id="view-pane-details" data-view="details" role="tabpanel" hidden>
+      <div class="view-pane" id="view-pane-details" data-view="details" role="tabpanel">
 
       <div class="chapter">
         <div class="chapter-eyebrow">Event Dashboard</div>
@@ -2677,7 +2664,7 @@
       </div><!-- /view-pane-details -->
 
       <!-- ============ EDITOR ============ -->
-      <div class="view-pane" id="view-pane-editor" data-view="editor" role="tabpanel" hidden>
+      <div class="view-pane" id="view-pane-editor" data-view="editor" role="tabpanel">
 
       <div class="chapter">
         <div class="chapter-eyebrow">Event Dashboard</div>
@@ -5859,28 +5846,16 @@
     wireSidebarJumpLinks();
   }
 
-  // Map each jump-link target section to the view-pane that contains it,
-  // so a sidebar click switches view first, then scrolls.
-  function viewForSection(sectionId) {
-    const el = document.getElementById(sectionId);
-    if (!el) return null;
-    const pane = el.closest('.view-pane');
-    return pane ? pane.getAttribute('data-view') : null;
-  }
-
   function wireSidebarJumpLinks() {
     document.querySelectorAll('.sidebar .jump-link').forEach((link) => {
       if (link.dataset.viewWired) return;
       link.dataset.viewWired = '1';
       link.addEventListener('click', (e) => {
         const sectionId = link.dataset.section;
-        const view = viewForSection(sectionId);
-        if (!view) return; // let default anchor behaviour run
-        e.preventDefault();
-        const tab = document.querySelector(`#view-tabs .view-tab[data-view="${view}"]`);
-        if (tab && !tab.classList.contains('is-active')) tab.click();
         const target = document.getElementById(sectionId);
-        if (target) requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        if (!target) return;
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
   }
@@ -6059,58 +6034,29 @@
 <script src="/js/partner-messages.js" defer></script>
 
 <script>
-  // View routing: ?view=overview | analytics | details
+  // Legacy view routing shim: the event dashboard is now one continuous page.
   (function () {
-    const VIEWS = ['overview', 'analytics', 'details', 'editor'];
-    const DEFAULT_VIEW = 'overview';
-
-    function resolveView(name) {
-      return VIEWS.includes(name) ? name : DEFAULT_VIEW;
-    }
-
-    function paramView() {
-      const params = new URLSearchParams(location.search);
-      return resolveView(params.get('view'));
-    }
-
-    function applyView(view, opts) {
-      view = resolveView(view);
+    function showAllSections() {
       document.querySelectorAll('.view-pane').forEach(pane => {
-        const match = pane.getAttribute('data-view') === view;
-        pane.hidden = !match;
+        pane.hidden = false;
       });
       document.querySelectorAll('.view-tab').forEach(tab => {
-        const match = tab.getAttribute('data-view') === view;
-        tab.classList.toggle('is-active', match);
-        tab.setAttribute('aria-selected', match ? 'true' : 'false');
+        tab.classList.toggle('is-active', tab.getAttribute('data-view') === 'overview');
+        tab.setAttribute('aria-selected', tab.getAttribute('data-view') === 'overview' ? 'true' : 'false');
       });
-      if (opts && opts.scrollTop) window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-      // Nudge the sidebar scrollspy to recompute now that visible
-      // sections have changed.
       window.dispatchEvent(new Event('scroll'));
-    }
-
-    function navigateTo(view, replace) {
-      view = resolveView(view);
-      const params = new URLSearchParams(location.search);
-      if (view === DEFAULT_VIEW) params.delete('view');
-      else params.set('view', view);
-      const qs = params.toString();
-      const url = location.pathname + (qs ? '?' + qs : '') + location.hash;
-      const method = replace ? 'replaceState' : 'pushState';
-      history[method]({ view }, '', url);
-      applyView(view, { scrollTop: true });
     }
 
     function wireTabs() {
       document.querySelectorAll('#view-tabs .view-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          navigateTo(tab.getAttribute('data-view'), false);
+        tab.addEventListener('click', (e) => {
+          e.preventDefault();
+          showAllSections();
         });
       });
     }
 
-    window.addEventListener('popstate', () => applyView(paramView()));
+    window.addEventListener('popstate', showAllSections);
 
     function wireSectionEditButtons() {
       document.querySelectorAll('.section-edit-btn[data-edit-target]').forEach(btn => {
@@ -6118,11 +6064,8 @@
         btn.dataset.editWired = '1';
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-edit-target');
-          navigateTo('editor', false);
           const target = document.getElementById(targetId);
           if (target) {
-            // After the editor pane is shown, scroll the target into view
-            // and briefly highlight it so it's obvious what was opened.
             requestAnimationFrame(() => {
               target.scrollIntoView({ behavior: 'smooth', block: 'start' });
               target.classList.add('section-just-opened');
@@ -6148,7 +6091,7 @@
       wireTabs();
       wireSectionEditButtons();
       wireFloorPlanLauncher();
-      applyView(paramView());
+      showAllSections();
     });
   })();
 </script>
