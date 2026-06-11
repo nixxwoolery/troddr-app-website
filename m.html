@@ -6,10 +6,13 @@
 <title>TRODDR · Floor Plan Editor</title>
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/partner-shared.css">
+<link rel="stylesheet" href="/css/floorplan-builder.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-errors.js"></script>
+<script src="/js/floorplan-builder.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -45,7 +48,7 @@
   }
   header .meta { margin-left: auto; font-size: 12px; color: var(--grey-mid); }
 
-  main { max-width: 1280px; margin: 24px auto; padding: 0 20px; }
+  main { max-width: 1380px; margin: 18px auto; padding: 0 20px 60px; }
 
   .state-card {
     background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
@@ -53,40 +56,6 @@
   }
   .state-card h1 { font-size: 22px; margin-bottom: 8px; }
   .state-card p { color: var(--grey-mid); font-size: 14px; line-height: 1.5; }
-
-  .fp-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; margin-bottom: 14px; }
-  .fp-step-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand-primary); margin-bottom: 14px; }
-  .fp-editor-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; }
-  @media (max-width: 980px) { .fp-editor-grid { grid-template-columns: 1fr; } }
-  .fp-canvas-wrap { position: relative; background: var(--bg-soft); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); user-select: none; }
-  .fp-canvas-wrap img { display: block; width: 100%; height: auto; pointer-events: none; }
-  .fp-markers { position: absolute; inset: 0; cursor: crosshair; }
-  .fp-marker { position: absolute; transform: translate(-50%, -100%); cursor: grab; user-select: none; }
-  .fp-marker:active { cursor: grabbing; }
-  .fp-marker.selected .fp-marker-pin { box-shadow: 0 0 0 3px rgba(10,122,255,0.4); }
-  .fp-marker-pin { width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--brand-primary); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.25); transition: box-shadow 0.15s; }
-  .fp-marker-pin > span { transform: rotate(45deg); font-size: 14px; }
-  .fp-side-title { font-size: 13px; font-weight: 700; color: var(--black); margin-bottom: 6px; }
-  .fp-help { font-size: 12px; color: var(--grey-mid); line-height: 1.5; margin-bottom: 10px; }
-  .fp-marker-list { list-style: none; padding: 0; max-height: 240px; overflow-y: auto; }
-  .fp-marker-list li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; }
-  .fp-marker-list li:hover { background: var(--bg-soft); }
-  .fp-marker-list li.active { background: rgba(10,122,255,0.06); color: var(--brand-primary); font-weight: 600; }
-  .fp-marker-list li .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--brand-primary); flex-shrink: 0; }
-  .fp-marker-list li .lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .fp-marker-list li .pos { font-size: 10px; color: var(--grey-light); }
-  .ve-field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
-  .ve-field label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-mid); }
-  .ve-field input, .ve-field select, .ve-field textarea { font-family: inherit; font-size: 14px; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: #fff; outline: none; }
-  .ve-field input:focus, .ve-field select:focus, .ve-field textarea:focus { border-color: var(--brand-primary); }
-  .ve-btn { padding: 8px 14px; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; color: var(--grey-dark); }
-  .ve-btn.primary { background: var(--brand-primary); border-color: var(--brand-primary); color: var(--brand-text); }
-  .ve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .ve-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
-  .fp-save-row { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-soft); gap: 12px; }
-  .fp-save-meta { font-size: 12px; color: var(--grey-mid); }
-  .fp-save-meta.dirty { color: var(--amber); font-weight: 600; }
-  .fp-save-meta.saved { color: var(--green); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -101,48 +70,7 @@
     <h1 id="state-title">Loading…</h1>
     <p id="state-msg"></p>
   </div>
-
-  <div id="editor" style="display:none;">
-    <div class="fp-card">
-      <div class="fp-step-label">Markers</div>
-      <div class="fp-editor-grid">
-        <div class="fp-canvas-wrap" id="fp-canvas-wrap">
-          <img id="fp-img" alt="Floor plan" />
-          <div class="fp-markers" id="fp-markers"></div>
-        </div>
-        <div>
-          <div class="fp-side-title">Add a marker</div>
-          <p class="fp-help">Click anywhere on the floor plan to drop a marker, then fill in details below.</p>
-          <div id="fp-marker-form" style="display:none;">
-            <div class="ve-field"><label>Label</label><input id="fpm-label" type="text" maxlength="100" /></div>
-            <div class="ve-field"><label>Icon</label>
-              <select id="fpm-icon">
-                <option value="pin">📍 Pin</option><option value="food">🍴 Food</option>
-                <option value="drink">🥤 Drink</option><option value="stage">🎤 Stage</option>
-                <option value="restroom">🚻 Restroom</option><option value="info">ℹ️ Info</option>
-                <option value="exit">🚪 Exit</option><option value="parking">🅿️ Parking</option>
-              </select>
-            </div>
-            <div class="ve-field"><label>Colour</label><input id="fpm-color" type="color" value="#0a7aff" /></div>
-            <div class="ve-field"><label>Vendor link (optional)</label><select id="fpm-vendor"><option value="">— None —</option></select></div>
-            <div class="ve-field"><label>Booth number (optional)</label><input id="fpm-booth" type="text" maxlength="40" /></div>
-            <div class="ve-field"><label>Description (optional)</label><textarea id="fpm-desc" rows="2" maxlength="300"></textarea></div>
-            <div class="ve-actions" style="border-top:none;padding-top:0;margin-top:4px;">
-              <button type="button" class="ve-btn" id="fpm-delete">Delete</button>
-              <button type="button" class="ve-btn primary" id="fpm-apply">Apply</button>
-            </div>
-          </div>
-
-          <div class="fp-side-title" style="margin-top:18px;">All markers</div>
-          <ul class="fp-marker-list" id="fp-marker-list"></ul>
-        </div>
-      </div>
-      <div class="fp-save-row">
-        <span class="fp-save-meta" id="fp-save-meta">No unsaved changes.</span>
-        <button type="button" class="ve-btn primary" id="fp-save-btn">Submit changes</button>
-      </div>
-    </div>
-  </div>
+  <div id="builder-root"></div>
 </main>
 
 <script>
@@ -158,29 +86,18 @@
   }
   function showState(title, msg) {
     $('state').style.display = '';
-    $('editor').style.display = 'none';
+    $('builder-root').innerHTML = '';
     $('state-title').textContent = title;
     $('state-msg').textContent = msg || '';
   }
-  function escapeHtml(s) {
-    if (s == null) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-  function fpUid() { return 'm_' + Math.random().toString(36).slice(2, 9); }
-  function fpIcon(name) {
-    const map = { pin: '📍', food: '🍴', drink: '🥤', stage: '🎤', restroom: '🚻', info: 'ℹ️', exit: '🚪', parking: '🅿️' };
-    return map[name] || '📍';
-  }
-
-  const State = { inviteToken: '', markers: [], selectedId: null, dirty: false, eventTitle: '' };
 
   async function init() {
-    State.inviteToken = getInviteToken();
-    if (!State.inviteToken) { showState("No invite token", "Open the link from your dashboard email."); return; }
+    const inviteToken = getInviteToken();
+    if (!inviteToken) { showState("No invite token", "Open the link from your dashboard email."); return; }
 
     let res;
     try {
-      res = await db.rpc('resolve_event_map_invite', { p_invite_token: State.inviteToken });
+      res = await db.rpc('resolve_event_map_invite', { p_invite_token: inviteToken });
     } catch (e) {
       showState("Couldn't reach the server", (e && e.message) || ''); return;
     }
@@ -188,157 +105,34 @@
     const err  = res && res.error;
     if (err || !data || !data.ok) {
       const reason = (data && data.error) || (err && err.message) || 'invalid';
-      if (reason === 'expired')  return showState("This link has expired",  "Ask the event organiser for a fresh invite.");
-      if (reason === 'revoked')  return showState("This link was revoked",  "Ask the event organiser for a fresh invite.");
-      if (reason === 'not_found') return showState("Invite not found",      "Double-check the URL.");
+      if (reason === 'expired')   return showState("This link has expired",  "Ask the event organiser for a fresh invite.");
+      if (reason === 'revoked')   return showState("This link was revoked",  "Ask the event organiser for a fresh invite.");
+      if (reason === 'not_found') return showState("Invite not found",       "Double-check the URL.");
       return showState("We couldn't open this editor", reason);
     }
 
     const ev = data.event;
-    State.eventTitle = ev.title || 'Floor Plan';
-    State.markers = Array.isArray(ev.floor_plan_markers)
-      ? ev.floor_plan_markers.map(m => ({ ...m, id: m.id || fpUid() }))
-      : [];
+    $('meta').textContent = `${ev.title || 'Floor Plan'} · expires ${new Date(data.expires_at).toLocaleDateString()}`;
 
-    $('meta').textContent = `${State.eventTitle} · expires ${new Date(data.expires_at).toLocaleDateString()}`;
-
-    if (!ev.floor_plan_url) {
-      return showState("No floor plan uploaded yet", "Ask the organiser to upload the image first.");
-    }
-
-    $('editor').style.display = '';
-    $('fp-img').src = ev.floor_plan_url;
-
-    // Vendor dropdown
-    const sel = $('fpm-vendor');
-    (data.vendors || []).forEach(v => {
-      const o = document.createElement('option');
-      o.value = v.event_vendor_id || v.vendor_id || '';
-      o.textContent = v.vendor_name || 'Vendor';
-      sel.appendChild(o);
+    // The invite scope only covers markers, so the designer gets the full
+    // builder but no background upload; layout elements all live in markers.
+    FloorplanBuilder.mount({
+      container: $('builder-root'),
+      elements: Array.isArray(ev.floor_plan_markers) ? ev.floor_plan_markers : [],
+      backgroundUrl: ev.floor_plan_url || null,
+      vendors: Array.isArray(data.vendors) ? data.vendors : [],
+      saveLabel: 'Submit changes',
+      onSave: async ({ elements }) => {
+        const { data: saveData, error } = await db.rpc('update_event_floor_plan_via_invite', {
+          p_invite_token: inviteToken,
+          p_floor_plan_markers: elements,
+        });
+        if (error || !saveData || !saveData.ok) {
+          return { ok: false, error: (error && error.message) || (saveData && saveData.error) || 'Save failed.' };
+        }
+        return { ok: true };
+      },
     });
-
-    $('fp-img').addEventListener('load', renderAll, { once: true });
-    if ($('fp-img').complete) renderAll();
-    setupHandlers();
-  }
-
-  function markDirty(yes) {
-    State.dirty = !!yes;
-    const meta = $('fp-save-meta');
-    meta.className = 'fp-save-meta' + (yes ? ' dirty' : ' saved');
-    meta.textContent = yes ? 'Unsaved changes' : 'All changes saved.';
-  }
-
-  function renderAll() { renderMarkers(); renderList(); }
-  function renderMarkers() {
-    const layer = $('fp-markers'); layer.innerHTML = '';
-    State.markers.forEach(m => {
-      const el = document.createElement('div');
-      el.className = 'fp-marker' + (m.id === State.selectedId ? ' selected' : '');
-      el.dataset.id = m.id;
-      el.style.left = `${(m.x || 0) * 100}%`;
-      el.style.top  = `${(m.y || 0) * 100}%`;
-      el.innerHTML = `<div class="fp-marker-pin" style="background:${escapeHtml(m.color || '#0a7aff')};"><span>${fpIcon(m.icon)}</span></div>`;
-      el.addEventListener('mousedown', (e) => startDrag(e, m.id));
-      el.addEventListener('click', (e) => { e.stopPropagation(); select(m.id); });
-      layer.appendChild(el);
-    });
-  }
-  function renderList() {
-    const ul = $('fp-marker-list');
-    if (!State.markers.length) { ul.innerHTML = `<li style="cursor:default;color:var(--grey-mid);font-size:12px;">No markers yet — click the floor plan to add one.</li>`; return; }
-    ul.innerHTML = State.markers.map(m => `
-      <li data-id="${m.id}" class="${m.id === State.selectedId ? 'active' : ''}">
-        <span class="dot" style="background:${escapeHtml(m.color || '#0a7aff')};"></span>
-        <span class="lbl">${escapeHtml(m.label || '(unnamed)')}</span>
-        <span class="pos">${Math.round((m.x || 0) * 100)}%, ${Math.round((m.y || 0) * 100)}%</span>
-      </li>`).join('');
-    ul.querySelectorAll('li[data-id]').forEach(li => li.addEventListener('click', () => select(li.dataset.id)));
-  }
-  function select(id) {
-    State.selectedId = id;
-    renderAll();
-    const m = State.markers.find(x => x.id === id);
-    if (!m) { $('fp-marker-form').style.display = 'none'; return; }
-    $('fp-marker-form').style.display = '';
-    $('fpm-label').value  = m.label || '';
-    $('fpm-icon').value   = m.icon || 'pin';
-    $('fpm-color').value  = m.color || '#0a7aff';
-    $('fpm-vendor').value = m.vendor_id || '';
-    $('fpm-booth').value  = m.booth || '';
-    $('fpm-desc').value   = m.description || '';
-  }
-
-  function setupHandlers() {
-    $('fp-markers').addEventListener('click', (e) => {
-      if (e.target.closest('.fp-marker')) return;
-      const rect = $('fp-markers').getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top)  / rect.height;
-      if (x < 0 || x > 1 || y < 0 || y > 1) return;
-      const m = { id: fpUid(), x, y, label: '', icon: 'pin', color: '#0a7aff' };
-      State.markers.push(m);
-      markDirty(true); select(m.id); renderAll();
-      setTimeout(() => $('fpm-label').focus(), 30);
-    });
-    $('fpm-apply').addEventListener('click', () => {
-      const m = State.markers.find(x => x.id === State.selectedId); if (!m) return;
-      m.label = $('fpm-label').value.trim();
-      m.icon = $('fpm-icon').value;
-      m.color = $('fpm-color').value;
-      m.vendor_id = $('fpm-vendor').value || null;
-      m.booth = $('fpm-booth').value.trim();
-      m.description = $('fpm-desc').value.trim();
-      markDirty(true); renderAll();
-    });
-    $('fpm-delete').addEventListener('click', () => {
-      State.markers = State.markers.filter(x => x.id !== State.selectedId);
-      State.selectedId = null;
-      $('fp-marker-form').style.display = 'none';
-      markDirty(true); renderAll();
-    });
-    $('fp-save-btn').addEventListener('click', save);
-    window.addEventListener('resize', renderMarkers);
-  }
-
-  let _drag = null;
-  function startDrag(e, id) {
-    e.stopPropagation();
-    _drag = { id, moved: false };
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', endDrag, { once: true });
-  }
-  function onDrag(e) {
-    if (!_drag) return;
-    const m = State.markers.find(x => x.id === _drag.id); if (!m) return;
-    const rect = $('fp-markers').getBoundingClientRect();
-    m.x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    m.y = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
-    _drag.moved = true; renderMarkers();
-  }
-  function endDrag() {
-    document.removeEventListener('mousemove', onDrag);
-    if (_drag && _drag.moved) markDirty(true);
-    _drag = null;
-  }
-
-  async function save() {
-    const btn = $('fp-save-btn'); btn.disabled = true; btn.textContent = 'Saving...';
-    try {
-      const { data, error } = await db.rpc('update_event_floor_plan_via_invite', {
-        p_invite_token: State.inviteToken,
-        p_floor_plan_markers: State.markers,
-      });
-      if (error || !data || !data.ok) {
-        alert((error && error.message) || (data && data.error) || 'Save failed.'); return;
-      }
-      markDirty(false);
-    } catch (e) {
-      alert((e && e.message) || 'Network error.');
-    } finally {
-      btn.disabled = false; btn.textContent = 'Submit changes';
-    }
   }
 
   init();

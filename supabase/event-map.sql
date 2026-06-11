@@ -18,7 +18,14 @@ alter table public.events
 comment on column public.events.floor_plan_url is
   'Public URL of the uploaded floor plan image (PNG/JPG). Lives in the event-floorplans Storage bucket.';
 comment on column public.events.floor_plan_markers is
-  'Array of marker objects: {id, x, y, label, icon, color, vendor_id, booth, description}. x and y are 0-1 fractions of the rendered image — resolution-agnostic.';
+  'Array of floor-plan elements, discriminated by "type" (entries with no type are legacy pins). '
+  'pin: {id,type?,x,y,label,icon,color,vendor_id,booth,size,description} · '
+  'booth: {id,type,x,y,w,h,number,label,icon,color,vendor_id,size,description} · '
+  'zone: {id,type,x,y,w,h,label,color,description} · '
+  'table: {id,type,x,y,w,h,shape,color} · '
+  'text: {id,type,x,y,label,color,fontSize}. '
+  'x/y are CENTER fractions (0-1) of the canvas; w/h are fractions of canvas width/height — resolution-agnostic. '
+  'Renderers that only understand pins can fall back to showing any element as a pin at its centre.';
 
 -- ── 2. Designer-invite table ────────────────────────────────
 create table if not exists public.event_map_invites (

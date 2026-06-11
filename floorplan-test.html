@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Floor Plan Builder — local test harness</title>
+<link rel="stylesheet" href="/css/floorplan-builder.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+<script src="/js/floorplan-builder.js"></script>
+<style>
+  body { font-family: 'Poppins', sans-serif; margin: 0; background: #f8f9fa; padding: 16px; }
+  h1 { font-size: 16px; margin: 0 0 12px; }
+  #log { font-size: 11px; color: #666; margin-top: 10px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>Floor Plan Builder — test harness (not linked from the site)</h1>
+<div id="builder-root"></div>
+<div id="log"></div>
+<script>
+  const saved = [
+    // legacy pin (no type) — must keep working
+    { id: 'legacy1', x: 0.5, y: 0.9, label: 'Entrance', icon: 'exit', color: '#22c55e' },
+    // new-style elements
+    { id: 'b1', type: 'booth', x: 0.2, y: 0.2, w: 0.04, h: 0.064, number: 1, label: 'Lucky Crab', icon: 'food' },
+    { id: 'b2', type: 'booth', x: 0.25, y: 0.2, w: 0.04, h: 0.064, number: 2, label: '', icon: 'drink' },
+    { id: 'z1', type: 'zone', x: 0.55, y: 0.3, w: 0.14, h: 0.14, label: 'Stage', color: '#1f2937' },
+    { id: 't1', type: 'table', x: 0.4, y: 0.55, w: 0.024, h: 0.038, shape: 'round' },
+    { id: 'x1', type: 'text', x: 0.5, y: 0.05, label: 'SECURITY', color: '#166534', fontSize: 0.02 },
+  ];
+  const api = FloorplanBuilder.mount({
+    container: document.getElementById('builder-root'),
+    elements: saved,
+    backgroundUrl: null,
+    vendors: [
+      { event_vendor_id: 'v1', vendor_name: 'Lucky Crab Seafood' },
+      { event_vendor_id: 'v2', vendor_name: 'Pink Apron' },
+    ],
+    saveLabel: 'Save',
+    onSave: async (payload) => {
+      document.getElementById('log').textContent =
+        'SAVE PAYLOAD (' + payload.elements.length + ' elements):\n' + JSON.stringify(payload.elements, null, 1).slice(0, 3000);
+      return { ok: true };
+    },
+    onUploadBackground: async (file) => URL.createObjectURL(file),
+    actions: [{ label: 'Test action', onClick: () => alert('action!') }],
+  });
+  window.__fp = api;
+</script>
+</body>
+</html>
