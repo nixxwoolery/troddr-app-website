@@ -127,6 +127,11 @@ comment on function public.get_partner_vendor_directory is
 --   * both null                    → create a brand-new vendor, then link
 -- ============================================================
 
+-- Drop any earlier signature so create-or-replace doesn't leave an
+-- ambiguous overload behind (PostgREST can't disambiguate those).
+drop function if exists public.upsert_event_vendor(
+  text, uuid, uuid, text, text, text, text, boolean);
+
 create or replace function public.upsert_event_vendor(
   p_token              text,
   p_event_vendor_id    uuid    default null,
@@ -135,7 +140,8 @@ create or replace function public.upsert_event_vendor(
   p_booth_number       text    default null,
   p_vendor_type        text    default null,
   p_vendor_description text    default null,
-  p_is_featured        boolean default null
+  p_is_featured        boolean default null,
+  p_zone               text    default null
 )
 returns jsonb
 language plpgsql
@@ -156,13 +162,33 @@ begin
     return jsonb_build_object('ok', false, 'error', 'invalid_token');
   end if;
 
-  -- 2. Update path: delegate to the existing single-row updater.
+  -- 2. Update path: edit an existing event_vendors row in place.
   if p_event_vendor_id is not null then
-    return public.update_event_vendor(
-      p_token, p_event_vendor_id,
-      p_vendor_name, p_booth_number, p_vendor_type,
-      p_vendor_description, p_is_featured
-    );
+    select vendor_id into v_vendor_id
+      from public.event_vendors
+     where id = p_event_vendor_id and event_id = v_event_id;
+
+    if v_vendor_id is null then
+      return jsonb_build_object('ok', false, 'error', 'vendor_not_found_for_event');
+    end if;
+
+    update public.event_vendors
+       set booth_number = coalesce(p_booth_number, booth_number),
+           is_featured  = coalesce(p_is_featured,  is_featured),
+           zone         = coalesce(p_zone,         zone),
+           updated_at   = now()
+     where id = p_event_vendor_id;
+
+    if p_vendor_name is not null or p_vendor_type is not null or p_vendor_description is not null then
+      update public.vendors
+         set name        = coalesce(p_vendor_name,        name),
+             vendor_type = coalesce(p_vendor_type,        vendor_type),
+             description = coalesce(p_vendor_description, description),
+             updated_at  = now()
+       where id = v_vendor_id;
+    end if;
+
+    return jsonb_build_object('ok', true, 'event_vendor_id', p_event_vendor_id);
   end if;
 
   -- 3. Create path: existing directory vendor, or brand new.
@@ -182,7 +208,8 @@ begin
     end if;
   end if;
 
-  -- 4. Already linked? Return that row instead of duplicating.
+  -- 4. Already linked? (event_vendors has unique (event_id, vendor_id).)
+  --    Update the existing row instead of failing on the constraint.
   select id into v_event_vendor_id
     from public.event_vendors
    where event_id = v_event_id and vendor_id = v_vendor_id;
@@ -191,14 +218,15 @@ begin
     update public.event_vendors
        set booth_number = coalesce(p_booth_number, booth_number),
            is_featured  = coalesce(p_is_featured,  is_featured),
+           zone         = coalesce(p_zone,         zone),
            updated_at   = now()
      where id = v_event_vendor_id;
     return jsonb_build_object('ok', true, 'event_vendor_id', v_event_vendor_id, 'already_linked', true);
   end if;
 
   -- 5. Link vendor to event.
-  insert into public.event_vendors (event_id, vendor_id, booth_number, is_featured)
-  values (v_event_id, v_vendor_id, p_booth_number, coalesce(p_is_featured, false))
+  insert into public.event_vendors (event_id, vendor_id, booth_number, is_featured, zone)
+  values (v_event_id, v_vendor_id, p_booth_number, coalesce(p_is_featured, false), p_zone)
   returning id into v_event_vendor_id;
 
   return jsonb_build_object('ok', true, 'event_vendor_id', v_event_vendor_id);
@@ -208,7 +236,7 @@ end;
 $$;
 
 grant execute on function public.upsert_event_vendor(
-  text, uuid, uuid, text, text, text, text, boolean
+  text, uuid, uuid, text, text, text, text, boolean, text
 ) to anon, authenticated;
 
 comment on function public.upsert_event_vendor is

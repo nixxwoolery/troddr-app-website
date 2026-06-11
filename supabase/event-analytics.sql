@@ -349,6 +349,10 @@ begin
             'place_category',  vb.place_category,
             'event_vendor_id', vb.event_vendor_id,
             'booth_number',    vb.booth_number,
+            'zone', (
+              select ev.zone from public.event_vendors ev
+               where ev.id = vb.event_vendor_id
+            ),
             'is_featured',     vb.vendor_is_featured,
 
             -- Total ratings across all this vendor's items
