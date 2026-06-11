@@ -579,9 +579,9 @@
   .image-status.success { color: var(--green); }
   .main {
     min-width: 0;
-    padding-bottom: 80px;
+    padding: 0 clamp(18px, 2vw, 28px) 80px;
     display: grid;
-    gap: 32px;
+    gap: 40px;
   }
 
   .section {
@@ -618,7 +618,7 @@
     text-align: left;
   }
   /* Give Edit Event Details room to breathe from the preceding section */
-  .section.section-edit { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
+  .section.section-edit { margin-top: 20px; padding-top: 24px; border-top: 1px solid var(--border-soft); }
   .pill {
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
@@ -1167,14 +1167,14 @@
 
   /* ── CHAPTER DIVIDERS (Insights / View / Edits) ── */
   .chapter {
-    margin: 18px 0 4px;
-    padding: 8px 0 0;
+    margin: 28px 0 6px;
+    padding: 18px 0 0;
     background: transparent;
     border: 0;
     border-top: 1px solid var(--border);
     border-radius: 0;
   }
-  .chapter:first-child { margin-top: 6px; }
+  .chapter:first-child { margin-top: 12px; }
   .chapter-eyebrow {
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.14em; text-transform: uppercase;
@@ -1182,7 +1182,7 @@
     margin-bottom: 3px;
   }
   .chapter-title {
-    font-size: 20px; font-weight: 800;
+    font-size: 22px; font-weight: 800;
     color: var(--black);
     letter-spacing: -0.4px;
     margin-bottom: 3px;
@@ -1220,9 +1220,10 @@
     outline: 2px solid var(--brand-primary, #0a7aff);
     outline-offset: 2px;
   }
-  .view-pane { display: grid; gap: 28px; }
+  .view-pane { display: grid; gap: 36px; }
   .view-pane[hidden] { display: grid !important; }
   .view-pane > .chapter { margin: 0; }
+  .view-pane + .view-pane { margin-top: 12px; }
   @media (max-width: 640px) {
     .view-tabs { position: static; }
     .view-tab { font-size: 12px; padding: 9px 8px; }

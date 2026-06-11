@@ -355,6 +355,30 @@ begin
             ),
             'is_featured',     vb.vendor_is_featured,
 
+            -- Per-vendor activity. The app has used both vendor ids and
+            -- event_vendor ids for entity_id, so count either shape.
+            'view_count', (
+              select count(*) from public.user_event_activity a
+               where a.event_id = v_event.id
+                 and a.entity_type in ('vendor', 'event_vendor')
+                 and a.entity_id in (vb.vendor_id, vb.event_vendor_id)
+                 and (a.activity_type = 'visited' or a.action = 'viewed')
+            ),
+            'save_count', (
+              select count(*) from public.user_event_activity a
+               where a.event_id = v_event.id
+                 and a.entity_type in ('vendor', 'event_vendor')
+                 and a.entity_id in (vb.vendor_id, vb.event_vendor_id)
+                 and (a.activity_type = 'bookmarked' or a.action = 'saved')
+            ),
+            'menu_clicks', (
+              select count(*) from public.user_event_activity a
+               where a.event_id = v_event.id
+                 and a.entity_type in ('vendor', 'event_vendor', 'vendor_menu')
+                 and a.entity_id in (vb.vendor_id, vb.event_vendor_id)
+                 and a.action in ('menu_click', 'menu_clicked', 'menu_viewed')
+            ),
+
             -- Total ratings across all this vendor's items
             'total_ratings', (
               select count(*) from public.user_vendor_item_ratings r
