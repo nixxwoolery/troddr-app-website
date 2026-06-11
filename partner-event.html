@@ -1320,7 +1320,7 @@
     border-radius: var(--radius-lg);
     overflow-x: auto;
     overflow-y: hidden;
-    width: min(100%, 860px);
+    width: 100%;
     max-width: 100%;
   }
   .vl-table {
@@ -1331,13 +1331,17 @@
   .vl-table th:nth-child(1),
   .vl-table td:nth-child(1) { width: auto; }
   .vl-table th:nth-child(2),
-  .vl-table td:nth-child(2) { width: 120px; }
+  .vl-table td:nth-child(2) { width: 90px; }
   .vl-table th:nth-child(3),
-  .vl-table td:nth-child(3) { width: 130px; }
+  .vl-table td:nth-child(3) { width: 110px; }
   .vl-table th:nth-child(4),
-  .vl-table td:nth-child(4) { width: 72px; }
+  .vl-table td:nth-child(4) { width: 80px; }
   .vl-table th:nth-child(5),
-  .vl-table td:nth-child(5) { width: 40px; }
+  .vl-table td:nth-child(5) { width: 80px; }
+  .vl-table th:nth-child(6),
+  .vl-table td:nth-child(6) { width: 116px; }
+  .vl-table th:nth-child(7),
+  .vl-table td:nth-child(7) { width: 36px; }
   .vl-table thead th {
     text-align: left;
     font-size: 11px;
@@ -1469,18 +1473,10 @@
     font-size: 14px;
   }
   @media (max-width: 1120px) {
-    .vl-table th:nth-child(3),
-    .vl-table td:nth-child(3),
-    .vl-table th:nth-child(4),
-    .vl-table td:nth-child(4) { display: none; }
-    .vl-table th:nth-child(2),
-    .vl-table td:nth-child(2) { width: 100px; }
+    .vl-card { width: 100%; }
+    .vl-table { min-width: 820px; }
   }
   @media (max-width: 640px) {
-    .vl-table th:nth-child(2),
-    .vl-table td:nth-child(2) { width: 82px; }
-    .vl-table th:nth-child(5),
-    .vl-table td:nth-child(5) { width: 32px; }
     .vl-table thead th,
     .vl-table tbody td { padding-left: 12px; padding-right: 12px; }
   }
@@ -3561,6 +3557,9 @@
     const rowsHtml = vendors.map((v, i) => {
       const items = v.menu_items || [];
       const logo = v.logo_url || (Array.isArray(v.place_image) && v.place_image[0]) || v.cover_image_url || '';
+      const views = Number(v.view_count || v.views || 0);
+      const saves = Number(v.save_count || v.saves || items.reduce((a, it) => a + Number(it.saved_count || 0), 0));
+      const menuClicks = Number(v.menu_clicks || v.click_count || 0);
       const menuHtml = items.length ? items.map(it => {
         const tags = [];
         if (it.is_special)  tags.push('<span class="vl-menu-item-tag special">Special</span>');
@@ -3591,11 +3590,13 @@
           </td>
           <td>${escapeHtml(v.booth_number || '—')}${v.zone ? `<div style="font-size:11px;color:var(--grey-mid);">${escapeHtml(v.zone)}</div>` : ''}</td>
           <td>${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}</td>
-          <td class="num">${items.length}</td>
+          <td class="num">${views}</td>
+          <td class="num">${saves}</td>
+          <td class="num">${menuClicks}</td>
           <td class="num"><span class="vl-chevron">›</span></td>
         </tr>
         <tr class="vl-menu-row" data-menu-for="${i}" hidden>
-          <td colspan="5">
+          <td colspan="7">
             <div class="vl-menu">${menuHtml}</div>
           </td>
         </tr>`;
@@ -3608,7 +3609,9 @@
             <th>Vendor</th>
             <th>Booth</th>
             <th>Type</th>
-            <th class="num">Items</th>
+            <th class="num">Views</th>
+            <th class="num">Saves</th>
+            <th class="num">Menu Clicks</th>
             <th class="num"></th>
           </tr>
         </thead>
