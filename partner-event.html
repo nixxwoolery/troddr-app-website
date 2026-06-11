@@ -2684,7 +2684,7 @@
         </div>
         <div class="sponsors-grid" id="sponsors-grid"></div>
       </section>
-      <section class="section" id="transportation">
+      <section class="section" id="transportation" style="display:none;">
         <div class="section-head section-head-with-edit">
           <div>
             <h2 class="section-title">Transportation</h2>
@@ -2694,7 +2694,7 @@
         </div>
         <div class="info-card" id="transportation-card"></div>
       </section>
-      <section class="section" id="passes">
+      <section class="section" id="passes" style="display:none;">
         <div class="section-head section-head-with-edit">
           <div>
             <h2 class="section-title">Passes</h2>
@@ -2813,7 +2813,7 @@
         </div>
       </section>
 
-      <section class="section" id="edit-transportation">
+      <section class="section" id="edit-transportation" style="display:none;">
         <div class="section-head">
           <div>
             <h2 class="section-title">Manage Transportation</h2>
@@ -2829,7 +2829,7 @@
         </div>
       </section>
 
-      <section class="section" id="edit-passes">
+      <section class="section" id="edit-passes" style="display:none;">
         <div class="section-head">
           <div>
             <h2 class="section-title">Manage Passes</h2>
@@ -5891,8 +5891,9 @@
         { section: 'map',            icon: 'ic-map',      label: 'Map' },
         { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
         { section: 'sponsors',       icon: 'ic-bolt',     label: 'Sponsors' },
-        { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
-        { section: 'passes',         icon: 'ic-pass',     label: 'Passes' },
+        // Temporarily hidden while these sections are productized.
+        // { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
+        // { section: 'passes',         icon: 'ic-pass',     label: 'Passes' },
         { section: 'bands',          icon: 'ic-mic',      label: 'Bands', id: 'nav-bands', hidden: !opts.isCarnival },
         { section: 'updates',        icon: 'ic-chat',     label: 'Updates',  id: 'nav-updates',  hidden: !opts.hasUpdates },
 
@@ -5902,8 +5903,9 @@
         { section: 'edit-vendors',        icon: 'ic-shop', label: 'Manage Vendors' },
         { section: 'edit-tickets',        icon: 'ic-ticket', label: 'Manage Tickets' },
         { section: 'edit-schedule',       icon: 'ic-calendar', label: 'Manage Schedule' },
-        { section: 'edit-transportation', icon: 'ic-bus',  label: 'Manage Transportation' },
-        { section: 'edit-passes',         icon: 'ic-pass', label: 'Manage Passes' },
+        // Temporarily hidden while these sections are productized.
+        // { section: 'edit-transportation', icon: 'ic-bus',  label: 'Manage Transportation' },
+        // { section: 'edit-passes',         icon: 'ic-pass', label: 'Manage Passes' },
         { section: 'edit-bands',          icon: 'ic-mic',  label: 'Manage Bands', id: 'nav-edit-bands', hidden: !opts.isCarnival },
       ],
     });
