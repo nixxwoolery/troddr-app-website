@@ -70,7 +70,8 @@
     {
       group: 'Event',
       items: [
-        { href: '/partner/event', icon: 'ic-calendar', label: 'Event Dashboard', cap: 'event' },
+        { href: '/partner/event',            icon: 'ic-calendar',  label: 'Event Dashboard', cap: 'event' },
+        { href: '/partner/event-floorplan',  icon: 'ic-floorplan', label: 'Floor Plan',      cap: 'event' },
       ],
     },
     {

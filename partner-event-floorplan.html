@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Floor Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Pan/zoom for the canvas. ~5KB gzipped, touch-ready. -->
+<script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
+<script src="/js/partner-errors.js"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black: #111; --grey-dark: #333; --grey-mid: #666; --grey-light: #999;
+    --border: #e8e8e8; --border-soft: #f0f0f0;
+    --bg: #fff; --bg-soft: #f8f9fa;
+    --radius: 10px; --radius-lg: 16px;
+    --brand-primary: #0a7aff;
+    --red: #c0392b; --green: #1a7f4e; --amber: #b86e00;
+  }
+
+  body { background: var(--bg-soft); }
+
+  /* ── Toolbar above the canvas ── */
+  .fp-toolbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .fp-toolbar .tb-title { font-weight: 700; font-size: 14px; color: var(--black); margin-right: auto; }
+  .fp-toolbar .tb-dirty { color: var(--amber); font-size: 12px; font-weight: 600; margin-right: 6px; }
+  .fp-toolbar .tb-dirty.clean { color: var(--grey-mid); font-weight: 400; }
+  .tb-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    appearance: none; cursor: pointer; font: inherit;
+    font-size: 13px; font-weight: 600;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--black);
+    transition: background .12s, border-color .12s;
+  }
+  .tb-btn:hover { background: var(--bg-soft); }
+  .tb-btn.primary { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
+  .tb-btn.primary:hover { background: #0966d9; }
+  .tb-btn:disabled { opacity: .55; cursor: not-allowed; }
+  .tb-btn svg { width: 14px; height: 14px; }
+
+  /* ── Editor layout: canvas left, side panel right ── */
+  .fp-editor {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 14px;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .fp-editor { grid-template-columns: 1fr; }
+  }
+
+  /* ── Canvas viewport ── */
+  .fp-viewport {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    height: 70vh;
+    min-height: 500px;
+    touch-action: none;
+    user-select: none;
+  }
+  .fp-canvas {
+    position: relative;
+    transform-origin: 0 0;
+    display: inline-block;
+  }
+  .fp-canvas img {
+    display: block;
+    max-width: none;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+  .fp-zoom-controls {
+    position: absolute; right: 12px; bottom: 12px;
+    display: flex; flex-direction: column; gap: 4px;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .fp-zoom-btn {
+    appearance: none; border: none; background: transparent;
+    width: 30px; height: 30px; cursor: pointer;
+    font-size: 18px; color: var(--grey-dark);
+    border-radius: 6px;
+  }
+  .fp-zoom-btn:hover { background: var(--bg-soft); }
+  .fp-mode-pill {
+    position: absolute; left: 12px; top: 12px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px; font-weight: 600;
+    color: var(--grey-dark);
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .fp-mode-pill.placing { color: var(--brand-primary); border-color: var(--brand-primary); }
+
+  /* ── Pin markers on canvas ── */
+  .fp-pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    cursor: grab;
+    z-index: 2;
+    pointer-events: auto;
+  }
+  .fp-pin:active { cursor: grabbing; }
+  .fp-pin-bubble {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--pin-color, var(--brand-primary));
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2), 0 0 0 3px #fff;
+    transition: transform .12s;
+  }
+  .fp-pin:hover .fp-pin-bubble { transform: scale(1.08); }
+  .fp-pin.selected .fp-pin-bubble {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25), 0 0 0 3px #fff, 0 0 0 6px var(--pin-color, var(--brand-primary));
+  }
+  .fp-pin-bubble svg { width: 20px; height: 20px; stroke-width: 2; }
+  .fp-pin-label {
+    margin-top: 4px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--black);
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* ── Empty state ── */
+  .fp-empty {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 40px;
+    color: var(--grey-mid);
+    z-index: 1;
+  }
+  .fp-empty .icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--bg-soft);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+    color: var(--grey-mid);
+  }
+  .fp-empty .icon svg { width: 26px; height: 26px; }
+  .fp-empty h3 { font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 6px; }
+  .fp-empty p { font-size: 13px; line-height: 1.4; max-width: 320px; margin-bottom: 16px; }
+  .fp-empty .upload-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--brand-primary); color: #fff;
+    padding: 10px 18px; border-radius: 10px;
+    font-weight: 600; font-size: 13px; cursor: pointer;
+    border: none;
+  }
+  .fp-empty .upload-btn input { display: none; }
+
+  /* ── Side panel ── */
+  .fp-side {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    position: sticky; top: 14px;
+  }
+  .fp-side h3 {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid); margin-bottom: 10px;
+  }
+  .fp-side .empty-side { color: var(--grey-mid); font-size: 13px; padding: 14px 0; text-align: center; }
+  .fp-side .helper {
+    background: var(--bg-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px; color: var(--grey-dark);
+    line-height: 1.4;
+    margin-bottom: 14px;
+  }
+
+  /* Form fields in side panel */
+  .fp-field { margin-bottom: 12px; }
+  .fp-field label {
+    display: block; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid); margin-bottom: 4px;
+  }
+  .fp-field input,
+  .fp-field select,
+  .fp-field textarea {
+    width: 100%;
+    font: inherit; font-size: 13px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--black);
+    box-sizing: border-box;
+  }
+  .fp-field input:focus,
+  .fp-field select:focus,
+  .fp-field textarea:focus {
+    outline: none; border-color: var(--brand-primary);
+  }
+  .fp-field textarea { resize: vertical; min-height: 60px; }
+
+  /* Category grid in add-pin mode */
+  .fp-cat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .fp-cat-btn {
+    appearance: none; border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 6px;
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600;
+    color: var(--grey-dark);
+    transition: border-color .12s, background .12s;
+  }
+  .fp-cat-btn:hover { background: var(--bg-soft); }
+  .fp-cat-btn.active { border-color: var(--brand-primary); background: #eaf3ff; color: var(--brand-primary); }
+  .fp-cat-btn .swatch {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .fp-cat-btn .swatch svg { width: 14px; height: 14px; }
+
+  /* Pin list */
+  .fp-pin-list { max-height: 320px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+  .fp-pin-list li {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    background: #fff;
+  }
+  .fp-pin-list li:hover { background: var(--bg-soft); }
+  .fp-pin-list li.active {
+    border-color: var(--brand-primary);
+    background: #eaf3ff;
+  }
+  .fp-pin-list .dot {
+    width: 16px; height: 16px; border-radius: 50%; flex: 0 0 16px;
+  }
+  .fp-pin-list .meta { font-size: 11px; color: var(--grey-mid); }
+  .fp-pin-list .name { font-weight: 600; font-size: 13px; color: var(--black); }
+
+  /* Legend at the bottom */
+  .fp-legend {
+    margin-top: 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    display: flex; flex-wrap: wrap; gap: 12px;
+  }
+  .fp-legend-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--grey-dark);
+  }
+  .fp-legend-item .swatch {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .fp-legend-item .swatch svg { width: 11px; height: 11px; }
+
+  .fp-status { font-size: 12px; margin-top: 8px; }
+  .fp-status.success { color: var(--green); }
+  .fp-status.error   { color: var(--red); }
+
+  .fp-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .fp-actions .danger { color: var(--red); border-color: #f5c2bd; }
+  .fp-actions .danger:hover { background: #fdecea; }
+</style>
+</head>
+<body>
+
+<header class="partner-topbar">
+  <div class="partner-topbar-inner">
+    <a href="/" class="partner-logo">TRODDR</a>
+    <span class="nav-badge">Event Partner</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow" id="hero-eyebrow">Floor Plan</span>
+    <h1 id="hero-title">Loading…</h1>
+    <div class="hero-meta" id="hero-meta"></div>
+  </div>
+</section>
+
+<!-- Lucide icon symbols. Drop in more as new categories are added. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- food -->
+    <symbol id="li-utensils" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
+    <!-- drink -->
+    <symbol id="li-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 22H8.8a2 2 0 0 1-2-1.79L5 3h14l-1.81 17.21A2 2 0 0 1 15.2 22Z"/><path d="M6 12a5 5 0 0 1 6 0 5 5 0 0 0 6 0"/></symbol>
+    <!-- bar -->
+    <symbol id="li-wine" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5V3H7v7a5 5 0 0 0 5 5Z"/></symbol>
+    <!-- stage -->
+    <symbol id="li-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+    <!-- merch -->
+    <symbol id="li-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+    <!-- photo -->
+    <symbol id="li-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></symbol>
+    <!-- info -->
+    <symbol id="li-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <!-- medic -->
+    <symbol id="li-medic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8"/><path d="M8 12h8"/></symbol>
+    <!-- restroom -->
+    <symbol id="li-restroom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="5" r="2"/><path d="M5 22v-7H3l2-6h4l2 6H9v7Z"/><circle cx="17" cy="5" r="2"/><path d="M15 22V12h-2l2-5h4l2 5h-2v10Z"/></symbol>
+    <!-- entrance -->
+    <symbol id="li-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></symbol>
+    <!-- exit -->
+    <symbol id="li-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+    <!-- parking -->
+    <symbol id="li-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+    <!-- seating -->
+    <symbol id="li-chair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0Z"/><path d="M5 18v2"/><path d="M19 18v2"/></symbol>
+    <!-- vip -->
+    <symbol id="li-crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></symbol>
+    <!-- artisan -->
+    <symbol id="li-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.5 6.71 17.21 2 12 2z"/></symbol>
+    <!-- arcade -->
+    <symbol id="li-pad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h4"/><path d="M8 10v4"/><path d="m15 13 0 0"/><path d="m18 11 0 0"/><rect x="2" y="6" width="20" height="12" rx="2"/></symbol>
+    <!-- pin (generic) -->
+    <symbol id="li-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <!-- save / icons used in toolbar -->
+    <symbol id="li-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+    <symbol id="li-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="li-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+    <symbol id="li-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
+    <symbol id="li-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  </defs>
+</svg>
+
+<!-- LOADING -->
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main">
+    <div class="skeleton-card" style="margin-bottom: 14px;">
+      <span class="skeleton skeleton-title" style="width: 30%;"></span>
+      <span class="skeleton skeleton-text long"></span>
+    </div>
+    <div class="skeleton-card" style="height: 400px;"></div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="layout hidden" id="view-error">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <div class="state">
+      <div class="state-title">We couldn't load this floor plan</div>
+      <p class="state-msg">This link may have expired. Try opening the latest dashboard link from TRODDR, or message us if you think this is a mistake.</p>
+      <pre id="error-detail" style="margin-top:18px; padding:10px 14px; background:var(--bg-soft); border:1px solid var(--border); border-radius:8px; font-size:11px; color:var(--grey-mid); text-align:left; max-width:560px; margin-left:auto; margin-right:auto; white-space:pre-wrap; overflow:auto;"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div class="layout hidden" id="view-editor">
+  <aside class="sidebar"></aside>
+  <main class="main">
+
+    <div class="fp-toolbar" id="fp-toolbar">
+      <span class="tb-title" id="tb-title">Floor Plan</span>
+      <span class="tb-dirty clean" id="tb-dirty">No unsaved changes</span>
+      <label class="tb-btn">
+        <svg><use href="#li-upload"/></svg>
+        Replace background
+        <input id="fp-replace-input" type="file" accept="image/png,image/jpeg" hidden />
+      </label>
+      <button type="button" class="tb-btn" id="fp-add-pin-btn">
+        <svg><use href="#li-plus"/></svg>
+        Add pin
+      </button>
+      <button type="button" class="tb-btn" id="fp-invite-btn">
+        <svg><use href="#li-share"/></svg>
+        Designer link
+      </button>
+      <button type="button" class="tb-btn primary" id="fp-save-btn">
+        <svg><use href="#li-save"/></svg>
+        Save
+      </button>
+    </div>
+
+    <div class="fp-editor">
+
+      <div class="fp-viewport" id="fp-viewport">
+        <div class="fp-canvas" id="fp-canvas">
+          <img id="fp-img" alt="Venue background" />
+          <div class="fp-pins" id="fp-pins"></div>
+        </div>
+
+        <div class="fp-mode-pill" id="fp-mode-pill" hidden>
+          Click anywhere on the map to drop the pin
+        </div>
+
+        <div class="fp-zoom-controls">
+          <button type="button" class="fp-zoom-btn" id="fp-zoom-in" title="Zoom in">＋</button>
+          <button type="button" class="fp-zoom-btn" id="fp-zoom-reset" title="Fit">⊙</button>
+          <button type="button" class="fp-zoom-btn" id="fp-zoom-out" title="Zoom out">−</button>
+        </div>
+
+        <div class="fp-empty" id="fp-empty" hidden>
+          <div class="icon"><svg><use href="#li-pin"/></svg></div>
+          <h3>Upload your venue background</h3>
+          <p>Drop an illustrated map or aerial photo of your venue, then drop pins for vendors, stages, bars, and amenities.</p>
+          <label class="upload-btn">
+            <svg style="width:16px;height:16px;"><use href="#li-upload"/></svg>
+            Choose image
+            <input id="fp-empty-input" type="file" accept="image/png,image/jpeg" />
+          </label>
+          <div class="fp-status" id="fp-upload-status"></div>
+        </div>
+      </div>
+
+      <div class="fp-side" id="fp-side">
+        <!-- Side content swaps between three modes: idle / adding / editing -->
+
+        <div id="fp-side-idle">
+          <h3>Pins</h3>
+          <div class="helper">Click <strong>+ Add pin</strong> and pick a category. Drag pins to fine-tune positions. Click any pin to edit it.</div>
+          <ul class="fp-pin-list" id="fp-pin-list"></ul>
+        </div>
+
+        <div id="fp-side-add" hidden>
+          <h3>Add a pin</h3>
+          <div class="helper">Pick a category, then click the map.</div>
+          <div class="fp-cat-grid" id="fp-cat-grid"></div>
+          <div class="fp-actions">
+            <button type="button" class="tb-btn" id="fp-add-cancel">Cancel</button>
+          </div>
+        </div>
+
+        <div id="fp-side-edit" hidden>
+          <h3>Edit pin</h3>
+          <div class="fp-field">
+            <label for="pe-label">Label</label>
+            <input id="pe-label" type="text" maxlength="80" placeholder="e.g. Jerk Center" />
+          </div>
+          <div class="fp-field">
+            <label for="pe-category">Category</label>
+            <select id="pe-category"></select>
+          </div>
+          <div class="fp-field">
+            <label for="pe-vendor">Vendor (optional)</label>
+            <select id="pe-vendor">
+              <option value="">— None —</option>
+            </select>
+          </div>
+          <div class="fp-field">
+            <label for="pe-booth">Booth number (optional)</label>
+            <input id="pe-booth" type="text" maxlength="20" placeholder="e.g. A-12" />
+          </div>
+          <div class="fp-field">
+            <label for="pe-desc">Description (optional)</label>
+            <textarea id="pe-desc" rows="2" maxlength="240"></textarea>
+          </div>
+          <div class="fp-actions">
+            <button type="button" class="tb-btn" id="pe-done">Done</button>
+            <button type="button" class="tb-btn danger" id="pe-delete">
+              <svg><use href="#li-trash"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fp-legend" id="fp-legend"></div>
+
+    <div class="fp-status" id="fp-save-status"></div>
+
+  </main>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const $ = (id) => document.getElementById(id);
+
+  // ── Category library ──────────────────────────────────
+  // Each category drives icon + colour. Add freely; the side panel and
+  // legend regenerate from this list.
+  const CATEGORIES = [
+    { id: 'food',     label: 'Food',      icon: 'li-utensils', color: '#f59e0b' },
+    { id: 'drink',    label: 'Drink',     icon: 'li-glass',    color: '#06b6d4' },
+    { id: 'bar',      label: 'Bar',       icon: 'li-wine',     color: '#0891b2' },
+    { id: 'stage',    label: 'Stage',     icon: 'li-music',    color: '#8b5cf6' },
+    { id: 'merch',    label: 'Merch',     icon: 'li-bag',      color: '#ec4899' },
+    { id: 'artisan',  label: 'Artisan',   icon: 'li-palette',  color: '#a855f7' },
+    { id: 'photo',    label: 'Photo Op',  icon: 'li-camera',   color: '#14b8a6' },
+    { id: 'arcade',   label: 'Arcade',    icon: 'li-pad',      color: '#10b981' },
+    { id: 'seating',  label: 'Seating',   icon: 'li-chair',    color: '#64748b' },
+    { id: 'vip',      label: 'VIP',       icon: 'li-crown',    color: '#facc15' },
+    { id: 'info',     label: 'Info',      icon: 'li-info',     color: '#0a7aff' },
+    { id: 'medic',    label: 'First Aid', icon: 'li-medic',    color: '#ef4444' },
+    { id: 'restroom', label: 'Restrooms', icon: 'li-restroom', color: '#475569' },
+    { id: 'entrance', label: 'Entrance',  icon: 'li-enter',    color: '#22c55e' },
+    { id: 'exit',     label: 'Exit',      icon: 'li-exit',     color: '#22c55e' },
+    { id: 'parking',  label: 'Parking',   icon: 'li-car',      color: '#334155' },
+  ];
+  const CAT_BY_ID = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
+  const DEFAULT_CAT = 'food';
+
+  // ── State ─────────────────────────────────────────────
+  const FP = {
+    eventId: null,
+    eventSlug: null,
+    title: 'Floor Plan',
+    url: null,
+    markers: [],          // [{id, x, y, label, icon (category id), color, vendor_id, booth, description}]
+    selectedId: null,
+    placingCategory: null,
+    vendors: [],          // [{event_vendor_id, vendor_name}]
+    panzoom: null,
+    dirty: false,
+    sideMode: 'idle',
+  };
+
+  function uid() { return 'pin_' + Math.random().toString(36).slice(2, 10); }
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+  function markDirty(yes) {
+    FP.dirty = !!yes;
+    const el = $('tb-dirty');
+    if (yes) { el.textContent = 'Unsaved changes'; el.classList.remove('clean'); }
+    else     { el.textContent = 'No unsaved changes'; el.classList.add('clean'); }
+  }
+
+  function setSideMode(mode) {
+    FP.sideMode = mode;
+    $('fp-side-idle').hidden = mode !== 'idle';
+    $('fp-side-add').hidden  = mode !== 'add';
+    $('fp-side-edit').hidden = mode !== 'edit';
+    $('fp-mode-pill').hidden = mode !== 'add';
+    if (mode === 'add' && FP.placingCategory) {
+      const c = CAT_BY_ID[FP.placingCategory];
+      $('fp-mode-pill').textContent = 'Click anywhere to drop ' + (c ? c.label : 'pin');
+      $('fp-mode-pill').classList.add('placing');
+    }
+  }
+
+  // ── Categories: render picker grid + edit-mode dropdown + legend ──
+  function renderCategoryPicker() {
+    $('fp-cat-grid').innerHTML = CATEGORIES.map(c => `
+      <button type="button" class="fp-cat-btn" data-cat="${c.id}">
+        <span class="swatch" style="background:${c.color}"><svg><use href="#${c.icon}"/></svg></span>
+        ${escapeHtml(c.label)}
+      </button>`).join('');
+    $('fp-cat-grid').querySelectorAll('.fp-cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $('fp-cat-grid').querySelectorAll('.fp-cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        FP.placingCategory = btn.dataset.cat;
+        const c = CAT_BY_ID[FP.placingCategory];
+        $('fp-mode-pill').textContent = 'Click anywhere to drop ' + (c ? c.label : 'pin');
+      });
+    });
+    // Edit-mode dropdown
+    $('pe-category').innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${escapeHtml(c.label)}</option>`).join('');
+  }
+  function renderLegend() {
+    $('fp-legend').innerHTML = CATEGORIES.map(c => `
+      <span class="fp-legend-item">
+        <span class="swatch" style="background:${c.color}"><svg><use href="#${c.icon}"/></svg></span>
+        ${escapeHtml(c.label)}
+      </span>`).join('');
+  }
+
+  // ── Pin rendering ─────────────────────────────────────
+  function renderPins() {
+    const layer = $('fp-pins');
+    layer.innerHTML = FP.markers.map(m => {
+      const cat = CAT_BY_ID[m.icon] || CAT_BY_ID[DEFAULT_CAT];
+      const color = m.color || cat.color;
+      const cls = 'fp-pin' + (m.id === FP.selectedId ? ' selected' : '');
+      return `
+        <div class="${cls}" data-id="${m.id}" style="left:${(m.x || 0) * 100}%; top:${(m.y || 0) * 100}%; --pin-color:${color};">
+          <div class="fp-pin-bubble"><svg><use href="#${cat.icon}"/></svg></div>
+          ${m.label ? `<div class="fp-pin-label">${escapeHtml(m.label)}</div>` : ''}
+        </div>`;
+    }).join('');
+    layer.querySelectorAll('.fp-pin').forEach(el => {
+      el.addEventListener('mousedown',  (e) => startDrag(e, el.dataset.id));
+      el.addEventListener('touchstart', (e) => startDrag(e, el.dataset.id), { passive: false });
+      el.addEventListener('click', (e) => { e.stopPropagation(); selectPin(el.dataset.id); });
+    });
+    renderPinList();
+  }
+  function renderPinList() {
+    const ul = $('fp-pin-list');
+    if (!FP.markers.length) {
+      ul.innerHTML = `<li style="cursor:default;color:var(--grey-mid);font-size:12px;justify-content:center;">No pins yet — use + Add pin.</li>`;
+      return;
+    }
+    ul.innerHTML = FP.markers.map(m => {
+      const cat = CAT_BY_ID[m.icon] || CAT_BY_ID[DEFAULT_CAT];
+      const active = m.id === FP.selectedId ? ' active' : '';
+      return `
+        <li data-id="${m.id}" class="${active.trim()}">
+          <span class="dot" style="background:${m.color || cat.color}"></span>
+          <div style="flex:1;min-width:0;">
+            <div class="name">${escapeHtml(m.label || cat.label)}</div>
+            <div class="meta">${escapeHtml(cat.label)}${m.booth ? ' · Booth ' + escapeHtml(m.booth) : ''}</div>
+          </div>
+        </li>`;
+    }).join('');
+    ul.querySelectorAll('li[data-id]').forEach(li => {
+      li.addEventListener('click', () => selectPin(li.dataset.id));
+    });
+  }
+
+  // ── Selection / edit ──────────────────────────────────
+  function selectPin(id) {
+    FP.selectedId = id;
+    const m = FP.markers.find(x => x.id === id);
+    if (!m) return;
+    renderPins();
+    // Populate edit form
+    $('pe-label').value = m.label || '';
+    $('pe-category').value = CAT_BY_ID[m.icon] ? m.icon : DEFAULT_CAT;
+    $('pe-vendor').value = m.vendor_id || '';
+    $('pe-booth').value = m.booth || '';
+    $('pe-desc').value = m.description || '';
+    setSideMode('edit');
+  }
+
+  function updateSelectedFromForm() {
+    if (!FP.selectedId) return;
+    const m = FP.markers.find(x => x.id === FP.selectedId);
+    if (!m) return;
+    const cat = CAT_BY_ID[$('pe-category').value] || CAT_BY_ID[DEFAULT_CAT];
+    m.label = $('pe-label').value.trim() || '';
+    m.icon  = cat.id;
+    m.color = cat.color;
+    m.vendor_id = $('pe-vendor').value || null;
+    m.booth = $('pe-booth').value.trim() || '';
+    m.description = $('pe-desc').value.trim() || '';
+    markDirty(true);
+    renderPins();
+  }
+
+  function deleteSelected() {
+    if (!FP.selectedId) return;
+    if (!confirm('Remove this pin?')) return;
+    FP.markers = FP.markers.filter(x => x.id !== FP.selectedId);
+    FP.selectedId = null;
+    markDirty(true);
+    renderPins();
+    setSideMode('idle');
+  }
+
+  // ── Drag pins (independent of panzoom) ───────────────
+  let _drag = null;
+  function startDrag(evt, id) {
+    evt.preventDefault();
+    evt.stopPropagation();
+    selectPin(id);
+    if (FP.panzoom) FP.panzoom.setOptions({ disablePan: true });
+    const point = evt.touches ? evt.touches[0] : evt;
+    _drag = { id, startX: point.clientX, startY: point.clientY };
+    window.addEventListener('mousemove', onDragMove);
+    window.addEventListener('mouseup',   endDrag);
+    window.addEventListener('touchmove', onDragMove, { passive: false });
+    window.addEventListener('touchend',  endDrag);
+  }
+  function onDragMove(evt) {
+    if (!_drag) return;
+    if (evt.cancelable) evt.preventDefault();
+    const point = evt.touches ? evt.touches[0] : evt;
+    const img = $('fp-img');
+    if (!img.naturalWidth) return;
+    const rect = img.getBoundingClientRect();
+    const x = (point.clientX - rect.left) / rect.width;
+    const y = (point.clientY - rect.top)  / rect.height;
+    const m = FP.markers.find(x2 => x2.id === _drag.id);
+    if (!m) return;
+    m.x = Math.max(0, Math.min(1, x));
+    m.y = Math.max(0, Math.min(1, y));
+    // Update DOM directly (avoid full re-render every move)
+    const el = $('fp-pins').querySelector(`.fp-pin[data-id="${_drag.id}"]`);
+    if (el) { el.style.left = (m.x * 100) + '%'; el.style.top = (m.y * 100) + '%'; }
+  }
+  function endDrag() {
+    if (!_drag) return;
+    _drag = null;
+    if (FP.panzoom) FP.panzoom.setOptions({ disablePan: false });
+    window.removeEventListener('mousemove', onDragMove);
+    window.removeEventListener('mouseup',   endDrag);
+    window.removeEventListener('touchmove', onDragMove);
+    window.removeEventListener('touchend',  endDrag);
+    markDirty(true);
+  }
+
+  // ── Add-pin mode ─────────────────────────────────────
+  function enterAddMode() {
+    FP.placingCategory = DEFAULT_CAT;
+    setSideMode('add');
+    renderCategoryPicker();
+    // pre-select default
+    const first = $('fp-cat-grid').querySelector(`.fp-cat-btn[data-cat="${DEFAULT_CAT}"]`);
+    if (first) first.classList.add('active');
+  }
+  function exitAddMode() { setSideMode('idle'); FP.placingCategory = null; }
+
+  function canvasClick(evt) {
+    if (FP.sideMode !== 'add' || !FP.placingCategory) return;
+    const img = $('fp-img');
+    if (!img.naturalWidth) return;
+    const rect = img.getBoundingClientRect();
+    const x = (evt.clientX - rect.left) / rect.width;
+    const y = (evt.clientY - rect.top)  / rect.height;
+    if (x < 0 || y < 0 || x > 1 || y > 1) return;
+    const cat = CAT_BY_ID[FP.placingCategory] || CAT_BY_ID[DEFAULT_CAT];
+    const m = {
+      id: uid(), x, y,
+      label: '', icon: cat.id, color: cat.color,
+      vendor_id: null, booth: '', description: '',
+    };
+    FP.markers.push(m);
+    FP.selectedId = m.id;
+    markDirty(true);
+    renderPins();
+    selectPin(m.id);
+  }
+
+  // ── Pan/zoom ─────────────────────────────────────────
+  function initPanzoom() {
+    const target = $('fp-canvas');
+    if (FP.panzoom) { try { FP.panzoom.destroy(); } catch (e) {} }
+    FP.panzoom = Panzoom(target, {
+      contain: 'outside',
+      maxScale: 4,
+      minScale: 0.4,
+      step: 0.2,
+      canvas: true,
+    });
+    const viewport = $('fp-viewport');
+    viewport.addEventListener('wheel', FP.panzoom.zoomWithWheel);
+  }
+  function fitToViewport() {
+    const img = $('fp-img');
+    const vp  = $('fp-viewport');
+    if (!img.naturalWidth) return;
+    const scaleX = vp.clientWidth  / img.naturalWidth;
+    const scaleY = vp.clientHeight / img.naturalHeight;
+    const scale  = Math.min(scaleX, scaleY) * 0.98;
+    if (FP.panzoom) FP.panzoom.zoom(scale, { animate: false });
+    if (FP.panzoom) FP.panzoom.pan(0, 0, { animate: false });
+  }
+
+  // ── Image upload ─────────────────────────────────────
+  async function uploadBackground(file) {
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      uploadStatus('Image is over 8 MB. Try a smaller version.', 'error'); return;
+    }
+    uploadStatus('Uploading…', '');
+    const ext  = (file.name.split('.').pop() || 'png').toLowerCase();
+    const slug = FP.eventSlug || FP.eventId || 'event';
+    const path = `${slug}/floor-plan-${Date.now()}.${ext}`;
+    try {
+      const { data, error } = await db.storage.from('event-floorplans').upload(path, file, {
+        upsert: true, contentType: file.type,
+      });
+      if (error) throw error;
+      const { data: pub } = db.storage.from('event-floorplans').getPublicUrl(data.path);
+      FP.url = pub.publicUrl;
+      $('fp-img').src = FP.url;
+      $('fp-empty').hidden = true;
+      uploadStatus('Background uploaded. Click + Add pin to start placing.', 'success');
+      markDirty(true);
+      $('fp-img').addEventListener('load', () => { renderPins(); fitToViewport(); }, { once: true });
+    } catch (err) {
+      console.error('[floorplan] upload', err);
+      const msg = (err && (err.message || err.error)) || 'Upload failed.';
+      const blocked = /not found|policy/i.test(String(msg))
+        ? ' (Make sure the "event-floorplans" bucket exists in Supabase Storage with the right policies.)'
+        : '';
+      uploadStatus(msg + blocked, 'error');
+    }
+  }
+  function uploadStatus(msg, kind) {
+    const el = $('fp-upload-status');
+    el.textContent = msg;
+    el.className = 'fp-status' + (kind ? ' ' + kind : '');
+  }
+  function saveStatus(msg, kind) {
+    const el = $('fp-save-status');
+    el.textContent = msg;
+    el.className = 'fp-status' + (kind ? ' ' + kind : '');
+  }
+
+  // ── Save ─────────────────────────────────────────────
+  async function save() {
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    const payload = {
+      p_token: token,
+      p_floor_plan_url: FP.url,
+      p_floor_plan_markers: FP.markers.map(m => ({
+        id: m.id, x: m.x, y: m.y,
+        label: m.label || '', icon: m.icon || DEFAULT_CAT, color: m.color || CAT_BY_ID[DEFAULT_CAT].color,
+        vendor_id: m.vendor_id || null,
+        booth: m.booth || '',
+        description: m.description || '',
+      })),
+    };
+    const btn = $('fp-save-btn');
+    btn.disabled = true;
+    saveStatus('Saving…', '');
+    try {
+      const { data, error } = await db.rpc('update_event_floor_plan', payload);
+      if (error || !data || !data.ok) {
+        const msg = (error && (error.message || error.code)) || (data && data.error) || 'Save failed';
+        saveStatus(msg, 'error');
+        return;
+      }
+      markDirty(false);
+      saveStatus('Saved.', 'success');
+      setTimeout(() => saveStatus('', ''), 2500);
+    } catch (err) {
+      saveStatus((err && err.message) || 'Network error.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Designer invite ──────────────────────────────────
+  async function createInvite() {
+    const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    try {
+      const { data, error } = await db.rpc('create_event_map_invite', {
+        p_token:          token,
+        p_designer_name:  null,
+        p_designer_email: null,
+        p_scopes:         ['markers'],
+        p_expires_in_days: 14,
+      });
+      if (error || !data || !data.token) {
+        alert((error && error.message) || (data && data.error) || 'Could not create invite.');
+        return;
+      }
+      const url = `${location.origin}/m/${data.token}`;
+      navigator.clipboard?.writeText(url).catch(() => {});
+      alert('Designer link copied to clipboard:\n\n' + url + '\n\nValid for 14 days.');
+    } catch (err) { alert((err && err.message) || 'Network error.'); }
+  }
+
+  // ── Sidebar mount ────────────────────────────────────
+  function setupSidebar(capabilities, opts) {
+    opts = opts || {};
+    window.PartnerSidebar?.mount({
+      active: '/partner/event-floorplan',
+      capabilities,
+      partner: opts.partner,
+      jumpLinks: [
+        { section: 'fp-toolbar', icon: 'ic-floorplan', label: 'Floor Plan' },
+      ],
+    });
+  }
+
+  // ── Bootstrap ────────────────────────────────────────
+  function showLoadError(error, friendly) {
+    const detail = (error && (error.message || error.code || error.details || error.hint)) || (typeof error === 'string' ? error : '');
+    $('error-detail').textContent = detail || '';
+    document.getElementById('view-loading').classList.add('hidden');
+    document.getElementById('view-error').classList.remove('hidden');
+    window.PartnerAuth?.mountSessionControl('partner');
+    setupSidebar();
+  }
+
+  async function load() {
+    const urlParams = new URLSearchParams(location.search);
+    const token = window.PartnerAuth?.getToken({ require: false }) || urlParams.get('token') || '';
+    if (!token) {
+      if (window.PartnerAuth) window.PartnerAuth.getToken({ require: true });
+      else showLoadError('Missing token', "We couldn't find an event access token in this link.");
+      return;
+    }
+
+    let eventRes, capsRes;
+    try {
+      const results = await Promise.allSettled([
+        db.rpc('get_partner_event_by_token',        { p_token: token }),
+        db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+      ]);
+      eventRes = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
+      capsRes  = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
+    } catch (err) {
+      showLoadError(err, 'Could not reach the dashboard service.');
+      return;
+    }
+
+    const { data, error } = eventRes;
+    if (error || !data || !data.event) {
+      showLoadError(error || 'No event', "We couldn't load this floor plan.");
+      return;
+    }
+
+    const e = data.event;
+    FP.eventId   = e.id;
+    FP.eventSlug = e.slug;
+    FP.title     = e.title || 'Event';
+    FP.url       = e.floor_plan_url || null;
+    FP.markers   = Array.isArray(e.floor_plan_markers)
+      ? e.floor_plan_markers.map(m => ({
+          id: m.id || uid(),
+          x: Number(m.x) || 0,
+          y: Number(m.y) || 0,
+          label: m.label || '',
+          // Legacy markers used 'icon' as a free-form string; map known
+          // legacy values to current categories.
+          icon: CAT_BY_ID[m.icon] ? m.icon : ({
+            food: 'food', drink: 'drink', stage: 'stage', restroom: 'restroom',
+            info: 'info', exit: 'exit', parking: 'parking', pin: DEFAULT_CAT,
+          }[m.icon] || DEFAULT_CAT),
+          color: m.color || (CAT_BY_ID[m.icon] || CAT_BY_ID[DEFAULT_CAT]).color,
+          vendor_id: m.vendor_id || null,
+          booth: m.booth || '',
+          description: m.description || '',
+        }))
+      : [];
+
+    // Vendor dropdown options
+    FP.vendors = Array.isArray(data.vendors) ? data.vendors : [];
+    const vSelect = $('pe-vendor');
+    vSelect.innerHTML = '<option value="">— None —</option>' + FP.vendors.map(v => {
+      const id = v.event_vendor_id || v.vendor_id || '';
+      const name = v.vendor_name || v.name || 'Vendor';
+      return `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`;
+    }).join('');
+
+    // Hero
+    $('hero-title').textContent = e.title || 'Floor Plan';
+    $('hero-meta').textContent  = 'Floor plan editor';
+    $('tb-title').textContent   = (e.title || 'Floor Plan') + ' · Layout';
+
+    // Reveal editor
+    document.getElementById('view-loading').classList.add('hidden');
+    document.getElementById('view-editor').classList.remove('hidden');
+
+    // Mount session + sidebar
+    window.PartnerAuth?.mountSessionControl('partner');
+    setupSidebar(capsRes && capsRes.data && capsRes.data.capabilities, {
+      partner: capsRes && capsRes.data && capsRes.data.partner,
+    });
+
+    // Initial render
+    renderCategoryPicker();
+    renderLegend();
+    if (FP.url) {
+      $('fp-img').src = FP.url;
+      $('fp-empty').hidden = true;
+      $('fp-img').addEventListener('load', () => { initPanzoom(); renderPins(); fitToViewport(); }, { once: true });
+      if ($('fp-img').complete) { initPanzoom(); renderPins(); fitToViewport(); }
+    } else {
+      $('fp-empty').hidden = false;
+    }
+  }
+
+  // ── Event wiring ─────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    $('fp-add-pin-btn').addEventListener('click', enterAddMode);
+    $('fp-add-cancel').addEventListener('click', exitAddMode);
+    $('fp-save-btn').addEventListener('click', save);
+    $('fp-invite-btn').addEventListener('click', createInvite);
+    $('pe-done').addEventListener('click', () => { updateSelectedFromForm(); setSideMode('idle'); FP.selectedId = null; renderPins(); });
+    $('pe-delete').addEventListener('click', deleteSelected);
+    ['pe-label','pe-category','pe-vendor','pe-booth','pe-desc'].forEach(id => {
+      $(id).addEventListener('change', updateSelectedFromForm);
+      $(id).addEventListener('input',  updateSelectedFromForm);
+    });
+
+    // Canvas click for placing new pins
+    $('fp-canvas').addEventListener('click', canvasClick);
+
+    // Replace / first upload inputs
+    $('fp-replace-input').addEventListener('change', (e) => uploadBackground(e.target.files[0]));
+    $('fp-empty-input').addEventListener('change',   (e) => uploadBackground(e.target.files[0]));
+
+    // Zoom controls
+    $('fp-zoom-in').addEventListener('click',    () => FP.panzoom && FP.panzoom.zoomIn());
+    $('fp-zoom-out').addEventListener('click',   () => FP.panzoom && FP.panzoom.zoomOut());
+    $('fp-zoom-reset').addEventListener('click', fitToViewport);
+
+    // Esc cancels add mode / deselects
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (FP.sideMode === 'add')   exitAddMode();
+      else if (FP.selectedId)      { FP.selectedId = null; setSideMode('idle'); renderPins(); }
+    });
+
+    // Warn on close with unsaved changes
+    window.addEventListener('beforeunload', (e) => {
+      if (!FP.dirty) return;
+      e.preventDefault(); e.returnValue = '';
+    });
+
+    load();
+  });
+</script>
+
+</body>
+</html>

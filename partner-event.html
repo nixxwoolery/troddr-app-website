@@ -1235,6 +1235,140 @@
     .view-tab { font-size: 12px; padding: 9px 8px; }
   }
 
+  /* ── VENDORS LINEUP (Details view) ── */
+  .vl-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .vl-table { width: 100%; border-collapse: collapse; }
+  .vl-table thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+    padding: 14px 18px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+  }
+  .vl-table thead th.num { text-align: right; }
+  .vl-table tbody tr.vl-row {
+    border-top: 1px solid var(--border-soft);
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .vl-table tbody tr.vl-row:hover { background: var(--bg-soft); }
+  .vl-table tbody tr.vl-row.expanded { background: var(--bg-soft); }
+  .vl-table tbody td {
+    padding: 14px 18px;
+    font-size: 14px;
+    color: var(--black);
+    vertical-align: middle;
+  }
+  .vl-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .vl-vendor-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .vl-vendor-logo {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--bg-soft) center/cover no-repeat;
+    flex: 0 0 36px;
+    border: 1px solid var(--border-soft);
+  }
+  .vl-vendor-name { font-weight: 700; min-width: 0; }
+  .vl-featured-pill {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand-primary, #0a7aff);
+  }
+  .vl-chevron {
+    display: inline-block;
+    transition: transform .15s;
+    color: var(--grey-mid);
+    font-size: 12px;
+  }
+  .vl-row.expanded .vl-chevron { transform: rotate(90deg); }
+  .vl-menu-row td {
+    padding: 0;
+    background: #fff;
+    border-top: 1px solid var(--border-soft);
+  }
+  .vl-menu {
+    padding: 8px 18px 18px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  @media (min-width: 720px) {
+    .vl-menu { grid-template-columns: 1fr 1fr; }
+  }
+  .vl-menu-item {
+    padding: 12px 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    background: #fff;
+  }
+  .vl-menu-item-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .vl-menu-item-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--black);
+  }
+  .vl-menu-item-price {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--brand-primary, #0a7aff);
+    white-space: nowrap;
+  }
+  .vl-menu-item-desc {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--grey-mid);
+    line-height: 1.4;
+  }
+  .vl-menu-item-tags {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .vl-menu-item-tag {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--grey-mid);
+    background: var(--bg-soft);
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+  .vl-menu-item-tag.special { color: var(--brand-primary, #0a7aff); }
+  .vl-menu-item-tag.sold-out { color: var(--red); }
+  .vl-menu-empty {
+    padding: 14px 18px;
+    color: var(--grey-mid);
+    font-size: 13px;
+    font-style: italic;
+  }
+  .vl-empty {
+    padding: 28px 18px;
+    text-align: center;
+    color: var(--grey-mid);
+    font-size: 14px;
+  }
+  @media (max-width: 640px) {
+    .vl-table thead th:nth-child(3),
+    .vl-table tbody td:nth-child(3) { display: none; }
+  }
+
   /* Brief highlight after an "Edit" button opens a section in the Editor view. */
   @keyframes sectionOpenedFlash {
     0%   { box-shadow: 0 0 0 0 rgba(10, 122, 255, 0.35); }
@@ -2323,6 +2457,18 @@
         </div>
         <div class="info-card" id="info-card"></div>
       </section>
+
+      <section class="section" id="vendors-lineup">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Vendors</h2>
+            <div class="section-sub">Your event lineup. Click a vendor to see their menu, prices, and description.</div>
+          </div>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-vendors" title="Manage vendors">Edit</button>
+        </div>
+        <div class="vl-card" id="vendors-lineup-card"></div>
+      </section>
+
       <section class="section" id="schedule">
         <div class="section-head section-head-with-edit">
           <div>
@@ -2334,11 +2480,12 @@
         <div class="schedule-card" id="schedule-card"></div>
       </section>
       <section class="section" id="map">
-        <div class="section-head">
+        <div class="section-head section-head-with-edit">
           <div>
             <h2 class="section-title">Map</h2>
             <div class="section-sub">Upload your floor plan, drop markers for vendors and zones, and share with a designer.</div>
           </div>
+          <a id="fp-open-editor" class="section-edit-btn" style="text-decoration:none;" title="Open the full floor plan editor">Open editor →</a>
         </div>
 
         <!-- 1. Tier picker -->
@@ -2554,6 +2701,22 @@
             <button type="button" class="add-btn" id="add-sponsor-btn">+ Add sponsor</button>
           </div>
           <div id="edit-sponsors-list"></div>
+        </div>
+      </section>
+
+      <section class="section" id="edit-vendors">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Manage Vendors</h2>
+            <div class="section-sub">Add, edit, or remove vendors from the lineup. Menus and booth assignments are managed per-vendor.</div>
+          </div>
+        </div>
+        <div class="edit-list-card">
+          <div class="head">
+            <span class="lead" id="edit-vendors-lead">Loading...</span>
+            <button type="button" class="add-btn" id="add-vendor-btn">+ Add vendor</button>
+          </div>
+          <div id="edit-vendors-list"></div>
         </div>
       </section>
 
@@ -3266,6 +3429,7 @@
   // ── Vendor edit modal wiring ───────────────────────────
   let _editingVendor = null;
   function openVendorEditor(v) {
+    v = v || { _isNew: true };
     _editingVendor = v;
     $('ve-modal-sub').textContent = v.vendor_name ? `Editing : ${v.vendor_name}` : 'New vendor entry';
     $('ve-name').value     = v.vendor_name || '';
@@ -3301,7 +3465,7 @@
     const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     const payload = {
       p_token:               token,
-      p_event_vendor_id:     _editingVendor.event_vendor_id,
+      p_event_vendor_id:     _editingVendor.event_vendor_id || null,
       p_vendor_name:         $('ve-name').value.trim() || null,
       p_booth_number:        $('ve-booth').value.trim() || null,
       p_vendor_type:         $('ve-type').value || null,
@@ -3313,7 +3477,10 @@
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving...';
     try {
-      const { data, error } = await db.rpc('update_event_vendor', payload);
+      // upsert_event_vendor handles both create (p_event_vendor_id=null) and update.
+      // Falls back to update_event_vendor for backends where only update is deployed.
+      const rpcName = _editingVendor.event_vendor_id ? 'update_event_vendor' : 'upsert_event_vendor';
+      const { data, error } = await db.rpc(rpcName, payload);
       if (error || !data || !data.ok) {
         const msg = (error && (error.message || error.code)) || (data && data.error) || 'Could not save changes.';
         status.className = 've-status error';
@@ -3330,6 +3497,132 @@
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save';
     }
+  }
+
+  // ── Vendors lineup (Details view) — table with click-to-expand menus ──
+  function renderVendorsLineup(data) {
+    const card = $('vendors-lineup-card');
+    if (!card) return;
+    const vendors = (data && data.vendors) || [];
+    if (!vendors.length) {
+      card.innerHTML = `<div class="vl-empty">No vendors in the lineup yet. Use Manage Vendors to add the first one.</div>`;
+      return;
+    }
+    const rowsHtml = vendors.map((v, i) => {
+      const items = v.menu_items || [];
+      const logo = v.logo_url || (Array.isArray(v.place_image) && v.place_image[0]) || v.cover_image_url || '';
+      const menuHtml = items.length ? items.map(it => {
+        const tags = [];
+        if (it.is_special)  tags.push('<span class="vl-menu-item-tag special">Special</span>');
+        if (it.is_sold_out) tags.push('<span class="vl-menu-item-tag sold-out">Sold out</span>');
+        if (it.category)    tags.push(`<span class="vl-menu-item-tag">${escapeHtml(it.category)}</span>`);
+        (it.tags || []).forEach(t => tags.push(`<span class="vl-menu-item-tag">${escapeHtml(t)}</span>`));
+        return `
+          <div class="vl-menu-item">
+            <div class="vl-menu-item-head">
+              <span class="vl-menu-item-name">${escapeHtml(it.name || 'Untitled item')}</span>
+              ${it.price != null ? `<span class="vl-menu-item-price">${escapeHtml(fmtPrice(it.price, it.currency))}</span>` : ''}
+            </div>
+            ${it.description ? `<div class="vl-menu-item-desc">${escapeHtml(it.description)}</div>` : ''}
+            ${tags.length ? `<div class="vl-menu-item-tags">${tags.join('')}</div>` : ''}
+          </div>`;
+      }).join('') : `<div class="vl-menu-empty">No menu items added for this vendor yet.</div>`;
+
+      return `
+        <tr class="vl-row" data-vendor-idx="${i}">
+          <td>
+            <div class="vl-vendor-cell">
+              <div class="vl-vendor-logo" ${logo ? `style="background-image:url('${escapeHtml(logo)}')"` : ''}></div>
+              <div>
+                <span class="vl-vendor-name">${escapeHtml(v.vendor_name || v.name || 'Unnamed vendor')}</span>
+                ${v.vendor_is_featured || v.is_featured ? '<span class="vl-featured-pill">Featured</span>' : ''}
+              </div>
+            </div>
+          </td>
+          <td>${escapeHtml(v.booth_number || '—')}</td>
+          <td>${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}</td>
+          <td class="num">${items.length}</td>
+          <td class="num"><span class="vl-chevron">›</span></td>
+        </tr>
+        <tr class="vl-menu-row" data-menu-for="${i}" hidden>
+          <td colspan="5">
+            <div class="vl-menu">${menuHtml}</div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    card.innerHTML = `
+      <table class="vl-table">
+        <thead>
+          <tr>
+            <th>Vendor</th>
+            <th>Booth</th>
+            <th>Type</th>
+            <th class="num">Items</th>
+            <th class="num"></th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>`;
+
+    // Click row to toggle the menu row below it.
+    card.querySelectorAll('.vl-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const idx = row.dataset.vendorIdx;
+        const menuRow = card.querySelector(`.vl-menu-row[data-menu-for="${idx}"]`);
+        if (!menuRow) return;
+        const expanding = menuRow.hasAttribute('hidden');
+        // Collapse any other open rows for clarity.
+        card.querySelectorAll('.vl-row.expanded').forEach(r => {
+          if (r !== row) {
+            r.classList.remove('expanded');
+            const other = card.querySelector(`.vl-menu-row[data-menu-for="${r.dataset.vendorIdx}"]`);
+            if (other) other.setAttribute('hidden', '');
+          }
+        });
+        if (expanding) { menuRow.removeAttribute('hidden'); row.classList.add('expanded'); }
+        else           { menuRow.setAttribute('hidden', '');  row.classList.remove('expanded'); }
+      });
+    });
+  }
+
+  // ── Manage Vendors (Editor view) ──────────────────────
+  function renderVendorsEditor(data) {
+    const vendors = (data && data.vendors) || [];
+    const lead = document.getElementById('edit-vendors-lead');
+    const wrap = document.getElementById('edit-vendors-list');
+    if (!lead || !wrap) return;
+    lead.textContent = vendors.length
+      ? `${vendors.length} vendor${vendors.length === 1 ? '' : 's'} in the lineup.`
+      : 'No vendors yet.';
+    if (!vendors.length) {
+      wrap.innerHTML = `<div class="edit-list-empty">Click + Add vendor to add the first one.</div>`;
+      return;
+    }
+    wrap.innerHTML = vendors.map(v => `
+      <div class="edit-list-row" data-event-vendor-id="${escapeHtml(v.event_vendor_id || '')}">
+        <div class="body">
+          <div class="name">
+            ${escapeHtml(v.vendor_name || v.name || 'Unnamed vendor')}
+            ${v.vendor_is_featured || v.is_featured ? ' <span style="font-size:10px;color:var(--brand-primary);">· FEATURED</span>' : ''}
+          </div>
+          <div class="meta">
+            ${v.booth_number ? 'Booth ' + escapeHtml(v.booth_number) + ' · ' : ''}
+            ${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}
+            ${(v.menu_items && v.menu_items.length) ? ' · ' + v.menu_items.length + ' menu item' + (v.menu_items.length === 1 ? '' : 's') : ''}
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="ve-btn" data-action="edit">Edit</button>
+        </div>
+      </div>`).join('');
+    wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-event-vendor-id]').dataset.eventVendorId;
+        const v = vendors.find(x => x.event_vendor_id === id);
+        if (v) openVendorEditor(v);
+      });
+    });
   }
 
   function renderVendors(data) {
@@ -4131,6 +4424,8 @@
     document.getElementById('ps-modal-backdrop')?.addEventListener('click', (e) => {
       if (e.target.id === 'ps-modal-backdrop') _modalClose('ps-modal-backdrop');
     });
+    // Vendors (Add Vendor — Edit is wired per-row by renderers)
+    document.getElementById('add-vendor-btn')?.addEventListener('click', () => openVendorEditor(null));
     // Bands
     document.getElementById('add-band-btn')?.addEventListener('click', () => openBandEditor(null));
     document.getElementById('bd-cancel')?.addEventListener('click', () => _modalClose('bd-modal-backdrop'));
@@ -5482,7 +5777,8 @@
         { section: 'unlocks',        icon: 'ic-lock',     label: 'Unlocks' },
 
         { header: 'Details' },
-        { section: 'info',           icon: 'ic-doc',      label: 'Info' },
+        { section: 'info',            icon: 'ic-doc',      label: 'Info' },
+        { section: 'vendors-lineup',  icon: 'ic-shop',     label: 'Vendors' },
         { section: 'schedule',       icon: 'ic-calendar', label: 'Schedule' },
         { section: 'map',            icon: 'ic-map',      label: 'Map' },
         { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
@@ -5495,6 +5791,7 @@
         { header: 'Editor' },
         { section: 'edit',                icon: 'ic-edit', label: 'Edit Core Details' },
         { section: 'edit-sponsors',       icon: 'ic-bolt', label: 'Manage Sponsors' },
+        { section: 'edit-vendors',        icon: 'ic-shop', label: 'Manage Vendors' },
         { section: 'edit-tickets',        icon: 'ic-ticket', label: 'Manage Tickets' },
         { section: 'edit-schedule',       icon: 'ic-calendar', label: 'Manage Schedule' },
         { section: 'edit-transportation', icon: 'ic-bus',  label: 'Manage Transportation' },
@@ -5659,6 +5956,7 @@
 
     // Edit-list editors in the Edits chapter.
     safe('renderSponsorsEditor',  () => renderSponsorsEditor(data));
+    safe('renderVendorsEditor',   () => renderVendorsEditor(data));
     safe('renderTicketsEditor',   () => renderTicketsEditor(extras, data));
     safe('renderTransportEditor', () => renderTransportEditor(extras));
     safe('renderScheduleEditor',  () => renderScheduleEditor(extras, data));
@@ -5666,6 +5964,7 @@
     safe('renderBandsEditor',     () => renderBandsEditor(extras, data, isCarnival));
 
     // Display renderers for sections wired to the new editors.
+    safe('renderVendorsLineup',   () => renderVendorsLineup(data));
     safe('renderPasses',          () => renderPasses(extras.passes || data.passes));
     safe('renderBands',           () => renderBands(extras.bands || data.bands || data.mas_bands, isCarnival));
 
@@ -5778,9 +6077,21 @@
       });
     }
 
+    function wireFloorPlanLauncher() {
+      const link = document.getElementById('fp-open-editor');
+      if (!link) return;
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+        if (window.PartnerAuth) window.PartnerAuth.navigate('/partner/event-floorplan', token);
+        else location.href = `/partner/event-floorplan${token ? '?token=' + encodeURIComponent(token) : ''}`;
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       wireTabs();
       wireSectionEditButtons();
+      wireFloorPlanLauncher();
       applyView(paramView());
     });
   })();
