@@ -468,3 +468,55 @@
 .fpb-status { font-size: 12px; margin-top: 8px; min-height: 18px; }
 .fpb-status.success { color: var(--fpb-green); }
 .fpb-status.error   { color: var(--fpb-red); }
+
+/* ── Unplaced-vendors checklist ── */
+.fpb-all-placed { color: var(--fpb-green); font-weight: 600; }
+.fpb-unplaced { margin-bottom: 14px; }
+.fpb-unplaced li.item { padding: 0; }
+.fpb-vendor-add {
+  appearance: none; border: none; background: transparent;
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 7px 9px;
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--fpb-black);
+  cursor: pointer; text-align: left;
+}
+.fpb-vendor-add .plus {
+  width: 18px; height: 18px; flex: 0 0 18px;
+  border-radius: 50%;
+  background: var(--fpb-black); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; line-height: 1;
+}
+.fpb-vendor-add .vname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Read-only (attendee) mode ── */
+.fpb.readonly .fpb-body { grid-template-columns: 1fr; }
+.fpb.readonly .fpb-el,
+.fpb.readonly .fpb-booth, .fpb.readonly .fpb-zone,
+.fpb.readonly .fpb-pin, .fpb.readonly .fpb-text { cursor: pointer; }
+.fpb.readonly .fpb-table { cursor: default; }
+.fpb.readonly .fpb-booth.selected, .fpb.readonly .fpb-zone.selected {
+  outline-width: 3px;
+}
+
+.fpb-pop {
+  position: absolute;
+  z-index: 120;
+  background: #fff;
+  border: 1px solid var(--fpb-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.16);
+  padding: 11px 14px;
+  max-width: 240px;
+  min-width: 130px;
+  pointer-events: none;
+}
+.fpb-pop .pop-title {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13.5px; font-weight: 700; color: var(--fpb-black);
+  line-height: 1.3;
+}
+.fpb-pop .pop-dot { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 10px; }
+.fpb-pop .pop-meta { font-size: 11.5px; color: var(--fpb-grey-mid); margin-top: 3px; }
+.fpb-pop .pop-desc { font-size: 12px; color: var(--fpb-grey-dark); margin-top: 6px; line-height: 1.45; }

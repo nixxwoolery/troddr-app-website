@@ -294,6 +294,49 @@ $$;
 grant execute on function public.update_event_floor_plan_via_invite(text, jsonb)
   to anon, authenticated;
 
+-- 3g. get_event_floor_plan_public : attendee-facing map view (/map/<slug>).
+--     Returns only public-safe fields: the event title, the floor plan, and
+--     vendor display names (needed so booths linked to a vendor without a
+--     custom label can still show the vendor's name).
+create or replace function public.get_event_floor_plan_public(p_slug text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_evt public.events%rowtype;
+begin
+  select * into v_evt from public.events where slug = p_slug;
+  if v_evt.id is null then
+    return jsonb_build_object('ok', false, 'error', 'not_found');
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'event', jsonb_build_object(
+      'id',                 v_evt.id,
+      'slug',               v_evt.slug,
+      'title',              v_evt.title,
+      'floor_plan_url',     v_evt.floor_plan_url,
+      'floor_plan_markers', coalesce(v_evt.floor_plan_markers, '[]'::jsonb)
+    ),
+    'vendors', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'event_vendor_id', ev.id,
+        'vendor_id',       v.id,
+        'vendor_name',     v.name
+      ) order by v.name), '[]'::jsonb)
+      from public.event_vendors ev
+      join public.vendors v on v.id = ev.vendor_id
+      where ev.event_id = v_evt.id
+    )
+  );
+end;
+$$;
+
+grant execute on function public.get_event_floor_plan_public(text) to anon, authenticated;
+
 -- ============================================================
 -- STORAGE BUCKET (run in Supabase Dashboard or via the storage UI):
 --

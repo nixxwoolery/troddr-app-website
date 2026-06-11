@@ -94,6 +94,7 @@
     + '<symbol id="fpb-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>'
     + '<symbol id="fpb-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>'
     + '<symbol id="fpb-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>'
+    + '<symbol id="fpb-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>'
     + '<symbol id="fpb-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.5 10l-5.6 1.3L12 17l-1.9-5.7L4.5 10l5.6-1.3L12 3z"/></symbol>'
     + '<symbol id="fpb-grid-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></symbol>'
     + '</defs></svg>';
@@ -163,6 +164,7 @@
     constructor(opts) {
       this.opts = opts || {};
       this.container = opts.container;
+      this.readOnly = !!opts.readOnly;
       this.vendors = Array.isArray(opts.vendors) ? opts.vendors : [];
       this.elements = (Array.isArray(opts.elements) ? opts.elements : []).map(normalizeElement);
       this.bgUrl = (opts.backgroundUrl && !isBlankUri(opts.backgroundUrl)) ? opts.backgroundUrl : null;
@@ -191,23 +193,51 @@
       }
       this.container.innerHTML = this.template();
       this.refs();
-      this.wireToolbar();
+      if (!this.readOnly) {
+        this.wireToolbar();
+        this.wireKeyboard();
+      }
       this.wireCanvas();
-      this.wireKeyboard();
       this.renderSide();
       this.renderLegend();
       this.setBackground(this.bgUrl, { silent: true });
-      this.setTool('select');
-      if (!this.bgUrl && !this.elements.length) this.showEmpty(true);
-      window.addEventListener('beforeunload', this._beforeUnload = (e) => {
-        if (!this.dirty) return;
-        e.preventDefault(); e.returnValue = '';
-      });
+      if (!this.readOnly) {
+        this.setTool('select');
+        if (!this.bgUrl && !this.elements.length) this.showEmpty(true);
+        window.addEventListener('beforeunload', this._beforeUnload = (e) => {
+          if (!this.dirty) return;
+          e.preventDefault(); e.returnValue = '';
+        });
+      }
       return this;
     }
 
     template() {
       const o = this.opts;
+      if (this.readOnly) {
+        return `
+<div class="fpb readonly">
+  <div class="fpb-body">
+    <div class="fpb-viewport" data-ref="viewport">
+      <div class="fpb-canvas" data-ref="canvas">
+        <img class="fpb-bg" data-ref="bg" alt="" hidden />
+        <div class="fpb-grid" data-ref="grid" hidden></div>
+        <div class="fpb-els" data-ref="els"></div>
+        <div class="fpb-guide-v" data-ref="guideV" hidden></div>
+        <div class="fpb-guide-h" data-ref="guideH" hidden></div>
+        <div class="fpb-rubber" data-ref="rubber" hidden></div>
+      </div>
+      <div class="fpb-zoom">
+        <button type="button" data-ref="zoomIn" title="Zoom in">＋</button>
+        <button type="button" data-ref="zoomFit" title="Fit to screen">⊙</button>
+        <button type="button" data-ref="zoomOut" title="Zoom out">−</button>
+      </div>
+      <div class="fpb-pop" data-ref="pop" hidden></div>
+    </div>
+  </div>
+  <div class="fpb-legend" data-ref="legend"></div>
+</div>`;
+      }
       const tools = [
         ['select', 'fpb-cursor', 'Select', 'V'],
         ['booth', 'fpb-square', 'Booth', 'B'],
@@ -329,6 +359,7 @@
     }
 
     hint(msg) {
+      if (!this.$.hint) return;
       this.$.hint.hidden = !msg;
       this.$.hint.textContent = msg || '';
     }
@@ -340,6 +371,7 @@
     }
 
     updateGridVisibility() {
+      if (this.readOnly) return;   // viewers never see the grid
       // Grid lines show on the blank canvas, or whenever snapping is on over an image (faint guide).
       this.$.grid.style.display = (!this.bgUrl || this.snap) ? '' : 'none';
       this.$.grid.style.opacity = this.bgUrl ? 0.5 : 1;
@@ -423,6 +455,26 @@
       this.initPanzoom();
       const canvas = this.$.canvas;
 
+      if (this.readOnly) {
+        // View mode: pan/zoom freely; a tap (no drag) on an element opens
+        // its info popover. Any pan/zoom movement dismisses it.
+        this.$.zoomIn.addEventListener('click', () => this.panzoom && this.panzoom.zoomIn());
+        this.$.zoomOut.addEventListener('click', () => this.panzoom && this.panzoom.zoomOut());
+        this.$.zoomFit.addEventListener('click', () => { this.hidePopover(); this.fit(); });
+        canvas.addEventListener('panzoomchange', () => this.hidePopover());
+        let down = null;
+        this.$.viewport.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
+        this.$.viewport.addEventListener('pointerup', (e) => {
+          if (!down) return;
+          const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6;
+          down = null;
+          if (moved || e.target.closest('.fpb-zoom') || e.target.closest('.fpb-pop')) return;
+          const elDiv = e.target.closest('.fpb-el');
+          if (elDiv) this.showPopover(elDiv.dataset.id); else this.hidePopover();
+        });
+        return;
+      }
+
       canvas.addEventListener('pointerdown', (e) => {
         if (this.spacePan) return;                       // let panzoom pan
         const handle = e.target.closest('.fpb-h');
@@ -449,6 +501,52 @@
         if (e.target.closest('.fpb-el') || e.target.closest('.fpb-zoom')) return;
         if (this.selectedId) { this.selectedId = null; this.renderAll(); }
       });
+    }
+
+    // ── Read-only info popover ──────────────────────────────
+    vendorName(id) {
+      if (!id) return null;
+      const v = this.vendors.find(v => String(v.event_vendor_id || v.vendor_id) === String(id));
+      return v ? (v.vendor_name || v.name || null) : null;
+    }
+
+    showPopover(id) {
+      const el = this.byId(id);
+      // Tables and bare text labels carry no extra info worth a popover.
+      if (!el || el.type === 'table' || el.type === 'text') { this.hidePopover(); return; }
+      const cat = CAT_BY_ID[el.icon];
+      const vendor = this.vendorName(el.vendor_id);
+      const title = el.label || vendor || (el.type === 'zone' ? 'Zone' : (cat ? cat.label : 'Location'));
+      const rows = [];
+      if (el.type === 'booth' && el.number != null && el.number !== '') rows.push(`Booth ${esc(el.number)}`);
+      if (el.type !== 'zone' && cat) rows.push(esc(cat.label));
+      if (el.size) rows.push(esc(String(el.size).replace('x', ' × ')) + ' ft');
+      this.$.pop.innerHTML = `
+        <div class="pop-title"><span class="pop-dot" style="background:${esc(el.color || (cat && cat.color) || '#0a7aff')}"></span>${esc(title)}</div>
+        ${rows.length ? `<div class="pop-meta">${rows.join(' · ')}</div>` : ''}
+        ${vendor && el.label && vendor !== el.label ? `<div class="pop-meta">${esc(vendor)}</div>` : ''}
+        ${el.description ? `<div class="pop-desc">${esc(el.description)}</div>` : ''}`;
+      // Position near the element, clamped inside the viewport.
+      const elDiv = this.$.els.querySelector(`.fpb-el[data-id="${el.id}"]`);
+      const vpRect = this.$.viewport.getBoundingClientRect();
+      const r = elDiv.getBoundingClientRect();
+      this.$.pop.hidden = false;
+      const pw = this.$.pop.offsetWidth, ph = this.$.pop.offsetHeight;
+      let left = r.left - vpRect.left + r.width / 2 - pw / 2;
+      left = clamp(left, 8, vpRect.width - pw - 8);
+      let top = r.top - vpRect.top - ph - 10;
+      if (top < 8) top = r.bottom - vpRect.top + 10;
+      this.$.pop.style.left = left + 'px';
+      this.$.pop.style.top = top + 'px';
+      this.selectedId = el.id;
+      this.renderElements();
+    }
+
+    hidePopover() {
+      if (!this.$.pop || this.$.pop.hidden) return;
+      this.$.pop.hidden = true;
+      this.selectedId = null;
+      this.renderElements();
     }
 
     // Move (drag) the selected element.
@@ -781,6 +879,7 @@
       this.renderAll();
     }
     updateUndoButtons() {
+      if (!this.$.undoBtn) return;
       this.$.undoBtn.disabled = !this.undoStack.length;
       this.$.redoBtn.disabled = !this.redoStack.length;
     }
@@ -814,7 +913,7 @@
 
     renderElements() {
       const W = this.world.w, H = this.world.h;
-      const handles = (el, corners) => el.id !== this.selectedId ? '' :
+      const handles = (el, corners) => (this.readOnly || el.id !== this.selectedId) ? '' :
         (corners ? ['nw', 'ne', 'se', 'sw'] : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'])
           .map(h => `<i class="fpb-h" data-h="${h}"></i>`).join('');
 
@@ -872,8 +971,53 @@
         }));
         return;
       }
-      side.innerHTML = `<h3>Layout</h3>${this.listHtml()}`;
+      side.innerHTML = `${this.unplacedVendorsHtml()}<h3>Layout</h3>${this.listHtml()}`;
       side.querySelectorAll('li[data-id]').forEach(li => li.addEventListener('click', () => this.select(li.dataset.id)));
+      side.querySelectorAll('[data-vendor]').forEach(btn => btn.addEventListener('click', () => {
+        const v = this.vendors.find(v => String(v.event_vendor_id || v.vendor_id) === btn.dataset.vendor);
+        if (v) this.placeVendorBooth(v);
+      }));
+    }
+
+    // Checklist of vendors that don't have an element on the map yet.
+    unplacedVendorsHtml() {
+      if (!this.vendors.length) return '';
+      const placed = new Set(this.elements.filter(e => e.vendor_id).map(e => String(e.vendor_id)));
+      const unplaced = this.vendors.filter(v => !placed.has(String(v.event_vendor_id || v.vendor_id)));
+      if (!unplaced.length) {
+        return `<h3>Vendors</h3><div class="fpb-helper fpb-all-placed">✓ All ${this.vendors.length} vendor${this.vendors.length === 1 ? ' is' : 's are'} placed on the map.</div>`;
+      }
+      return `<h3>Vendors to place · ${unplaced.length}</h3>
+        <div class="fpb-helper">Click a vendor to drop their booth in the middle of the view, then drag it into position.</div>
+        <ul class="fpb-list fpb-unplaced">${unplaced.map(v => `
+          <li class="item" role="button"><button type="button" class="fpb-vendor-add" data-vendor="${esc(v.event_vendor_id || v.vendor_id)}">
+            <span class="plus">+</span><span class="vname">${esc(v.vendor_name || v.name || 'Vendor')}</span>
+          </button></li>`).join('')}</ul>`;
+    }
+
+    // One-click placement: booth in the centre of the current view,
+    // pre-linked to the vendor and auto-numbered. Drag to position.
+    placeVendorBooth(v) {
+      this.pushUndo();
+      const vp = this.$.viewport.getBoundingClientRect();
+      const pt = this.worldPoint({ clientX: vp.left + vp.width / 2, clientY: vp.top + vp.height / 2 });
+      const w = this.lastBoothSize.w, h = this.lastBoothSize.h;
+      const cx = this.snap ? Math.round((pt.x - w / 2) / GRID) * GRID + w / 2 : pt.x;
+      const cy = this.snap ? Math.round((pt.y - h / 2) / GRID) * GRID + h / 2 : pt.y;
+      const cat = CAT_BY_ID[this.boothCategory] || CAT_BY_ID[DEFAULT_CAT];
+      const el = {
+        id: uid(), type: 'booth',
+        x: clamp(cx / this.world.w, 0, 1), y: clamp(cy / this.world.h, 0, 1),
+        w: w / this.world.w, h: h / this.world.h,
+        number: this.nextBoothNumber(),
+        label: v.vendor_name || v.name || '',
+        icon: cat.id, color: cat.color,
+        vendor_id: v.event_vendor_id || v.vendor_id || null,
+        size: '', description: '',
+      };
+      this.elements.push(el);
+      this.setDirty(true);
+      this.select(el.id);
     }
 
     listHtml() {
@@ -1062,12 +1206,15 @@
     setDirty(yes) {
       this.dirty = !!yes;
       const el = this.$.dirtyLabel;
-      el.textContent = yes ? 'Unsaved changes' : 'No unsaved changes';
-      el.classList.toggle('clean', !yes);
+      if (el) {
+        el.textContent = yes ? 'Unsaved changes' : 'No unsaved changes';
+        el.classList.toggle('clean', !yes);
+      }
       if (this.opts.onDirtyChange) this.opts.onDirtyChange(this.dirty);
     }
     status(msg, kind, node) {
       const el = node || this.$.status;
+      if (!el) return;
       el.textContent = msg || '';
       el.className = 'fpb-status' + (kind ? ' ' + kind : '');
       if (kind === 'success') setTimeout(() => { if (el.textContent === msg) { el.textContent = ''; el.className = 'fpb-status'; } }, 3000);

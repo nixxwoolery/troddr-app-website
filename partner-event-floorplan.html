@@ -318,6 +318,14 @@
     } catch (err) { alert((err && err.message) || 'Network error.'); }
   }
 
+  // ── Public attendee link ───────────────────────────────────
+  function copyPublicLink() {
+    if (!eventSlug) { alert('This event has no public link yet.'); return; }
+    const url = `${location.origin}/map/${eventSlug}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+    alert('Public map link copied to clipboard:\n\n' + url + '\n\nGuests can open it on any phone — no app or login needed. Remember to Save so the link shows your latest layout.');
+  }
+
   // ── Sidebar mount ──────────────────────────────────────────
   function setupSidebar(capabilities, opts) {
     opts = opts || {};
@@ -396,6 +404,7 @@
       onUploadBackground: uploadBackground,
       actions: [
         { label: 'Designer link', icon: 'fpb-copy', onClick: createInvite },
+        { label: 'Public link', icon: 'fpb-link', onClick: copyPublicLink },
       ],
     });
   }

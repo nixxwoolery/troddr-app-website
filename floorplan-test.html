@@ -29,14 +29,28 @@
     { id: 't1', type: 'table', x: 0.4, y: 0.55, w: 0.024, h: 0.038, shape: 'round' },
     { id: 'x1', type: 'text', x: 0.5, y: 0.05, label: 'SECURITY', color: '#166534', fontSize: 0.02 },
   ];
-  const api = FloorplanBuilder.mount({
+  const readOnly = new URLSearchParams(location.search).get('view') === '1';
+  const vendors = [
+    { event_vendor_id: 'v1', vendor_name: 'Lucky Crab Seafood' },
+    { event_vendor_id: 'v2', vendor_name: 'Pink Apron' },
+    { event_vendor_id: 'v3', vendor_name: 'Soup King' },
+  ];
+  const viewSaved = [
+    ...saved,
+    { id: 'bv', type: 'booth', x: 0.32, y: 0.2, w: 0.04, h: 0.064, number: 5, label: '', icon: 'merch',
+      vendor_id: 'v2', size: '10x20', description: 'Aprons, totes and small-batch hot sauce.' },
+  ];
+  const api = FloorplanBuilder.mount(readOnly ? {
+    container: document.getElementById('builder-root'),
+    readOnly: true,
+    elements: viewSaved,
+    backgroundUrl: null,
+    vendors,
+  } : {
     container: document.getElementById('builder-root'),
     elements: saved,
     backgroundUrl: null,
-    vendors: [
-      { event_vendor_id: 'v1', vendor_name: 'Lucky Crab Seafood' },
-      { event_vendor_id: 'v2', vendor_name: 'Pink Apron' },
-    ],
+    vendors,
     saveLabel: 'Save',
     onSave: async (payload) => {
       document.getElementById('log').textContent =

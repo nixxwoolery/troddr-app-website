@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Event Map</title>
+<link rel="stylesheet" href="/css/floorplan-builder.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/floorplan-builder.js"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black: #111; --grey-mid: #666;
+    --border: #e8e8e8; --bg-soft: #f8f9fa;
+    --blue: #0a7aff;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft);
+    color: var(--black);
+    font-size: 15px; line-height: 1.5;
+    display: flex; flex-direction: column;
+    min-height: 100dvh;
+  }
+  header {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
+  header .logo {
+    font-size: 22px; font-weight: 700;
+    color: var(--blue); text-decoration: none;
+    letter-spacing: -1px;
+  }
+  header .title {
+    font-size: 14px; font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1; text-align: right;
+    color: var(--black);
+  }
+  main { flex: 1; display: flex; flex-direction: column; padding: 10px; min-height: 0; }
+
+  /* The viewer fills the page; legend hugs the bottom. */
+  .fpb.readonly { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .fpb.readonly .fpb-body { flex: 1; min-height: 0; }
+  .fpb.readonly .fpb-viewport { height: 100%; min-height: 320px; }
+  .fpb.readonly .fpb-legend { margin-top: 8px; flex-shrink: 0; }
+
+  .state-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 16px;
+    padding: 32px 24px; text-align: center; max-width: 420px; margin: 60px auto;
+  }
+  .state-card h1 { font-size: 20px; margin-bottom: 8px; }
+  .state-card p { color: var(--grey-mid); font-size: 14px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="https://www.troddr.com">troddr</a>
+  <span class="title" id="event-title"></span>
+</header>
+
+<main>
+  <div id="state" class="state-card hidden">
+    <h1 id="state-title">Loading…</h1>
+    <p id="state-msg"></p>
+  </div>
+  <div id="viewer-root" class="hidden" style="flex:1;display:flex;flex-direction:column;min-height:0;"></div>
+</main>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  // Slug comes from /map/<slug> (vercel rewrite passes ?e=) or ?e=<slug>.
+  function getSlug() {
+    const q = new URLSearchParams(location.search).get('e');
+    if (q) return q;
+    const m = location.pathname.match(/^\/map\/([^/]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  function showState(title, msg) {
+    document.getElementById('state').classList.remove('hidden');
+    document.getElementById('viewer-root').classList.add('hidden');
+    document.getElementById('state-title').textContent = title;
+    document.getElementById('state-msg').textContent = msg || '';
+  }
+
+  async function init() {
+    const slug = getSlug();
+    if (!slug) { showState('Map not found', 'This link is missing an event.'); return; }
+    showState('Loading…', '');
+
+    let res;
+    try {
+      res = await db.rpc('get_event_floor_plan_public', { p_slug: slug });
+    } catch (e) {
+      showState("Couldn't load the map", (e && e.message) || ''); return;
+    }
+    const data = res && res.data;
+    if ((res && res.error) || !data || !data.ok) {
+      showState('Map not found', 'Double-check the link, or ask the event organiser for a fresh one.');
+      return;
+    }
+
+    const ev = data.event;
+    document.getElementById('event-title').textContent = ev.title || '';
+    document.title = `${ev.title || 'Event'} · Map · TRODDR`;
+
+    const elements = Array.isArray(ev.floor_plan_markers) ? ev.floor_plan_markers : [];
+    if (!elements.length && !ev.floor_plan_url) {
+      showState('No map yet', 'The organiser hasn’t published a floor plan for this event.');
+      return;
+    }
+
+    document.getElementById('state').classList.add('hidden');
+    document.getElementById('viewer-root').classList.remove('hidden');
+
+    FloorplanBuilder.mount({
+      container: document.getElementById('viewer-root'),
+      readOnly: true,
+      elements,
+      backgroundUrl: ev.floor_plan_url || null,
+      vendors: Array.isArray(data.vendors) ? data.vendors : [],
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>
