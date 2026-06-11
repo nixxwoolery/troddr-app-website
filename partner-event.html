@@ -1236,6 +1236,16 @@
   /* Grid gap handles the rhythm; strip the chapter card's own margins
      so spacing stays even instead of doubling up around dividers. */
   .view-pane > .chapter { margin: 0; }
+  #view-pane-details { gap: 34px; }
+  #view-pane-details .section-head { margin-bottom: 16px; }
+  #view-pane-details #map {
+    display: grid;
+    gap: 16px;
+  }
+  #view-pane-details #map .section-head,
+  #view-pane-details #map .fp-card {
+    margin-bottom: 0;
+  }
   @media (max-width: 640px) {
     .view-tabs { position: static; }
     .view-tab { font-size: 12px; padding: 9px 8px; }
