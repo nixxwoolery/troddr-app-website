@@ -147,7 +147,7 @@
     margin: 0 auto;
     padding: 14px 18px 0;
     display: grid;
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 240px minmax(0, 1fr);
     gap: 16px;
     position: relative; z-index: 10;
   }
@@ -1237,6 +1237,10 @@
      so spacing stays even instead of doubling up around dividers. */
   .view-pane > .chapter { margin: 0; }
   #view-pane-details { gap: 34px; }
+  #view-pane-details,
+  #view-pane-details .section {
+    min-width: 0;
+  }
   #view-pane-details .section-head { margin-bottom: 16px; }
   #view-pane-details #map {
     display: grid;
@@ -1256,7 +1260,9 @@
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: min(100%, 860px);
     max-width: 100%;
   }
   .vl-table {
