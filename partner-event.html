@@ -2816,6 +2816,10 @@
         <form class="ve-modal" id="ve-modal" autocomplete="off">
           <h3>Edit vendor</h3>
           <div class="ve-modal-sub" id="ve-modal-sub"></div>
+          <div class="ve-field" id="ve-pick-wrap" style="display:none;"><label for="ve-pick">Pick from your vendor directory</label>
+            <select id="ve-pick">
+              <option value="">＋ Create new vendor</option>
+            </select></div>
           <div class="ve-field"><label for="ve-name">Name</label>
             <input id="ve-name" type="text" maxlength="200" /></div>
           <div class="ve-field"><label for="ve-booth">Booth number</label>
@@ -3346,7 +3350,7 @@
         <div class="vi-rank-row">
           <div class="vi-rank-num">${i + 1}</div>
           <div class="vi-rank-body">
-            <div class="vi-rank-name">${escapeHtml(v.vendor_name || 'Unnamed vendor')}</div>
+            <div class="vi-rank-name">${escapeHtml(v.vendor_name || v.name || 'Unnamed vendor')}</div>
             <div class="vi-rank-sub">${v[sortKey]} ${suffix}</div>
           </div>
         </div>`).join('');
@@ -3404,7 +3408,7 @@
         <tbody>
           ${withMetrics.map(v => `
             <tr data-event-vendor-id="${escapeHtml(v.event_vendor_id || '')}">
-              <td class="v-name">${escapeHtml(v.vendor_name || 'Unnamed vendor')}</td>
+              <td class="v-name">${escapeHtml(v.vendor_name || v.name || 'Unnamed vendor')}</td>
               <td>${escapeHtml(v.booth_number || '—')}</td>
               <td>${escapeHtml(titleCase(v.vendor_type || '—'))}</td>
               <td class="num ${v._views ? 'highlight' : ''}">${v._views || '—'}</td>
@@ -3434,17 +3438,46 @@
 
   // ── Vendor edit modal wiring ───────────────────────────
   let _editingVendor = null;
+  let _vendorDirectory = null;
+
+  async function loadVendorDirectory() {
+    if (_vendorDirectory) return _vendorDirectory;
+    try {
+      const { data, error } = await db.rpc('get_partner_vendor_directory', { p_token: _getToken() });
+      if (error || !data || !data.ok) return (_vendorDirectory = []);
+      _vendorDirectory = data.vendors || [];
+    } catch (e) { _vendorDirectory = []; }
+    return _vendorDirectory;
+  }
+
   function openVendorEditor(v) {
     v = v || { _isNew: true };
     _editingVendor = v;
-    $('ve-modal-sub').textContent = v.vendor_name ? `Editing : ${v.vendor_name}` : 'New vendor entry';
-    $('ve-name').value     = v.vendor_name || '';
+    const name = v.vendor_name || v.name || '';
+    $('ve-modal-sub').textContent = name ? `Editing : ${name}` : 'New vendor entry';
+    $('ve-name').value     = name;
     $('ve-booth').value    = v.booth_number || '';
     $('ve-type').value     = v.vendor_type || '';
-    $('ve-desc').value     = v.vendor_description || '';
-    $('ve-featured').checked = !!v.vendor_is_featured;
+    $('ve-desc').value     = v.vendor_description || v.description || '';
+    $('ve-featured').checked = !!(v.vendor_is_featured || v.is_featured);
     $('ve-status').className = 've-status';
     $('ve-status').textContent = '';
+    // Directory picker: only when adding. Selecting an existing vendor
+    // prefills the fields; "Create new vendor" leaves them blank.
+    const pickWrap = $('ve-pick-wrap');
+    pickWrap.style.display = v._isNew ? '' : 'none';
+    if (v._isNew) {
+      const sel = $('ve-pick');
+      sel.innerHTML = '<option value="">＋ Create new vendor</option>';
+      loadVendorDirectory().then(list => {
+        if (!_editingVendor || !_editingVendor._isNew) return;
+        sel.innerHTML = '<option value="">＋ Create new vendor</option>' + list.map(d => `
+          <option value="${escapeHtml(d.vendor_id)}"
+                  data-type="${escapeHtml(d.vendor_type || '')}"
+                  data-desc="${escapeHtml(d.description || '')}"
+                  ${d.on_event ? 'disabled' : ''}>${escapeHtml(d.name || 'Vendor')}${d.on_event ? ' · already added' : ''}</option>`).join('');
+      });
+    }
     $('ve-modal-backdrop').classList.add('open');
     setTimeout(() => $('ve-name').focus(), 30);
   }
@@ -3457,6 +3490,17 @@
     const cancel  = document.getElementById('ve-cancel');
     const back    = document.getElementById('ve-modal-backdrop');
     const form    = document.getElementById('ve-modal');
+    const pick    = document.getElementById('ve-pick');
+    if (pick) pick.addEventListener('change', () => {
+      const opt = pick.selectedOptions[0];
+      if (opt && opt.value) {
+        $('ve-name').value = opt.textContent.replace(/ · already added$/, '').trim();
+        $('ve-type').value = opt.dataset.type || '';
+        $('ve-desc').value = opt.dataset.desc || '';
+      } else {
+        $('ve-name').value = ''; $('ve-type').value = ''; $('ve-desc').value = '';
+      }
+    });
     if (cancel) cancel.addEventListener('click', closeVendorEditor);
     if (back)   back.addEventListener('click', (e) => { if (e.target === back) closeVendorEditor(); });
     if (form)   form.addEventListener('submit', saveVendorEdit);
@@ -3478,6 +3522,12 @@
       p_vendor_description:  $('ve-desc').value.trim() || null,
       p_is_featured:         $('ve-featured').checked,
     };
+    // Creating: pass the directory pick so the backend links the existing
+    // vendor instead of creating a duplicate. (update_event_vendor doesn't
+    // accept p_vendor_id, so only attach it on the create path.)
+    if (!_editingVendor.event_vendor_id) {
+      payload.p_vendor_id = $('ve-pick').value || null;
+    }
     const status = $('ve-status');
     const saveBtn = $('ve-save');
     saveBtn.disabled = true;
