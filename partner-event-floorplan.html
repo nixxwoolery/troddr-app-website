@@ -620,13 +620,18 @@
 
         <div class="fp-empty" id="fp-empty" hidden>
           <div class="icon"><svg><use href="#li-pin"/></svg></div>
-          <h3>Upload your venue background</h3>
-          <p>Drop an illustrated map or aerial photo of your venue, then drop pins for vendors, stages, bars, and amenities.</p>
-          <label class="upload-btn">
-            <svg style="width:16px;height:16px;"><use href="#li-upload"/></svg>
-            Choose image
-            <input id="fp-empty-input" type="file" accept="image/png,image/jpeg" />
-          </label>
+          <h3>Set up your venue canvas</h3>
+          <p>Upload an illustrated map or aerial photo of your venue — or start with a blank canvas and add a background later. Pins keep their positions either way.</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+            <label class="upload-btn">
+              <svg style="width:16px;height:16px;"><use href="#li-upload"/></svg>
+              Choose image
+              <input id="fp-empty-input" type="file" accept="image/png,image/jpeg" />
+            </label>
+            <button type="button" class="tb-btn" id="fp-blank-btn" style="padding:10px 18px;">
+              Start with blank canvas
+            </button>
+          </div>
           <div class="fp-status" id="fp-upload-status"></div>
         </div>
       </div>
@@ -967,6 +972,36 @@
     if (FP.panzoom) FP.panzoom.pan(0, 0, { animate: false });
   }
 
+  // ── Blank canvas ─────────────────────────────────────
+  // A generated SVG grid, used when the organizer has no venue image yet.
+  // It's a tiny data URI, so it saves through update_event_floor_plan and
+  // renders in the app exactly like an uploaded image. Swapping in a real
+  // background later keeps all pin positions (they're stored as % of the
+  // image, not absolute pixels).
+  function blankCanvasUri(w = 1600, h = 1000, cell = 50) {
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">` +
+      `<rect width="${w}" height="${h}" fill="#fcfdfe"/>` +
+      `<path d="${Array.from({ length: Math.floor(w / cell) }, (_, i) => `M${(i + 1) * cell} 0V${h}`).join('')}` +
+      `${Array.from({ length: Math.floor(h / cell) }, (_, i) => `M0 ${(i + 1) * cell}H${w}`).join('')}" ` +
+      `stroke="#e8eef4" stroke-width="1"/>` +
+      `<rect x="0.5" y="0.5" width="${w - 1}" height="${h - 1}" fill="none" stroke="#d4dde6" stroke-width="1"/>` +
+      `</svg>`;
+    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+  }
+
+  function startBlankCanvas() {
+    FP.url = blankCanvasUri();
+    $('fp-img').src = FP.url;
+    $('fp-empty').hidden = true;
+    markDirty(true);
+    $('fp-img').addEventListener('load', () => {
+      initPanzoom();
+      renderPins();
+      fitToViewport();
+    }, { once: true });
+  }
+
   // ── Image upload ─────────────────────────────────────
   async function uploadBackground(file) {
     if (!file) return;
@@ -1166,6 +1201,11 @@
     // Initial render
     renderCategoryPicker();
     renderLegend();
+    if (!FP.url && FP.markers.length) {
+      // Markers saved without a background (legacy or partial save):
+      // fall back to the generated blank canvas so the pins stay visible.
+      FP.url = blankCanvasUri();
+    }
     if (FP.url) {
       $('fp-img').src = FP.url;
       $('fp-empty').hidden = true;
@@ -1195,6 +1235,7 @@
     // Replace / first upload inputs
     $('fp-replace-input').addEventListener('change', (e) => uploadBackground(e.target.files[0]));
     $('fp-empty-input').addEventListener('change',   (e) => uploadBackground(e.target.files[0]));
+    $('fp-blank-btn').addEventListener('click', startBlankCanvas);
 
     // Zoom controls
     $('fp-zoom-in').addEventListener('click',    () => FP.panzoom && FP.panzoom.zoomIn());
