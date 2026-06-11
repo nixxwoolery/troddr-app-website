@@ -331,6 +331,7 @@
   }
 
   /* ── Empty state ── */
+  .fp-empty[hidden] { display: none !important; }
   .fp-empty {
     position: absolute; inset: 0;
     display: flex; flex-direction: column;
@@ -671,6 +672,26 @@
             </select>
           </div>
           <div class="fp-field">
+            <label for="pe-size">Booth / tent size (ft)</label>
+            <select id="pe-size">
+              <option value="">— Not set —</option>
+              <option value="10x10">10 × 10</option>
+              <option value="10x20">10 × 20</option>
+              <option value="10x30">10 × 30</option>
+              <option value="20x20">20 × 20</option>
+              <option value="20x30">20 × 30</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div class="fp-field" id="pe-size-custom" hidden>
+            <label>Custom size (ft)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input id="pe-size-w" type="number" min="1" max="500" placeholder="Width" style="width:0;flex:1;" />
+              <span style="color:var(--grey-mid);font-size:13px;">×</span>
+              <input id="pe-size-d" type="number" min="1" max="500" placeholder="Depth" style="width:0;flex:1;" />
+            </div>
+          </div>
+          <div class="fp-field">
             <label for="pe-booth">Booth number (optional)</label>
             <input id="pe-booth" type="text" maxlength="20" placeholder="e.g. A-12" />
           </div>
@@ -824,7 +845,7 @@
           <span class="dot" style="background:${m.color || cat.color}"></span>
           <div style="flex:1;min-width:0;">
             <div class="name">${escapeHtml(m.label || cat.label)}</div>
-            <div class="meta">${escapeHtml(cat.label)}${m.booth ? ' · Booth ' + escapeHtml(m.booth) : ''}</div>
+            <div class="meta">${escapeHtml(cat.label)}${m.booth ? ' · Booth ' + escapeHtml(m.booth) : ''}${m.size ? ' · ' + escapeHtml(m.size.replace('x', ' × ')) + ' ft' : ''}</div>
           </div>
         </li>`;
     }).join('');
@@ -845,6 +866,21 @@
     $('pe-vendor').value = m.vendor_id || '';
     $('pe-booth').value = m.booth || '';
     $('pe-desc').value = m.description || '';
+    // Booth size: preset, custom, or unset
+    const PRESET_SIZES = ['10x10', '10x20', '10x30', '20x20', '20x30'];
+    if (!m.size) {
+      $('pe-size').value = '';
+      $('pe-size-custom').hidden = true;
+    } else if (PRESET_SIZES.includes(m.size)) {
+      $('pe-size').value = m.size;
+      $('pe-size-custom').hidden = true;
+    } else {
+      $('pe-size').value = 'custom';
+      $('pe-size-custom').hidden = false;
+      const parts = String(m.size).split('x');
+      $('pe-size-w').value = parts[0] || '';
+      $('pe-size-d').value = parts[1] || '';
+    }
     setSideMode('edit');
   }
 
@@ -859,6 +895,16 @@
     m.vendor_id = $('pe-vendor').value || null;
     m.booth = $('pe-booth').value.trim() || '';
     m.description = $('pe-desc').value.trim() || '';
+    // Booth size: preset value, or "WxD" assembled from the custom inputs.
+    const sizeSel = $('pe-size').value;
+    $('pe-size-custom').hidden = sizeSel !== 'custom';
+    if (sizeSel === 'custom') {
+      const w = parseInt($('pe-size-w').value, 10);
+      const d = parseInt($('pe-size-d').value, 10);
+      m.size = (w > 0 && d > 0) ? `${w}x${d}` : '';
+    } else {
+      m.size = sizeSel || '';
+    }
     markDirty(true);
     renderPins();
   }
@@ -1055,6 +1101,7 @@
         label: m.label || '', icon: m.icon || DEFAULT_CAT, color: m.color || CAT_BY_ID[DEFAULT_CAT].color,
         vendor_id: m.vendor_id || null,
         booth: m.booth || '',
+        size: m.size || '',
         description: m.description || '',
       })),
     };
@@ -1170,6 +1217,7 @@
           color: m.color || (CAT_BY_ID[m.icon] || CAT_BY_ID[DEFAULT_CAT]).color,
           vendor_id: m.vendor_id || null,
           booth: m.booth || '',
+          size: m.size || '',
           description: m.description || '',
         }))
       : [];
@@ -1224,9 +1272,19 @@
     $('fp-invite-btn').addEventListener('click', createInvite);
     $('pe-done').addEventListener('click', () => { updateSelectedFromForm(); setSideMode('idle'); FP.selectedId = null; renderPins(); });
     $('pe-delete').addEventListener('click', deleteSelected);
-    ['pe-label','pe-category','pe-vendor','pe-booth','pe-desc'].forEach(id => {
+    ['pe-label','pe-category','pe-vendor','pe-booth','pe-desc','pe-size','pe-size-w','pe-size-d'].forEach(id => {
       $(id).addEventListener('change', updateSelectedFromForm);
       $(id).addEventListener('input',  updateSelectedFromForm);
+    });
+    // Picking a vendor auto-fills an empty label with the vendor's name,
+    // so most pins never need manual typing.
+    $('pe-vendor').addEventListener('change', () => {
+      if ($('pe-label').value.trim()) return;
+      const opt = $('pe-vendor').selectedOptions[0];
+      if (opt && opt.value) {
+        $('pe-label').value = opt.textContent;
+        updateSelectedFromForm();
+      }
     });
 
     // Canvas click for placing new pins
