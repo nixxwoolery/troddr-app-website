@@ -1229,7 +1229,13 @@
     outline: 2px solid var(--brand-primary, #0a7aff);
     outline-offset: 2px;
   }
+  /* Panes own the section spacing now that sections are nested inside
+     them instead of being direct children of .main's grid. */
+  .view-pane { display: grid; gap: 28px; }
   .view-pane[hidden] { display: none !important; }
+  /* Grid gap handles the rhythm; strip the chapter card's own margins
+     so spacing stays even instead of doubling up around dividers. */
+  .view-pane > .chapter { margin: 0; }
   @media (max-width: 640px) {
     .view-tabs { position: static; }
     .view-tab { font-size: 12px; padding: 9px 8px; }
@@ -3378,7 +3384,7 @@
       $('vi-table-wrap').innerHTML = `
         <div class="empty-state-card" style="border:none;padding:20px;">
           <div class="empty-state-title">No vendors added yet</div>
-          <div class="empty-state-body">Send us a message to add your vendor lineup.</div>
+          <div class="empty-state-body">Add your lineup in the Editor tab under Manage Vendors — performance metrics appear here once the app starts logging activity.</div>
         </div>`;
       return;
     }
@@ -3626,13 +3632,12 @@
   }
 
   function renderVendors(data) {
-    const hasVendorTab = data.capabilities && data.capabilities.vendors;
     const vendors = data.vendors || [];
     const vStats = data.vendor_stats || {};
     const mStats = data.menu_stats || {};
 
-    if (!hasVendorTab && !vendors.length) return;
-
+    // Always render: with no vendors yet, every card shows its own
+    // empty state instead of leaving the section blank.
     $('vendors').style.display = '';
     const nv = $('nav-vendors'); if (nv) nv.style.display = '';
 
@@ -3662,7 +3667,7 @@
         <div class="empty-state-card">
           <div class="empty-state-icon"><svg width="24" height="24"><use href="#ic-shop"/></svg></div>
           <div class="empty-state-title">No vendors added yet</div>
-          <div class="empty-state-body">Vendors and their menus will appear here once added to this event. Send us a message to add your vendor lineup.</div>
+          <div class="empty-state-body">Add your lineup in the Editor tab under Manage Vendors. Insights fill in automatically once guests start viewing and saving vendors in the app.</div>
         </div>`;
       return;
     }
