@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Admin Billing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/billing-shared.js"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || '';
+</script>
+
+<style>
+  :root {
+    --blue:#0077CC; --blue-light:#e8f4ff; --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea; --amber:#b86e00; --amber-light:#fff4e0;
+    --black:#111111; --grey-dark:#333333; --grey-mid:#666666; --grey-light:#999999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg-soft:#f8f9fa;
+    --radius:10px; --radius-lg:16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', sans-serif; background: var(--bg-soft); color: var(--black); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .hidden { display: none !important; }
+
+  .header { position: sticky; top: 0; z-index: 200; background: #fff; border-bottom: 1px solid var(--border); }
+  .navbar { max-width: 1320px; margin: 0 auto; padding: 0 24px; height: 58px; display: flex; align-items: center; gap: 16px; }
+  .logo { font-size: 24px; font-weight: 700; color: var(--blue); text-decoration: none; letter-spacing: -1px; }
+  .nav-badge { background: var(--black); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 6px; }
+
+  .gate-wrap { min-height: calc(100vh - 58px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .gate-card { width: 100%; max-width: 400px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 30px; box-shadow: 0 16px 45px rgba(0,0,0,0.08); }
+  .gate-card h1 { font-size: 20px; margin-bottom: 6px; letter-spacing: -0.4px; }
+  .gate-card p { color: var(--grey-mid); font-size: 13px; margin-bottom: 14px; }
+  .gate-err { display: none; margin-top: 10px; color: var(--red); font-size: 13px; }
+  .gate-err.show { display: block; }
+
+  .page { max-width: 1320px; margin: 0 auto; padding: 22px 24px 100px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--border); background: #fff; color: var(--grey-dark); border-radius: 100px; padding: 8px 16px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .tab.active { background: var(--black); border-color: var(--black); color: #fff; }
+  .tab .count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 6px; border-radius: 100px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; text-align: center; }
+
+  .card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 16px; letter-spacing: -0.3px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .muted { color: var(--grey-mid); font-size: 12px; }
+  .empty { padding: 20px; background: var(--bg-soft); border-radius: var(--radius); text-align: center; color: var(--grey-mid); font-size: 13px; }
+
+  .pill { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; }
+  .pill.good { background: var(--green-light); color: var(--green); }
+  .pill.warn { background: var(--amber-light); color: var(--amber); }
+  .pill.bad  { background: var(--red-light); color: var(--red); }
+  .pill.info { background: var(--blue-light); color: var(--blue); }
+  .pill.neutral { background: var(--bg-soft); color: var(--grey-mid); border: 1px solid var(--border); }
+
+  button.btn { border: 1px solid var(--border); background: #fff; color: var(--grey-dark); border-radius: 7px; padding: 7px 12px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+  button.btn:hover { background: var(--bg-soft); }
+  button.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  button.btn.primary:hover { filter: brightness(1.08); }
+  button.btn.danger { color: var(--red); border-color: #f0c5c0; }
+  button.btn.danger:hover { background: var(--red-light); }
+  button.btn:disabled { opacity: 0.5; cursor: default; }
+
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-light); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 10px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr.clickable { cursor: pointer; }
+  .tbl tr.clickable:hover td { background: var(--bg-soft); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  label.f { display: block; font-size: 11px; font-weight: 700; color: var(--grey-dark); margin: 10px 0 4px; }
+  input.f, select.f, textarea.f { width: 100%; border: 1px solid #dcdcdc; border-radius: 7px; padding: 8px 10px; font: inherit; font-size: 13px; background: #fff; }
+  textarea.f { min-height: 70px; resize: vertical; }
+  .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .frow3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .review-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; background: #fff; }
+  .review-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .review-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 6px 16px; font-size: 12px; margin-bottom: 10px; }
+  .review-kv b { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-light); }
+  .review-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .li-table input, .li-table select { border: 1px solid #dcdcdc; border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 12px; width: 100%; }
+  .li-table td { padding: 6px 5px; }
+  .totals-line { display: flex; justify-content: flex-end; gap: 24px; font-size: 14px; padding: 6px 10px; }
+  .totals-line.grand { font-size: 17px; font-weight: 800; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 980px) { .detail-grid, .frow, .frow3 { grid-template-columns: 1fr; } }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--black); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 900; opacity: 0; pointer-events: none; transition: opacity 0.25s; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+  .toast.visible { opacity: 1; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 60px auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .back-link { display: inline-block; margin-bottom: 12px; font-size: 13px; color: var(--blue); cursor: pointer; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="/" class="logo">troddr</a>
+    <span class="nav-badge">Admin · Billing</span>
+  </div>
+</header>
+
+<!-- Gate -->
+<div class="gate-wrap" id="gate">
+  <div class="gate-card">
+    <h1>Admin Billing Console</h1>
+    <p>Enter your TRODDR admin token to manage company accounts, invoices, and payment reviews.</p>
+    <input class="f" id="gate-input" type="password" placeholder="Admin token" autocomplete="one-time-code" />
+    <div style="margin-top: 12px;"><button class="btn primary" id="gate-go" style="width:100%; padding:11px;">Continue</button></div>
+    <div class="gate-err" id="gate-error">That token didn't work. Check it and try again.</div>
+  </div>
+</div>
+
+<div id="loading" class="hidden"><div class="spinner"></div></div>
+
+<!-- Dashboard -->
+<main class="page hidden" id="dashboard">
+
+  <div class="tabs">
+    <button class="tab active" data-tab="review">Payment Review<span class="count hidden" id="count-review"></span></button>
+    <button class="tab" data-tab="companies">Companies</button>
+    <button class="tab" data-tab="invoice">Invoice Generator</button>
+    <button class="tab" data-tab="requests">Requests<span class="count hidden" id="count-requests"></span></button>
+    <button class="tab" data-tab="audit">Audit Log</button>
+  </div>
+
+  <!-- ============ REVIEW TAB ============ -->
+  <section id="tab-review">
+    <div class="card">
+      <h2>Pending payment confirmations</h2>
+      <p class="muted" style="margin-bottom: 12px;">
+        Approving a confirmation marks the invoice <b>paid</b> and activates the subscription / entitlements.
+        Nothing activates until you approve it here.
+      </p>
+      <div id="review-list"></div>
+    </div>
+    <div class="card">
+      <h2>Recent invoices</h2>
+      <div id="recent-invoices"></div>
+    </div>
+  </section>
+
+  <!-- ============ COMPANIES TAB ============ -->
+  <section id="tab-companies" class="hidden">
+    <div id="companies-list-view">
+      <div class="card">
+        <h2>Company accounts <button class="btn primary" id="new-company-btn" style="margin-left:auto;">+ New company</button></h2>
+        <div id="new-company-form" class="hidden" style="border:1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 14px;">
+          <div class="frow">
+            <div><label class="f">Company name</label><input class="f" id="nc-name" /></div>
+            <div><label class="f">Billing email</label><input class="f" id="nc-email" type="email" /></div>
+          </div>
+          <div class="frow">
+            <div><label class="f">Contact name</label><input class="f" id="nc-contact" /></div>
+            <div><label class="f">Contact phone</label><input class="f" id="nc-phone" /></div>
+          </div>
+          <div style="margin-top: 12px; display:flex; gap:8px;">
+            <button class="btn primary" id="nc-save">Create company</button>
+            <button class="btn" id="nc-cancel">Cancel</button>
+          </div>
+        </div>
+        <table class="tbl"><thead><tr>
+          <th>Company</th><th>Status</th><th>Subscription</th><th>Paid Through</th>
+          <th class="num">Locations</th><th class="num">Users</th><th class="num">Open Invoices</th>
+        </tr></thead><tbody id="companies-rows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Company detail -->
+    <div id="company-detail-view" class="hidden">
+      <span class="back-link" id="back-to-companies">← All companies</span>
+      <div class="card">
+        <h2 id="cd-name">—</h2>
+        <div class="frow3">
+          <div><label class="f">Name</label><input class="f" id="cd-edit-name" /></div>
+          <div><label class="f">Billing email</label><input class="f" id="cd-edit-email" /></div>
+          <div><label class="f">Status</label>
+            <select class="f" id="cd-edit-status">
+              <option value="active">active</option><option value="suspended">suspended</option><option value="archived">archived</option>
+            </select></div>
+        </div>
+        <label class="f">Internal notes</label><textarea class="f" id="cd-edit-notes"></textarea>
+        <div style="margin-top: 10px;"><button class="btn" id="cd-save-company">Save company</button></div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="card">
+          <h2>Subscription <span id="cd-sub-pill"></span></h2>
+          <div id="cd-sub-summary" class="muted" style="margin-bottom: 10px;"></div>
+          <div class="frow3">
+            <div><label class="f">Plan</label><select class="f" id="cd-sub-plan"></select></div>
+            <div><label class="f">Cycle</label>
+              <select class="f" id="cd-sub-cycle"><option value="annual">annual</option><option value="monthly">monthly</option></select></div>
+            <div><label class="f">Paid through</label><input class="f" id="cd-sub-paidthrough" type="date" /></div>
+          </div>
+          <div style="margin-top: 12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn primary" data-subaction="activate">Activate</button>
+            <button class="btn" data-subaction="adjust_paid_through">Adjust paid-through</button>
+            <button class="btn" data-subaction="read_only">Set read-only</button>
+            <button class="btn" data-subaction="expire">Expire</button>
+            <button class="btn danger" data-subaction="revoke">Revoke (kill entitlements)</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Entitlements</h2>
+          <div id="cd-entitlements"></div>
+          <div class="frow3" style="margin-top: 10px; align-items: end;">
+            <div><label class="f">Grant entitlement</label><select class="f" id="cd-ent-key"></select></div>
+            <div><label class="f">Expires (optional)</label><input class="f" id="cd-ent-expires" type="date" /></div>
+            <div><button class="btn" id="cd-ent-grant" style="width:100%;">Grant</button></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Approved locations</h2>
+          <div id="cd-locations"></div>
+          <label class="f">Attach a location (search places)</label>
+          <input class="f" id="cd-loc-search" placeholder="Type a place name…" />
+          <div id="cd-loc-results" style="margin-top: 8px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Company users</h2>
+          <div id="cd-users"></div>
+          <div class="frow3" style="margin-top: 10px; align-items: end;">
+            <div><label class="f">Email</label><input class="f" id="cd-user-email" type="email" /></div>
+            <div><label class="f">Role</label>
+              <select class="f" id="cd-user-role"><option value="admin">admin</option><option value="member">member</option></select></div>
+            <div><button class="btn" id="cd-user-add" style="width:100%;">Add user</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Invoices <button class="btn primary" id="cd-new-invoice" style="margin-left:auto;">+ New invoice for this company</button></h2>
+        <div id="cd-invoices"></div>
+      </div>
+
+      <div class="card">
+        <h2>Audit history</h2>
+        <div id="cd-audit" style="max-height: 360px; overflow-y: auto;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INVOICE GENERATOR TAB ============ -->
+  <section id="tab-invoice" class="hidden">
+    <div class="card">
+      <h2 id="ig-title">New invoice</h2>
+      <div class="frow3">
+        <div><label class="f">Company</label><select class="f" id="ig-company"></select></div>
+        <div><label class="f">Currency</label>
+          <select class="f" id="ig-currency"><option>USD</option><option>JMD</option></select></div>
+        <div><label class="f">Invoice number</label><input class="f" id="ig-number" disabled placeholder="Assigned when issued (TRODDR-INV-YYYY-0001)" /></div>
+      </div>
+      <div class="frow">
+        <div><label class="f">Issue date</label><input class="f" id="ig-issue-date" type="date" /></div>
+        <div><label class="f">Due date</label><input class="f" id="ig-due-date" type="date" /></div>
+      </div>
+      <div class="frow">
+        <div><label class="f">Billing period start</label><input class="f" id="ig-period-start" type="date" /></div>
+        <div><label class="f">Billing period end</label><input class="f" id="ig-period-end" type="date" /></div>
+      </div>
+
+      <h2 style="margin-top: 20px;">Line items</h2>
+      <div class="frow3" style="align-items: end; margin-bottom: 10px;">
+        <div>
+          <label class="f">Add plan subscription</label>
+          <select class="f" id="ig-add-plan"></select>
+        </div>
+        <div>
+          <label class="f">Cycle</label>
+          <select class="f" id="ig-add-plan-cycle"><option value="annual">annual</option><option value="monthly">monthly</option></select>
+        </div>
+        <div><button class="btn" id="ig-add-plan-btn" style="width:100%;">+ Add plan line</button></div>
+      </div>
+      <div class="frow3" style="align-items: end; margin-bottom: 14px;">
+        <div style="grid-column: span 2;">
+          <label class="f">Add product</label>
+          <select class="f" id="ig-add-product"></select>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn" id="ig-add-product-btn" style="flex:1;">+ Add product</button>
+          <button class="btn" id="ig-add-custom-btn" style="flex:1;">+ Custom line</button>
+        </div>
+      </div>
+
+      <table class="tbl li-table">
+        <thead><tr><th style="width:34%;">Description</th><th>Type</th><th style="width:64px;">Qty</th><th style="width:110px;">Unit</th><th>Period start</th><th>Period end</th><th class="num">Amount</th><th></th></tr></thead>
+        <tbody id="ig-lines"></tbody>
+      </table>
+
+      <div class="frow" style="margin-top: 14px;">
+        <div><label class="f">Discount amount</label><input class="f" id="ig-discount" type="number" min="0" step="0.01" value="0" /></div>
+        <div><label class="f">Discount note</label><input class="f" id="ig-discount-note" /></div>
+      </div>
+      <div class="totals-line"><span>Subtotal</span><span id="ig-subtotal">$0.00</span></div>
+      <div class="totals-line grand"><span>Total</span><span id="ig-total">$0.00</span></div>
+
+      <label class="f">Notes (printed on invoice)</label><textarea class="f" id="ig-notes"></textarea>
+      <label class="f">Payment instructions (printed on invoice)</label><textarea class="f" id="ig-instructions">Bank transfer to TRODDR Ltd. Include the invoice number as your payment reference, then confirm payment in your dashboard.</textarea>
+      <label class="f">Internal admin notes (never shown to company)</label><textarea class="f" id="ig-internal"></textarea>
+
+      <div style="margin-top: 16px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn primary" id="ig-save">Save draft</button>
+        <button class="btn" id="ig-issue">Save &amp; issue</button>
+        <button class="btn" id="ig-preview">Preview PDF</button>
+        <button class="btn" id="ig-reset">Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REQUESTS TAB ============ -->
+  <section id="tab-requests" class="hidden">
+    <div class="card">
+      <h2>Company requests</h2>
+      <p class="muted" style="margin-bottom: 12px;">Extra admins, insights, event coverage, and sponsor products are request-only — quote them and issue an invoice from the generator.</p>
+      <div id="requests-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ AUDIT TAB ============ -->
+  <section id="tab-audit" class="hidden">
+    <div class="card">
+      <h2>Audit log (latest 100)</h2>
+      <div id="audit-list"></div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const BS = window.BillingShared;
+  const $ = (id) => document.getElementById(id);
+  const esc = BS.esc;
+
+  let adminToken = '';
+  let overview = null;
+  let catalog = null;
+  let companyDetail = null;
+  let igLines = [];           // invoice generator line items
+  let igEditingId = null;     // draft invoice id being edited
+
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('visible');
+    setTimeout(() => t.classList.remove('visible'), 3500);
+  }
+  function pill(meta) { return `<span class="pill ${meta.cls}">${esc(meta.label)}</span>`; }
+
+  async function rpc(fn, args) {
+    const { data, error } = await db.rpc(fn, args);
+    if (error) throw new Error(error.message || 'Request failed');
+    return data;
+  }
+  async function action(fn, args, successMsg) {
+    try {
+      const res = await rpc(fn, args);
+      if (res && res.ok === false) { alert(res.error || 'Action failed'); return null; }
+      if (successMsg) toast(successMsg);
+      return res;
+    } catch (e) { alert(e.message); return null; }
+  }
+
+  /* ── Auth gate ────────────────────────────────────────── */
+  function setToken(t) {
+    adminToken = t;
+    try { sessionStorage.setItem('troddr_admin_token', t); } catch (e) {}
+  }
+  function loadStoredToken() {
+    const urlT = window.PartnerAuth?.getAdminToken({ require: false })
+      || new URLSearchParams(location.search).get('token');
+    if (urlT) { setToken(urlT); return urlT; }
+    try { return sessionStorage.getItem('troddr_admin_token') || ''; } catch (e) { return ''; }
+  }
+  $('gate-go').addEventListener('click', () => {
+    const t = $('gate-input').value.trim();
+    if (!t) return;
+    setToken(t);
+    boot();
+  });
+  $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
+
+  /* ── Tabs ─────────────────────────────────────────────── */
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+    b.classList.add('active');
+    ['review', 'companies', 'invoice', 'requests', 'audit'].forEach((k) => {
+      $('tab-' + k).classList.toggle('hidden', k !== b.dataset.tab);
+    });
+  }));
+
+  /* ── Load overview + catalog ──────────────────────────── */
+  async function loadAll() {
+    const [ov, cat] = await Promise.all([
+      rpc('admin_billing_overview', { p_admin_token: adminToken }),
+      catalog ? Promise.resolve(catalog) : rpc('admin_get_billing_catalog', { p_admin_token: adminToken }),
+    ]);
+    if (!ov) throw new Error('bad token');
+    overview = ov;
+    catalog = cat;
+    renderOverview();
+    renderCatalogSelects();
+  }
+
+  async function boot() {
+    $('gate').classList.add('hidden');
+    $('loading').classList.remove('hidden');
+    try {
+      await loadAll();
+      $('loading').classList.add('hidden');
+      $('dashboard').classList.remove('hidden');
+    } catch (e) {
+      console.error(e);
+      $('loading').classList.add('hidden');
+      $('gate').classList.remove('hidden');
+      $('gate-error').classList.add('show');
+    }
+  }
+
+  /* ── Overview rendering ───────────────────────────────── */
+  function renderOverview() {
+    const c = overview.counts || {};
+    $('count-review').textContent = c.pending_reviews || '';
+    $('count-review').classList.toggle('hidden', !c.pending_reviews);
+    $('count-requests').textContent = c.open_requests || '';
+    $('count-requests').classList.toggle('hidden', !c.open_requests);
+
+    // Pending reviews
+    const reviews = overview.pending_reviews || [];
+    $('review-list').innerHTML = reviews.length ? reviews.map((r) => `
+      <div class="review-card">
+        <div class="review-head">
+          <div>
+            <b>${esc(r.company ? r.company.name : '?')}</b>
+            · ${esc(r.invoice ? r.invoice.invoice_number : '')}
+            · <b>${BS.money(r.invoice ? r.invoice.total : 0, r.invoice ? r.invoice.currency : 'USD')}</b>
+          </div>
+          ${pill(BS.confirmationStatus(r.status))}
+        </div>
+        <div class="review-kv">
+          <div><b>Method</b>${esc(r.payment_method)}</div>
+          <div><b>Paid on</b>${BS.fmtDate(r.paid_on)}</div>
+          <div><b>Reference</b>${esc(r.reference_number)}</div>
+          <div><b>Submitted by</b>${esc(r.submitted_by || '—')}</div>
+          <div><b>Submitted</b>${BS.fmtDate(r.created_at)}</div>
+          <div><b>Receipt</b>${r.receipt_url ? `<a href="${esc(r.receipt_url)}" target="_blank" rel="noopener">View receipt</a>` : '—'}</div>
+        </div>
+        ${r.notes ? `<div class="muted" style="margin-bottom:10px;">Note from company: ${esc(r.notes)}</div>` : ''}
+        <div class="review-actions">
+          <button class="btn primary" data-review="approve" data-id="${r.id}">Approve &amp; activate</button>
+          <button class="btn" data-review="clarify" data-id="${r.id}">Request clarification</button>
+          <button class="btn danger" data-review="reject" data-id="${r.id}">Reject</button>
+        </div>
+      </div>`).join('')
+      : '<div class="empty">No payment confirmations waiting for review.</div>';
+
+    document.querySelectorAll('[data-review]').forEach((b) => b.addEventListener('click', async () => {
+      const decision = b.dataset.review;
+      let note = null;
+      if (decision === 'approve') {
+        if (!confirm('Approve this payment? This marks the invoice PAID and activates the subscription/entitlements.')) return;
+      } else {
+        note = prompt(decision === 'reject'
+          ? 'Why is this payment rejected? (shown to the company)'
+          : 'What clarification do you need? (shown to the company)');
+        if (note === null) return;
+      }
+      const res = await action('admin_review_payment', {
+        p_admin_token: adminToken, p_confirmation_id: b.dataset.id,
+        p_decision: decision, p_note: note,
+      }, decision === 'approve' ? 'Payment approved — access activated.' : 'Saved.');
+      if (res) await loadAll();
+    }));
+
+    // Recent invoices
+    const invs = overview.recent_invoices || [];
+    $('recent-invoices').innerHTML = invs.length ? `
+      <table class="tbl"><thead><tr><th>Invoice</th><th>Company</th><th>Status</th><th class="num">Total</th><th>Issued</th><th>Due</th></tr></thead>
+      <tbody>${invs.map((i) => `
+        <tr>
+          <td>${esc(i.invoice_number || '(draft)')}</td>
+          <td>${esc(i.company ? i.company.name : '')}</td>
+          <td>${pill(BS.invoiceStatus(i.status))}</td>
+          <td class="num">${BS.money(i.total, i.currency)}</td>
+          <td>${BS.fmtDate(i.issue_date)}</td>
+          <td>${BS.fmtDate(i.due_date)}</td>
+        </tr>`).join('')}</tbody></table>`
+      : '<div class="empty">No invoices yet.</div>';
+
+    // Companies table
+    $('companies-rows').innerHTML = (overview.companies || []).map((co) => `
+      <tr class="clickable" data-company="${co.id}">
+        <td><b>${esc(co.name)}</b><div class="muted">${esc(co.billing_email)}</div></td>
+        <td>${pill(co.status === 'active' ? { label: 'Active', cls: 'good' } : { label: co.status, cls: 'neutral' })}</td>
+        <td>${co.access && co.access.status ? pill(BS.subscriptionStatus(co.access.status)) : '<span class="pill neutral">None</span>'}</td>
+        <td>${BS.fmtDate(co.access ? co.access.paid_through : null)}</td>
+        <td class="num">${co.locations}</td>
+        <td class="num">${co.users}</td>
+        <td class="num">${co.open_invoices}</td>
+      </tr>`).join('');
+    document.querySelectorAll('[data-company]').forEach((tr) =>
+      tr.addEventListener('click', () => openCompany(tr.dataset.company)));
+
+    // Requests
+    const reqs = overview.requests || [];
+    $('requests-list').innerHTML = reqs.length ? reqs.map((r) => `
+      <div class="review-card">
+        <div class="review-head">
+          <div><b>${esc(r.company ? r.company.name : '?')}</b> · ${esc(r.request_type.replace(/_/g, ' '))}</div>
+          ${pill(r.status === 'new' ? { label: 'New', cls: 'warn' } : { label: 'In progress', cls: 'info' })}
+        </div>
+        ${r.message ? `<div class="muted" style="margin-bottom:10px;">${esc(r.message)}</div>` : ''}
+        <div class="muted" style="margin-bottom:10px;">${esc(r.requested_by || '')} · ${BS.fmtDate(r.created_at)}</div>
+        <div class="review-actions">
+          ${r.status === 'new' ? `<button class="btn" data-req-status="in_progress" data-id="${r.id}">Mark in progress</button>` : ''}
+          <button class="btn" data-req-status="resolved" data-id="${r.id}">Mark resolved</button>
+        </div>
+      </div>`).join('')
+      : '<div class="empty">No open requests.</div>';
+    document.querySelectorAll('[data-req-status]').forEach((b) => b.addEventListener('click', async () => {
+      const res = await action('admin_set_request_status', {
+        p_admin_token: adminToken, p_request_id: b.dataset.id, p_status: b.dataset.reqStatus,
+      }, 'Request updated.');
+      if (res) await loadAll();
+    }));
+
+    // Audit
+    $('audit-list').innerHTML = renderAuditRows(overview.audit || []);
+  }
+
+  function renderAuditRows(rows) {
+    if (!rows.length) return '<div class="empty">Nothing logged yet.</div>';
+    return `<table class="tbl"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Company</th><th>Details</th></tr></thead>
+      <tbody>${rows.map((a) => `
+        <tr>
+          <td style="white-space:nowrap;">${new Date(a.created_at).toLocaleString()}</td>
+          <td>${esc(a.actor_type)}${a.actor_label ? '<div class="muted">' + esc(a.actor_label) + '</div>' : ''}</td>
+          <td><b>${esc(a.action)}</b></td>
+          <td>${esc(a.company || '')}</td>
+          <td class="muted" style="max-width:340px; word-break:break-word;">${esc(JSON.stringify(a.details))}</td>
+        </tr>`).join('')}</tbody></table>`;
+  }
+
+  /* ── Catalog selects ──────────────────────────────────── */
+  function renderCatalogSelects() {
+    const plans = catalog.plans || [];
+    const products = (catalog.products || []).filter((p) => p.item_type !== 'founding_partner_subscription');
+    const ents = catalog.entitlements || [];
+
+    $('ig-company').innerHTML = '<option value="">Select company…</option>' +
+      (overview.companies || []).map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    $('ig-add-plan').innerHTML = plans.map((p) =>
+      `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join('');
+    $('ig-add-product').innerHTML = products.map((p) => {
+      const price = p.unit_amount != null ? BS.money(p.unit_amount, p.currency)
+        : `${BS.money(p.min_amount, p.currency)}${p.max_amount ? '–' + BS.money(p.max_amount, p.currency) : '+'}`;
+      return `<option value="${esc(p.code)}">${esc(p.name)} — ${price}</option>`;
+    }).join('');
+    $('cd-sub-plan').innerHTML = plans.map((p) => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join('');
+    $('cd-ent-key').innerHTML = ents.map((e) => `<option value="${esc(e.key)}">${esc(e.name)} (${esc(e.key)})</option>`).join('');
+  }
+
+  /* ── Company detail ───────────────────────────────────── */
+  async function openCompany(id) {
+    const data = await rpc('admin_get_company', { p_admin_token: adminToken, p_company_id: id });
+    if (!data) { alert('Could not load company'); return; }
+    companyDetail = data;
+    renderCompanyDetail();
+    // Switch to companies tab + detail view
+    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === 'companies'));
+    ['review', 'companies', 'invoice', 'requests', 'audit'].forEach((k) =>
+      $('tab-' + k).classList.toggle('hidden', k !== 'companies'));
+    $('companies-list-view').classList.add('hidden');
+    $('company-detail-view').classList.remove('hidden');
+  }
+
+  function renderCompanyDetail() {
+    const d = companyDetail;
+    const co = d.company;
+    $('cd-name').textContent = co.name;
+    $('cd-edit-name').value = co.name;
+    $('cd-edit-email').value = co.billing_email;
+    $('cd-edit-status').value = co.status;
+    $('cd-edit-notes').value = co.notes || '';
+
+    const access = d.access || {};
+    $('cd-sub-pill').innerHTML = access.status ? pill(BS.subscriptionStatus(access.status)) : '<span class="pill neutral">No subscription</span>';
+    const sub = d.subscription;
+    $('cd-sub-summary').textContent = sub
+      ? `${sub.plan_key || 'no plan'} · ${sub.billing_cycle || '—'} · paid through ${sub.paid_through || '—'} · access: ${access.access}`
+      : 'No subscription yet. Activating manually or approving a subscription invoice creates one.';
+    if (sub) {
+      if (sub.plan_key) $('cd-sub-plan').value = sub.plan_key;
+      if (sub.billing_cycle) $('cd-sub-cycle').value = sub.billing_cycle;
+      $('cd-sub-paidthrough').value = sub.paid_through || '';
+    }
+
+    // Entitlements
+    const ents = d.entitlements || [];
+    $('cd-entitlements').innerHTML = ents.length ? ents.map((e) => `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 2px; border-bottom:1px solid var(--border-soft); font-size:12px;">
+        <div>
+          <b>${esc(e.key)}</b>
+          <span class="muted">· ${esc(e.source)}${e.expires_at ? ' · until ' + BS.fmtDate(e.expires_at) : ''}</span>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          ${e.is_active ? '<span class="pill good">Active</span>' : '<span class="pill neutral">Off</span>'}
+          <button class="btn" data-ent-toggle="${esc(e.key)}" data-ent-active="${e.is_active}">${e.is_active ? 'Revoke' : 'Re-grant'}</button>
+        </div>
+      </div>`).join('')
+      : '<div class="empty">No entitlements yet.</div>';
+    document.querySelectorAll('[data-ent-toggle]').forEach((b) => b.addEventListener('click', async () => {
+      const active = b.dataset.entActive === 'true';
+      const res = await action('admin_set_entitlement', {
+        p_admin_token: adminToken, p_company_id: co.id,
+        p_key: b.dataset.entToggle, p_active: !active, p_expires_at: null, p_note: null,
+      }, active ? 'Entitlement revoked.' : 'Entitlement granted.');
+      if (res) openCompany(co.id);
+    }));
+
+    // Locations
+    const locs = d.locations || [];
+    $('cd-locations').innerHTML = locs.length ? locs.map((l) => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 2px; border-bottom:1px solid var(--border-soft); font-size:13px;">
+        <div><b>${esc(l.name || l.label || l.place_id)}</b> <span class="muted">${esc(l.town || '')}</span></div>
+        <button class="btn danger" data-detach="${l.place_id}">Detach</button>
+      </div>`).join('')
+      : '<div class="empty">No locations attached.</div>';
+    document.querySelectorAll('[data-detach]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Detach this location from the company account?')) return;
+      const res = await action('admin_detach_location', {
+        p_admin_token: adminToken, p_company_id: co.id, p_place_id: b.dataset.detach,
+      }, 'Location detached.');
+      if (res) openCompany(co.id);
+    }));
+
+    // Users
+    const users = d.users || [];
+    $('cd-users').innerHTML = users.length ? users.map((u) => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 2px; border-bottom:1px solid var(--border-soft); font-size:13px;">
+        <div><b>${esc(u.email)}</b> <span class="muted">· ${esc(u.role)} · ${u.linked ? 'signed in' : 'invited'}</span></div>
+        <button class="btn danger" data-rmuser="${u.id}">Remove</button>
+      </div>`).join('')
+      : '<div class="empty">No users yet. Add the owner\'s email below.</div>';
+    document.querySelectorAll('[data-rmuser]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Remove this user\'s dashboard access?')) return;
+      const res = await action('admin_remove_company_user', {
+        p_admin_token: adminToken, p_company_user_id: b.dataset.rmuser,
+      }, 'User removed.');
+      if (res) openCompany(co.id);
+    }));
+
+    // Invoices
+    const invs = d.invoices || [];
+    $('cd-invoices').innerHTML = invs.length ? `
+      <table class="tbl"><thead><tr><th>Invoice</th><th>Status</th><th class="num">Total</th><th>Issued</th><th>Due</th><th>Confirmation</th><th></th></tr></thead>
+      <tbody>${invs.map((i, idx) => {
+        const conf = (i.confirmations || [])[0];
+        return `<tr>
+          <td><b>${esc(i.invoice_number || '(draft)')}</b></td>
+          <td>${pill(BS.invoiceStatus(i.status))}</td>
+          <td class="num">${BS.money(i.total, i.currency)}</td>
+          <td>${BS.fmtDate(i.issue_date)}</td>
+          <td>${BS.fmtDate(i.due_date)}</td>
+          <td>${conf ? pill(BS.confirmationStatus(conf.status)) : '—'}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn" data-inv-pdf="${idx}">PDF</button>
+            ${i.raw_status === 'draft' ? `<button class="btn" data-inv-edit="${idx}">Edit</button>
+              <button class="btn primary" data-inv-issue="${i.id}">Issue</button>` : ''}
+            ${['issued', 'overdue'].includes(i.raw_status) ? `<button class="btn" data-inv-paid="${i.id}">Mark paid</button>` : ''}
+            ${i.raw_status !== 'void' ? `<button class="btn danger" data-inv-void="${i.id}">Void</button>` : ''}
+          </td>
+        </tr>`;
+      }).join('')}</tbody></table>`
+      : '<div class="empty">No invoices for this company yet.</div>';
+
+    document.querySelectorAll('[data-inv-pdf]').forEach((b) => b.addEventListener('click', () =>
+      BS.openInvoicePdf(invs[Number(b.dataset.invPdf)], co)));
+    document.querySelectorAll('[data-inv-edit]').forEach((b) => b.addEventListener('click', () =>
+      loadInvoiceIntoGenerator(invs[Number(b.dataset.invEdit)], co.id)));
+    document.querySelectorAll('[data-inv-issue]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Issue this invoice? It becomes visible to the company and gets its invoice number.')) return;
+      const res = await action('admin_issue_invoice', {
+        p_admin_token: adminToken, p_invoice_id: b.dataset.invIssue,
+      }, 'Invoice issued.');
+      if (res) { await loadAll(); openCompany(co.id); }
+    }));
+    document.querySelectorAll('[data-inv-paid]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Mark PAID without a company confirmation? Use this only when you verified the payment out-of-band. This activates the subscription/entitlements.')) return;
+      const note = prompt('Internal note (how was this verified?)') || null;
+      const res = await action('admin_set_invoice_status', {
+        p_admin_token: adminToken, p_invoice_id: b.dataset.invPaid, p_status: 'paid', p_note: note,
+      }, 'Invoice paid — access activated.');
+      if (res) { await loadAll(); openCompany(co.id); }
+    }));
+    document.querySelectorAll('[data-inv-void]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Void this invoice? This cannot be undone.')) return;
+      const res = await action('admin_set_invoice_status', {
+        p_admin_token: adminToken, p_invoice_id: b.dataset.invVoid, p_status: 'void', p_note: null,
+      }, 'Invoice voided.');
+      if (res) { await loadAll(); openCompany(co.id); }
+    }));
+
+    // Audit
+    $('cd-audit').innerHTML = renderAuditRows((d.audit || []).map((a) => ({ ...a, company: co.name })));
+  }
+
+  $('back-to-companies').addEventListener('click', () => {
+    $('company-detail-view').classList.add('hidden');
+    $('companies-list-view').classList.remove('hidden');
+  });
+
+  $('cd-save-company').addEventListener('click', async () => {
+    const res = await action('admin_upsert_company', {
+      p_admin_token: adminToken, p_company_id: companyDetail.company.id,
+      p_name: $('cd-edit-name').value, p_billing_email: $('cd-edit-email').value,
+      p_contact_name: companyDetail.company.contact_name, p_contact_phone: companyDetail.company.contact_phone,
+      p_status: $('cd-edit-status').value, p_notes: $('cd-edit-notes').value,
+    }, 'Company saved.');
+    if (res) { await loadAll(); openCompany(companyDetail.company.id); }
+  });
+
+  document.querySelectorAll('[data-subaction]').forEach((b) => b.addEventListener('click', async () => {
+    const act = b.dataset.subaction;
+    const paidThrough = $('cd-sub-paidthrough').value || null;
+    if (act === 'activate' && !confirm('Manually activate this subscription? Normally activation happens by approving a paid invoice.')) return;
+    if (act === 'revoke' && !confirm('Revoke subscription AND deactivate all entitlements?')) return;
+    if (act === 'adjust_paid_through' && !paidThrough) { alert('Set the paid-through date first.'); return; }
+    const res = await action('admin_set_subscription', {
+      p_admin_token: adminToken, p_company_id: companyDetail.company.id,
+      p_action: act, p_plan_key: $('cd-sub-plan').value || null,
+      p_billing_cycle: $('cd-sub-cycle').value || null,
+      p_paid_through: paidThrough, p_note: null,
+    }, 'Subscription updated.');
+    if (res) { await loadAll(); openCompany(companyDetail.company.id); }
+  }));
+
+  $('cd-ent-grant').addEventListener('click', async () => {
+    const res = await action('admin_set_entitlement', {
+      p_admin_token: adminToken, p_company_id: companyDetail.company.id,
+      p_key: $('cd-ent-key').value, p_active: true,
+      p_expires_at: $('cd-ent-expires').value || null, p_note: null,
+    }, 'Entitlement granted.');
+    if (res) openCompany(companyDetail.company.id);
+  });
+
+  let locSearchTimer = null;
+  $('cd-loc-search').addEventListener('input', () => {
+    clearTimeout(locSearchTimer);
+    const q = $('cd-loc-search').value.trim();
+    if (q.length < 2) { $('cd-loc-results').innerHTML = ''; return; }
+    locSearchTimer = setTimeout(async () => {
+      try {
+        const results = await rpc('admin_search_places', { p_admin_token: adminToken, p_query: q });
+        $('cd-loc-results').innerHTML = (results || []).map((p) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:13px; border-bottom:1px solid var(--border-soft);">
+            <div><b>${esc(p.name)}</b> <span class="muted">${esc([p.town, p.parish].filter(Boolean).join(', '))}</span></div>
+            <button class="btn" data-attach="${p.id}">Attach</button>
+          </div>`).join('') || '<div class="muted">No matches.</div>';
+        document.querySelectorAll('[data-attach]').forEach((b) => b.addEventListener('click', async () => {
+          const res = await action('admin_attach_location', {
+            p_admin_token: adminToken, p_company_id: companyDetail.company.id,
+            p_place_id: b.dataset.attach, p_label: null,
+          }, 'Location attached.');
+          if (res) { $('cd-loc-search').value = ''; $('cd-loc-results').innerHTML = ''; openCompany(companyDetail.company.id); }
+        }));
+      } catch (e) { console.error(e); }
+    }, 300);
+  });
+
+  $('cd-user-add').addEventListener('click', async () => {
+    const email = $('cd-user-email').value.trim();
+    if (!email) return;
+    const res = await action('admin_upsert_company_user', {
+      p_admin_token: adminToken, p_company_id: companyDetail.company.id,
+      p_email: email, p_name: null, p_role: $('cd-user-role').value,
+    }, 'User added — they sign in with this email at /company/billing.');
+    if (res) { $('cd-user-email').value = ''; openCompany(companyDetail.company.id); }
+  });
+
+  /* ── New company ──────────────────────────────────────── */
+  $('new-company-btn').addEventListener('click', () => $('new-company-form').classList.toggle('hidden'));
+  $('nc-cancel').addEventListener('click', () => $('new-company-form').classList.add('hidden'));
+  $('nc-save').addEventListener('click', async () => {
+    const res = await action('admin_upsert_company', {
+      p_admin_token: adminToken, p_company_id: null,
+      p_name: $('nc-name').value, p_billing_email: $('nc-email').value,
+      p_contact_name: $('nc-contact').value || null, p_contact_phone: $('nc-phone').value || null,
+      p_status: 'active', p_notes: null,
+    }, 'Company created.');
+    if (res) {
+      ['nc-name', 'nc-email', 'nc-contact', 'nc-phone'].forEach((id) => $(id).value = '');
+      $('new-company-form').classList.add('hidden');
+      await loadAll();
+      openCompany(res.id);
+    }
+  });
+
+  /* ── Invoice generator ────────────────────────────────── */
+  function igRenderLines() {
+    $('ig-lines').innerHTML = igLines.map((li, idx) => `
+      <tr>
+        <td><input value="${esc(li.description)}" data-li="${idx}" data-k="description" /></td>
+        <td><span class="muted" style="font-size:11px;">${esc(li.item_type)}</span></td>
+        <td><input type="number" min="0" step="1" value="${li.quantity}" data-li="${idx}" data-k="quantity" /></td>
+        <td><input type="number" step="0.01" value="${li.unit_amount}" data-li="${idx}" data-k="unit_amount" /></td>
+        <td><input type="date" value="${li.period_start || ''}" data-li="${idx}" data-k="period_start" /></td>
+        <td><input type="date" value="${li.period_end || ''}" data-li="${idx}" data-k="period_end" /></td>
+        <td class="num"><b>${BS.money((Number(li.quantity) || 0) * (Number(li.unit_amount) || 0), $('ig-currency').value)}</b></td>
+        <td><button class="btn danger" data-li-rm="${idx}">×</button></td>
+      </tr>`).join('') || '<tr><td colspan="8"><div class="empty">No line items yet — add a plan, product, or custom line above.</div></td></tr>';
+
+    document.querySelectorAll('[data-li]').forEach((inp) => inp.addEventListener('change', () => {
+      const li = igLines[Number(inp.dataset.li)];
+      li[inp.dataset.k] = inp.type === 'number' ? Number(inp.value) : inp.value;
+      igRenderLines();
+    }));
+    document.querySelectorAll('[data-li-rm]').forEach((b) => b.addEventListener('click', () => {
+      igLines.splice(Number(b.dataset.liRm), 1);
+      igRenderLines();
+    }));
+    igRenderTotals();
+  }
+
+  function igRenderTotals() {
+    const cur = $('ig-currency').value;
+    const sub = igLines.reduce((s, li) => s + (Number(li.quantity) || 0) * (Number(li.unit_amount) || 0), 0);
+    const disc = Number($('ig-discount').value) || 0;
+    $('ig-subtotal').textContent = BS.money(sub, cur);
+    $('ig-total').textContent = BS.money(sub - disc, cur);
+  }
+  $('ig-discount').addEventListener('input', igRenderTotals);
+  $('ig-currency').addEventListener('change', igRenderLines);
+
+  $('ig-add-plan-btn').addEventListener('click', () => {
+    const plan = (catalog.plans || []).find((p) => p.key === $('ig-add-plan').value);
+    if (!plan) return;
+    const cycle = $('ig-add-plan-cycle').value;
+    const start = $('ig-period-start').value || new Date().toISOString().slice(0, 10);
+    const end = new Date(start + 'T12:00:00');
+    if (cycle === 'monthly') end.setMonth(end.getMonth() + 1); else end.setFullYear(end.getFullYear() + 1);
+    end.setDate(end.getDate() - 1);
+    igLines.push({
+      item_type: 'founding_partner_subscription',
+      product_code: null,
+      description: `${plan.name} (${cycle})`,
+      quantity: 1,
+      unit_amount: cycle === 'monthly' ? Number(plan.monthly_price) : Number(plan.annual_price),
+      period_start: start,
+      period_end: end.toISOString().slice(0, 10),
+      metadata: { plan_key: plan.key, billing_cycle: cycle },
+    });
+    igRenderLines();
+  });
+
+  $('ig-add-product-btn').addEventListener('click', () => {
+    const prod = (catalog.products || []).find((p) => p.code === $('ig-add-product').value);
+    if (!prod) return;
+    igLines.push({
+      item_type: prod.item_type,
+      product_code: prod.code,
+      description: prod.name,
+      quantity: 1,
+      unit_amount: prod.unit_amount != null ? Number(prod.unit_amount) : Number(prod.min_amount || 0),
+      period_start: null, period_end: null,
+      metadata: {},
+    });
+    igRenderLines();
+  });
+
+  $('ig-add-custom-btn').addEventListener('click', () => {
+    igLines.push({
+      item_type: 'custom', product_code: null, description: 'Custom line item',
+      quantity: 1, unit_amount: 0, period_start: null, period_end: null, metadata: {},
+    });
+    igRenderLines();
+  });
+
+  function igPayload() {
+    return {
+      company_account_id: $('ig-company').value || null,
+      currency: $('ig-currency').value,
+      issue_date: $('ig-issue-date').value || null,
+      due_date: $('ig-due-date').value || null,
+      period_start: $('ig-period-start').value || null,
+      period_end: $('ig-period-end').value || null,
+      discount_amount: Number($('ig-discount').value) || 0,
+      discount_note: $('ig-discount-note').value || null,
+      notes: $('ig-notes').value || null,
+      payment_instructions: $('ig-instructions').value || null,
+      internal_notes: $('ig-internal').value || null,
+      line_items: igLines,
+    };
+  }
+
+  async function igSave(thenIssue) {
+    const payload = igPayload();
+    if (!payload.company_account_id) { alert('Pick a company first.'); return; }
+    if (!igLines.length) { alert('Add at least one line item.'); return; }
+    const res = await action('admin_save_invoice', {
+      p_admin_token: adminToken, p_invoice_id: igEditingId, p_invoice: payload,
+    });
+    if (!res) return;
+    igEditingId = res.id;
+    $('ig-title').textContent = 'Editing draft invoice';
+    if (thenIssue) {
+      const issued = await action('admin_issue_invoice', {
+        p_admin_token: adminToken, p_invoice_id: res.id,
+      }, null);
+      if (issued) {
+        toast('Invoice ' + issued.invoice_number + ' issued.');
+        igReset();
+      }
+    } else {
+      toast('Draft saved.');
+    }
+    await loadAll();
+  }
+
+  function igReset() {
+    igEditingId = null;
+    igLines = [];
+    $('ig-title').textContent = 'New invoice';
+    $('ig-number').value = '';
+    ['ig-issue-date', 'ig-due-date', 'ig-period-start', 'ig-period-end', 'ig-discount-note', 'ig-notes', 'ig-internal'].forEach((id) => $(id).value = '');
+    $('ig-discount').value = 0;
+    igRenderLines();
+  }
+
+  function loadInvoiceIntoGenerator(inv, companyId) {
+    igEditingId = inv.id;
+    igLines = (inv.line_items || []).map((li) => ({
+      item_type: li.item_type, product_code: li.product_code,
+      description: li.description, quantity: Number(li.quantity),
+      unit_amount: Number(li.unit_amount),
+      period_start: li.period_start, period_end: li.period_end,
+      metadata: li.metadata || {},
+    }));
+    $('ig-title').textContent = 'Editing draft invoice';
+    $('ig-company').value = companyId;
+    $('ig-currency').value = inv.currency || 'USD';
+    $('ig-number').value = inv.invoice_number || '';
+    $('ig-issue-date').value = inv.issue_date || '';
+    $('ig-due-date').value = inv.due_date || '';
+    $('ig-period-start').value = inv.period_start || '';
+    $('ig-period-end').value = inv.period_end || '';
+    $('ig-discount').value = Number(inv.discount_amount) || 0;
+    $('ig-discount-note').value = inv.discount_note || '';
+    $('ig-notes').value = inv.notes || '';
+    $('ig-instructions').value = inv.payment_instructions || '';
+    $('ig-internal').value = inv.internal_notes || '';
+    igRenderLines();
+    // Jump to generator tab
+    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === 'invoice'));
+    ['review', 'companies', 'invoice', 'requests', 'audit'].forEach((k) =>
+      $('tab-' + k).classList.toggle('hidden', k !== 'invoice'));
+  }
+
+  $('ig-save').addEventListener('click', () => igSave(false));
+  $('ig-issue').addEventListener('click', () => {
+    if (!confirm('Save and ISSUE this invoice? It becomes visible to the company.')) return;
+    igSave(true);
+  });
+  $('ig-reset').addEventListener('click', igReset);
+  $('ig-preview').addEventListener('click', () => {
+    const p = igPayload();
+    const co = (overview.companies || []).find((c) => c.id === p.company_account_id) || { name: '(no company)', billing_email: '' };
+    const sub = igLines.reduce((s, li) => s + (Number(li.quantity) || 0) * (Number(li.unit_amount) || 0), 0);
+    BS.openInvoicePdf({
+      invoice_number: $('ig-number').value || null,
+      status: igEditingId ? 'draft' : 'draft',
+      currency: p.currency, issue_date: p.issue_date, due_date: p.due_date,
+      period_start: p.period_start, period_end: p.period_end,
+      subtotal: sub, discount_amount: p.discount_amount, discount_note: p.discount_note,
+      total: sub - p.discount_amount,
+      notes: p.notes, payment_instructions: p.payment_instructions,
+      line_items: igLines.map((li) => ({ ...li, amount: (Number(li.quantity) || 0) * (Number(li.unit_amount) || 0) })),
+    }, co);
+  });
+
+  $('cd-new-invoice').addEventListener('click', () => {
+    igReset();
+    $('ig-company').value = companyDetail.company.id;
+    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === 'invoice'));
+    ['review', 'companies', 'invoice', 'requests', 'audit'].forEach((k) =>
+      $('tab-' + k).classList.toggle('hidden', k !== 'invoice'));
+  });
+
+  /* ── Boot ─────────────────────────────────────────────── */
+  igRenderLines();
+  const stored = loadStoredToken();
+  if (stored) { adminToken = stored; boot(); }
+</script>
+</body>
+</html>

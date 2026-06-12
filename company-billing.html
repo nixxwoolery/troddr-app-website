@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Company Billing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/billing-shared.js"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || '';
+</script>
+
+<style>
+  :root {
+    --blue:#0077CC; --blue-light:#e8f4ff; --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea; --amber:#b86e00; --amber-light:#fff4e0;
+    --black:#111111; --grey-dark:#333333; --grey-mid:#666666; --grey-light:#999999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#ffffff; --bg-soft:#f8f9fa;
+    --radius-sm:6px; --radius:10px; --radius-lg:16px;
+    --shadow-sm:0 1px 3px rgba(0,0,0,0.06);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft); color: var(--black);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .hidden { display: none !important; }
+
+  .header { position: sticky; top: 0; z-index: 200; background: #fff; border-bottom: 1px solid var(--border); }
+  .navbar { max-width: 1180px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 16px; }
+  .logo { font-size: 26px; font-weight: 700; color: var(--blue); text-decoration: none; letter-spacing: -1px; }
+  .nav-badge {
+    background: var(--bg-soft); color: var(--grey-dark);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+  }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--grey-mid); }
+  .btn-ghost {
+    border: 1px solid var(--border); background: #fff; color: var(--grey-dark);
+    border-radius: 6px; padding: 6px 12px; font-family: inherit; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+  }
+  .btn-ghost:hover { background: var(--bg-soft); }
+
+  /* ---------- Sign-in ---------- */
+  .auth-wrap { min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .auth-card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 16px 45px rgba(0,0,0,0.08); padding: 32px; }
+  .auth-card .kicker { color: var(--grey-mid); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .auth-card h1 { margin: 6px 0 6px; font-size: 23px; letter-spacing: -0.5px; }
+  .auth-card p { color: var(--grey-mid); font-size: 13px; margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--grey-dark); margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; border: 1px solid #dcdcdc; border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 14px; background: #fff;
+  }
+  .field textarea { min-height: 90px; resize: vertical; }
+  .btn-primary {
+    width: 100%; border: 0; border-radius: 8px; padding: 12px 16px;
+    background: var(--blue); color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .btn-primary:disabled { opacity: 0.6; cursor: default; }
+  .auth-err { display: none; margin-top: 12px; background: var(--red-light); color: var(--red); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+  .auth-err.visible { display: block; }
+  .auth-help { margin-top: 14px; font-size: 12px; color: var(--grey-mid); }
+  .auth-help a { color: var(--blue); }
+
+  /* ---------- Dashboard ---------- */
+  .page { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
+  .page-head { margin-bottom: 22px; }
+  .page-head .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--grey-mid); }
+  .page-head h1 { font-size: clamp(24px, 4vw, 32px); letter-spacing: -0.6px; }
+  .page-head .sub { color: var(--grey-mid); font-size: 13px; }
+
+  .banner { border-radius: var(--radius); padding: 14px 18px; font-size: 13px; margin-bottom: 20px; display: none; }
+  .banner.visible { display: block; }
+  .banner.readonly { background: var(--amber-light); color: var(--amber); border: 1px solid #f3ddb3; }
+  .banner strong { display: block; font-size: 14px; }
+
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+  .stat .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-mid); margin-bottom: 6px; }
+  .stat .val { font-size: 21px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+  .stat .sub { font-size: 12px; color: var(--grey-mid); margin-top: 4px; }
+
+  .section { margin-bottom: 26px; }
+  .section-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .pill { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; }
+  .pill.good    { background: var(--green-light); color: var(--green); }
+  .pill.warn    { background: var(--amber-light); color: var(--amber); }
+  .pill.bad     { background: var(--red-light); color: var(--red); }
+  .pill.info    { background: var(--blue-light); color: var(--blue); }
+  .pill.neutral { background: var(--bg-soft); color: var(--grey-mid); border: 1px solid var(--border); }
+
+  .list-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .main-txt { font-weight: 600; }
+  .list-row .sub-txt { font-size: 12px; color: var(--grey-mid); }
+
+  .ent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+  .ent { border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 13px; font-size: 12px; background: #fff; }
+  .ent .k { font-weight: 700; font-size: 13px; }
+  .ent .meta { color: var(--grey-mid); margin-top: 2px; }
+
+  .invoice-row {
+    display: grid; grid-template-columns: 150px 1fr auto auto auto; align-items: center;
+    gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--border-soft); font-size: 13px;
+  }
+  .invoice-row:last-child { border-bottom: none; }
+  .invoice-num { font-weight: 700; }
+  .invoice-sub { font-size: 11px; color: var(--grey-mid); }
+  .invoice-amount { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .inv-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-sm {
+    border: 1px solid var(--border); background: #fff; color: var(--grey-dark);
+    border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .btn-sm:hover { background: var(--bg-soft); }
+  .btn-sm.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn-sm.primary:hover { filter: brightness(1.08); }
+
+  .req-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .empty { padding: 24px 16px; background: var(--bg-soft); border-radius: var(--radius); text-align: center; color: var(--grey-mid); font-size: 13px; }
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(17,17,17,0.45); z-index: 500;
+    display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto;
+  }
+  .modal-backdrop.visible { display: flex; }
+  .modal { background: #fff; border-radius: var(--radius-lg); width: 100%; max-width: 540px; padding: 26px 26px 22px; box-shadow: 0 24px 60px rgba(0,0,0,0.2); }
+  .modal h2 { font-size: 19px; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .modal .modal-sub { color: var(--grey-mid); font-size: 13px; margin-bottom: 16px; }
+  .modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .modal-err { display: none; background: var(--red-light); color: var(--red); border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-top: 12px; }
+  .modal-err.visible { display: block; }
+  .notice { background: var(--blue-light); color: #075a96; border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 14px; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--black); color: #fff; padding: 12px 20px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; z-index: 900; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .toast.visible { opacity: 1; }
+
+  .state { text-align: center; padding: 60px 24px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .invoice-row { grid-template-columns: 1fr auto; }
+    .invoice-row .inv-col-hide { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Company Dashboard · Billing</span>
+    <div class="nav-right">
+      <span id="nav-user" class="hidden"></span>
+      <button type="button" class="btn-ghost hidden" id="signout-btn">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ SIGN IN ============ -->
+<div class="auth-wrap" id="view-auth">
+  <div class="auth-card">
+    <div class="kicker">Company Dashboard</div>
+    <h1>Sign in to your company account</h1>
+    <p>Billing, invoices, and account management for TRODDR company accounts. Use the email TRODDR registered for you.</p>
+    <div class="field">
+      <label for="auth-email">Email</label>
+      <input id="auth-email" type="email" autocomplete="email" />
+    </div>
+    <div class="field">
+      <label for="auth-password">Password</label>
+      <input id="auth-password" type="password" autocomplete="current-password" />
+    </div>
+    <button type="button" class="btn-primary" id="auth-submit">Sign In</button>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-help">
+      Forgot your password? <a href="#" id="auth-reset">Send a reset link</a>.<br>
+      New to TRODDR? Company accounts are set up by our team — email <a href="mailto:billing@troddr.com">billing@troddr.com</a>.
+    </div>
+  </div>
+</div>
+
+<!-- ============ LOADING ============ -->
+<div class="state hidden" id="view-loading">
+  <div class="spinner"></div>
+  <div style="color: var(--grey-mid); font-size: 14px;">Loading your billing…</div>
+</div>
+
+<!-- ============ NO COMPANY ============ -->
+<div class="auth-wrap hidden" id="view-nocompany">
+  <div class="auth-card">
+    <div class="kicker">Almost there</div>
+    <h1>No company account linked yet</h1>
+    <p id="nocompany-msg">Your sign-in works, but it isn't linked to a TRODDR company account yet. Email <a href="mailto:billing@troddr.com">billing@troddr.com</a> from your business address and we'll connect you.</p>
+    <button type="button" class="btn-primary" id="nocompany-signout">Sign out</button>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<main class="page hidden" id="view-dashboard">
+
+  <div class="page-head">
+    <div class="eyebrow">Billing</div>
+    <h1 id="company-name">—</h1>
+    <div class="sub" id="company-sub"></div>
+  </div>
+
+  <div class="banner readonly" id="readonly-banner">
+    <strong>Your account is in read-only mode</strong>
+    <span id="readonly-msg">Paid features are paused. You can still view your data and invoices. Pay your latest invoice and confirm payment below to restore full access — access resumes once TRODDR verifies your payment.</span>
+  </div>
+
+  <div class="grid-4">
+    <div class="stat"><div class="lbl">Current Plan</div><div class="val" id="stat-plan">—</div><div class="sub" id="stat-plan-sub"></div></div>
+    <div class="stat"><div class="lbl">Billing Cycle</div><div class="val" id="stat-cycle">—</div><div class="sub" id="stat-cycle-sub"></div></div>
+    <div class="stat"><div class="lbl">Subscription</div><div class="val" id="stat-status">—</div><div class="sub" id="stat-status-sub"></div></div>
+    <div class="stat"><div class="lbl">Paid Through</div><div class="val" id="stat-paidthrough">—</div><div class="sub" id="stat-paidthrough-sub"></div></div>
+  </div>
+
+  <div class="two-col section">
+    <div class="card">
+      <div class="section-title">Locations <span class="pill neutral" id="loc-count"></span></div>
+      <div id="locations-list"></div>
+      <div class="sub-txt" style="margin-top: 10px; font-size: 12px; color: var(--grey-mid);">
+        Locations are attached and approved by TRODDR. Need another location covered? Email
+        <a href="mailto:billing@troddr.com">billing@troddr.com</a>.
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Admin Users <span class="pill neutral" id="user-count"></span></div>
+      <div id="users-list"></div>
+      <div style="margin-top: 12px;">
+        <button type="button" class="btn-sm" data-request="extra_admins">Request more admin users</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Active Add-Ons &amp; Entitlements</div>
+    <div class="card">
+      <div class="ent-grid" id="entitlements-grid"></div>
+      <div class="empty hidden" id="entitlements-empty">No active entitlements yet. They activate when TRODDR verifies payment on your first invoice.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Invoices</div>
+    <div class="card">
+      <div id="invoices-list"></div>
+      <div class="empty hidden" id="invoices-empty">No invoices yet. TRODDR issues invoices for your plan and any add-ons — they'll appear here.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Requests</div>
+    <div class="card">
+      <p style="font-size: 13px; color: var(--grey-mid); margin-bottom: 12px;">
+        These products are set up with the TRODDR team — send a request and we'll follow up with a quote and invoice.
+      </p>
+      <div class="req-actions">
+        <button type="button" class="btn-sm" data-request="extra_admins">More admin users</button>
+        <button type="button" class="btn-sm" data-request="insights">Insights (location / company)</button>
+        <button type="button" class="btn-sm" data-request="event_coverage">Event coverage</button>
+        <button type="button" class="btn-sm" data-request="sponsor_activation">Sponsor activation</button>
+        <button type="button" class="btn-sm" data-request="sponsor_report">Sponsor report</button>
+      </div>
+      <div id="requests-list" style="margin-top: 14px;"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============ CONFIRM PAYMENT MODAL ============ -->
+<div class="modal-backdrop" id="pay-modal">
+  <div class="modal">
+    <h2>Confirm payment</h2>
+    <div class="modal-sub" id="pay-modal-sub"></div>
+    <div class="notice">
+      Submitting this tells TRODDR you've paid — it does <strong>not</strong> activate your account by itself.
+      TRODDR verifies every payment before access is activated.
+    </div>
+    <div class="field">
+      <label for="pay-method">Payment method</label>
+      <select id="pay-method">
+        <option value="bank_transfer">Bank transfer</option>
+        <option value="cash">Cash</option>
+        <option value="cheque">Cheque</option>
+        <option value="card">Card</option>
+        <option value="mobile_money">Mobile money</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="pay-date">Payment date</label>
+      <input id="pay-date" type="date" />
+    </div>
+    <div class="field">
+      <label for="pay-ref">Reference number</label>
+      <input id="pay-ref" type="text" placeholder="Bank/transfer reference" />
+    </div>
+    <div class="field">
+      <label for="pay-receipt">Receipt (optional)</label>
+      <input id="pay-receipt" type="file" accept="image/*,.pdf" />
+    </div>
+    <div class="field">
+      <label for="pay-notes">Notes (optional)</label>
+      <textarea id="pay-notes" placeholder="Anything that helps us match your payment"></textarea>
+    </div>
+    <div class="modal-err" id="pay-err"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-sm" id="pay-cancel">Cancel</button>
+      <button type="button" class="btn-sm primary" id="pay-submit">Submit confirmation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ REQUEST MODAL ============ -->
+<div class="modal-backdrop" id="req-modal">
+  <div class="modal">
+    <h2 id="req-title">Send a request</h2>
+    <div class="modal-sub">The TRODDR team will follow up by email with details and pricing.</div>
+    <div class="field">
+      <label for="req-message">Tell us what you need</label>
+      <textarea id="req-message"></textarea>
+    </div>
+    <div class="modal-err" id="req-err"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-sm" id="req-cancel">Cancel</button>
+      <button type="button" class="btn-sm primary" id="req-submit">Send request</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const BS = window.BillingShared;
+  const $ = (id) => document.getElementById(id);
+  const show = (id) => $(id).classList.remove('hidden');
+  const hide = (id) => $(id).classList.add('hidden');
+
+  let billing = null;       // payload from get_company_billing
+  let payInvoice = null;    // invoice being confirmed
+  let reqType = 'other';
+
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('visible');
+    setTimeout(() => t.classList.remove('visible'), 3500);
+  }
+
+  /* ---------------- Auth ---------------- */
+  function showAuthError(msg) {
+    const el = $('auth-err');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  async function handleSignIn() {
+    const email = $('auth-email').value.trim();
+    const password = $('auth-password').value;
+    if (!email || !password) { showAuthError('Enter your email and password.'); return; }
+    const btn = $('auth-submit');
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    btn.disabled = false; btn.textContent = 'Sign In';
+    if (error) { showAuthError(error.message); return; }
+    boot();
+  }
+
+  async function handleReset(e) {
+    e.preventDefault();
+    const email = $('auth-email').value.trim();
+    if (!email) { showAuthError('Enter your email first, then click the reset link.'); return; }
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
+    if (error) { showAuthError(error.message); return; }
+    toast('Password reset link sent to ' + email);
+  }
+
+  async function signOut() {
+    await db.auth.signOut();
+    window.location.reload();
+  }
+
+  /* ---------------- Rendering ---------------- */
+  function pill(meta) {
+    return `<span class="pill ${meta.cls}">${BS.esc(meta.label)}</span>`;
+  }
+
+  function render() {
+    const d = billing;
+    const access = d.access || {};
+    const sub = d.subscription;
+    const plan = d.plan;
+
+    $('nav-user').textContent = d.me.email;
+    show('nav-user'); show('signout-btn');
+
+    $('company-name').textContent = d.company.name;
+    $('company-sub').textContent = 'Billing email: ' + (d.company.billing_email || '—');
+
+    // Read-only banner
+    const ro = access.access !== 'full';
+    $('readonly-banner').classList.toggle('visible', ro && !!sub);
+
+    // Summary stats
+    $('stat-plan').textContent = plan ? plan.name.replace('Founding Partner — ', '') : (sub ? (sub.plan_key || '—') : 'None');
+    $('stat-plan-sub').textContent = plan
+      ? `${plan.included_locations} location${plan.included_locations > 1 ? 's' : ''} · ${plan.included_admins} admin${plan.included_admins > 1 ? 's' : ''}` : '';
+    $('stat-cycle').textContent = sub && sub.billing_cycle
+      ? sub.billing_cycle.charAt(0).toUpperCase() + sub.billing_cycle.slice(1) : '—';
+    $('stat-cycle-sub').textContent = plan && sub
+      ? (sub.billing_cycle === 'monthly'
+          ? BS.money(plan.monthly_price, plan.currency) + '/month'
+          : BS.money(plan.annual_price, plan.currency) + '/year') : '';
+    const sm = BS.subscriptionStatus(sub ? sub.status : null);
+    $('stat-status').innerHTML = sub ? pill(sm) : '<span class="pill neutral">No subscription</span>';
+    $('stat-status-sub').textContent = access.access === 'full' ? 'Full access' : (sub ? 'Read-only access' : '');
+    $('stat-paidthrough').textContent = sub && sub.paid_through ? BS.fmtDate(sub.paid_through) : '—';
+    $('stat-paidthrough-sub').textContent = sub && sub.current_period_start
+      ? 'Period started ' + BS.fmtDate(sub.current_period_start) : '';
+
+    // Locations
+    const locs = d.locations || [];
+    const planLocs = plan ? plan.included_locations : null;
+    $('loc-count').textContent = planLocs != null ? `${locs.length} of ${planLocs} included` : `${locs.length}`;
+    $('locations-list').innerHTML = locs.length
+      ? locs.map((l) => `
+          <div class="list-row">
+            <div>
+              <div class="main-txt">${BS.esc(l.name)}</div>
+              <div class="sub-txt">${BS.esc([l.town, l.parish].filter(Boolean).join(', '))}</div>
+            </div>
+            <span class="pill good">Approved</span>
+          </div>`).join('')
+      : '<div class="empty">No approved locations attached yet. TRODDR attaches locations for you.</div>';
+
+    // Users
+    const users = d.users || [];
+    const planAdmins = plan ? plan.included_admins : null;
+    const adminCount = users.filter((u) => u.role === 'admin').length;
+    $('user-count').textContent = planAdmins != null ? `${adminCount} of ${planAdmins} admins used` : `${users.length}`;
+    $('users-list').innerHTML = users.length
+      ? users.map((u) => `
+          <div class="list-row">
+            <div>
+              <div class="main-txt">${BS.esc(u.name || u.email)}</div>
+              <div class="sub-txt">${BS.esc(u.email)} · ${BS.esc(u.role)}</div>
+            </div>
+            <span class="pill ${u.status === 'active' ? 'good' : 'neutral'}">${u.status === 'active' ? 'Active' : 'Invited'}</span>
+          </div>`).join('')
+      : '<div class="empty">No users registered yet.</div>';
+
+    // Entitlements
+    const ents = (d.entitlements || []).filter((e) => e.active_now);
+    $('entitlements-grid').innerHTML = ents.map((e) => `
+      <div class="ent">
+        <div class="k">${BS.esc(e.name)}</div>
+        <div class="meta">${BS.esc(e.source)}${e.expires_at ? ' · until ' + BS.fmtDate(e.expires_at) : ''}</div>
+      </div>`).join('');
+    $('entitlements-empty').classList.toggle('hidden', ents.length > 0);
+
+    // Invoices
+    const invoices = d.invoices || [];
+    $('invoices-empty').classList.toggle('hidden', invoices.length > 0);
+    $('invoices-list').innerHTML = invoices.map((inv, idx) => {
+      const im = BS.invoiceStatus(inv.status);
+      const conf = inv.payment_confirmation;
+      const cm = conf ? BS.confirmationStatus(conf.status) : null;
+      const canConfirm = ['issued', 'overdue', 'rejected'].includes(inv.status)
+        || (inv.status === 'payment_reported' && conf && conf.status === 'needs_clarification');
+      return `
+        <div class="invoice-row">
+          <div>
+            <div class="invoice-num">${BS.esc(inv.invoice_number || 'Invoice')}</div>
+            <div class="invoice-sub">Issued ${BS.fmtDate(inv.issue_date)} · Due ${BS.fmtDate(inv.due_date)}</div>
+          </div>
+          <div class="inv-col-hide">
+            ${pill(im)}
+            ${cm ? ' ' + pill(cm) : ''}
+            ${conf && conf.status === 'needs_clarification' && conf.review_note
+              ? `<div class="invoice-sub" style="margin-top:4px;">TRODDR: ${BS.esc(conf.review_note)}</div>` : ''}
+            ${conf && conf.status === 'rejected' && conf.review_note
+              ? `<div class="invoice-sub" style="margin-top:4px;">TRODDR: ${BS.esc(conf.review_note)}</div>` : ''}
+          </div>
+          <div class="invoice-amount">${BS.money(inv.total, inv.currency)}</div>
+          <div class="inv-actions">
+            <button type="button" class="btn-sm" data-pdf="${idx}">Invoice PDF</button>
+            ${canConfirm ? `<button type="button" class="btn-sm primary" data-confirm="${idx}">Confirm Payment</button>` : ''}
+          </div>
+          <div></div>
+        </div>`;
+    }).join('');
+
+    document.querySelectorAll('[data-pdf]').forEach((b) => b.addEventListener('click', () => {
+      BS.openInvoicePdf(invoices[Number(b.dataset.pdf)], d.company);
+    }));
+    document.querySelectorAll('[data-confirm]').forEach((b) => b.addEventListener('click', () => {
+      openPayModal(invoices[Number(b.dataset.confirm)]);
+    }));
+
+    // Requests history
+    const reqs = d.requests || [];
+    $('requests-list').innerHTML = reqs.length
+      ? reqs.map((r) => `
+          <div class="list-row">
+            <div>
+              <div class="main-txt">${BS.esc(r.request_type.replace(/_/g, ' '))}</div>
+              <div class="sub-txt">${BS.fmtDate(r.created_at)}${r.message ? ' · ' + BS.esc(r.message) : ''}</div>
+            </div>
+            <span class="pill ${r.status === 'resolved' ? 'good' : r.status === 'in_progress' ? 'info' : 'neutral'}">${BS.esc(r.status.replace('_', ' '))}</span>
+          </div>`).join('')
+      : '';
+  }
+
+  /* ---------------- Confirm payment ---------------- */
+  function openPayModal(inv) {
+    payInvoice = inv;
+    $('pay-modal-sub').textContent = `${inv.invoice_number || 'Invoice'} · ${BS.money(inv.total, inv.currency)}`;
+    $('pay-date').value = new Date().toISOString().slice(0, 10);
+    $('pay-ref').value = ''; $('pay-notes').value = ''; $('pay-receipt').value = '';
+    $('pay-err').classList.remove('visible');
+    $('pay-modal').classList.add('visible');
+  }
+
+  function payError(msg) {
+    const el = $('pay-err');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  async function submitPayment() {
+    const method = $('pay-method').value;
+    const paidOn = $('pay-date').value;
+    const ref = $('pay-ref').value.trim();
+    const notes = $('pay-notes').value.trim();
+    const file = $('pay-receipt').files[0] || null;
+    if (!paidOn) { payError('Pick the date you paid.'); return; }
+    if (!ref) { payError('Enter the payment reference number.'); return; }
+
+    const btn = $('pay-submit');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      let receiptUrl = null;
+      if (file) {
+        const path = `${billing.company.id}/${payInvoice.id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g, '_')}`;
+        const { error: upErr } = await db.storage.from('payment-receipts').upload(path, file);
+        if (upErr) throw upErr;
+        receiptUrl = db.storage.from('payment-receipts').getPublicUrl(path).data.publicUrl;
+      }
+      const { data, error } = await db.rpc('submit_payment_confirmation', {
+        p_invoice_id: payInvoice.id,
+        p_payment_method: method,
+        p_paid_on: paidOn,
+        p_reference: ref,
+        p_receipt_url: receiptUrl,
+        p_notes: notes || null,
+      });
+      if (error) throw error;
+      if (!data.ok) { payError(data.error || 'Could not submit.'); return; }
+      $('pay-modal').classList.remove('visible');
+      toast('Payment reported — TRODDR will verify and activate your account.');
+      await loadBilling();
+    } catch (e) {
+      payError(e.message || String(e));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit confirmation';
+    }
+  }
+
+  /* ---------------- Requests ---------------- */
+  const REQ_TITLES = {
+    extra_admins: 'Request more admin users',
+    insights: 'Request Insights',
+    event_coverage: 'Request Event coverage',
+    sponsor_activation: 'Request Sponsor activation',
+    sponsor_report: 'Request Sponsor report',
+    other: 'Send a request',
+  };
+
+  function openReqModal(type) {
+    reqType = type;
+    $('req-title').textContent = REQ_TITLES[type] || REQ_TITLES.other;
+    $('req-message').value = '';
+    $('req-err').classList.remove('visible');
+    $('req-modal').classList.add('visible');
+  }
+
+  async function submitRequest() {
+    const btn = $('req-submit');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const { data, error } = await db.rpc('submit_billing_request', {
+        p_request_type: reqType,
+        p_message: $('req-message').value.trim() || null,
+      });
+      if (error) throw error;
+      if (!data.ok) {
+        $('req-err').textContent = data.error || 'Could not send.';
+        $('req-err').classList.add('visible');
+        return;
+      }
+      $('req-modal').classList.remove('visible');
+      toast('Request sent — we\'ll follow up by email.');
+      await loadBilling();
+    } catch (e) {
+      $('req-err').textContent = e.message || String(e);
+      $('req-err').classList.add('visible');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Send request';
+    }
+  }
+
+  /* ---------------- Load ---------------- */
+  async function loadBilling() {
+    const { data, error } = await db.rpc('get_company_billing');
+    if (error) throw error;
+    if (!data.ok) {
+      hide('view-loading'); hide('view-dashboard');
+      show('view-nocompany');
+      return;
+    }
+    billing = data;
+    hide('view-loading'); hide('view-nocompany');
+    show('view-dashboard');
+    render();
+  }
+
+  async function boot() {
+    const { data } = await db.auth.getSession();
+    if (!data || !data.session) {
+      hide('view-loading'); hide('view-dashboard'); hide('view-nocompany');
+      show('view-auth');
+      return;
+    }
+    hide('view-auth'); show('view-loading');
+    try {
+      await loadBilling();
+    } catch (e) {
+      console.error('[company-billing] load failed:', e);
+      hide('view-loading');
+      show('view-nocompany');
+      $('nocompany-msg').textContent = 'We couldn\'t load your billing right now. Refresh to try again, or email billing@troddr.com.';
+    }
+  }
+
+  /* ---------------- Wire up ---------------- */
+  $('auth-submit').addEventListener('click', handleSignIn);
+  $('auth-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSignIn(); });
+  $('auth-reset').addEventListener('click', handleReset);
+  $('signout-btn').addEventListener('click', signOut);
+  $('nocompany-signout').addEventListener('click', signOut);
+  $('pay-cancel').addEventListener('click', () => $('pay-modal').classList.remove('visible'));
+  $('pay-submit').addEventListener('click', submitPayment);
+  $('req-cancel').addEventListener('click', () => $('req-modal').classList.remove('visible'));
+  $('req-submit').addEventListener('click', submitRequest);
+  document.querySelectorAll('[data-request]').forEach((b) =>
+    b.addEventListener('click', () => openReqModal(b.dataset.request)));
+
+  boot();
+</script>
+</body>
+</html>
