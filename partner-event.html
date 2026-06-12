@@ -2347,7 +2347,7 @@
             <div id="vi-most-viewed"></div>
           </div>
           <div class="vi-card">
-            <div class="vi-card-label">Most Saved Vendors</div>
+            <div class="vi-card-label">Most Interested Vendors</div>
             <div id="vi-most-saved"></div>
           </div>
           <div class="vi-card">
@@ -3158,14 +3158,20 @@
   // ── Vendor Insights : new layout (Most Viewed / Most Saved / Peak / Table) ─
   function renderVendorInsights(data) {
     const vendors = data.vendors || [];
-    // Per-vendor engagement metrics (views, saves, menu_clicks) are not yet on
-    // the RPC. We surface what we have today and degrade to 0 / "—" otherwise
-    // so the layout is correct as soon as those fields land.
+    // Per-vendor engagement, degrading to 0 / "—" when a field is missing so
+    // the layout stays correct against older RPC deployments.
     const withMetrics = vendors.map(v => ({
       ...v,
       _views:      Number(v.view_count   || v.views       || 0),
       _saves:      Number(v.save_count   || v.saves       || (v.menu_items || []).reduce((a, it) => a + Number(it.saved_count || 0), 0)),
       _menuClicks: Number(v.menu_clicks  || v.click_count || 0),
+      // App "Interested" is stored as activity_type 'bookmarked', which is
+      // exactly what the older RPC exposed as save_count — so save_count is
+      // the correct fallback when interested_count hasn't been deployed yet.
+      _interested: Number(v.interested_count ?? v.save_count ?? v.saves ?? 0),
+      _visited:    Number(v.visited_count || 0),
+      _favourites: Number(v.favourite_count || 0),
+      _wantToTry:  Number(v.want_to_try_count || 0),
     }));
 
     function rankRows(target, sortKey, suffix) {
@@ -3188,7 +3194,7 @@
     }
 
     rankRows($('vi-most-viewed'), '_views', 'views');
-    rankRows($('vi-most-saved'),  '_saves', 'saves');
+    rankRows($('vi-most-saved'),  '_interested', 'interested');
 
     // Peak Engagement Time chart : 12pm to 10pm by default. Reads hourly buckets
     // from data.engagement_by_hour when present, otherwise renders a placeholder.
@@ -3231,7 +3237,10 @@
             <th>Booth</th>
             <th>Type</th>
             <th class="num">Views</th>
-            <th class="num">Saves</th>
+            <th class="num" title="App users who added this vendor to their plan">Interested</th>
+            <th class="num" title="App users who checked this vendor off as visited">Visited</th>
+            <th class="num" title="App users who hearted this vendor">Favourites</th>
+            <th class="num" title="Menu items saved to want-to-try lists">Want to Try</th>
             <th class="num">Menu Clicks</th>
             <th></th>
           </tr>
@@ -3241,9 +3250,12 @@
             <tr data-event-vendor-id="${escapeHtml(v.event_vendor_id || '')}">
               <td class="v-name">${escapeHtml(v.vendor_name || v.name || 'Unnamed vendor')}</td>
               <td>${escapeHtml(v.booth_number || '—')}</td>
-              <td>${escapeHtml(titleCase(v.vendor_type || '—'))}</td>
+              <td>${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}</td>
               <td class="num ${v._views ? 'highlight' : ''}">${v._views || '—'}</td>
-              <td class="num">${v._saves || '—'}</td>
+              <td class="num ${v._interested ? 'highlight' : ''}">${v._interested || '—'}</td>
+              <td class="num">${v._visited || '—'}</td>
+              <td class="num">${v._favourites || '—'}</td>
+              <td class="num">${v._wantToTry || '—'}</td>
               <td class="num">${v._menuClicks || '—'}</td>
               <td><button type="button" class="vi-edit-btn" data-edit-vendor>Edit</button></td>
             </tr>
@@ -3398,6 +3410,12 @@
       const logo = v.logo_url || (Array.isArray(v.place_image) && v.place_image[0]) || v.cover_image_url || '';
       const views = Number(v.view_count || v.views || 0);
       const saves = Number(v.save_count || v.saves || items.reduce((a, it) => a + Number(it.saved_count || 0), 0));
+      // App "Interested" is stored as activity_type 'bookmarked' — the same
+      // rows the older RPC exposed as save_count, hence the fallback.
+      const interested = Number(v.interested_count ?? saves);
+      const visited = Number(v.visited_count || 0);
+      const favourites = Number(v.favourite_count || 0);
+      const wantToTry = Number(v.want_to_try_count || 0);
       const menuClicks = Number(v.menu_clicks || v.click_count || 0);
       const menuHtml = items.length ? items.map(it => {
         const tags = [];
@@ -3430,12 +3448,15 @@
           <td>${escapeHtml(v.booth_number || '—')}${v.zone ? `<div style="font-size:11px;color:var(--grey-mid);">${escapeHtml(v.zone)}</div>` : ''}</td>
           <td>${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}</td>
           <td class="num">${views}</td>
-          <td class="num">${saves}</td>
+          <td class="num">${interested}</td>
+          <td class="num">${visited}</td>
+          <td class="num">${favourites}</td>
+          <td class="num">${wantToTry}</td>
           <td class="num">${menuClicks}</td>
           <td class="num"><span class="vl-chevron">›</span></td>
         </tr>
         <tr class="vl-menu-row" data-menu-for="${i}" hidden>
-          <td colspan="7">
+          <td colspan="10">
             <div class="vl-menu">${menuHtml}</div>
           </td>
         </tr>`;
@@ -3449,7 +3470,10 @@
             <th>Booth</th>
             <th>Type</th>
             <th class="num">Views</th>
-            <th class="num">Saves</th>
+            <th class="num" title="App users who added this vendor to their plan">Interested</th>
+            <th class="num" title="App users who checked this vendor off as visited">Visited</th>
+            <th class="num" title="App users who hearted this vendor">Favourites</th>
+            <th class="num" title="Menu items saved to want-to-try lists">Want to Try</th>
             <th class="num">Menu Clicks</th>
             <th class="num"></th>
           </tr>

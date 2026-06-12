@@ -357,12 +357,15 @@ begin
 
             -- Per-vendor activity. The app has used both vendor ids and
             -- event_vendor ids for entity_id, so count either shape.
+            -- NOTE: activity_type 'visited' is deliberately NOT counted as a
+            -- view — in the app that name belongs to the My Plan "Visited"
+            -- check-off (written as 'going', see visited_count below).
             'view_count', (
               select count(*) from public.user_event_activity a
                where a.event_id = v_event.id
                  and a.entity_type in ('vendor', 'event_vendor')
                  and a.entity_id in (vb.vendor_id, vb.event_vendor_id)
-                 and (a.activity_type = 'visited' or a.action = 'viewed')
+                 and a.action = 'viewed'
             ),
             'save_count', (
               select count(*) from public.user_event_activity a
@@ -377,6 +380,48 @@ begin
                  and a.entity_type in ('vendor', 'event_vendor', 'vendor_menu')
                  and a.entity_id in (vb.vendor_id, vb.event_vendor_id)
                  and a.action in ('menu_click', 'menu_clicked', 'menu_viewed')
+            ),
+
+            -- "My Plan" signals from the mobile app. The app's UI labels do
+            -- NOT match the stored activity_type names — this is the
+            -- confirmed mapping (do not "fix" it to match intuition):
+            --   app "Interested"  → activity_type 'bookmarked'
+            --   app "Visited"     → activity_type 'going'
+            --   app "Favourites"  → activity_type 'interested'
+            --   app "Want to try" → rows in user_saved_menu_items (per vendor)
+            -- All activity rows are written with action = null. Some app
+            -- builds omit event_id, so also accept a null event_id when the
+            -- row points at this event's event_vendor id (those ids are
+            -- event-scoped, so the match stays unambiguous).
+            'interested_count', (
+              select count(*) from public.user_event_activity a
+               where a.entity_type in ('vendor', 'event_vendor')
+                 and a.entity_id in (vb.vendor_id, vb.event_vendor_id)
+                 and a.activity_type = 'bookmarked'
+                 and (a.event_id = v_event.id
+                      or (a.event_id is null and a.entity_id = vb.event_vendor_id))
+            ),
+            'visited_count', (
+              select count(*) from public.user_event_activity a
+               where a.entity_type in ('vendor', 'event_vendor')
+                 and a.entity_id in (vb.vendor_id, vb.event_vendor_id)
+                 and a.activity_type = 'going'
+                 and (a.event_id = v_event.id
+                      or (a.event_id is null and a.entity_id = vb.event_vendor_id))
+            ),
+            'favourite_count', (
+              select count(*) from public.user_event_activity a
+               where a.entity_type in ('vendor', 'event_vendor')
+                 and a.entity_id in (vb.vendor_id, vb.event_vendor_id)
+                 and a.activity_type = 'interested'
+                 and (a.event_id = v_event.id
+                      or (a.event_id is null and a.entity_id = vb.event_vendor_id))
+            ),
+            'want_to_try_count', (
+              select count(*) from public.user_saved_menu_items s
+               where s.vendor_id in (vb.vendor_id, vb.event_vendor_id)
+                 and (s.event_id = v_event.id
+                      or (s.event_id is null and s.vendor_id = vb.event_vendor_id))
             ),
 
             -- Total ratings across all this vendor's items
