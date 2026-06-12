@@ -1117,11 +1117,14 @@
     color: var(--black);
     margin-bottom: 14px;
   }
-  .vi-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  /* The wrap div scrolls horizontally; the table keeps a comfortable width. */
+  #vi-table-wrap { overflow-x: auto; }
+  .vi-table { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 13px; }
   .vi-table thead th {
     text-align: left;
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
+    white-space: nowrap;
     color: var(--grey-mid);
     padding: 10px 12px;
     border-bottom: 1px solid var(--border);
@@ -1324,31 +1327,40 @@
   }
   .vl-table {
     width: 100%;
+    /* Wider than most viewports on purpose — .vl-card scrolls horizontally. */
+    min-width: 1080px;
     border-collapse: collapse;
     table-layout: fixed;
   }
   .vl-table th:nth-child(1),
-  .vl-table td:nth-child(1) { width: auto; }
+  .vl-table td:nth-child(1)  { width: auto; }       /* Vendor */
   .vl-table th:nth-child(2),
-  .vl-table td:nth-child(2) { width: 90px; }
+  .vl-table td:nth-child(2)  { width: 80px; }       /* Booth */
   .vl-table th:nth-child(3),
-  .vl-table td:nth-child(3) { width: 110px; }
+  .vl-table td:nth-child(3)  { width: 100px; }      /* Type */
   .vl-table th:nth-child(4),
-  .vl-table td:nth-child(4) { width: 80px; }
+  .vl-table td:nth-child(4)  { width: 78px; }       /* Views */
   .vl-table th:nth-child(5),
-  .vl-table td:nth-child(5) { width: 80px; }
+  .vl-table td:nth-child(5)  { width: 106px; }      /* Interested */
   .vl-table th:nth-child(6),
-  .vl-table td:nth-child(6) { width: 116px; }
+  .vl-table td:nth-child(6)  { width: 84px; }       /* Visited */
   .vl-table th:nth-child(7),
-  .vl-table td:nth-child(7) { width: 36px; }
+  .vl-table td:nth-child(7)  { width: 110px; }      /* Favourites */
+  .vl-table th:nth-child(8),
+  .vl-table td:nth-child(8)  { width: 118px; }      /* Want to Try */
+  .vl-table th:nth-child(9),
+  .vl-table td:nth-child(9)  { width: 116px; }      /* Menu Clicks */
+  .vl-table th:nth-child(10),
+  .vl-table td:nth-child(10) { width: 36px; }       /* chevron */
   .vl-table thead th {
     text-align: left;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    white-space: nowrap;
     color: var(--grey-mid);
-    padding: 14px 18px;
+    padding: 14px 14px;
     background: var(--bg-soft);
     border-bottom: 1px solid var(--border);
   }
@@ -1473,7 +1485,8 @@
   }
   @media (max-width: 1120px) {
     .vl-card { width: 100%; }
-    .vl-table { min-width: 820px; }
+    /* Keep the full 10-column width — the card scrolls horizontally. */
+    .vl-table { min-width: 1080px; }
   }
   @media (max-width: 640px) {
     .vl-table thead th,
