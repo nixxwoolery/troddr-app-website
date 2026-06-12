@@ -207,13 +207,68 @@
   <div style="color: var(--grey-mid); font-size: 14px;">Loading your billing…</div>
 </div>
 
-<!-- ============ NO COMPANY ============ -->
+<!-- ============ NO COMPANY: setup request / pending review ============ -->
 <div class="auth-wrap hidden" id="view-nocompany">
-  <div class="auth-card">
-    <div class="kicker">Almost there</div>
-    <h1>No company account linked yet</h1>
-    <p id="nocompany-msg">Your sign-in works, but it isn't linked to a TRODDR company account yet. Email <a href="mailto:billing@troddr.com">billing@troddr.com</a> from your business address and we'll connect you.</p>
+  <div class="auth-card" id="setup-pending" style="display:none;">
+    <div class="kicker">Pending review</div>
+    <h1>Your company is being reviewed</h1>
+    <p id="setup-pending-msg">TRODDR is reviewing your company setup request. You'll get an email once your account is approved.</p>
     <button type="button" class="btn-primary" id="nocompany-signout">Sign out</button>
+  </div>
+  <div class="auth-card" id="setup-form" style="display:none; max-width: 520px;">
+    <div class="kicker">Company setup</div>
+    <h1>Tell us about your business</h1>
+    <p>Your sign-in isn't linked to a TRODDR company account yet. Submit your business details and TRODDR will review and set up your account.</p>
+    <div class="field"><label>Legal/business name *</label><input id="su-legal" /></div>
+    <div class="field"><label>Trading name</label><input id="su-trading" /></div>
+    <div class="field"><label>Billing contact name</label><input id="su-contact" /></div>
+    <div class="field"><label>Billing phone</label><input id="su-phone" /></div>
+    <div class="field"><label>Country</label><input id="su-country" value="Jamaica" /></div>
+    <div class="field"><label>Address</label><input id="su-address" /></div>
+    <div class="field"><label>Tax/VAT/GCT ID (optional)</label><input id="su-tax" /></div>
+    <div class="field"><label>Preferred invoice currency</label>
+      <select id="su-currency"><option>USD</option><option>JMD</option></select></div>
+    <div class="field"><label>Business type</label>
+      <select id="su-type">
+        <option value="hospitality_group">Hospitality (restaurant/hotel/attraction group)</option>
+        <option value="event_host">Event host / organizer / festival producer</option>
+        <option value="sponsor">Sponsor</option>
+        <option value="mixed">Mixed</option>
+      </select></div>
+    <div class="field"><label>Your role/title</label><input id="su-role" /></div>
+    <div class="field"><label>Anything else?</label><textarea id="su-message"></textarea></div>
+    <button type="button" class="btn-primary" id="su-submit">Submit for review</button>
+    <div class="auth-err" id="su-err"></div>
+    <div class="auth-help" style="margin-top:10px;"><a href="#" id="su-signout">Sign out</a></div>
+  </div>
+</div>
+
+<!-- ============ ONBOARDING: confirm billing details ============ -->
+<div class="auth-wrap hidden" id="view-onboarding">
+  <div class="auth-card" style="max-width: 520px;">
+    <div class="kicker">One-time setup</div>
+    <h1>Confirm your billing details</h1>
+    <p>Before using billing, confirm your company's details. Approved locations and events are managed by TRODDR — this only updates billing information.</p>
+    <div class="field"><label>Legal/business name *</label><input id="ob-legal" /></div>
+    <div class="field"><label>Trading name</label><input id="ob-trading" /></div>
+    <div class="field"><label>Billing contact name</label><input id="ob-contact" /></div>
+    <div class="field"><label>Billing email *</label><input id="ob-email" type="email" /></div>
+    <div class="field"><label>Billing phone</label><input id="ob-phone" /></div>
+    <div class="field"><label>Country</label><input id="ob-country" value="Jamaica" /></div>
+    <div class="field"><label>Address</label><input id="ob-address" /></div>
+    <div class="field"><label>Tax/VAT/GCT ID (optional)</label><input id="ob-tax" /></div>
+    <div class="field"><label>Preferred invoice currency</label>
+      <select id="ob-currency"><option>USD</option><option>JMD</option></select></div>
+    <div class="field"><label>Business type</label>
+      <select id="ob-type">
+        <option value="hospitality_group">Hospitality (restaurant/hotel/attraction group)</option>
+        <option value="event_host">Event host / organizer / festival producer</option>
+        <option value="sponsor">Sponsor</option>
+        <option value="mixed">Mixed</option>
+      </select></div>
+    <div class="field"><label>Your role/title</label><input id="ob-role" /></div>
+    <button type="button" class="btn-primary" id="ob-submit">Save &amp; continue</button>
+    <div class="auth-err" id="ob-err"></div>
   </div>
 </div>
 
@@ -254,6 +309,14 @@
         <button type="button" class="btn-sm" data-request="extra_admins">Request more admin users</button>
       </div>
     </div>
+    <div class="card" style="grid-column: 1 / -1;">
+      <div class="section-title">Events &amp; Event Series <span class="pill neutral" id="event-count"></span></div>
+      <div id="events-list"></div>
+      <div class="sub-txt" style="margin-top: 10px; font-size: 12px; color: var(--grey-mid);">
+        Events are attached and approved by TRODDR. Want TRODDR Events coverage for an upcoming event?
+        Use "Request Event coverage" below.
+      </div>
+    </div>
   </div>
 
   <div class="section">
@@ -280,10 +343,13 @@
       </p>
       <div class="req-actions">
         <button type="button" class="btn-sm" data-request="extra_admins">More admin users</button>
-        <button type="button" class="btn-sm" data-request="insights">Insights (location / company)</button>
+        <button type="button" class="btn-sm" data-request="location_insights">Location Insights</button>
+        <button type="button" class="btn-sm" data-request="company_insights">Company Insights</button>
         <button type="button" class="btn-sm" data-request="event_coverage">Event coverage</button>
+        <button type="button" class="btn-sm" data-request="event_insights">Event Insights</button>
         <button type="button" class="btn-sm" data-request="sponsor_activation">Sponsor activation</button>
         <button type="button" class="btn-sm" data-request="sponsor_report">Sponsor report</button>
+        <button type="button" class="btn-sm" data-request="billing_help">Billing help</button>
       </div>
       <div id="requests-list" style="margin-top: 14px;"></div>
     </div>
@@ -340,6 +406,14 @@
   <div class="modal">
     <h2 id="req-title">Send a request</h2>
     <div class="modal-sub">The TRODDR team will follow up by email with details and pricing.</div>
+    <div class="field hidden" id="req-location-wrap">
+      <label for="req-location">Which location?</label>
+      <select id="req-location"></select>
+    </div>
+    <div class="field hidden" id="req-event-wrap">
+      <label for="req-event">Which event?</label>
+      <select id="req-event"></select>
+    </div>
     <div class="field">
       <label for="req-message">Tell us what you need</label>
       <textarea id="req-message"></textarea>
@@ -477,6 +551,27 @@
           </div>`).join('')
       : '<div class="empty">No users registered yet.</div>';
 
+    // Events & series
+    const events = d.events || [];
+    $('event-count').textContent = `${events.length} approved`;
+    const parents = events.filter((e) => !e.parent_event_id);
+    const children = events.filter((e) => e.parent_event_id);
+    const eventRow = (e, isChild) => `
+      <div class="list-row" ${isChild ? 'style="padding-left: 22px;"' : ''}>
+        <div>
+          <div class="main-txt">${isChild ? '↳ ' : ''}${BS.esc(e.title)}</div>
+          <div class="sub-txt">${BS.esc(e.relationship_type)}${e.start_date ? ' · ' + BS.fmtDate(e.start_date) : ''}${e.package ? ' · ' + BS.esc(e.package) : ''}</div>
+        </div>
+        <span class="pill ${e.comped ? 'info' : 'good'}">${e.comped ? 'Comped' : 'Approved'}</span>
+      </div>`;
+    $('events-list').innerHTML = events.length
+      ? parents.map((p) => eventRow(p, false)
+          + children.filter((c) => c.parent_event_id === p.event_id).map((c) => eventRow(c, true)).join('')
+        ).join('')
+        + children.filter((c) => !parents.some((p) => p.event_id === c.parent_event_id))
+            .map((c) => eventRow(c, false)).join('')
+      : '<div class="empty">No approved events attached yet. TRODDR attaches events for you.</div>';
+
     // Entitlements
     const ents = (d.entitlements || []).filter((e) => e.active_now);
     $('entitlements-grid').innerHTML = ents.map((e) => `
@@ -519,7 +614,10 @@
     }).join('');
 
     document.querySelectorAll('[data-pdf]').forEach((b) => b.addEventListener('click', () => {
-      BS.openInvoicePdf(invoices[Number(b.dataset.pdf)], d.company);
+      BS.openInvoicePdf(invoices[Number(b.dataset.pdf)], d.company, {
+        instructions: d.payment_instructions,
+        footerCopy: d.invoice_footer_copy,
+      });
     }));
     document.querySelectorAll('[data-confirm]').forEach((b) => b.addEventListener('click', () => {
       openPayModal(invoices[Number(b.dataset.confirm)]);
@@ -564,23 +662,43 @@
     if (!paidOn) { payError('Pick the date you paid.'); return; }
     if (!ref) { payError('Enter the payment reference number.'); return; }
 
+    // Receipt rules come from billing settings (admin-configurable).
+    const rules = billing.receipt_rules || {};
+    const allowed = rules.allowed_types || ['pdf', 'jpg', 'jpeg', 'png'];
+    const maxMb = Number(rules.max_mb || 10);
+    if (file) {
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      if (!allowed.includes(ext)) {
+        payError('Receipts must be one of: ' + allowed.join(', ').toUpperCase());
+        return;
+      }
+      if (file.size > maxMb * 1024 * 1024) {
+        payError(`Receipt is too large (max ${maxMb} MB).`);
+        return;
+      }
+    }
+
     const btn = $('pay-submit');
     btn.disabled = true; btn.textContent = 'Submitting…';
     try {
-      let receiptUrl = null;
+      let receiptPath = null;
       if (file) {
-        const path = `${billing.company.id}/${payInvoice.id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g, '_')}`;
-        const { error: upErr } = await db.storage.from('payment-receipts').upload(path, file);
+        // Path must start with the company id: the private bucket's
+        // RLS only lets company members read/write their own folder.
+        receiptPath = `${billing.company.id}/${payInvoice.id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g, '_')}`;
+        const { error: upErr } = await db.storage.from('payment-receipts').upload(receiptPath, file);
         if (upErr) throw upErr;
-        receiptUrl = db.storage.from('payment-receipts').getPublicUrl(path).data.publicUrl;
       }
       const { data, error } = await db.rpc('submit_payment_confirmation', {
         p_invoice_id: payInvoice.id,
         p_payment_method: method,
         p_paid_on: paidOn,
         p_reference: ref,
-        p_receipt_url: receiptUrl,
+        p_receipt_path: receiptPath,
         p_notes: notes || null,
+        p_receipt_filename: file ? file.name : null,
+        p_receipt_size_bytes: file ? file.size : null,
+        p_receipt_mime: file ? (file.type || null) : null,
       });
       if (error) throw error;
       if (!data.ok) { payError(data.error || 'Could not submit.'); return; }
@@ -597,18 +715,38 @@
   /* ---------------- Requests ---------------- */
   const REQ_TITLES = {
     extra_admins: 'Request more admin users',
-    insights: 'Request Insights',
+    location_insights: 'Request Location Insights',
+    company_insights: 'Request Company Insights',
     event_coverage: 'Request Event coverage',
+    event_insights: 'Request Event Insights',
     sponsor_activation: 'Request Sponsor activation',
     sponsor_report: 'Request Sponsor report',
+    billing_help: 'Request billing help',
     other: 'Send a request',
   };
+  const REQ_WANTS_LOCATION = ['location_insights'];
+  const REQ_WANTS_EVENT = ['event_coverage', 'event_insights', 'sponsor_activation', 'sponsor_report'];
 
   function openReqModal(type) {
     reqType = type;
     $('req-title').textContent = REQ_TITLES[type] || REQ_TITLES.other;
     $('req-message').value = '';
     $('req-err').classList.remove('visible');
+
+    const locs = (billing && billing.locations) || [];
+    const showLoc = REQ_WANTS_LOCATION.includes(type) && locs.length > 0;
+    $('req-location-wrap').classList.toggle('hidden', !showLoc);
+    if (showLoc) {
+      $('req-location').innerHTML = '<option value="">All / not sure</option>' +
+        locs.map((l) => `<option value="${l.id}">${BS.esc(l.name)}</option>`).join('');
+    }
+    const evs = (billing && billing.events) || [];
+    const showEv = REQ_WANTS_EVENT.includes(type) && evs.length > 0;
+    $('req-event-wrap').classList.toggle('hidden', !showEv);
+    if (showEv) {
+      $('req-event').innerHTML = '<option value="">A new / unlisted event</option>' +
+        evs.map((e) => `<option value="${e.event_id}">${BS.esc(e.title)}</option>`).join('');
+    }
     $('req-modal').classList.add('visible');
   }
 
@@ -619,6 +757,8 @@
       const { data, error } = await db.rpc('submit_billing_request', {
         p_request_type: reqType,
         p_message: $('req-message').value.trim() || null,
+        p_related_location_id: ($('req-location-wrap').classList.contains('hidden') ? null : $('req-location').value) || null,
+        p_related_event_id: ($('req-event-wrap').classList.contains('hidden') ? null : $('req-event').value) || null,
       });
       if (error) throw error;
       if (!data.ok) {
@@ -638,35 +778,133 @@
   }
 
   /* ---------------- Load ---------------- */
+  const ALL_VIEWS = ['view-auth', 'view-loading', 'view-nocompany', 'view-onboarding', 'view-dashboard'];
+  function showOnly(id) {
+    ALL_VIEWS.forEach((v) => $(v).classList.toggle('hidden', v !== id));
+  }
+
+  function showNoCompany(setupRequest) {
+    showOnly('view-nocompany');
+    const pending = setupRequest && setupRequest.status === 'pending_review';
+    $('setup-pending').style.display = pending ? 'block' : 'none';
+    $('setup-form').style.display = pending ? 'none' : 'block';
+    if (setupRequest && setupRequest.status === 'rejected') {
+      const el = $('su-err');
+      el.textContent = 'Your previous request was not approved'
+        + (setupRequest.review_note ? ': ' + setupRequest.review_note : '.')
+        + ' You can update your details and submit again.';
+      el.classList.add('visible');
+    }
+  }
+
+  function showOnboarding() {
+    showOnly('view-onboarding');
+    const co = billing.company || {};
+    $('ob-legal').value = co.legal_name || co.name || '';
+    $('ob-trading').value = co.trading_name || '';
+    $('ob-contact').value = co.contact_name || '';
+    $('ob-email').value = co.billing_email || '';
+    $('ob-phone').value = co.billing_phone || '';
+    $('ob-country').value = co.country || 'Jamaica';
+    $('ob-address').value = co.address || '';
+    $('ob-tax').value = co.tax_id || '';
+    $('ob-currency').value = co.preferred_currency || 'USD';
+    $('ob-type').value = co.account_type || 'hospitality_group';
+  }
+
   async function loadBilling() {
     const { data, error } = await db.rpc('get_company_billing');
     if (error) throw error;
     if (!data.ok) {
-      hide('view-loading'); hide('view-dashboard');
-      show('view-nocompany');
+      showNoCompany(data.setup_request || null);
       return;
     }
     billing = data;
-    hide('view-loading'); hide('view-nocompany');
-    show('view-dashboard');
+    // Onboarding gate: confirm billing details before full use.
+    if (data.onboarding && data.onboarding.status !== 'complete') {
+      $('nav-user').textContent = data.me.email;
+      show('nav-user'); show('signout-btn');
+      showOnboarding();
+      return;
+    }
+    showOnly('view-dashboard');
     render();
+  }
+
+  async function submitOnboarding() {
+    const btn = $('ob-submit');
+    const err = $('ob-err');
+    err.classList.remove('visible');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const { data, error } = await db.rpc('submit_company_onboarding', { p_info: {
+        legal_name: $('ob-legal').value.trim(),
+        trading_name: $('ob-trading').value.trim() || null,
+        billing_contact_name: $('ob-contact').value.trim() || null,
+        billing_email: $('ob-email').value.trim(),
+        billing_phone: $('ob-phone').value.trim() || null,
+        country: $('ob-country').value.trim() || null,
+        address: $('ob-address').value.trim() || null,
+        tax_id: $('ob-tax').value.trim() || null,
+        preferred_currency: $('ob-currency').value,
+        business_type: $('ob-type').value,
+        role_title: $('ob-role').value.trim() || null,
+      }});
+      if (error) throw error;
+      if (!data.ok) { err.textContent = data.error; err.classList.add('visible'); return; }
+      toast('Billing details saved.');
+      await loadBilling();
+    } catch (e) {
+      err.textContent = e.message || String(e);
+      err.classList.add('visible');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save & continue';
+    }
+  }
+
+  async function submitSetupRequest() {
+    const btn = $('su-submit');
+    const err = $('su-err');
+    err.classList.remove('visible');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const { data, error } = await db.rpc('submit_company_setup_request', { p_info: {
+        legal_name: $('su-legal').value.trim(),
+        trading_name: $('su-trading').value.trim() || null,
+        billing_contact_name: $('su-contact').value.trim() || null,
+        billing_phone: $('su-phone').value.trim() || null,
+        country: $('su-country').value.trim() || null,
+        address: $('su-address').value.trim() || null,
+        tax_id: $('su-tax').value.trim() || null,
+        preferred_currency: $('su-currency').value,
+        business_type: $('su-type').value,
+        role_title: $('su-role').value.trim() || null,
+        message: $('su-message').value.trim() || null,
+      }});
+      if (error) throw error;
+      if (!data.ok) { err.textContent = data.error; err.classList.add('visible'); return; }
+      showNoCompany({ status: 'pending_review' });
+    } catch (e) {
+      err.textContent = e.message || String(e);
+      err.classList.add('visible');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit for review';
+    }
   }
 
   async function boot() {
     const { data } = await db.auth.getSession();
     if (!data || !data.session) {
-      hide('view-loading'); hide('view-dashboard'); hide('view-nocompany');
-      show('view-auth');
+      showOnly('view-auth');
       return;
     }
-    hide('view-auth'); show('view-loading');
+    showOnly('view-loading');
     try {
       await loadBilling();
     } catch (e) {
       console.error('[company-billing] load failed:', e);
-      hide('view-loading');
-      show('view-nocompany');
-      $('nocompany-msg').textContent = 'We couldn\'t load your billing right now. Refresh to try again, or email billing@troddr.com.';
+      showNoCompany({ status: 'pending_review' });
+      $('setup-pending-msg').textContent = 'We couldn\'t load your billing right now. Refresh to try again, or email billing@troddr.com.';
     }
   }
 
@@ -676,6 +914,9 @@
   $('auth-reset').addEventListener('click', handleReset);
   $('signout-btn').addEventListener('click', signOut);
   $('nocompany-signout').addEventListener('click', signOut);
+  $('su-signout').addEventListener('click', (e) => { e.preventDefault(); signOut(); });
+  $('su-submit').addEventListener('click', submitSetupRequest);
+  $('ob-submit').addEventListener('click', submitOnboarding);
   $('pay-cancel').addEventListener('click', () => $('pay-modal').classList.remove('visible'));
   $('pay-submit').addEventListener('click', submitPayment);
   $('req-cancel').addEventListener('click', () => $('req-modal').classList.remove('visible'));

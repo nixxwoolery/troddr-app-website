@@ -62,10 +62,51 @@
       .replace(/"/g, '&quot;');
   }
 
+  /* Resolve which payment-instruction records apply to an invoice.
+   * `instructions` is either an array or {USD:[...],JMD:[...]} from
+   * get_company_billing. Shows the invoice currency's accounts; if
+   * none exist for that currency, shows everything active. */
+  function instructionsForInvoice(inv, instructions) {
+    if (!instructions) return [];
+    if (Array.isArray(instructions)) {
+      const match = instructions.filter((i) => i.currency === inv.currency);
+      return match.length ? match : instructions;
+    }
+    const match = instructions[inv.currency] || [];
+    if (match.length) return match;
+    return [].concat(instructions.USD || [], instructions.JMD || []);
+  }
+
+  function bankBlockHtml(list) {
+    if (!list || !list.length) return '';
+    return list.map((b) => `
+      <div class="bank">
+        <div class="bank-name">${esc(b.bank_name)} — ${esc(b.currency)} ${esc(b.account_type || '')}</div>
+        <div class="bank-kv"><span>Account name</span><span>${esc(b.account_name)}</span></div>
+        ${b.branch_name ? `<div class="bank-kv"><span>Branch</span><span>${esc(b.branch_name)}</span></div>` : ''}
+        ${b.account_number
+          ? `<div class="bank-kv"><span>Account number</span><span>${esc(b.account_number)}</span></div>`
+          : (b.payment_notes ? `<div class="bank-kv"><span>Account number</span><span>${esc(b.payment_notes)}</span></div>` : '')}
+        ${b.routing_or_swift ? `<div class="bank-kv"><span>Routing/SWIFT</span><span>${esc(b.routing_or_swift)}</span></div>` : ''}
+        ${b.account_number && b.payment_notes ? `<div class="bank-note">${esc(b.payment_notes)}</div>` : ''}
+      </div>`).join('');
+  }
+
+  const DEFAULT_FOOTER_COPY = [
+    'Access is activated after payment verification by TRODDR.',
+    'Please include the invoice number in your payment reference.',
+    'After payment, return to your dashboard and submit your payment confirmation.',
+    'User-reported payment does not activate access until reviewed by TRODDR.',
+  ];
+
   /* Printable invoice document. `inv` is the invoice jsonb from the
    * RPCs (with line_items), `company` is { name, billing_email }.
+   * `opts` (optional): { instructions: array | {USD,JMD}, footerCopy: [..] }.
    * Returns a full HTML document string. */
-  function invoiceDocument(inv, company) {
+  function invoiceDocument(inv, company, opts) {
+    opts = opts || {};
+    const banks = instructionsForInvoice(inv, opts.instructions);
+    const footerCopy = (opts.footerCopy && opts.footerCopy.length) ? opts.footerCopy : DEFAULT_FOOTER_COPY;
     const meta = statusMeta(INVOICE_STATUS, inv.status);
     const lines = (inv.line_items || []).map((li) => `
       <tr>
@@ -116,6 +157,11 @@
   .blocks { margin-top: 30px; display: grid; gap: 18px; }
   .block h3 { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 4px; }
   .block p { white-space: pre-wrap; color: #333; }
+  .bank { border: 1px solid #eee; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+  .bank-name { font-weight: 700; margin-bottom: 4px; }
+  .bank-kv { display: flex; gap: 10px; font-size: 12px; } .bank-kv span:first-child { color: #666; min-width: 120px; }
+  .bank-note { font-size: 11px; color: #888; margin-top: 4px; }
+  .footer-copy { margin-top: 6px; } .footer-copy li { font-size: 11px; color: #555; margin-left: 16px; line-height: 1.7; }
   .foot { margin-top: 44px; padding-top: 16px; border-top: 1px solid #eee; font-size: 11px; color: #999; text-align: center; }
   @media print { body { padding: 24px; } .no-print { display: none; } }
 </style>
@@ -156,10 +202,12 @@
   </table>
 
   <div class="blocks">
+    ${banks.length ? `<div class="block"><h3>Pay To</h3>${bankBlockHtml(banks)}</div>` : ''}
     ${inv.payment_instructions ? `<div class="block"><h3>Payment Instructions</h3><p>${esc(inv.payment_instructions)}</p></div>` : ''}
     ${inv.notes ? `<div class="block"><h3>Notes</h3><p>${esc(inv.notes)}</p></div>` : ''}
     <div class="block"><h3>How payment works</h3>
-      <p>Pay using the instructions above, then submit "Confirm Payment" in your TRODDR dashboard with your reference number. Access is activated once TRODDR verifies the payment. No GCT applied.</p>
+      <ul class="footer-copy">${footerCopy.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+      <p style="margin-top:6px; font-size:11px; color:#888;">No GCT applied.</p>
     </div>
   </div>
 
@@ -169,11 +217,11 @@
 </html>`;
   }
 
-  function openInvoicePdf(inv, company) {
+  function openInvoicePdf(inv, company, opts) {
     const w = window.open('', '_blank');
     if (!w) { alert('Allow pop-ups to download the invoice PDF.'); return; }
     w.document.open();
-    w.document.write(invoiceDocument(inv, company));
+    w.document.write(invoiceDocument(inv, company, opts));
     w.document.close();
   }
 

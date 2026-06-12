@@ -2400,6 +2400,16 @@
         <div class="locked-grid" id="locked-grid"></div>
       </section>
 
+      <section class="section" id="billing">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Billing</h2>
+            <div class="section-sub">Event package, insights, push usage, and invoices for the host company account.</div>
+          </div>
+        </div>
+        <div id="billing-body"></div>
+      </section>
+
       </div><!-- /view-pane-analytics -->
 
       <!-- ============ DETAILS ============ -->
@@ -5409,6 +5419,7 @@
         { section: 'vendors',        icon: 'ic-shop',     label: 'Vendor Insights' },
         { section: 'audience',       icon: 'ic-users',    label: 'Audience', id: 'nav-audience', hidden: !opts.hasAudience },
         { section: 'unlocks',        icon: 'ic-lock',     label: 'Unlocks' },
+        { section: 'billing',        icon: 'ic-doc',      label: 'Billing' },
 
         { header: 'Details' },
         { section: 'info',            icon: 'ic-doc',      label: 'Info' },
@@ -5637,6 +5648,7 @@
 </script>
 
 <script src="/js/partner-messages.js" defer></script>
+<script src="/js/event-billing-widget.js" defer></script>
 
 <script>
   // View routing: ?view=overview | analytics | details

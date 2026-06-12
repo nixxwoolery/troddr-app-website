@@ -131,6 +131,9 @@
     <button class="tab" data-tab="companies">Companies</button>
     <button class="tab" data-tab="invoice">Invoice Generator</button>
     <button class="tab" data-tab="requests">Requests<span class="count hidden" id="count-requests"></span></button>
+    <button class="tab" data-tab="setup">Setup Requests<span class="count hidden" id="count-setup"></span></button>
+    <button class="tab" data-tab="notifications">Notifications<span class="count hidden" id="count-notifications"></span></button>
+    <button class="tab" data-tab="settings">Payment &amp; Settings</button>
     <button class="tab" data-tab="audit">Audit Log</button>
   </div>
 
@@ -143,6 +146,17 @@
         Nothing activates until you approve it here.
       </p>
       <div id="review-list"></div>
+    </div>
+    <div class="card">
+      <h2>Renewals due
+        <span class="muted" id="renewal-window-label"></span>
+        <button class="btn" id="run-maintenance" style="margin-left:auto;">Run billing maintenance</button>
+      </h2>
+      <p class="muted" style="margin-bottom: 10px;">
+        Maintenance marks past-due invoices overdue and moves lapsed subscriptions to read-only
+        (7-day grace). Renewal invoices are generated manually from here — review the draft before issuing.
+      </p>
+      <div id="renewals-due"></div>
     </div>
     <div class="card">
       <h2>Recent invoices</h2>
@@ -163,6 +177,28 @@
           <div class="frow">
             <div><label class="f">Contact name</label><input class="f" id="nc-contact" /></div>
             <div><label class="f">Contact phone</label><input class="f" id="nc-phone" /></div>
+          </div>
+          <div class="frow">
+            <div><label class="f">Account type (the real commercial entity)</label>
+              <select class="f" id="nc-account-type">
+                <option value="hospitality_group">Hospitality group (hotel/restaurant/attraction/operator)</option>
+                <option value="event_host">Event host / organizer / carnival band / festival producer</option>
+                <option value="sponsor">Sponsor (buys activations/reports directly)</option>
+                <option value="mixed">Mixed</option>
+              </select></div>
+            <div><label class="f">Create from</label>
+              <select class="f" id="nc-source-type">
+                <option value="manual">Manual (no source link)</option>
+                <option value="place_group">Hospitality group (link a partner)</option>
+                <option value="event_organizer">Event organizer (link an event — auto-attaches it)</option>
+                <option value="sponsor">Sponsor</option>
+              </select></div>
+          </div>
+          <div id="nc-source-search-wrap" class="hidden">
+            <label class="f" id="nc-source-label">Search source</label>
+            <input class="f" id="nc-source-search" placeholder="Type to search…" />
+            <div id="nc-source-results" style="margin-top:6px;"></div>
+            <div class="muted" id="nc-source-picked"></div>
           </div>
           <div style="margin-top: 12px; display:flex; gap:8px;">
             <button class="btn primary" id="nc-save">Create company</button>
@@ -228,6 +264,27 @@
           <label class="f">Attach a location (search places)</label>
           <input class="f" id="cd-loc-search" placeholder="Type a place name…" />
           <div id="cd-loc-results" style="margin-top: 8px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Approved events &amp; series</h2>
+          <div id="cd-events"></div>
+          <div class="frow3" style="margin-top: 10px; align-items: end;">
+            <div style="grid-column: span 2;">
+              <label class="f">Attach an event (search)</label>
+              <input class="f" id="cd-event-search" placeholder="Type an event name…" />
+            </div>
+            <div><label class="f">Relationship</label>
+              <select class="f" id="cd-event-rel">
+                <option value="host">host</option><option value="organizer">organizer</option>
+                <option value="sponsor">sponsor</option><option value="vendor">vendor</option>
+                <option value="production_partner">production_partner</option>
+              </select></div>
+          </div>
+          <label style="display:flex; gap:6px; align-items:center; font-size:12px; margin-top:6px;">
+            <input type="checkbox" id="cd-event-children" /> Also attach child events (series)
+          </label>
+          <div id="cd-event-results" style="margin-top: 8px;"></div>
         </div>
 
         <div class="card">
@@ -330,6 +387,82 @@
     </div>
   </section>
 
+  <!-- ============ SETUP REQUESTS TAB ============ -->
+  <section id="tab-setup" class="hidden">
+    <div class="card">
+      <h2>Company setup requests</h2>
+      <p class="muted" style="margin-bottom: 12px;">Users who signed in without a pre-created company. Approving creates the company account and links them as its first admin.</p>
+      <div id="setup-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ NOTIFICATIONS TAB ============ -->
+  <section id="tab-notifications" class="hidden">
+    <div class="card">
+      <h2>Notification queue (pending)</h2>
+      <p class="muted" style="margin-bottom: 12px;">Email sending is not wired up yet — these records are what the mailer will drain. Mark items sent after handling them manually, or dismiss.</p>
+      <div id="notifications-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS TAB ============ -->
+  <section id="tab-settings" class="hidden">
+    <div class="card">
+      <h2>Payment instructions
+        <button class="btn primary" id="pi-new" style="margin-left:auto;">+ Add account</button>
+      </h2>
+      <p class="muted" style="margin-bottom: 12px;">
+        Shown on invoices by currency (USD invoices show USD accounts, JMD invoices show JMD accounts).
+        Account numbers are entered here only — never in source code.
+      </p>
+      <div id="pi-list"></div>
+      <div id="pi-form" class="hidden" style="border:1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-top: 12px;">
+        <input type="hidden" id="pi-id" />
+        <div class="frow3">
+          <div><label class="f">Bank name</label><input class="f" id="pi-bank" /></div>
+          <div><label class="f">Account name</label><input class="f" id="pi-account-name" /></div>
+          <div><label class="f">Branch</label><input class="f" id="pi-branch" /></div>
+        </div>
+        <div class="frow3">
+          <div><label class="f">Currency</label>
+            <select class="f" id="pi-currency"><option>USD</option><option>JMD</option></select></div>
+          <div><label class="f">Account type</label><input class="f" id="pi-account-type" placeholder="Savings / Chequing" /></div>
+          <div><label class="f">Display order</label><input class="f" id="pi-order" type="number" value="0" /></div>
+        </div>
+        <div class="frow">
+          <div><label class="f">Account number (sensitive)</label><input class="f" id="pi-number" autocomplete="off" /></div>
+          <div><label class="f">Routing / SWIFT</label><input class="f" id="pi-swift" /></div>
+        </div>
+        <label class="f">Payment notes (shown when account number is blank)</label>
+        <input class="f" id="pi-notes" />
+        <label style="display:flex; gap:6px; align-items:center; font-size:12px; margin-top:8px;">
+          <input type="checkbox" id="pi-active" checked /> Active
+        </label>
+        <div style="margin-top: 10px; display:flex; gap:8px;">
+          <button class="btn primary" id="pi-save">Save</button>
+          <button class="btn" id="pi-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Invoice footer copy</h2>
+      <p class="muted" style="margin-bottom: 10px;">One line per row — printed under "How payment works" on every invoice.</p>
+      <textarea class="f" id="set-footer-copy" style="min-height: 110px;"></textarea>
+      <div style="margin-top: 10px;"><button class="btn" id="set-footer-save">Save copy</button></div>
+    </div>
+    <div class="card">
+      <h2>Renewal &amp; receipt settings</h2>
+      <div class="frow">
+        <div><label class="f">Renewal reminder window (days before expiry)</label>
+          <input class="f" id="set-renewal-days" type="number" min="1" /></div>
+        <div><label class="f">Receipt max size (MB)</label>
+          <input class="f" id="set-receipt-mb" type="number" min="1" /></div>
+      </div>
+      <div style="margin-top: 10px;"><button class="btn" id="set-ops-save">Save settings</button></div>
+      <p class="muted" style="margin-top: 12px;" id="onsite-reference"></p>
+    </div>
+  </section>
+
   <!-- ============ AUDIT TAB ============ -->
   <section id="tab-audit" class="hidden">
     <div class="card">
@@ -369,6 +502,14 @@
     if (error) throw new Error(error.message || 'Request failed');
     return data;
   }
+
+  // Active payment instructions + editable footer copy for PDFs.
+  function pdfOpts() {
+    return {
+      instructions: ((overview && overview.payment_instructions) || []).filter((p) => p.active),
+      footerCopy: (overview && overview.settings && overview.settings.invoice_footer_copy) || null,
+    };
+  }
   async function action(fn, args, successMsg) {
     try {
       const res = await rpc(fn, args);
@@ -398,13 +539,12 @@
   $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
 
   /* ── Tabs ─────────────────────────────────────────────── */
-  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
-    b.classList.add('active');
-    ['review', 'companies', 'invoice', 'requests', 'audit'].forEach((k) => {
-      $('tab-' + k).classList.toggle('hidden', k !== b.dataset.tab);
-    });
-  }));
+  const TAB_KEYS = ['review', 'companies', 'invoice', 'requests', 'setup', 'notifications', 'settings', 'audit'];
+  function switchTab(key) {
+    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === key));
+    TAB_KEYS.forEach((k) => $('tab-' + k).classList.toggle('hidden', k !== key));
+  }
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 
   /* ── Load overview + catalog ──────────────────────────── */
   async function loadAll() {
@@ -435,12 +575,31 @@
   }
 
   /* ── Overview rendering ───────────────────────────────── */
+  /* Receipts live in a PRIVATE bucket: admins get a short-lived
+   * signed URL from the admin-receipt-url edge function. */
+  async function openReceipt(path) {
+    try {
+      const res = await fetch(SUPABASE_URL + '/functions/v1/admin-receipt-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({ admin_token: adminToken, path }),
+      });
+      const data = await res.json();
+      if (!data.ok) { alert(data.error || 'Could not open receipt'); return; }
+      window.open(data.url, '_blank', 'noopener');
+    } catch (e) { alert('Could not open receipt: ' + e.message); }
+  }
+
   function renderOverview() {
     const c = overview.counts || {};
     $('count-review').textContent = c.pending_reviews || '';
     $('count-review').classList.toggle('hidden', !c.pending_reviews);
     $('count-requests').textContent = c.open_requests || '';
     $('count-requests').classList.toggle('hidden', !c.open_requests);
+    $('count-setup').textContent = c.setup_requests || '';
+    $('count-setup').classList.toggle('hidden', !c.setup_requests);
+    $('count-notifications').textContent = c.pending_notifications || '';
+    $('count-notifications').classList.toggle('hidden', !c.pending_notifications);
 
     // Pending reviews
     const reviews = overview.pending_reviews || [];
@@ -460,7 +619,8 @@
           <div><b>Reference</b>${esc(r.reference_number)}</div>
           <div><b>Submitted by</b>${esc(r.submitted_by || '—')}</div>
           <div><b>Submitted</b>${BS.fmtDate(r.created_at)}</div>
-          <div><b>Receipt</b>${r.receipt_url ? `<a href="${esc(r.receipt_url)}" target="_blank" rel="noopener">View receipt</a>` : '—'}</div>
+          <div><b>Receipt</b>${r.receipt_path
+            ? `<a href="#" data-receipt="${esc(r.receipt_path)}">${esc(r.receipt_filename || 'View receipt')}</a>` : '—'}</div>
         </div>
         ${r.notes ? `<div class="muted" style="margin-bottom:10px;">Note from company: ${esc(r.notes)}</div>` : ''}
         <div class="review-actions">
@@ -518,31 +678,172 @@
     document.querySelectorAll('[data-company]').forEach((tr) =>
       tr.addEventListener('click', () => openCompany(tr.dataset.company)));
 
-    // Requests
+    // Receipt links (signed URLs via edge function)
+    document.querySelectorAll('[data-receipt]').forEach((a) => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      openReceipt(a.dataset.receipt);
+    }));
+
+    // Renewals due
+    $('renewal-window-label').textContent =
+      '(window: ' + ((overview.settings || {}).renewal_reminder_days || 30) + ' days)';
+    const renewals = overview.renewals_due || [];
+    $('renewals-due').innerHTML = renewals.length ? `
+      <table class="tbl"><thead><tr><th>Company</th><th>Plan</th><th>Cycle</th><th>Paid through</th><th></th></tr></thead>
+      <tbody>${renewals.map((r) => `
+        <tr>
+          <td><b>${esc(r.company_name)}</b></td>
+          <td>${esc(r.plan_key || '—')}</td>
+          <td>${esc(r.billing_cycle || '—')}</td>
+          <td>${BS.fmtDate(r.paid_through)}</td>
+          <td><button class="btn primary" data-renew="${r.company_id}">Generate renewal draft</button></td>
+        </tr>`).join('')}</tbody></table>`
+      : '<div class="empty">No renewals due inside the reminder window.</div>';
+    document.querySelectorAll('[data-renew]').forEach((b) => b.addEventListener('click', async () => {
+      const res = await action('admin_generate_renewal_invoice', {
+        p_admin_token: adminToken, p_company_id: b.dataset.renew,
+      }, 'Renewal draft created — review and issue it.');
+      if (res) { await loadAll(); openCompany(b.dataset.renew); }
+    }));
+
+    // Requests (quote -> invoice -> complete workflow)
     const reqs = overview.requests || [];
+    const reqPill = (s) => pill({
+      new: { label: 'New', cls: 'warn' }, in_review: { label: 'In review', cls: 'info' },
+      quoted: { label: 'Quoted', cls: 'info' }, invoiced: { label: 'Invoiced', cls: 'good' },
+    }[s] || { label: s, cls: 'neutral' });
+    const REQ_NEXT = { new: ['in_review', 'quoted', 'rejected'], in_review: ['quoted', 'invoiced', 'rejected'],
+                       quoted: ['invoiced', 'completed', 'rejected'], invoiced: ['completed', 'rejected'] };
     $('requests-list').innerHTML = reqs.length ? reqs.map((r) => `
       <div class="review-card">
         <div class="review-head">
           <div><b>${esc(r.company ? r.company.name : '?')}</b> · ${esc(r.request_type.replace(/_/g, ' '))}</div>
-          ${pill(r.status === 'new' ? { label: 'New', cls: 'warn' } : { label: 'In progress', cls: 'info' })}
+          ${reqPill(r.status)}
         </div>
-        ${r.message ? `<div class="muted" style="margin-bottom:10px;">${esc(r.message)}</div>` : ''}
+        ${r.message ? `<div class="muted" style="margin-bottom:8px;">${esc(r.message)}</div>` : ''}
+        ${r.admin_notes ? `<div class="muted" style="margin-bottom:8px;">Admin notes: ${esc(r.admin_notes)}</div>` : ''}
         <div class="muted" style="margin-bottom:10px;">${esc(r.requested_by || '')} · ${BS.fmtDate(r.created_at)}</div>
         <div class="review-actions">
-          ${r.status === 'new' ? `<button class="btn" data-req-status="in_progress" data-id="${r.id}">Mark in progress</button>` : ''}
-          <button class="btn" data-req-status="resolved" data-id="${r.id}">Mark resolved</button>
+          ${(REQ_NEXT[r.status] || []).map((s) =>
+            `<button class="btn ${s === 'rejected' ? 'danger' : ''}" data-req-status="${s}" data-id="${r.id}">${s.replace('_', ' ')}</button>`).join('')}
+          ${r.company ? `<button class="btn" data-req-quote="${r.company.id}">Open invoice generator</button>` : ''}
         </div>
       </div>`).join('')
       : '<div class="empty">No open requests.</div>';
     document.querySelectorAll('[data-req-status]').forEach((b) => b.addEventListener('click', async () => {
+      const note = prompt('Admin note (optional):');
       const res = await action('admin_set_request_status', {
-        p_admin_token: adminToken, p_request_id: b.dataset.id, p_status: b.dataset.reqStatus,
+        p_admin_token: adminToken, p_request_id: b.dataset.id,
+        p_status: b.dataset.reqStatus, p_admin_notes: note || null,
       }, 'Request updated.');
       if (res) await loadAll();
     }));
+    document.querySelectorAll('[data-req-quote]').forEach((b) => b.addEventListener('click', () => {
+      igReset();
+      $('ig-company').value = b.dataset.reqQuote;
+      switchTab('invoice');
+    }));
+
+    // Company setup requests
+    const setups = overview.setup_requests || [];
+    $('setup-list').innerHTML = setups.length ? setups.map((s) => `
+      <div class="review-card">
+        <div class="review-head">
+          <div><b>${esc(s.legal_name)}</b>${s.trading_name ? ' · ' + esc(s.trading_name) : ''}</div>
+          ${pill({ label: s.business_type.replace(/_/g, ' '), cls: 'info' })}
+        </div>
+        <div class="review-kv">
+          <div><b>Email</b>${esc(s.email)}</div>
+          <div><b>Contact</b>${esc(s.contact_name || '—')}</div>
+          <div><b>Country</b>${esc(s.country || '—')}</div>
+          <div><b>Currency</b>${esc(s.preferred_currency)}</div>
+          <div><b>Role</b>${esc(s.role_title || '—')}</div>
+          <div><b>Submitted</b>${BS.fmtDate(s.created_at)}</div>
+        </div>
+        ${s.message ? `<div class="muted" style="margin-bottom:10px;">${esc(s.message)}</div>` : ''}
+        <div class="review-actions">
+          <button class="btn primary" data-setup="approve" data-id="${s.id}">Approve &amp; create company</button>
+          <button class="btn danger" data-setup="reject" data-id="${s.id}">Reject</button>
+        </div>
+      </div>`).join('')
+      : '<div class="empty">No setup requests pending review.</div>';
+    document.querySelectorAll('[data-setup]').forEach((b) => b.addEventListener('click', async () => {
+      const decision = b.dataset.setup;
+      let note = null;
+      if (decision === 'reject') {
+        note = prompt('Why is this rejected? (shown to the requester)');
+        if (note === null) return;
+      } else if (!confirm('Approve and create this company account? The requester becomes its first admin user.')) return;
+      const res = await action('admin_review_company_setup', {
+        p_admin_token: adminToken, p_request_id: b.dataset.id, p_decision: decision, p_note: note,
+      }, decision === 'approve' ? 'Company created.' : 'Request rejected.');
+      if (res) {
+        await loadAll();
+        if (res.company_id) openCompany(res.company_id);
+      }
+    }));
+
+    // Notifications queue
+    const notifs = overview.notifications || [];
+    $('notifications-list').innerHTML = notifs.length ? `
+      <table class="tbl"><thead><tr><th>When</th><th>Type</th><th>Company</th><th>Recipient</th><th>Subject</th><th></th></tr></thead>
+      <tbody>${notifs.map((n) => `
+        <tr>
+          <td style="white-space:nowrap;">${new Date(n.created_at).toLocaleString()}</td>
+          <td><b>${esc(n.notification_type.replace(/_/g, ' '))}</b></td>
+          <td>${esc(n.company || '—')}</td>
+          <td>${esc(n.recipient_email || '—')}</td>
+          <td class="muted" style="max-width:280px;">${esc(n.subject)}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn" data-notif="sent" data-id="${n.id}">Mark sent</button>
+            <button class="btn" data-notif="dismissed" data-id="${n.id}">Dismiss</button>
+          </td>
+        </tr>`).join('')}</tbody></table>`
+      : '<div class="empty">No pending notifications.</div>';
+    document.querySelectorAll('[data-notif]').forEach((b) => b.addEventListener('click', async () => {
+      const res = await action('admin_set_notification_status', {
+        p_admin_token: adminToken, p_notification_id: b.dataset.id, p_status: b.dataset.notif,
+      }, null);
+      if (res) await loadAll();
+    }));
+
+    renderSettings();
 
     // Audit
     $('audit-list').innerHTML = renderAuditRows(overview.audit || []);
+  }
+
+  /* ── Settings tab ─────────────────────────────────────── */
+  function renderSettings() {
+    const settings = overview.settings || {};
+    const pis = overview.payment_instructions || [];
+    $('pi-list').innerHTML = pis.length ? `
+      <table class="tbl"><thead><tr><th>Bank</th><th>Currency</th><th>Type</th><th>Account #</th><th>Active</th><th></th></tr></thead>
+      <tbody>${pis.map((p, idx) => `
+        <tr>
+          <td><b>${esc(p.bank_name)}</b><div class="muted">${esc(p.account_name)}${p.branch_name ? ' · ' + esc(p.branch_name) : ''}</div></td>
+          <td>${esc(p.currency)}</td>
+          <td>${esc(p.account_type || '—')}</td>
+          <td>${p.account_number ? '••••' + esc(String(p.account_number).slice(-4)) : '<span class="muted">not set</span>'}</td>
+          <td>${p.active ? '<span class="pill good">Active</span>' : '<span class="pill neutral">Off</span>'}</td>
+          <td><button class="btn" data-pi-edit="${idx}">Edit</button></td>
+        </tr>`).join('')}</tbody></table>`
+      : '<div class="empty">No payment instructions yet.</div>';
+    document.querySelectorAll('[data-pi-edit]').forEach((b) => b.addEventListener('click', () => {
+      const p = pis[Number(b.dataset.piEdit)];
+      $('pi-id').value = p.id;
+      $('pi-bank').value = p.bank_name; $('pi-account-name').value = p.account_name;
+      $('pi-branch').value = p.branch_name || ''; $('pi-currency').value = p.currency;
+      $('pi-account-type').value = p.account_type || ''; $('pi-order').value = p.display_order;
+      $('pi-number').value = p.account_number || ''; $('pi-swift').value = p.routing_or_swift || '';
+      $('pi-notes').value = p.payment_notes || ''; $('pi-active').checked = !!p.active;
+      $('pi-form').classList.remove('hidden');
+    }));
+
+    $('set-footer-copy').value = (settings.invoice_footer_copy || []).join('\n');
+    $('set-renewal-days').value = settings.renewal_reminder_days || 30;
+    $('set-receipt-mb').value = settings.receipt_max_mb || 10;
+    $('onsite-reference').textContent = settings.onsite_support_reference || '';
   }
 
   function renderAuditRows(rows) {
@@ -584,9 +885,7 @@
     companyDetail = data;
     renderCompanyDetail();
     // Switch to companies tab + detail view
-    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === 'companies'));
-    ['review', 'companies', 'invoice', 'requests', 'audit'].forEach((k) =>
-      $('tab-' + k).classList.toggle('hidden', k !== 'companies'));
+    switchTab('companies');
     $('companies-list-view').classList.add('hidden');
     $('company-detail-view').classList.remove('hidden');
   }
@@ -651,6 +950,54 @@
       if (res) openCompany(co.id);
     }));
 
+    // Events & series
+    const cevents = d.events || [];
+    $('cd-events').innerHTML = cevents.length ? cevents.map((ev) => `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 2px; border-bottom:1px solid var(--border-soft); font-size:13px;">
+        <div>
+          <b>${ev.parent_event_id ? '↳ ' : ''}${esc(ev.title)}</b>
+          <span class="muted">· ${esc(ev.relationship_type)}${ev.start_date ? ' · ' + BS.fmtDate(ev.start_date) : ''}</span>
+          <div class="muted" style="font-size:11px;">
+            ${ev.comped ? '<span class="pill info">Comped</span> ' : ''}
+            ${ev.package_product_code ? 'Package: ' + esc(ev.package_product_code) : 'No package set'}
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn" data-ev-package="${ev.id}">Package</button>
+          <button class="btn danger" data-ev-detach="${ev.id}">Detach</button>
+        </div>
+      </div>`).join('')
+      : '<div class="empty">No events attached.</div>';
+
+    document.querySelectorAll('[data-ev-detach]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Detach this event from the company account?')) return;
+      const res = await action('admin_detach_event', {
+        p_admin_token: adminToken, p_company_event_id: b.dataset.evDetach,
+      }, 'Event detached.');
+      if (res) openCompany(co.id);
+    }));
+    document.querySelectorAll('[data-ev-package]').forEach((b) => b.addEventListener('click', async () => {
+      const ev = cevents.find((x) => x.id === b.dataset.evPackage);
+      const pkgs = (catalog.products || []).filter((p) =>
+        ['event_lite', 'event_pro', 'major_event_hub', 'flagship_event', 'carnival_hub',
+         'carnival_band_hub', 'carnival_event_listing', 'carnival_event_pro', 'event_series_hub']
+        .includes(p.item_type));
+      const code = prompt('Package code (blank to clear):\n' + pkgs.map((p) => '  ' + p.code).join('\n'),
+        ev.package_product_code || '');
+      if (code === null) return;
+      const comped = confirm('Is this package COMPED (free event hub, e.g. founding partner)?\nOK = comped, Cancel = paid/assigned.');
+      let note = null;
+      if (comped) {
+        note = prompt('Reason for comped access (required, goes to the audit log):');
+        if (!note) { alert('Comped access requires a reason.'); return; }
+      }
+      const res = await action('admin_set_event_package', {
+        p_admin_token: adminToken, p_company_event_id: ev.id,
+        p_package_code: code.trim() || null, p_comped: comped, p_note: note,
+      }, 'Event package updated.');
+      if (res) openCompany(co.id);
+    }));
+
     // Users
     const users = d.users || [];
     $('cd-users').innerHTML = users.length ? users.map((u) => `
@@ -692,7 +1039,7 @@
       : '<div class="empty">No invoices for this company yet.</div>';
 
     document.querySelectorAll('[data-inv-pdf]').forEach((b) => b.addEventListener('click', () =>
-      BS.openInvoicePdf(invs[Number(b.dataset.invPdf)], co)));
+      BS.openInvoicePdf(invs[Number(b.dataset.invPdf)], co, pdfOpts())));
     document.querySelectorAll('[data-inv-edit]').forEach((b) => b.addEventListener('click', () =>
       loadInvoiceIntoGenerator(invs[Number(b.dataset.invEdit)], co.id)));
     document.querySelectorAll('[data-inv-issue]').forEach((b) => b.addEventListener('click', async () => {
@@ -712,8 +1059,10 @@
     }));
     document.querySelectorAll('[data-inv-void]').forEach((b) => b.addEventListener('click', async () => {
       if (!confirm('Void this invoice? This cannot be undone.')) return;
+      const note = prompt('Reason for voiding (required, goes to the audit log):');
+      if (!note) { alert('A reason is required to void an invoice.'); return; }
       const res = await action('admin_set_invoice_status', {
-        p_admin_token: adminToken, p_invoice_id: b.dataset.invVoid, p_status: 'void', p_note: null,
+        p_admin_token: adminToken, p_invoice_id: b.dataset.invVoid, p_status: 'void', p_note: note,
       }, 'Invoice voided.');
       if (res) { await loadAll(); openCompany(co.id); }
     }));
@@ -737,28 +1086,69 @@
     if (res) { await loadAll(); openCompany(companyDetail.company.id); }
   });
 
+  // Manual subscription overrides: activation (= comped access),
+  // paid-through adjustments, and revokes all require a written
+  // reason — the server refuses without one.
   document.querySelectorAll('[data-subaction]').forEach((b) => b.addEventListener('click', async () => {
     const act = b.dataset.subaction;
     const paidThrough = $('cd-sub-paidthrough').value || null;
     if (act === 'activate' && !confirm('Manually activate this subscription? Normally activation happens by approving a paid invoice.')) return;
     if (act === 'revoke' && !confirm('Revoke subscription AND deactivate all entitlements?')) return;
     if (act === 'adjust_paid_through' && !paidThrough) { alert('Set the paid-through date first.'); return; }
+    let note = null;
+    if (['activate', 'adjust_paid_through', 'revoke'].includes(act)) {
+      note = prompt('Reason (required, goes to the audit log):');
+      if (!note) { alert('A reason is required for this override.'); return; }
+    }
     const res = await action('admin_set_subscription', {
       p_admin_token: adminToken, p_company_id: companyDetail.company.id,
       p_action: act, p_plan_key: $('cd-sub-plan').value || null,
       p_billing_cycle: $('cd-sub-cycle').value || null,
-      p_paid_through: paidThrough, p_note: null,
+      p_paid_through: paidThrough, p_note: note,
     }, 'Subscription updated.');
     if (res) { await loadAll(); openCompany(companyDetail.company.id); }
   }));
 
   $('cd-ent-grant').addEventListener('click', async () => {
+    const note = prompt('Reason for granting this entitlement (required):');
+    if (!note) { alert('A reason is required for entitlement overrides.'); return; }
     const res = await action('admin_set_entitlement', {
       p_admin_token: adminToken, p_company_id: companyDetail.company.id,
       p_key: $('cd-ent-key').value, p_active: true,
-      p_expires_at: $('cd-ent-expires').value || null, p_note: null,
+      p_expires_at: $('cd-ent-expires').value || null, p_note: note,
     }, 'Entitlement granted.');
     if (res) openCompany(companyDetail.company.id);
+  });
+
+  // Event attach search inside company detail
+  let evSearchTimer = null;
+  $('cd-event-search').addEventListener('input', () => {
+    clearTimeout(evSearchTimer);
+    const q = $('cd-event-search').value.trim();
+    if (q.length < 2) { $('cd-event-results').innerHTML = ''; return; }
+    evSearchTimer = setTimeout(async () => {
+      try {
+        const results = await rpc('admin_search_events', { p_admin_token: adminToken, p_query: q });
+        $('cd-event-results').innerHTML = (results || []).map((e) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:13px; border-bottom:1px solid var(--border-soft);">
+            <div><b>${esc(e.title)}</b>
+              <span class="muted">${e.start_date ? BS.fmtDate(e.start_date) : ''}${e.child_count > 0 ? ' · ' + e.child_count + ' child events' : ''}</span></div>
+            <button class="btn" data-ev-attach="${e.id}">Attach</button>
+          </div>`).join('') || '<div class="muted">No matches.</div>';
+        document.querySelectorAll('[data-ev-attach]').forEach((b) => b.addEventListener('click', async () => {
+          const res = await action('admin_attach_event', {
+            p_admin_token: adminToken, p_company_id: companyDetail.company.id,
+            p_event_id: b.dataset.evAttach,
+            p_relationship_type: $('cd-event-rel').value,
+            p_include_children: $('cd-event-children').checked,
+          }, 'Event attached.');
+          if (res) {
+            $('cd-event-search').value = ''; $('cd-event-results').innerHTML = '';
+            openCompany(companyDetail.company.id);
+          }
+        }));
+      } catch (e) { console.error(e); }
+    }, 300);
   });
 
   let locSearchTimer = null;
@@ -795,21 +1185,125 @@
     if (res) { $('cd-user-email').value = ''; openCompany(companyDetail.company.id); }
   });
 
-  /* ── New company ──────────────────────────────────────── */
+  /* ── New company (from hospitality group / event host / sponsor) ── */
+  let ncSourceId = null;
   $('new-company-btn').addEventListener('click', () => $('new-company-form').classList.toggle('hidden'));
   $('nc-cancel').addEventListener('click', () => $('new-company-form').classList.add('hidden'));
+
+  $('nc-source-type').addEventListener('change', () => {
+    const st = $('nc-source-type').value;
+    ncSourceId = null;
+    $('nc-source-picked').textContent = '';
+    $('nc-source-results').innerHTML = '';
+    $('nc-source-search').value = '';
+    const searchable = st === 'place_group' || st === 'event_organizer';
+    $('nc-source-search-wrap').classList.toggle('hidden', !searchable);
+    $('nc-source-label').textContent = st === 'place_group'
+      ? 'Search hospitality partners' : 'Search events (the company will own this event)';
+    // Sensible account-type default per source
+    if (st === 'place_group') $('nc-account-type').value = 'hospitality_group';
+    if (st === 'event_organizer') $('nc-account-type').value = 'event_host';
+    if (st === 'sponsor') $('nc-account-type').value = 'sponsor';
+  });
+
+  let ncSearchTimer = null;
+  $('nc-source-search').addEventListener('input', () => {
+    clearTimeout(ncSearchTimer);
+    const q = $('nc-source-search').value.trim();
+    if (q.length < 2) { $('nc-source-results').innerHTML = ''; return; }
+    ncSearchTimer = setTimeout(async () => {
+      const st = $('nc-source-type').value;
+      const fn = st === 'place_group' ? 'admin_search_partners' : 'admin_search_events';
+      try {
+        const results = await rpc(fn, { p_admin_token: adminToken, p_query: q });
+        $('nc-source-results').innerHTML = (results || []).map((r) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:13px; border-bottom:1px solid var(--border-soft);">
+            <div><b>${esc(r.name || r.title)}</b>
+              <span class="muted">${st === 'place_group'
+                ? (r.place_count + ' places')
+                : (r.child_count > 0 ? r.child_count + ' child events' : (r.start_date ? BS.fmtDate(r.start_date) : ''))}</span></div>
+            <button class="btn" data-nc-pick="${r.id}" data-nc-name="${esc(r.name || r.title)}" data-nc-email="${esc(r.contact_email || '')}">Select</button>
+          </div>`).join('') || '<div class="muted">No matches.</div>';
+        document.querySelectorAll('[data-nc-pick]').forEach((b) => b.addEventListener('click', () => {
+          ncSourceId = b.dataset.ncPick;
+          $('nc-source-picked').textContent = 'Selected: ' + b.dataset.ncName;
+          $('nc-source-results').innerHTML = '';
+          if (!$('nc-name').value) $('nc-name').value = b.dataset.ncName;
+          if (!$('nc-email').value && b.dataset.ncEmail) $('nc-email').value = b.dataset.ncEmail;
+        }));
+      } catch (e) { console.error(e); }
+    }, 300);
+  });
+
   $('nc-save').addEventListener('click', async () => {
     const res = await action('admin_upsert_company', {
       p_admin_token: adminToken, p_company_id: null,
       p_name: $('nc-name').value, p_billing_email: $('nc-email').value,
       p_contact_name: $('nc-contact').value || null, p_contact_phone: $('nc-phone').value || null,
       p_status: 'active', p_notes: null,
+      p_account_type: $('nc-account-type').value,
+      p_source_type: $('nc-source-type').value,
+      p_source_id: ncSourceId,
     }, 'Company created.');
     if (res) {
       ['nc-name', 'nc-email', 'nc-contact', 'nc-phone'].forEach((id) => $(id).value = '');
+      ncSourceId = null;
       $('new-company-form').classList.add('hidden');
       await loadAll();
       openCompany(res.id);
+    }
+  });
+
+  /* ── Settings tab handlers ────────────────────────────── */
+  $('pi-new').addEventListener('click', () => {
+    ['pi-id', 'pi-bank', 'pi-account-name', 'pi-branch', 'pi-account-type',
+     'pi-number', 'pi-swift', 'pi-notes'].forEach((id) => $(id).value = '');
+    $('pi-currency').value = 'USD'; $('pi-order').value = 0; $('pi-active').checked = true;
+    $('pi-form').classList.remove('hidden');
+  });
+  $('pi-cancel').addEventListener('click', () => $('pi-form').classList.add('hidden'));
+  $('pi-save').addEventListener('click', async () => {
+    const res = await action('admin_upsert_payment_instruction', {
+      p_admin_token: adminToken,
+      p_id: $('pi-id').value || null,
+      p_fields: {
+        bank_name: $('pi-bank').value.trim(),
+        account_name: $('pi-account-name').value.trim(),
+        branch_name: $('pi-branch').value.trim() || null,
+        currency: $('pi-currency').value,
+        account_type: $('pi-account-type').value.trim() || null,
+        account_number: $('pi-number').value.trim() || null,
+        routing_or_swift: $('pi-swift').value.trim() || null,
+        payment_notes: $('pi-notes').value.trim() || null,
+        active: $('pi-active').checked,
+        display_order: Number($('pi-order').value) || 0,
+      },
+    }, 'Payment instructions saved.');
+    if (res) { $('pi-form').classList.add('hidden'); await loadAll(); }
+  });
+  $('set-footer-save').addEventListener('click', async () => {
+    const lines = $('set-footer-copy').value.split('\n').map((l) => l.trim()).filter(Boolean);
+    const res = await action('admin_set_billing_setting', {
+      p_admin_token: adminToken, p_key: 'invoice_footer_copy', p_value: lines,
+    }, 'Invoice copy saved.');
+    if (res) await loadAll();
+  });
+  $('set-ops-save').addEventListener('click', async () => {
+    const a = await action('admin_set_billing_setting', {
+      p_admin_token: adminToken, p_key: 'renewal_reminder_days',
+      p_value: Number($('set-renewal-days').value) || 30,
+    }, null);
+    const b = await action('admin_set_billing_setting', {
+      p_admin_token: adminToken, p_key: 'receipt_max_mb',
+      p_value: Number($('set-receipt-mb').value) || 10,
+    }, 'Settings saved.');
+    if (a && b) await loadAll();
+  });
+  $('run-maintenance').addEventListener('click', async () => {
+    const res = await action('admin_run_billing_maintenance', { p_admin_token: adminToken }, null);
+    if (res) {
+      toast(`Maintenance: ${res.invoices_marked_overdue} invoice(s) marked overdue, ${res.subscriptions_read_only} subscription(s) moved to read-only.`);
+      await loadAll();
     }
   });
 
@@ -967,10 +1461,7 @@
     $('ig-instructions').value = inv.payment_instructions || '';
     $('ig-internal').value = inv.internal_notes || '';
     igRenderLines();
-    // Jump to generator tab
-    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === 'invoice'));
-    ['review', 'companies', 'invoice', 'requests', 'audit'].forEach((k) =>
-      $('tab-' + k).classList.toggle('hidden', k !== 'invoice'));
+    switchTab('invoice');
   }
 
   $('ig-save').addEventListener('click', () => igSave(false));
@@ -992,15 +1483,13 @@
       total: sub - p.discount_amount,
       notes: p.notes, payment_instructions: p.payment_instructions,
       line_items: igLines.map((li) => ({ ...li, amount: (Number(li.quantity) || 0) * (Number(li.unit_amount) || 0) })),
-    }, co);
+    }, co, pdfOpts());
   });
 
   $('cd-new-invoice').addEventListener('click', () => {
     igReset();
     $('ig-company').value = companyDetail.company.id;
-    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === 'invoice'));
-    ['review', 'companies', 'invoice', 'requests', 'audit'].forEach((k) =>
-      $('tab-' + k).classList.toggle('hidden', k !== 'invoice'));
+    switchTab('invoice');
   });
 
   /* ── Boot ─────────────────────────────────────────────── */

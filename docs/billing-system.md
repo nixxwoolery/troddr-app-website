@@ -162,3 +162,92 @@ must be categorized and approved).
 5. Admin sees it in **Payment Review**, checks the bank statement, approves.
 6. Invoice → `paid`; subscription → `active` with `paid_through`; plan + add-on
    entitlements activate; everything lands in the audit log.
+
+---
+
+## Business Operations Layer (follow-up)
+
+Added by `supabase/company-billing-ops.sql` (run after the three files above),
+tested by `supabase/tests/company-billing-ops-tests.sql`.
+
+### Real commercial entities
+`company_accounts` now carries `account_type` (hospitality_group / event_host /
+sponsor / mixed) and `source_type`/`source_id` (place_group / event_organizer /
+sponsor / manual). The admin "New company" form creates companies *from* a
+hospitality partner or an event (creating from an event organizer auto-attaches
+that event as `host`). Companies are never abstract billing shells.
+
+### Company events
+`company_events` links companies to events with `relationship_type` (host,
+organizer, sponsor, vendor, production_partner), admin-only attach/detach
+(`admin_attach_event` supports event series via `p_include_children`),
+plus per-event `package_product_code` and `comped`. Comping requires a written
+reason. Company users have no write path to locations or events — enforced by
+RLS and verified by tests.
+
+### Event dashboard billing
+`get_event_billing_by_token` (partner event token) powers the new Billing
+section in `partner-event.html` (via `js/event-billing-widget.js`): host
+company, package (paid/assigned/comped), insights + premium map status,
+sponsor products, push cap vs usage (reminder/promo only count; logistics/
+emergency exempt), open invoice, access state, and a link to `/company/billing`.
+A comped hub always shows insights as **not purchased** unless separately paid.
+
+### Payment instructions
+`payment_instructions` table (bank, account name, branch, currency, type,
+number, SWIFT, notes, active, order) managed from the admin Settings tab.
+Seeded with CIBC Caribbean / TRODDR Limited / Manor Park Branch USD Savings +
+JMD Chequing **without account numbers** — admins enter numbers in the panel
+only. Invoice PDFs show the accounts matching the invoice currency (both if
+none match), and fall back to the payment note when a number is blank.
+
+### Invoice copy + settings
+`billing_settings` holds editable `invoice_footer_copy` (seeded with the four
+default lines), `renewal_reminder_days` (30), `receipt_max_mb` (10), and
+`receipt_allowed_types`. All editable in the admin Settings tab.
+
+### Onboarding
+`company_accounts.onboarding_status`: not_started → pending_company_review →
+billing_info_required → complete. Admin-created companies start at
+`billing_info_required`; the company dashboard gates on it and shows the
+confirm-billing-details form (legal name, trading name, contacts, country,
+address, optional tax ID, preferred currency, business type, role). Users with
+no company submit a `company_setup_requests` row (pending_review) which admins
+approve (creates company + first admin user) or reject from the Setup tab.
+
+### Notifications
+`billing_notifications` rows are written by triggers on invoices, payment
+confirmations, subscriptions, and requests (issued/overdue/reported/approved/
+rejected/clarification/activated/read-only/renewal/request/setup). Email
+sending stays behind this abstraction — the admin Notifications tab is the
+queue (mark sent / dismiss); a future mailer drains `status='pending'`.
+
+### Renewals
+`admin_run_billing_maintenance` marks past-due invoices overdue and moves
+subscriptions lapsed beyond the 7-day grace to read-only. The Review tab lists
+companies inside the reminder window; `admin_generate_renewal_invoice` drafts
+the renewal (continues from paid_through+1 when current, starts today when
+lapsed — never backfills the gap).
+
+### Receipts
+The `payment-receipts` bucket is now **private**. Company members upload/read
+only within their own `<company_id>/...` folder (pdf/jpg/png enforced by
+storage policy AND server-side, size capped by settings; metadata stored on the
+confirmation). Admins open receipts through the `admin-receipt-url` edge
+function (validates the admin token, mints a 10-minute signed URL). Deploy it:
+`supabase functions deploy admin-receipt-url`.
+
+### Requests
+`company_requests` now: types extra_admins / location_insights /
+company_insights / event_coverage / event_insights / sponsor_activation /
+sponsor_report / billing_help; statuses new → in_review → quoted → invoiced →
+completed | rejected (transitions enforced); optional related location/event
+(validated to belong to the company); admin notes. The admin Requests tab walks
+the workflow and jumps into the invoice generator.
+
+### Reason-required overrides
+The server refuses without a note: manual activation (comped access),
+paid-through adjustment, revoke, entitlement grant/revoke, invoice void,
+payment rejection, clarification, and comped event packages. All land in
+`billing_audit_log` together with billing-info changes, payment-instruction
+changes, setting changes, and event/location attach/detach.
