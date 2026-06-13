@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="robots" content="noindex,nofollow" />
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+    --border:#e8e8e8; --bg:#fff; --bg-soft:#f8f9fa;
+    --primary:#0077CC; --red:#c0392b; --red-light:#fdecea;
+    --radius:10px; --radius-lg:16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft); color: var(--black);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    display: flex; flex-direction: column;
+  }
+  .hidden { display: none !important; }
+
+  /* ── Shell header / section nav ───────────────────────── */
+  .shell-header {
+    flex: 0 0 auto;
+    background: var(--black); color: #fff;
+    border-bottom: 1px solid #000;
+  }
+  .shell-bar {
+    max-width: 1320px; margin: 0 auto;
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .shell-bar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
+  .section-nav { display: flex; gap: 4px; margin-left: 8px; }
+  .section-tab {
+    padding: 8px 16px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    color: rgba(255,255,255,0.65);
+    background: transparent; border: none;
+    border-radius: 8px; cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .section-tab:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .section-tab.active { color: #fff; background: rgba(255,255,255,0.16); }
+  .shell-spacer { flex: 1; }
+  .signout-btn {
+    padding: 7px 14px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px; cursor: pointer;
+  }
+  .signout-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+  /* ── Section / iframe area ────────────────────────────── */
+  #main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .frames { flex: 1; min-height: 0; position: relative; }
+  .section { position: absolute; inset: 0; display: none; }
+  .section.active { display: block; }
+  .section iframe { width: 100%; height: 100%; border: none; display: block; background: var(--bg-soft); }
+
+  /* ── Auth gate ────────────────────────────────────────── */
+  #gate { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .gate-card {
+    width: 100%; max-width: 420px;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 34px 30px;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.08); text-align: center;
+  }
+  .gate-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.4px; }
+  .gate-card p { color: var(--grey-mid); font-size: 14px; margin-bottom: 18px; }
+  .gate-card input {
+    width: 100%; padding: 11px 14px;
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;
+  }
+  .gate-card button {
+    width: 100%; padding: 11px 22px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .gate-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+  .gate-error.show { display: block; }
+
+  .spinner {
+    width: 30px; height: 30px;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 720px) {
+    .shell-bar { gap: 8px; padding: 0 12px; }
+    .section-tab { padding: 8px 10px; font-size: 12px; }
+    .shell-bar h1 { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Auth gate ───────────────────────────────────────── -->
+<div id="gate" class="hidden">
+  <div class="gate-card">
+    <h2>Admin sign-in</h2>
+    <p>Enter your admin token to access the console.</p>
+    <input id="gate-input" type="password" placeholder="Admin token…" autocomplete="one-time-code" />
+    <button id="gate-go">Continue</button>
+    <div class="gate-error" id="gate-error">Invalid or revoked token.</div>
+  </div>
+</div>
+
+<!-- ── Loading ─────────────────────────────────────────── -->
+<div id="loading" class="hidden" style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; color:var(--grey-mid);">
+  <div class="spinner"></div>
+  <p>Verifying token…</p>
+</div>
+
+<!-- ── Main shell ──────────────────────────────────────── -->
+<header class="shell-header hidden" id="shell-header">
+  <div class="shell-bar">
+    <h1>TRODDR Admin</h1>
+    <nav class="section-nav">
+      <button class="section-tab active" data-section="review">Review</button>
+      <button class="section-tab" data-section="billing">Billing</button>
+      <button class="section-tab" data-section="bookings">Bookings</button>
+    </nav>
+    <div class="shell-spacer"></div>
+    <button class="signout-btn" id="signout">Sign out</button>
+  </div>
+</header>
+
+<div id="main" class="hidden">
+  <div class="frames">
+    <div class="section active" id="sec-review">
+      <iframe data-src="/admin-review.html" title="Review queue"></iframe>
+    </div>
+    <div class="section" id="sec-billing">
+      <iframe data-src="/admin-billing.html" title="Billing console"></iframe>
+    </div>
+    <div class="section" id="sec-bookings">
+      <iframe data-src="/admin-booking-setup.html" title="Booking setup"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const $ = (id) => document.getElementById(id);
+
+  let adminToken = '';
+
+  /* ── View helpers ─────────────────────────────────────── */
+  function show(view) {
+    $('gate').classList.toggle('hidden', view !== 'gate');
+    $('loading').classList.toggle('hidden', view !== 'loading');
+    $('shell-header').classList.toggle('hidden', view !== 'main');
+    $('main').classList.toggle('hidden', view !== 'main');
+  }
+
+  /* ── Token storage ────────────────────────────────────── */
+  function setToken(t) {
+    adminToken = t;
+    try { sessionStorage.setItem('troddr_admin_token', t); } catch (e) {}
+  }
+  function loadStoredToken() {
+    const urlT = new URLSearchParams(location.search).get('token');
+    if (urlT) { setToken(urlT); return urlT; }
+    try { return sessionStorage.getItem('troddr_admin_token') || ''; } catch (e) { return ''; }
+  }
+
+  /* ── Sections (lazy-loaded iframes) ───────────────────── */
+  const SECTIONS = ['review', 'billing', 'bookings'];
+  function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
+
+  // Strip the child page's own sticky header so the shell bar is the only chrome.
+  function stripChildHeader(iframe) {
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+      const style = doc.createElement('style');
+      style.textContent = 'header.header{display:none!important;}';
+      doc.head.appendChild(style);
+    } catch (e) { /* cross-origin or not ready — child header just stays visible */ }
+  }
+
+  function loadSection(key) {
+    const iframe = frameFor(key);
+    if (iframe.dataset.loaded) return;
+    iframe.dataset.loaded = '1';
+    iframe.addEventListener('load', () => stripChildHeader(iframe));
+    const sep = iframe.dataset.src.includes('?') ? '&' : '?';
+    iframe.src = iframe.dataset.src + sep + 'token=' + encodeURIComponent(adminToken);
+  }
+
+  function showSection(key) {
+    SECTIONS.forEach((k) => {
+      $('sec-' + k).classList.toggle('active', k === key);
+    });
+    document.querySelectorAll('.section-tab').forEach((t) =>
+      t.classList.toggle('active', t.dataset.section === key));
+    loadSection(key);
+  }
+
+  document.querySelectorAll('.section-tab').forEach((t) =>
+    t.addEventListener('click', () => showSection(t.dataset.section)));
+
+  /* ── Sign out ─────────────────────────────────────────── */
+  $('signout').addEventListener('click', () => {
+    try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
+    try { localStorage.removeItem('troddr_admin_token'); } catch (e) {}
+    adminToken = '';
+    // Reset every iframe so a fresh sign-in re-authenticates cleanly.
+    SECTIONS.forEach((k) => {
+      const f = frameFor(k);
+      f.removeAttribute('src');
+      delete f.dataset.loaded;
+    });
+    $('gate-input').value = '';
+    show('gate');
+  });
+
+  /* ── Boot ─────────────────────────────────────────────── */
+  async function boot() {
+    show('loading');
+    const { data, error } = await db.rpc('admin_search_places_for_booking', {
+      p_admin_token: adminToken, p_query: ''
+    });
+    if (error || (data && data.error)) {
+      try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
+      adminToken = '';
+      $('gate-error').classList.add('show');
+      show('gate');
+      return;
+    }
+    show('main');
+    showSection('review');
+  }
+
+  $('gate-go').addEventListener('click', () => {
+    const t = $('gate-input').value.trim();
+    if (!t) return;
+    $('gate-error').classList.remove('show');
+    setToken(t);
+    boot();
+  });
+  $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
+
+  /* ── Bootstrap ────────────────────────────────────────── */
+  const stored = loadStoredToken();
+  if (stored) {
+    adminToken = stored;
+    boot();
+  } else {
+    show('gate');
+  }
+</script>
+
+</body>
+</html>

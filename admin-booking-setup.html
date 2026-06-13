@@ -776,7 +776,7 @@ async function authenticate(token) {
     return false;
   }
   state.adminToken = token;
-  localStorage.setItem('troddr_admin_token', token);
+  try { sessionStorage.setItem('troddr_admin_token', token); } catch (e) {}
   loadPlaceList(data.places || []);
   showOnly('prop-picker-wrap');
   return true;
@@ -1588,11 +1588,14 @@ $('bulk-save-btn').addEventListener('click', saveBulkAvailability);
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async function init() {
   showLoading();
-  const saved = localStorage.getItem('troddr_admin_token');
+  // Accept a token from the URL (?token=…) so this page auto-authenticates when
+  // embedded in the unified admin.html shell; fall back to sessionStorage.
+  const urlToken = new URLSearchParams(location.search).get('token');
+  const saved = urlToken || sessionStorage.getItem('troddr_admin_token');
   if (saved) {
     const ok = await authenticate(saved);
     if (!ok) {
-      localStorage.removeItem('troddr_admin_token');
+      try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
       showOnly('gate');
     }
   } else {

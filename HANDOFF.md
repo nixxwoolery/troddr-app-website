@@ -111,9 +111,23 @@ Auth: token entered in gate → stored in `localStorage.troddr_admin_token` (⚠
 
 ## Remaining Tasks
 
-### 1. `admin.html` — Unified Admin Dashboard (NOT YET CREATED)
+> **Update 2026-06-13:** Tasks 1–3 below are now done. `admin.html` was built as an **iframe shell** (chosen approach: "iframe now, merge later"), not a full code merge — see the note under task 1. Tasks 2 and 3 (billing credentials bug, booking-setup storage) are fixed. The full single-document merge with `rv-/bl-/bk-` namespacing remains an optional follow-up.
 
-The user requested consolidation of all three admin pages into one dashboard at `troddr.com/admin`. This file **does not exist yet** and is the primary pending deliverable.
+### 1. `admin.html` — Unified Admin Dashboard (DONE — iframe shell)
+
+The user requested consolidation of all three admin pages into one dashboard at `troddr.com/admin`. **Built 2026-06-13 as a thin iframe shell** rather than the full namespaced merge originally planned below.
+
+How the shell works:
+- Single auth gate; token verified via `admin_search_places_for_booking(token, '')`, stored in `sessionStorage`.
+- Top section nav (`.section-tab`): **Review | Billing | Bookings**, each a `<section id="sec-…">` hosting an `<iframe>`.
+- Iframes are **lazy-loaded** on first activation; the token is passed both via `?token=` on the iframe src and via shared same-origin `sessionStorage`, so each child page auto-authenticates.
+- Each child page's own `header.header` is hidden via injected CSS (same-origin) so the shell bar is the only chrome.
+- Sign out clears `sessionStorage` + `localStorage`, blanks the iframes, and returns to the gate.
+- Route added in `vercel.json`: `/admin` → `/admin.html`.
+
+The full single-document merge (namespaced `rv-/bl-/bk-` IDs, scoped `reviewSwitchTab/billingSwitchTab/bookingSwitchTab`, single `db`/token) described below was **deferred** as an optional follow-up. The original plan is retained here for reference.
+
+The user requested consolidation of all three admin pages into one dashboard at `troddr.com/admin`.
 
 **Requirements:**
 - Single auth gate; one token works for all sections
@@ -159,7 +173,9 @@ The user requested consolidation of all three admin pages into one dashboard at 
 
 ---
 
-### 2. Fix `admin-billing.html` standalone login bug (if keeping the file)
+### 2. Fix `admin-billing.html` standalone login bug — DONE (2026-06-13)
+
+The `window.__ENV__` fallbacks were replaced with the hardcoded Supabase URL + anon key (the fix shown below). The page now authenticates standalone and inside the shell iframe.
 
 Root cause in `admin-billing.html` lines ~8-9:
 ```javascript
@@ -176,13 +192,14 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 ---
 
-### 3. Fix `sessionStorage` vs `localStorage` mismatch
+### 3. Fix `sessionStorage` vs `localStorage` mismatch — DONE (2026-06-13)
 
 - `admin-review.html` — uses `sessionStorage.troddr_admin_token` ✓
 - `admin-billing.html` — uses `sessionStorage.troddr_admin_token` ✓
-- `admin-booking-setup.html` — uses `localStorage.troddr_admin_token` ✗ (should be `sessionStorage`)
+- `admin-booking-setup.html` — **now uses `sessionStorage`** ✓ (was `localStorage`). Its `init()` also now reads `?token=` from the URL so it auto-authenticates inside the shell iframe.
+- `admin.html` (shell) — uses `sessionStorage` throughout; sign-out also clears any legacy `localStorage` token.
 
-The unified `admin.html` should use `sessionStorage` consistently throughout.
+All admin pages now use `sessionStorage.troddr_admin_token` consistently.
 
 ---
 
