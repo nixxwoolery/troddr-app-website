@@ -225,10 +225,126 @@
     w.document.close();
   }
 
+  /* ---- Loyalty plan: specials allowance + plan-rules cards ----
+   * `specials` is the company_specials_usage() payload, `plan` is
+   * the plan block. Returns HTML for the loyalty billing section.
+   * Both /company/billing and /partner/billing render this. */
+  function loyaltyAllowanceHtml(plan, specials) {
+    const limit = (specials && specials.included_per_location) || (plan && plan.specials_per_location) || 0;
+    const locs = (specials && specials.locations) || [];
+    const billableTotal = (specials && specials.billable_total) || 0;
+
+    const locRows = locs.length ? locs.map((l) => {
+      const used = l.used || 0;
+      const within = Math.min(used, limit);
+      const over = Math.max(used - limit, 0);
+      const pct = limit ? Math.min(100, Math.round((within / limit) * 100)) : 0;
+      return `
+        <div class="sp-loc">
+          <div class="sp-loc-head">
+            <span class="sp-loc-name">${esc(l.name)}</span>
+            <span class="sp-loc-count">${esc(within)} of ${esc(limit)} included${over ? ` · ${esc(over)} extra` : ''}</span>
+          </div>
+          <div class="sp-bar"><span style="width:${pct}%"></span></div>
+        </div>`;
+    }).join('') : '<div class="sp-empty">No locations attached yet.</div>';
+
+    return `
+      <div class="sp-allowance">
+        <div class="sp-allowance-head">
+          <div>
+            <div class="sp-allowance-num">${esc(limit)}<span>included specials / location</span></div>
+            <div class="sp-allowance-sub">Resets each billing cycle${specials && specials.cycle_end ? ' · cycle ends ' + fmtDate(specials.cycle_end) : ''}</div>
+          </div>
+          ${billableTotal
+            ? `<span class="pill warn">${esc(billableTotal)} billable extra${billableTotal === 1 ? '' : 's'} this cycle</span>`
+            : '<span class="pill good">Within allowance</span>'}
+        </div>
+        <div class="sp-locs">${locRows}</div>
+      </div>`;
+  }
+
+  function planRulesCardsHtml(plan) {
+    const limit = (plan && plan.specials_per_location) || 2;
+    return `
+      <div class="pr-grid">
+        <div class="pr-card">
+          <div class="pr-name">Included</div>
+          <div class="pr-headline">Allowance</div>
+          <div class="pr-price">${limit}<span>/location</span></div>
+          <ul class="pr-feat">
+            <li>${limit} included standard specials per location</li>
+            <li>Allowance resets each billing cycle</li>
+            <li>Rejected specials never become billable</li>
+            <li>Loyalty program + basic analytics</li>
+          </ul>
+        </div>
+        <div class="pr-card featured">
+          <div class="pr-name featured">Extra Standard</div>
+          <div class="pr-headline">After included specials</div>
+          <div class="pr-price">Quoted<span>/special</span></div>
+          <ul class="pr-feat">
+            <li>Tracked automatically after the included specials</li>
+            <li>Billed to your company account after approval</li>
+            <li>Usage separated by location</li>
+            <li>Appears on your invoices</li>
+          </ul>
+        </div>
+        <div class="pr-card">
+          <div class="pr-name">Featured</div>
+          <div class="pr-headline">Hero placement</div>
+          <div class="pr-price">Quoted<span>/campaign</span></div>
+          <ul class="pr-feat">
+            <li>Hero placement on the home screen</li>
+            <li>Featured in the weekly newsletter</li>
+            <li>Cross-promotion with curated guides</li>
+            <li>Full attribution analytics</li>
+          </ul>
+        </div>
+      </div>`;
+  }
+
+  // Shared CSS for the loyalty section (injected once).
+  function ensureLoyaltyStyles() {
+    if (document.getElementById('billing-loyalty-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'billing-loyalty-styles';
+    s.textContent = `
+      .sp-allowance{background:#fff;border:1px solid var(--border,#e8e8e8);border-radius:16px;padding:20px 22px;margin-bottom:14px}
+      .sp-allowance-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+      .sp-allowance-num{font-size:28px;font-weight:800;letter-spacing:-0.8px;line-height:1;color:var(--blue,#0077CC)}
+      .sp-allowance-num span{display:block;font-size:12px;font-weight:600;color:var(--grey-mid,#666);letter-spacing:0;margin-top:4px}
+      .sp-allowance-sub{font-size:12px;color:var(--grey-mid,#666);margin-top:6px}
+      .sp-locs{display:grid;gap:12px}
+      .sp-loc-head{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:5px}
+      .sp-loc-name{font-weight:600}
+      .sp-loc-count{color:var(--grey-mid,#666);font-size:12px}
+      .sp-bar{height:7px;background:var(--bg-soft,#f0f0f0);border-radius:100px;overflow:hidden}
+      .sp-bar span{display:block;height:100%;background:var(--blue,#0077CC);border-radius:100px}
+      .sp-empty{font-size:13px;color:var(--grey-mid,#666);padding:8px 0}
+      .pr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+      .pr-card{background:#fff;border:1px solid var(--border,#e8e8e8);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+      .pr-card.featured{border-color:var(--blue,#0077CC);box-shadow:0 0 0 1px var(--blue,#0077CC)}
+      .pr-name{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--grey-mid,#666)}
+      .pr-name.featured{color:var(--blue,#0077CC)}
+      .pr-headline{font-size:15px;font-weight:700;letter-spacing:-0.2px}
+      .pr-price{font-size:22px;font-weight:800;color:var(--blue,#0077CC);letter-spacing:-0.6px;margin-top:2px}
+      .pr-price span{font-size:12px;color:var(--grey-mid,#666);font-weight:500;margin-left:4px}
+      .pr-feat{display:grid;gap:3px;margin-top:4px;font-size:12px;color:var(--grey-dark,#333);line-height:1.45}
+      .pr-feat li{list-style:none;padding-left:16px;position:relative}
+      .pr-feat li::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--blue,#0077CC);border-radius:50%}
+      @media(max-width:880px){.pr-grid{grid-template-columns:1fr}}
+    `;
+    document.head.appendChild(s);
+  }
+
   window.BillingShared = {
     money,
     fmtDate,
     esc,
+    loyaltyAllowanceHtml,
+    planRulesCardsHtml,
+    ensureLoyaltyStyles,
     invoiceStatus: (s) => statusMeta(INVOICE_STATUS, s),
     subscriptionStatus: (s) => statusMeta(SUBSCRIPTION_STATUS, s),
     confirmationStatus: (s) => statusMeta(CONFIRMATION_STATUS, s),

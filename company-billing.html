@@ -71,12 +71,42 @@
   .auth-help { margin-top: 14px; font-size: 12px; color: var(--grey-mid); }
   .auth-help a { color: var(--blue); }
 
-  /* ---------- Dashboard ---------- */
-  .page { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
-  .page-head { margin-bottom: 22px; }
-  .page-head .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--grey-mid); }
-  .page-head h1 { font-size: clamp(24px, 4vw, 32px); letter-spacing: -0.6px; }
-  .page-head .sub { color: var(--grey-mid); font-size: 13px; }
+  /* ---------- Dashboard (partner-dashboard look) ---------- */
+  .page-hero { background: var(--blue); color: #fff; padding: 32px 24px 56px; text-align: center; position: relative; overflow: hidden; }
+  .hero-inner { max-width: 720px; margin: 0 auto; }
+  .hero-eyebrow {
+    display: inline-block; background: rgba(255,255,255,0.12); color: #fff;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 4px; margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .page-hero h1 { font-size: clamp(28px,4.5vw,40px); font-weight: 700; line-height: 1.15; margin-bottom: 10px; letter-spacing: -0.6px; }
+  .hero-sub { color: rgba(255,255,255,0.92); font-size: 14px; }
+
+  .layout {
+    max-width: 1320px; margin: -32px auto 0; padding: 0 16px 80px;
+    display: grid; grid-template-columns: 240px 1fr; gap: 24px;
+    position: relative; z-index: 10;
+  }
+  .side-nav {
+    position: sticky; top: 76px; align-self: start; height: max-content;
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 10px; box-shadow: var(--shadow-sm);
+  }
+  .side-nav .nav-title { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--grey-light); padding: 10px 12px 8px; }
+  .side-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; color: var(--grey-mid); text-decoration: none;
+    border-radius: 8px; font-size: 12px; font-weight: 600;
+    transition: background 0.15s, color 0.15s;
+  }
+  .side-nav a:hover { background: var(--bg-soft); color: var(--black); }
+  .side-nav a.active { color: var(--blue); font-weight: 700; }
+  .main-col { min-width: 0; }
+  .section { scroll-margin-top: 80px; }
+  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .section-sub { font-size: 12px; color: var(--grey-mid); font-weight: 500; }
+  #summary .section-title { color: #fff; }
 
   .banner { border-radius: var(--radius); padding: 14px 18px; font-size: 13px; margin-bottom: 20px; display: none; }
   .banner.visible { display: block; }
@@ -162,6 +192,12 @@
     .two-col { grid-template-columns: 1fr; }
     .invoice-row { grid-template-columns: 1fr auto; }
     .invoice-row .inv-col-hide { display: none; }
+    .layout { grid-template-columns: 1fr; gap: 16px; }
+    .side-nav { position: sticky; top: 60px; z-index: 50; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-radius: var(--radius); padding: 6px; }
+    .side-nav::-webkit-scrollbar { display: none; }
+    .side-nav .nav-title { display: none; }
+    .side-nav a { white-space: nowrap; }
+    .page-hero { padding: 28px 20px 48px; }
   }
 </style>
 </head>
@@ -273,27 +309,53 @@
 </div>
 
 <!-- ============ DASHBOARD ============ -->
-<main class="page hidden" id="view-dashboard">
+<main class="hidden" id="view-dashboard">
 
-  <div class="page-head">
-    <div class="eyebrow">Billing</div>
-    <h1 id="company-name">—</h1>
-    <div class="sub" id="company-sub"></div>
-  </div>
+  <section class="page-hero">
+    <div class="hero-inner">
+      <span class="hero-eyebrow">Billing</span>
+      <h1 id="company-name">—</h1>
+      <p class="hero-sub" id="company-sub"></p>
+    </div>
+  </section>
 
-  <div class="banner readonly" id="readonly-banner">
-    <strong>Your account is in read-only mode</strong>
-    <span id="readonly-msg">Paid features are paused. You can still view your data and invoices. Pay your latest invoice and confirm payment below to restore full access — access resumes once TRODDR verifies your payment.</span>
-  </div>
+  <div class="layout">
 
-  <div class="grid-4">
-    <div class="stat"><div class="lbl">Current Plan</div><div class="val" id="stat-plan">—</div><div class="sub" id="stat-plan-sub"></div></div>
-    <div class="stat"><div class="lbl">Billing Cycle</div><div class="val" id="stat-cycle">—</div><div class="sub" id="stat-cycle-sub"></div></div>
-    <div class="stat"><div class="lbl">Subscription</div><div class="val" id="stat-status">—</div><div class="sub" id="stat-status-sub"></div></div>
-    <div class="stat"><div class="lbl">Paid Through</div><div class="val" id="stat-paidthrough">—</div><div class="sub" id="stat-paidthrough-sub"></div></div>
-  </div>
+    <aside class="side-nav" id="side-nav">
+      <div class="nav-title">On this page</div>
+      <a href="#summary" class="active">Summary</a>
+      <a href="#specials" id="nav-specials" style="display:none;">Specials</a>
+      <a href="#account">Locations &amp; events</a>
+      <a href="#addons">Add-ons</a>
+      <a href="#invoices">Invoices</a>
+      <a href="#requests">Requests</a>
+    </aside>
 
-  <div class="two-col section">
+    <div class="main-col">
+
+    <section class="section" id="summary">
+      <div class="section-head"><h2 class="section-title">Billing Summary</h2></div>
+      <div class="banner readonly" id="readonly-banner">
+        <strong>Your account is in read-only mode</strong>
+        <span id="readonly-msg">Paid features are paused. You can still view your data and invoices. Pay your latest invoice and confirm payment below to restore full access — access resumes once TRODDR verifies your payment.</span>
+      </div>
+      <div class="grid-4">
+        <div class="stat"><div class="lbl">Current Plan</div><div class="val" id="stat-plan">—</div><div class="sub" id="stat-plan-sub"></div></div>
+        <div class="stat"><div class="lbl">Billing Cycle</div><div class="val" id="stat-cycle">—</div><div class="sub" id="stat-cycle-sub"></div></div>
+        <div class="stat"><div class="lbl">Subscription</div><div class="val" id="stat-status">—</div><div class="sub" id="stat-status-sub"></div></div>
+        <div class="stat"><div class="lbl">Paid Through</div><div class="val" id="stat-paidthrough">—</div><div class="sub" id="stat-paidthrough-sub"></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="specials" style="display:none; margin-top:26px;">
+      <div class="section-title">Specials Allowance</div>
+      <div id="specials-allowance"></div>
+      <div class="section-title" style="margin-top:20px;">Plan Rules</div>
+      <div class="section-sub" style="margin-bottom:12px;" id="specials-rules-sub">Your loyalty plan includes standard specials per location each billing cycle. Extras roll up to your company billing account.</div>
+      <div id="specials-rules"></div>
+    </section>
+
+  <div class="two-col section" id="account">
     <div class="card">
       <div class="section-title">Locations <span class="pill neutral" id="loc-count"></span></div>
       <div id="locations-list"></div>
@@ -319,7 +381,7 @@
     </div>
   </div>
 
-  <div class="section">
+  <div class="section" id="addons">
     <div class="section-title">Active Add-Ons &amp; Entitlements</div>
     <div class="card">
       <div class="ent-grid" id="entitlements-grid"></div>
@@ -327,7 +389,7 @@
     </div>
   </div>
 
-  <div class="section">
+  <div class="section" id="invoices">
     <div class="section-title">Invoices</div>
     <div class="card">
       <div id="invoices-list"></div>
@@ -335,7 +397,7 @@
     </div>
   </div>
 
-  <div class="section">
+  <div class="section" id="requests">
     <div class="section-title">Requests</div>
     <div class="card">
       <p style="font-size: 13px; color: var(--grey-mid); margin-bottom: 12px;">
@@ -354,6 +416,9 @@
       <div id="requests-list" style="margin-top: 14px;"></div>
     </div>
   </div>
+
+    </div><!-- /main-col -->
+  </div><!-- /layout -->
 
 </main>
 
@@ -496,8 +561,9 @@
     $('nav-user').textContent = d.me.email;
     show('nav-user'); show('signout-btn');
 
-    $('company-name').textContent = d.company.name;
-    $('company-sub').textContent = 'Billing email: ' + (d.company.billing_email || '—');
+    $('company-name').textContent = d.company.name + ' · Billing';
+    $('company-sub').textContent = 'Plan, invoices, and payment confirmations for your company account. Billing email: '
+      + (d.company.billing_email || '—');
 
     // Read-only banner
     const ro = access.access !== 'full';
@@ -509,10 +575,11 @@
       ? `${plan.included_locations} location${plan.included_locations > 1 ? 's' : ''} · ${plan.included_admins} admin${plan.included_admins > 1 ? 's' : ''}` : '';
     $('stat-cycle').textContent = sub && sub.billing_cycle
       ? sub.billing_cycle.charAt(0).toUpperCase() + sub.billing_cycle.slice(1) : '—';
-    $('stat-cycle-sub').textContent = plan && sub
-      ? (sub.billing_cycle === 'monthly'
-          ? BS.money(plan.monthly_price, plan.currency) + '/month'
-          : BS.money(plan.annual_price, plan.currency) + '/year') : '';
+    const cyclePrice = plan && sub
+      ? (sub.billing_cycle === 'monthly' ? plan.monthly_price : plan.annual_price) : null;
+    $('stat-cycle-sub').textContent = !plan || !sub ? ''
+      : (cyclePrice ? BS.money(cyclePrice, plan.currency) + (sub.billing_cycle === 'monthly' ? '/month' : '/year')
+                    : 'No recurring fee · specials-based');
     const sm = BS.subscriptionStatus(sub ? sub.status : null);
     $('stat-status').innerHTML = sub ? pill(sm) : '<span class="pill neutral">No subscription</span>';
     $('stat-status-sub').textContent = access.access === 'full' ? 'Full access' : (sub ? 'Read-only access' : '');
@@ -550,6 +617,16 @@
             <span class="pill ${u.status === 'active' ? 'good' : 'neutral'}">${u.status === 'active' ? 'Active' : 'Invited'}</span>
           </div>`).join('')
       : '<div class="empty">No users registered yet.</div>';
+
+    // Loyalty specials allowance + plan rules
+    const isLoyalty = plan && plan.plan_family === 'loyalty';
+    $('specials').style.display = isLoyalty ? '' : 'none';
+    $('nav-specials').style.display = isLoyalty ? '' : 'none';
+    if (isLoyalty) {
+      BS.ensureLoyaltyStyles();
+      $('specials-allowance').innerHTML = BS.loyaltyAllowanceHtml(plan, d.specials);
+      $('specials-rules').innerHTML = BS.planRulesCardsHtml(plan);
+    }
 
     // Events & series
     const events = d.events || [];
@@ -917,6 +994,25 @@
   $('su-signout').addEventListener('click', (e) => { e.preventDefault(); signOut(); });
   $('su-submit').addEventListener('click', submitSetupRequest);
   $('ob-submit').addEventListener('click', submitOnboarding);
+
+  // Side-nav scrollspy (matches the partner dashboard behavior)
+  const navLinks = Array.from(document.querySelectorAll('#side-nav a'));
+  navLinks.forEach((a) => a.addEventListener('click', (e) => {
+    const target = document.getElementById(a.getAttribute('href').slice(1));
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+  window.addEventListener('scroll', () => {
+    if ($('view-dashboard').classList.contains('hidden')) return;
+    let current = navLinks[0];
+    navLinks.forEach((a) => {
+      if (a.style.display === 'none') return;
+      const sec = document.getElementById(a.getAttribute('href').slice(1));
+      if (sec && sec.offsetParent !== null && sec.getBoundingClientRect().top <= 120) current = a;
+    });
+    navLinks.forEach((a) => a.classList.toggle('active', a === current));
+  }, { passive: true });
   $('pay-cancel').addEventListener('click', () => $('pay-modal').classList.remove('visible'));
   $('pay-submit').addEventListener('click', submitPayment);
   $('req-cancel').addEventListener('click', () => $('req-modal').classList.remove('visible'));

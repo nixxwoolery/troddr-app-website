@@ -251,3 +251,40 @@ paid-through adjustment, revoke, entitlement grant/revoke, invoice void,
 payment rejection, clarification, and comped event packages. All land in
 `billing_audit_log` together with billing-info changes, payment-instruction
 changes, setting changes, and event/location attach/detach.
+
+---
+
+## Loyalty plan model (follow-up)
+
+Added by `supabase/company-billing-loyalty.sql` (run after the ops layer and
+`billing-specials.sql`), tested by
+`supabase/tests/company-billing-loyalty-tests.sql`.
+
+Loyalty/Foundation partners are billed differently from the founding-partner
+subscription tiers: their plan centres on an **included specials allowance**
+(2 standard specials per location per billing cycle), with extras rolling up as
+billable. This is modelled as a first-class plan in the company-account system:
+
+- `subscription_plans` gains `plan_family` (standard / loyalty / event / sponsor)
+  and `specials_per_location`. The four Founding Partner / Loyalty tiers and a new
+  single-location **Foundation Loyalty** plan (`foundation_loyalty`, J$, no
+  recurring fee) are `plan_family = 'loyalty'` with a 2/location allowance.
+- `company_specials_usage(company_id)` computes, for the current cycle and each
+  approved location: the included allowance, specials used (pending/approved,
+  non-void), and billable extras — reading the existing `public.specials`
+  billing columns from `billing-specials.sql`.
+- `get_company_billing()` and `get_partner_billing_by_token()` add the plan's
+  `plan_family`/`specials_per_location` and a `specials` block (only for
+  loyalty-family plans).
+
+### Billing pages for loyalty partners
+
+Both `/company/billing` (authenticated) and `/partner/billing` (read-only,
+token) render a **Specials Allowance** section — per-location usage bars
+(used vs included, with extras flagged) and a billable-extras pill — plus
+**Plan Rules** cards (Included allowance / Extra Standard / Featured), driven by
+`BillingShared.loyaltyAllowanceHtml()` and `planRulesCardsHtml()`. The section
+only appears when the company is on a loyalty-family plan. `/partner/billing`
+was rebuilt from the old static placeholder into a real read-only view (plan,
+status, paid-through, locations, events, entitlements, invoices with PDF) that
+hands off to `/company/billing` for any action.

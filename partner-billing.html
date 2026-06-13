@@ -12,6 +12,7 @@
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
 <script src="/js/partner-sidebar.js"></script>
+<script src="/js/billing-shared.js"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -104,94 +105,59 @@
   .section-sub { font-size: 12px; color: var(--grey-mid); font-weight: 500; text-align: left; }
   #summary .section-title { color: #fff; }
   #summary .pill { color: #fff; border-color: rgba(255,255,255,0.45); background: rgba(255,255,255,0.14); }
-  .pill { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; background: var(--bg-soft); color: var(--grey-mid); border: 1px solid var(--border); }
-  .pill.soon { background: var(--bg-soft); }
-  .pill.warn { background: var(--amber-light); color: var(--amber); border-color: transparent; }
+  .pill { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; background: var(--bg-soft); color: var(--grey-mid); border: 1px solid var(--border); display: inline-block; }
+  .pill.good    { background: var(--green-light); color: var(--green); border-color: transparent; }
+  .pill.warn    { background: var(--amber-light); color: var(--amber); border-color: transparent; }
+  .pill.bad     { background: var(--red-light); color: var(--red); border-color: transparent; }
+  .pill.info    { background: var(--blue-light); color: var(--blue); border-color: transparent; }
+  .pill.neutral { background: var(--bg-soft); color: var(--grey-mid); }
 
-  .billing-summary {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-  .b-stat {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 18px 18px 16px;
-  }
+  .billing-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .b-stat { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 18px 16px; }
   .b-stat .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-mid); margin-bottom: 6px; }
-  .b-stat .val { font-size: 26px; font-weight: 800; color: var(--black); letter-spacing: -0.8px; line-height: 1; }
+  .b-stat .val { font-size: 22px; font-weight: 800; color: var(--black); letter-spacing: -0.6px; line-height: 1.15; }
   .b-stat .sub { font-size: 12px; color: var(--grey-mid); margin-top: 6px; }
 
-  .billing-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 22px 24px;
-  }
+  .billing-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; }
   .billing-card .lead { font-size: 15px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
   .billing-card .desc { font-size: 13px; color: var(--grey-mid); line-height: 1.55; margin-bottom: 14px; }
 
-  .tier-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 4px;
-  }
-  .tier-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    display: flex; flex-direction: column; gap: 6px;
-  }
-  .tier-card.featured {
-    border-color: var(--brand-primary);
-    box-shadow: 0 0 0 1px var(--brand-primary);
-  }
-  .tier-name { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey-mid); }
-  .tier-name.featured { color: var(--brand-primary); }
-  .tier-headline { font-size: 16px; font-weight: 700; color: var(--black); letter-spacing: -0.2px; }
-  .tier-price {
-    font-size: 22px; font-weight: 800;
-    color: var(--brand-primary); letter-spacing: -0.6px;
-    margin-top: 4px;
-  }
-  .tier-price .unit { font-size: 12px; color: var(--grey-mid); font-weight: 500; margin-left: 4px; }
-  .tier-features { display: grid; gap: 3px; margin-top: 4px; font-size: 12px; color: var(--grey-dark); line-height: 1.45; }
-  .tier-features li { list-style: none; padding-left: 16px; position: relative; }
-  .tier-features li::before { content: ''; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; background: var(--brand-primary); border-radius: 50%; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .list-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .main-txt { font-weight: 600; }
+  .list-row .sub-txt { font-size: 12px; color: var(--grey-mid); }
+
+  .ent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .ent { border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 13px; font-size: 12px; background: #fff; }
+  .ent .k { font-weight: 700; font-size: 13px; }
+  .ent .meta { color: var(--grey-mid); margin-top: 2px; }
 
   .invoice-row {
-    display: grid;
-    grid-template-columns: 110px 1fr auto auto;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 4px;
-    border-bottom: 1px solid var(--border-soft);
-    font-size: 13px;
+    display: grid; grid-template-columns: 1fr auto auto auto; align-items: center;
+    gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--border-soft); font-size: 13px;
   }
   .invoice-row:last-child { border-bottom: none; }
-  .invoice-date { color: var(--grey-mid); font-weight: 600; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .invoice-title { font-weight: 700; color: var(--black); }
+  .invoice-num { font-weight: 700; color: var(--black); }
+  .invoice-sub { font-size: 11px; color: var(--grey-mid); }
   .invoice-amount { font-weight: 800; color: var(--black); font-variant-numeric: tabular-nums; }
-  .invoice-status {
-    font-size: 9px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 3px 8px; border-radius: 4px;
+  .btn-sm {
+    border: 1px solid var(--border); background: #fff; color: var(--grey-dark);
+    border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer;
   }
-  .invoice-status.paid    { background: var(--green-light); color: var(--green); }
-  .invoice-status.due     { background: var(--amber-light); color: var(--amber); }
-  .invoice-status.overdue { background: var(--red-light); color: var(--red); }
+  .btn-sm:hover { background: var(--bg-soft); }
+
+  .readonly-banner {
+    display: none; background: var(--amber-light); color: var(--amber);
+    border: 1px solid #f3ddb3; border-radius: var(--radius); padding: 14px 18px;
+    font-size: 13px; margin-bottom: 20px;
+  }
+  .readonly-banner.visible { display: block; }
+  .readonly-banner strong { display: block; font-size: 14px; }
 
   .empty-state {
-    padding: 28px 18px;
-    background: var(--bg-soft);
-    border-radius: var(--radius);
-    text-align: center;
-    color: var(--grey-mid);
-    font-size: 13px;
-    line-height: 1.55;
+    padding: 28px 18px; background: var(--bg-soft); border-radius: var(--radius);
+    text-align: center; color: var(--grey-mid); font-size: 13px; line-height: 1.55;
   }
   .empty-state strong { color: var(--grey-dark); display: block; margin-bottom: 4px; font-size: 14px; }
 
@@ -203,6 +169,7 @@
     text-decoration: none; border: none; cursor: pointer;
   }
   .cta-button:hover { filter: brightness(1.08); }
+  .cta-button.ghost { background: #fff; color: var(--grey-dark); border: 1px solid var(--border); }
 
   .state { text-align: center; padding: 40px 24px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); }
   .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
@@ -216,7 +183,7 @@
 
   @media (max-width: 1100px) {
     .billing-summary { grid-template-columns: repeat(2, 1fr); }
-    .tier-grid { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; }
   }
   @media (max-width: 880px) {
     .layout { grid-template-columns: 1fr; gap: 16px; padding: 0 16px; }
@@ -226,6 +193,8 @@
     .sidebar a { padding: 8px 12px; white-space: nowrap; font-size: 12px; }
     .sidebar a svg { display: none; }
     .page-hero { padding: 28px 20px 48px; }
+    .invoice-row { grid-template-columns: 1fr auto; }
+    .invoice-row .inv-hide { display: none; }
   }
 </style>
 </head>
@@ -236,10 +205,10 @@
     <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h8M8 9h2"/></symbol>
     <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
     <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
-    <symbol id="ic-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 6 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.4 7.8 14 3 9.6 9.4 9z"/></symbol>
     <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12l-8 8a2 2 0 0 1-3 0L2 13V2h11l7 7a2 2 0 0 1 0 3z"/><circle cx="7" cy="7" r="1.2"/></symbol>
     <symbol id="ic-dollar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H7"/></symbol>
-    <symbol id="ic-bolt-nav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
+    <symbol id="ic-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></symbol>
+    <symbol id="ic-shop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9M3 9h18M3 9v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M9 21v-6h6v6"/></symbol>
   </defs>
 </svg>
 
@@ -261,13 +230,7 @@
 <div class="layout" id="view-loading">
   <div></div>
   <div class="main">
-    <div class="skeleton-grid">
-      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
-      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
-      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
-      <div class="skeleton-stat"><span class="skeleton skeleton-text short"></span><span class="skeleton skeleton-stat-num"></span><span class="skeleton skeleton-text short"></span></div>
-    </div>
-    <div class="skeleton-card" style="margin-top: 14px;"><span class="skeleton skeleton-text med" style="height: 18px;"></span><div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px;"><span class="skeleton" style="height: 140px;"></span><span class="skeleton" style="height: 140px;"></span><span class="skeleton" style="height: 140px;"></span></div></div>
+    <div class="state"><div class="spinner"></div><p class="state-msg">Loading your billing…</p></div>
   </div>
 </div>
 
@@ -290,102 +253,98 @@
     <section class="section" id="summary">
       <div class="section-head">
         <h2 class="section-title">Billing Summary</h2>
-        <span class="pill soon">Coming soon</span>
+        <span class="pill" id="readonly-pill" style="display:none;">View only</span>
+      </div>
+      <div class="readonly-banner" id="readonly-banner">
+        <strong>This account is in read-only mode</strong>
+        Paid features are paused until the latest invoice is paid and verified by TRODDR.
       </div>
       <div class="billing-summary">
-        <div class="b-stat">
-          <div class="lbl">Current Plan</div>
-          <div class="val">Foundation</div>
-          <div class="sub">2 included specials per location</div>
+        <div class="b-stat"><div class="lbl">Current Plan</div><div class="val" id="stat-plan">—</div><div class="sub" id="stat-plan-sub"></div></div>
+        <div class="b-stat"><div class="lbl">Subscription</div><div class="val" id="stat-status">—</div><div class="sub" id="stat-status-sub"></div></div>
+        <div class="b-stat"><div class="lbl">Paid Through</div><div class="val" id="stat-paidthrough">—</div><div class="sub" id="stat-paidthrough-sub"></div></div>
+        <div class="b-stat"><div class="lbl">Billing Cycle</div><div class="val" id="stat-cycle">—</div><div class="sub" id="stat-cycle-sub"></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="specials" style="display:none;">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Specials Allowance</h2>
+          <div class="section-sub">Standard specials included per location each billing cycle. Extras roll up to your company billing account.</div>
         </div>
-        <div class="b-stat">
-          <div class="lbl">Outstanding</div>
-          <div class="val">J$0</div>
-          <div class="sub">no balance due</div>
+      </div>
+      <div id="specials-allowance"></div>
+      <div class="section-head" style="margin-top:18px;">
+        <div><h2 class="section-title">Plan Rules</h2></div>
+      </div>
+      <div id="specials-rules"></div>
+    </section>
+
+    <section class="section" id="account">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Locations &amp; Events</h2>
+          <div class="section-sub">Approved and attached to your company account by TRODDR.</div>
         </div>
-        <div class="b-stat">
-          <div class="lbl">Included Specials</div>
-          <div class="val">0</div>
-          <div class="sub">tracked per restaurant/location</div>
+      </div>
+      <div class="two-col">
+        <div class="billing-card">
+          <div class="lead">Approved locations <span class="pill neutral" id="loc-count"></span></div>
+          <div id="locations-list"></div>
         </div>
-        <div class="b-stat">
-          <div class="lbl">Next Charge</div>
-          <div class="val">N/A</div>
-          <div class="sub">no recurring charges</div>
+        <div class="billing-card">
+          <div class="lead">Approved events <span class="pill neutral" id="event-count"></span></div>
+          <div id="events-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="addons">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Active Add-Ons &amp; Entitlements</h2>
+          <div class="section-sub">What's live on your account right now.</div>
+        </div>
+      </div>
+      <div class="billing-card">
+        <div class="ent-grid" id="entitlements-grid"></div>
+        <div class="empty-state hidden" id="entitlements-empty">
+          <strong>Nothing active yet</strong>
+          Entitlements activate once TRODDR verifies payment on your first invoice.
         </div>
       </div>
     </section>
 
     <section class="section" id="invoices">
       <div class="section-head">
-        <h2 class="section-title">Invoices</h2>
-        <span class="pill soon">Coming soon</span>
-      </div>
-      <div class="billing-card">
-        <div class="empty-state">
-          <strong>No invoices yet</strong>
-          Extra specials, boosted placements, featured campaigns, and any other billable services will appear here by restaurant/location once billing is live.
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="payment">
-      <div class="section-head">
-        <h2 class="section-title">Payment Method</h2>
-        <span class="pill soon">Coming soon</span>
-      </div>
-      <div class="billing-card">
-        <div class="lead">No payment method on file</div>
-        <div class="desc">
-          Foundation partners get two included specials per restaurant/location.
-          Any additional approved special is tracked automatically and billed to the partner account once payment collection is active.
-        </div>
-        <button type="button" class="cta-button" id="contact-billing-cta">
-          Have questions? Message us
-        </button>
-      </div>
-    </section>
-
-    <section class="section" id="tiers">
-      <div class="section-head">
         <div>
-          <h2 class="section-title">Plan Rules</h2>
-          <div class="section-sub">Foundation includes two standard specials per restaurant/location each billing cycle. Extras roll up to the partner billing account.</div>
+          <h2 class="section-title">Invoices</h2>
+          <div class="section-sub">View and download here. Confirm payments from your company billing sign-in.</div>
         </div>
       </div>
-      <div class="tier-grid">
-        <div class="tier-card">
-          <div class="tier-name">Foundation</div>
-          <div class="tier-headline">Included allowance</div>
-          <div class="tier-price">2<span class="unit">/location</span></div>
-          <ul class="tier-features">
-            <li>Two included standard specials per restaurant/location</li>
-            <li>Allowance resets each billing cycle</li>
-            <li>Rejected specials do not become billable</li>
-            <li>Basic analytics in this dashboard</li>
-          </ul>
+      <div class="billing-card">
+        <div id="invoices-list"></div>
+        <div class="empty-state hidden" id="invoices-empty">
+          <strong>No invoices yet</strong>
+          Your Founding Partner plan, insights, and event products will be invoiced here by TRODDR.
         </div>
-        <div class="tier-card featured">
-          <div class="tier-name featured">Extra Standard</div>
-          <div class="tier-headline">After included specials</div>
-          <div class="tier-price">TBD<span class="unit">/special</span></div>
-          <ul class="tier-features">
-            <li>Automatically tracked after the two included specials</li>
-            <li>Charged to the partner billing account after approval</li>
-            <li>Usage separated by restaurant/location</li>
-            <li>Visible in monthly billing history</li>
-          </ul>
+      </div>
+    </section>
+
+    <section class="section" id="manage">
+      <div class="section-head">
+        <h2 class="section-title">Manage Billing</h2>
+      </div>
+      <div class="billing-card">
+        <div class="lead" id="manage-lead">Confirm payments &amp; manage your account</div>
+        <div class="desc" id="manage-desc">
+          This page is view-only. To confirm a payment, download receipts, request more admin users,
+          Insights, or Event coverage, sign in to your company billing account with your registered email.
         </div>
-        <div class="tier-card">
-          <div class="tier-name">Featured</div>
-          <div class="tier-headline">Hero placement</div>
-          <div class="tier-price">TBD<span class="unit">/campaign</span></div>
-          <ul class="tier-features">
-            <li>Hero placement on the home screen</li>
-            <li>Featured in weekly newsletter</li>
-            <li>Cross-promotion with curated guides</li>
-            <li>Full attribution analytics</li>
-          </ul>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="cta-button" id="manage-cta" href="/company/billing">Sign in to Company Billing →</a>
+          <button type="button" class="cta-button ghost" id="contact-billing-cta">Have questions? Message us</button>
         </div>
       </div>
     </section>
@@ -401,6 +360,7 @@
 <script>
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const BS = window.BillingShared;
   const $ = (id) => document.getElementById(id);
   const show = (id) => $(id).classList.remove('hidden');
   const hide = (id) => $(id).classList.add('hidden');
@@ -448,20 +408,149 @@
     });
   }
 
+  let lastCaps = null, lastPartner = null;
   function setupSidebar(capabilities, opts) {
     opts = opts || {};
+    if (capabilities) lastCaps = capabilities;
+    if (opts.partner) lastPartner = opts.partner;
     window.PartnerSidebar?.mount({
       active: '/partner/billing',
       capabilities: capabilities,
       partner: opts && opts.partner,
       jumpLinks: [
         { section: 'summary',  icon: 'ic-chart',  label: 'Summary' },
+        { section: 'specials', icon: 'ic-tag',    label: 'Specials', id: 'nav-specials', hidden: !(opts && opts.isLoyalty) },
+        { section: 'account',  icon: 'ic-shop',   label: 'Locations & events' },
+        { section: 'addons',   icon: 'ic-tag',    label: 'Add-ons' },
         { section: 'invoices', icon: 'ic-doc',    label: 'Invoices' },
-        { section: 'payment',  icon: 'ic-dollar', label: 'Payment method' },
-        { section: 'tiers',    icon: 'ic-tag',    label: 'Plan rules' },
+        { section: 'manage',   icon: 'ic-dollar', label: 'Manage billing' },
       ],
     });
     window.PartnerSidebar?.setupScrollspy();
+  }
+
+  function pill(meta) {
+    return `<span class="pill ${meta.cls}">${BS.esc(meta.label)}</span>`;
+  }
+
+  /* ---------------- Billing render (read-only) ---------------- */
+  function renderBilling(b) {
+    const access = b.access || {};
+    const sub = b.subscription;
+    const plan = b.plan;
+
+    $('readonly-pill').style.display = '';
+    $('readonly-banner').classList.toggle('visible', !!sub && access.access !== 'full');
+
+    $('stat-plan').textContent = plan
+      ? plan.name.replace('Founding Partner — ', '')
+      : (sub && sub.plan_key) || 'None yet';
+    $('stat-plan-sub').textContent = plan
+      ? `${plan.included_locations} location${plan.included_locations > 1 ? 's' : ''} · ${plan.included_admins} admin${plan.included_admins > 1 ? 's' : ''}` : '';
+    $('stat-status').innerHTML = sub
+      ? pill(BS.subscriptionStatus(sub.status))
+      : '<span class="pill neutral">No subscription</span>';
+    $('stat-status-sub').textContent = access.access === 'full' ? 'Full access'
+      : (sub ? 'Read-only access' : '');
+    $('stat-paidthrough').textContent = sub && sub.paid_through ? BS.fmtDate(sub.paid_through) : '—';
+    $('stat-paidthrough-sub').textContent = sub && sub.current_period_start
+      ? 'Period started ' + BS.fmtDate(sub.current_period_start) : '';
+    $('stat-cycle').textContent = sub && sub.billing_cycle
+      ? sub.billing_cycle.charAt(0).toUpperCase() + sub.billing_cycle.slice(1) : '—';
+    const cyclePrice = plan && sub
+      ? (sub.billing_cycle === 'monthly' ? plan.monthly_price : plan.annual_price) : null;
+    $('stat-cycle-sub').textContent = !plan || !sub ? ''
+      : (cyclePrice ? BS.money(cyclePrice, plan.currency) + (sub.billing_cycle === 'monthly' ? '/month' : '/year')
+                    : 'No recurring fee · specials-based');
+
+    // Loyalty specials allowance + plan rules
+    const isLoyalty = plan && plan.plan_family === 'loyalty';
+    $('specials').style.display = isLoyalty ? '' : 'none';
+    if (isLoyalty) {
+      BS.ensureLoyaltyStyles();
+      $('specials-allowance').innerHTML = BS.loyaltyAllowanceHtml(plan, b.specials);
+      $('specials-rules').innerHTML = BS.planRulesCardsHtml(plan);
+      // Re-mount the sidebar now that we know this is a loyalty plan,
+      // so the Specials jump-link appears.
+      setupSidebar(lastCaps, { partner: lastPartner, isLoyalty: true });
+    }
+
+    // Locations & events
+    const locs = b.locations || [];
+    $('loc-count').textContent = plan ? `${locs.length} of ${plan.included_locations} included` : `${locs.length}`;
+    $('locations-list').innerHTML = locs.length
+      ? locs.map((l) => `
+          <div class="list-row">
+            <div>
+              <div class="main-txt">${BS.esc(l.name)}</div>
+              <div class="sub-txt">${BS.esc([l.town, l.parish].filter(Boolean).join(', '))}</div>
+            </div>
+            <span class="pill good">Approved</span>
+          </div>`).join('')
+      : '<div class="empty-state">No approved locations yet.</div>';
+
+    const events = b.events || [];
+    $('event-count').textContent = `${events.length}`;
+    $('events-list').innerHTML = events.length
+      ? events.map((e) => `
+          <div class="list-row" ${e.parent_event_id ? 'style="padding-left:18px;"' : ''}>
+            <div>
+              <div class="main-txt">${e.parent_event_id ? '↳ ' : ''}${BS.esc(e.title)}</div>
+              <div class="sub-txt">${BS.esc(e.relationship_type)}${e.start_date ? ' · ' + BS.fmtDate(e.start_date) : ''}${e.package ? ' · ' + BS.esc(e.package) : ''}</div>
+            </div>
+            <span class="pill ${e.comped ? 'info' : 'good'}">${e.comped ? 'Comped' : 'Approved'}</span>
+          </div>`).join('')
+      : '<div class="empty-state">No approved events yet.</div>';
+
+    // Entitlements
+    const ents = b.entitlements || [];
+    $('entitlements-grid').innerHTML = ents.map((e) => `
+      <div class="ent">
+        <div class="k">${BS.esc(e.name)}</div>
+        <div class="meta">${BS.esc(e.source)}${e.expires_at ? ' · until ' + BS.fmtDate(e.expires_at) : ''}</div>
+      </div>`).join('');
+    $('entitlements-empty').classList.toggle('hidden', ents.length > 0);
+
+    // Invoices (view/download only)
+    const invoices = b.invoices || [];
+    $('invoices-empty').classList.toggle('hidden', invoices.length > 0);
+    $('invoices-list').innerHTML = invoices.map((inv, idx) => {
+      const im = BS.invoiceStatus(inv.status);
+      const conf = inv.payment_confirmation;
+      const cm = conf ? BS.confirmationStatus(conf.status) : null;
+      return `
+        <div class="invoice-row">
+          <div>
+            <div class="invoice-num">${BS.esc(inv.invoice_number || 'Invoice')}</div>
+            <div class="invoice-sub">Issued ${BS.fmtDate(inv.issue_date)} · Due ${BS.fmtDate(inv.due_date)}</div>
+          </div>
+          <div class="inv-hide">${pill(im)}${cm ? ' ' + pill(cm) : ''}</div>
+          <div class="invoice-amount">${BS.money(inv.total, inv.currency)}</div>
+          <div><button type="button" class="btn-sm" data-pdf="${idx}">Invoice PDF</button></div>
+        </div>`;
+    }).join('');
+    document.querySelectorAll('[data-pdf]').forEach((btn) => btn.addEventListener('click', () => {
+      BS.openInvoicePdf(invoices[Number(btn.dataset.pdf)], b.company, {
+        instructions: b.payment_instructions,
+        footerCopy: b.invoice_footer_copy,
+      });
+    }));
+  }
+
+  function renderNoCompany() {
+    $('readonly-banner').classList.remove('visible');
+    $('stat-plan').textContent = 'Not set up';
+    $('stat-status').innerHTML = '<span class="pill neutral">No billing account</span>';
+    $('locations-list').innerHTML = '<div class="empty-state">No company billing account yet.</div>';
+    $('events-list').innerHTML = '<div class="empty-state">No company billing account yet.</div>';
+    $('entitlements-empty').classList.remove('hidden');
+    $('invoices-empty').classList.remove('hidden');
+    $('manage-lead').textContent = 'Get set up for billing';
+    $('manage-desc').textContent =
+      'This listing isn\'t attached to a TRODDR company billing account yet. ' +
+      'Email billing@troddr.com or message us below and we\'ll set up your Founding Partner account.';
+    $('manage-cta').textContent = 'Email billing@troddr.com';
+    $('manage-cta').href = 'mailto:billing@troddr.com';
   }
 
   async function load() {
@@ -492,8 +581,6 @@
       return;
     }
 
-    // Reveal the dashboard view + sidebar FIRST so the user always sees nav,
-    // even if a later renderer fails.
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
@@ -507,7 +594,7 @@
     safe('renderHero', () => {
       const entityName = (data.place && data.place.name) || (data.event && data.event.title) || 'Your account';
       $('hero-title').textContent = `${entityName} · Billing`;
-      $('hero-sub').textContent = 'Plans, invoices, and payment method for this partner account.';
+      $('hero-sub').textContent = 'Your plan, invoices, and account — view only. Sign in to company billing to make changes.';
     });
     safe('wireContactCta', () => {
       document.getElementById('contact-billing-cta').addEventListener('click', () => {
@@ -521,6 +608,17 @@
         }, 80);
       });
     });
+
+    // Real billing data (read-only, via the partner token bridge)
+    try {
+      const { data: billing, error: bErr } = await db.rpc('get_partner_billing_by_token', { p_token: token });
+      if (bErr) throw bErr;
+      if (billing && billing.ok) renderBilling(billing);
+      else renderNoCompany();
+    } catch (e) {
+      console.error('[partner-billing] billing load failed:', e);
+      renderNoCompany();
+    }
   }
 
   load();
