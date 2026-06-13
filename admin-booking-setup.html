@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR Admin · Booking Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<meta name="robots" content="noindex,nofollow" />
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#fff; --bg-soft:#f8f9fa;
+    --primary:#0077CC; --primary-text:#fff;
+    --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea;
+    --amber:#b86e00; --amber-light:#fff4e0;
+    --blue-light:#e8f4ff;
+    --purple:#6b21a8; --purple-light:#f3e8ff;
+    --radius:10px; --radius-lg:16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft); color: var(--black);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--black); color: #fff;
+    border-bottom: 1px solid #000;
+  }
+  .navbar {
+    max-width: 1400px; margin: 0 auto;
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .navbar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .navbar .tag {
+    background: rgba(255,255,255,0.12); color: #fff;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+  }
+  .navbar-spacer { flex: 1; }
+  .navbar-place {
+    font-size: 13px; color: rgba(255,255,255,0.7);
+    max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .layout { max-width: 1400px; margin: 0 auto; padding: 24px 24px 80px; }
+
+  /* Gate */
+  .gate {
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 60px 30px;
+    max-width: 480px; margin: 60px auto;
+  }
+  .gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .gate p { color: var(--grey-mid); font-size: 14px; margin-bottom: 18px; }
+  .gate input {
+    width: 100%; padding: 10px 14px;
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 8px; outline: none;
+  }
+  .gate input:focus { border-color: var(--primary); }
+  .gate button {
+    padding: 10px 22px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+  .gate-error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+  .gate-error.show { display: block; }
+
+  /* Spinner */
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Property picker */
+  .prop-picker {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px;
+    max-width: 680px; margin: 0 auto;
+  }
+  .prop-picker h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .prop-picker p { color: var(--grey-mid); font-size: 13px; margin-bottom: 18px; }
+  .search-row {
+    display: flex; gap: 10px; margin-bottom: 16px;
+  }
+  .search-row input {
+    flex: 1; padding: 10px 14px;
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px; outline: none;
+  }
+  .search-row input:focus { border-color: var(--primary); }
+  .search-row button {
+    padding: 10px 18px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+  }
+  .place-list { display: flex; flex-direction: column; gap: 6px; max-height: 400px; overflow-y: auto; }
+  .place-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; background: var(--bg-soft);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .place-row:hover { border-color: var(--primary); background: var(--blue-light); }
+  .place-row-info { flex: 1; min-width: 0; }
+  .place-row-name { font-size: 14px; font-weight: 700; color: var(--black); }
+  .place-row-sub { font-size: 11px; color: var(--grey-mid); margin-top: 2px; }
+  .place-row-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 4px;
+    flex-shrink: 0; margin-left: 10px;
+  }
+  .place-row-badge.active { background: var(--green-light); color: var(--green); }
+  .place-row-badge.inactive { background: var(--bg-soft); color: var(--grey-mid); }
+
+  /* Main dashboard layout */
+  .dash-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 20px;
+  }
+  .dash-header h2 {
+    font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dash-header .sub {
+    font-size: 12px; color: var(--grey-mid); font-weight: 400;
+  }
+  .btn-ghost {
+    padding: 8px 14px; border: 1px solid var(--border);
+    border-radius: 8px; background: #fff; color: var(--grey-dark);
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .btn-ghost:hover { border-color: var(--grey-light); }
+  .btn-primary {
+    padding: 9px 18px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: filter 0.15s;
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:disabled { opacity: 0.55; pointer-events: none; }
+  .btn-danger {
+    padding: 7px 12px;
+    background: #fff; border: 1px solid var(--red); color: var(--red);
+    border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-danger:hover { background: var(--red-light); }
+  .btn-sm {
+    padding: 5px 10px; font-size: 11px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 2px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .tab {
+    padding: 10px 18px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    color: var(--grey-mid);
+    background: transparent; border: none; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: var(--black); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 700; color: var(--black);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .card-title .count {
+    font-size: 11px; font-weight: 700; color: var(--grey-mid);
+    background: var(--bg-soft); padding: 2px 8px; border-radius: 20px;
+  }
+
+  /* Form grid */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+  .form-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.col1 { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.span2 { grid-column: span 2; }
+  .form-group.span3 { grid-column: span 3; }
+  label {
+    font-size: 11px; font-weight: 700; color: var(--grey-mid);
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  input[type=text], input[type=email], input[type=number], input[type=time],
+  select, textarea {
+    font-family: inherit; font-size: 13px; color: var(--black);
+    padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 8px; outline: none; background: #fff;
+    transition: border-color 0.15s;
+  }
+  input[type=text]:focus, input[type=email]:focus, input[type=number]:focus,
+  input[type=time]:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+  }
+  textarea { resize: vertical; min-height: 72px; }
+  .toggle-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0;
+  }
+  .toggle-label { font-size: 13px; font-weight: 600; color: var(--black); }
+  .toggle-sub { font-size: 11px; color: var(--grey-mid); }
+  input[type=checkbox] {
+    width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary);
+  }
+  .form-actions {
+    display: flex; align-items: center; gap: 10px;
+    padding-top: 16px; margin-top: 4px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .save-status {
+    font-size: 12px; color: var(--grey-mid);
+    transition: color 0.3s;
+  }
+  .save-status.ok { color: var(--green); }
+  .save-status.err { color: var(--red); }
+
+  /* Section dividers inside cards */
+  .section-divider {
+    border: none; border-top: 1px solid var(--border-soft);
+    margin: 18px 0;
+  }
+  .section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--grey-mid); margin-bottom: 12px;
+  }
+
+  /* Room type and rate plan cards */
+  .item-list { display: flex; flex-direction: column; gap: 10px; }
+  .item-card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .item-card-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  .item-card-head:hover { background: var(--blue-light); }
+  .item-card-head-title {
+    flex: 1; font-size: 14px; font-weight: 700; color: var(--black);
+  }
+  .item-card-head-sub { font-size: 11px; color: var(--grey-mid); margin-top: 1px; }
+  .item-card-head-badges { display: flex; gap: 6px; align-items: center; }
+  .badge-pill {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 4px;
+  }
+  .badge-active   { background: var(--green-light); color: var(--green); }
+  .badge-inactive { background: var(--red-light); color: var(--red); }
+  .badge-refund   { background: var(--blue-light); color: var(--primary); }
+  .badge-nonref   { background: var(--amber-light); color: var(--amber); }
+  .chevron {
+    width: 16px; height: 16px; color: var(--grey-light);
+    transition: transform 0.2s;
+  }
+  .item-card.open .chevron { transform: rotate(180deg); }
+  .item-card-body {
+    display: none; padding: 18px;
+    border-top: 1px solid var(--border-soft);
+    background: #fff;
+  }
+  .item-card.open .item-card-body { display: block; }
+
+  .add-item-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    background: transparent; border: 2px dashed var(--border);
+    border-radius: var(--radius); color: var(--grey-mid);
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; width: 100%;
+    transition: border-color 0.15s, color 0.15s;
+    text-align: left;
+  }
+  .add-item-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .add-item-btn .plus { font-size: 18px; line-height: 1; }
+
+  /* Availability calendar */
+  .avail-controls {
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap; margin-bottom: 18px;
+  }
+  .avail-controls select { min-width: 200px; }
+  .avail-controls .mode-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--grey-mid); text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .avail-week {
+    margin-bottom: 20px;
+  }
+  .avail-week-label {
+    font-size: 11px; font-weight: 700; color: var(--grey-mid);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .avail-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .avail-cell {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 5px; text-align: center;
+    cursor: pointer; transition: border-color 0.15s, background 0.1s;
+    background: #fff; min-height: 72px;
+    position: relative;
+  }
+  .avail-cell:hover { border-color: var(--primary); }
+  .avail-cell.selected { border-color: var(--primary); background: var(--blue-light); }
+  .avail-cell.blackout { background: var(--red-light); border-color: #f0b0a0; }
+  .avail-cell.closed   { background: var(--bg-soft); }
+  .avail-cell.past     { opacity: 0.45; cursor: default; pointer-events: none; }
+  .avail-cell-date { font-size: 10px; font-weight: 700; color: var(--grey-mid); }
+  .avail-cell-day  { font-size: 11px; font-weight: 700; color: var(--black); }
+  .avail-cell-rooms{ font-size: 13px; font-weight: 800; color: var(--primary); margin-top: 4px; }
+  .avail-cell-rate { font-size: 10px; color: var(--grey-mid); }
+  .avail-cell-flag {
+    position: absolute; top: 4px; right: 4px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; padding: 1px 4px; border-radius: 3px;
+  }
+  .avail-cell-flag.blackout { background: var(--red); color: #fff; }
+  .avail-cell-flag.closed { background: var(--grey-light); color: #fff; }
+
+  .bulk-editor {
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px;
+    margin-top: 16px;
+  }
+  .bulk-editor h4 {
+    font-size: 12px; font-weight: 700; color: var(--black);
+    margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .bulk-editor h4 span { font-weight: 400; color: var(--grey-mid); }
+  .bulk-editor .form-grid { gap: 10px 14px; }
+  .bulk-editor label { color: var(--grey-dark); }
+  .selected-count {
+    font-size: 12px; font-weight: 600; color: var(--primary);
+  }
+
+  /* Utility */
+  .hidden { display: none !important; }
+  .empty {
+    text-align: center; padding: 32px 24px;
+    color: var(--grey-mid); font-size: 13px;
+  }
+  .alert {
+    padding: 10px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .alert-info { background: var(--blue-light); color: var(--primary); }
+  .alert-warn { background: var(--amber-light); color: var(--amber); }
+  .alert-ok   { background: var(--green-light); color: var(--green); }
+  .alert-err  { background: var(--red-light);   color: var(--red); }
+
+  .mode-pill {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 6px;
+  }
+  .mode-request  { background: var(--amber-light); color: var(--amber); }
+  .mode-manual   { background: var(--blue-light); color: var(--primary); }
+  .mode-instant  { background: var(--green-light); color: var(--green); }
+
+  @media (max-width: 900px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid.col3 { grid-template-columns: 1fr; }
+    .form-group.span2, .form-group.span3 { grid-column: span 1; }
+    .avail-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .avail-grid { grid-template-columns: repeat(2, 1fr); }
+    .avail-controls { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <h1>TRODDR Admin</h1>
+    <span class="tag">Booking Setup</span>
+    <div class="navbar-spacer"></div>
+    <div class="navbar-place hidden" id="navbar-place-name"></div>
+  </div>
+</header>
+
+<!-- Auth gate -->
+<div id="gate" class="gate hidden">
+  <h2>Admin sign-in</h2>
+  <p>Enter your admin token to access booking configuration.</p>
+  <input id="gate-input" type="password" placeholder="Admin token…" />
+  <div><button id="gate-go">Continue</button></div>
+  <div class="gate-error" id="gate-error">Invalid or revoked token.</div>
+</div>
+
+<!-- Loading -->
+<div id="loading" class="gate hidden">
+  <div class="spinner"></div>
+  <p>Loading…</p>
+</div>
+
+<!-- Property picker -->
+<div id="prop-picker-wrap" class="layout hidden">
+  <div class="prop-picker">
+    <h2>Select a property</h2>
+    <p>Search for the hotel or place you want to configure for bookings.</p>
+    <div class="search-row">
+      <input id="place-search" type="text" placeholder="Search by name or town…" />
+      <button id="place-search-btn">Search</button>
+    </div>
+    <div class="place-list" id="place-list"></div>
+  </div>
+</div>
+
+<!-- Main dashboard -->
+<div id="dashboard" class="layout hidden">
+
+  <div class="dash-header">
+    <div>
+      <h2 id="dash-place-name">Property</h2>
+      <div class="sub" id="dash-place-sub"></div>
+    </div>
+    <button class="btn-ghost" id="change-place-btn">Change property</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="setup">Setup</button>
+    <button class="tab" data-tab="rooms">Room Types</button>
+    <button class="tab" data-tab="rates">Rate Plans</button>
+    <button class="tab" data-tab="availability">Availability</button>
+    <button class="tab" data-tab="policies">Policies</button>
+  </div>
+
+  <!-- SETUP TAB -->
+  <div class="tab-panel active" id="tab-setup">
+    <div class="card">
+      <div class="card-title">Booking Configuration</div>
+      <div id="setup-alert"></div>
+
+      <div class="section-label">Mode &amp; Access</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Booking Mode</label>
+          <select id="cfg-booking-mode">
+            <option value="request_only">Request Only — manual review per booking</option>
+            <option value="manual_availability">Manual Availability — calendar-based, still confirm manually</option>
+            <option value="instant_manual_inventory">Instant + Inventory — auto-hold on checkout, you confirm</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Accept Stay Bookings</label>
+          <div class="toggle-row">
+            <input type="checkbox" id="cfg-accepts-stay" />
+            <div>
+              <div class="toggle-label">Enable stay bookings for this property</div>
+              <div class="toggle-sub">Turns on booking request flow for guests</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Bookings Email</label>
+          <input type="email" id="cfg-bookings-email" placeholder="reservations@property.com" />
+        </div>
+        <div class="form-group">
+          <label>Contact Name</label>
+          <input type="text" id="cfg-contact-name" placeholder="Reservations Manager" />
+        </div>
+      </div>
+
+      <hr class="section-divider" />
+      <div class="section-label">Check-in / Check-out</div>
+      <div class="form-grid col3">
+        <div class="form-group">
+          <label>Check-in Time</label>
+          <input type="time" id="cfg-checkin-time" />
+        </div>
+        <div class="form-group">
+          <label>Check-out Time</label>
+          <input type="time" id="cfg-checkout-time" />
+        </div>
+        <div class="form-group">
+          <label>Min Nights</label>
+          <input type="number" id="cfg-min-nights" min="1" max="365" placeholder="1" />
+        </div>
+        <div class="form-group">
+          <label>Max Guests (property-wide)</label>
+          <input type="number" id="cfg-max-guests" min="1" placeholder="e.g. 20" />
+        </div>
+        <div class="form-group">
+          <label>Hold Expiry (minutes)</label>
+          <input type="number" id="cfg-hold-expiry" min="1" max="1440" placeholder="30" />
+        </div>
+      </div>
+
+      <hr class="section-divider" />
+      <div class="section-label">Deposit &amp; Payment</div>
+      <div class="form-grid col3">
+        <div class="form-group">
+          <label>Require Deposit</label>
+          <div class="toggle-row">
+            <input type="checkbox" id="cfg-deposit-req" />
+            <div class="toggle-label">Deposit required to confirm booking</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Default Deposit Amount</label>
+          <input type="number" id="cfg-deposit-amount" min="0" step="0.01" placeholder="e.g. 500" />
+        </div>
+        <div class="form-group">
+          <label>Deposit Currency</label>
+          <select id="cfg-deposit-currency">
+            <option value="USD">USD</option>
+            <option value="JMD">JMD</option>
+            <option value="BBD">BBD</option>
+            <option value="TTD">TTD</option>
+            <option value="XCD">XCD</option>
+            <option value="GBP">GBP</option>
+            <option value="EUR">EUR</option>
+            <option value="CAD">CAD</option>
+          </select>
+        </div>
+        <div class="form-group span3">
+          <label>Deposit Instructions (shown to guest)</label>
+          <textarea id="cfg-deposit-instructions" rows="3" placeholder="Wire transfer details, bank account info, or payment instructions for the guest…"></textarea>
+        </div>
+      </div>
+
+      <hr class="section-divider" />
+      <div class="section-label">Policy &amp; Fees</div>
+      <div class="form-grid col1">
+        <div class="form-group">
+          <label>Cancellation Policy Text (shown to guest)</label>
+          <textarea id="cfg-cancel-policy" rows="3" placeholder="Cancellations within 7 days of arrival are non-refundable…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Taxes &amp; Fees Notes</label>
+          <textarea id="cfg-taxes-fees" rows="2" placeholder="10% GCT applicable. Resort fee: $30/night payable at property…"></textarea>
+        </div>
+      </div>
+
+      <hr class="section-divider" />
+      <div class="section-label">Internal (Troddr Ops)</div>
+      <div class="form-grid col1">
+        <div class="form-group">
+          <label>Commission Terms</label>
+          <textarea id="cfg-commission" rows="2" placeholder="15% commission on confirmed stays, invoiced monthly…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Internal Booking Notes</label>
+          <textarea id="cfg-internal-notes" rows="2" placeholder="Troddr ops notes — not visible to partner or guest…"></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" id="save-setup-btn">Save Configuration</button>
+        <span class="save-status" id="setup-save-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOMS TAB -->
+  <div class="tab-panel" id="tab-rooms">
+    <div class="card">
+      <div class="card-title">
+        Room Types
+        <span class="count" id="rooms-count">0</span>
+      </div>
+      <div id="rooms-alert"></div>
+      <div class="item-list" id="room-list"></div>
+      <div style="margin-top:10px">
+        <button class="add-item-btn" id="add-room-btn">
+          <span class="plus">+</span> Add room type
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATES TAB -->
+  <div class="tab-panel" id="tab-rates">
+    <div class="card">
+      <div class="card-title">
+        Rate Plans
+        <span class="count" id="rates-count">0</span>
+      </div>
+      <div id="rates-alert"></div>
+      <div class="item-list" id="rate-list"></div>
+      <div style="margin-top:10px">
+        <button class="add-item-btn" id="add-rate-btn">
+          <span class="plus">+</span> Add rate plan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AVAILABILITY TAB -->
+  <div class="tab-panel" id="tab-availability">
+    <div class="card">
+      <div class="card-title">Availability Calendar (60 days)</div>
+      <div id="avail-alert"></div>
+      <div class="avail-controls">
+        <div>
+          <div class="mode-label">Room Type</div>
+          <select id="avail-room-select" style="min-width:220px"></select>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+          <span class="selected-count hidden" id="avail-selected-label">0 dates selected</span>
+          <button class="btn-ghost btn-sm" id="avail-clear-btn">Clear selection</button>
+          <button class="btn-ghost btn-sm" id="avail-select-all-btn">Select all</button>
+        </div>
+      </div>
+      <div id="avail-calendar"></div>
+
+      <div class="bulk-editor hidden" id="bulk-editor">
+        <h4>
+          Update selected dates
+          <span id="bulk-date-range"></span>
+        </h4>
+        <div class="form-grid col3">
+          <div class="form-group">
+            <label>Available Rooms</label>
+            <input type="number" id="bulk-rooms" min="0" placeholder="Leave blank to keep" />
+          </div>
+          <div class="form-group">
+            <label>Nightly Rate (USD)</label>
+            <input type="number" id="bulk-rate" min="0" step="0.01" placeholder="Leave blank to keep" />
+          </div>
+          <div class="form-group">
+            <label>Currency</label>
+            <select id="bulk-currency">
+              <option value="USD">USD</option>
+              <option value="JMD">JMD</option>
+              <option value="BBD">BBD</option>
+              <option value="TTD">TTD</option>
+              <option value="XCD">XCD</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Min Nights Override</label>
+            <input type="number" id="bulk-min-nights" min="1" placeholder="Leave blank to keep" />
+          </div>
+          <div class="form-group">
+            <label>Mark as Blackout</label>
+            <div class="toggle-row">
+              <input type="checkbox" id="bulk-blackout" />
+              <div class="toggle-label">Block these dates</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Close (stop bookings)</label>
+            <div class="toggle-row">
+              <input type="checkbox" id="bulk-closed" />
+              <div class="toggle-label">Close these dates</div>
+            </div>
+          </div>
+          <div class="form-group span3">
+            <label>Notes</label>
+            <input type="text" id="bulk-notes" placeholder="Optional note for these dates" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" id="bulk-save-btn">Apply to selected dates</button>
+          <span class="save-status" id="avail-save-status"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POLICIES TAB -->
+  <div class="tab-panel" id="tab-policies">
+    <div class="card">
+      <div class="card-title">
+        Cancellation Policies
+        <span class="count" id="policies-count">0</span>
+      </div>
+      <div id="policies-alert"></div>
+      <div class="item-list" id="policy-list"></div>
+      <div style="margin-top:10px">
+        <button class="add-item-btn" id="add-policy-btn">
+          <span class="plus">+</span> Add cancellation policy
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /dashboard -->
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+const $ = (id) => document.getElementById(id);
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fmtMoney(v, cur) {
+  if (v == null) return '—';
+  return (cur || 'USD') + ' ' + Number(v).toFixed(2);
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const state = {
+  adminToken: null,
+  placeId: null,
+  config: null,  // from admin_get_place_booking_config
+  selectedDates: new Set(),
+  availRoomTypeId: null,
+};
+
+// ── Visibility helpers ────────────────────────────────────────────────────────
+function showOnly(id) {
+  ['gate','loading','prop-picker-wrap','dashboard'].forEach(i => {
+    $(i).classList.toggle('hidden', i !== id);
+  });
+}
+function showLoading() { showOnly('loading'); }
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function authenticate(token) {
+  showLoading();
+  const { data, error } = await db.rpc('admin_search_places_for_booking', {
+    p_admin_token: token, p_query: ''
+  });
+  if (error || data?.error) {
+    showOnly('gate');
+    $('gate-error').classList.add('show');
+    return false;
+  }
+  state.adminToken = token;
+  localStorage.setItem('troddr_admin_token', token);
+  loadPlaceList(data.places || []);
+  showOnly('prop-picker-wrap');
+  return true;
+}
+
+// ── Property picker ────────────────────────────────────────────────────────────
+function loadPlaceList(places) {
+  const wrap = $('place-list');
+  if (!places || places.length === 0) {
+    wrap.innerHTML = '<div class="empty">No properties found.</div>';
+    return;
+  }
+  wrap.innerHTML = places.map(p => `
+    <div class="place-row" data-id="${escHtml(p.id)}">
+      <div class="place-row-info">
+        <div class="place-row-name">${escHtml(p.name)}</div>
+        <div class="place-row-sub">${escHtml([p.town, p.parish, p.category].filter(Boolean).join(' · '))}
+          ${p.bookings_email ? ` · ${escHtml(p.bookings_email)}` : ''}
+        </div>
+      </div>
+      <span class="place-row-badge ${p.accepts_stay_bookings ? 'active' : 'inactive'}">
+        ${p.accepts_stay_bookings ? 'Bookings ON' : 'Bookings OFF'}
+      </span>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.place-row').forEach(row => {
+    row.addEventListener('click', () => selectPlace(row.dataset.id));
+  });
+}
+
+async function searchPlaces(query) {
+  showLoading();
+  const { data } = await db.rpc('admin_search_places_for_booking', {
+    p_admin_token: state.adminToken, p_query: query || null
+  });
+  loadPlaceList(data?.places || []);
+  showOnly('prop-picker-wrap');
+}
+
+async function selectPlace(placeId) {
+  state.placeId = placeId;
+  state.selectedDates = new Set();
+  showLoading();
+  const { data, error } = await db.rpc('admin_get_place_booking_config', {
+    p_admin_token: state.adminToken,
+    p_place_id: placeId
+  });
+  if (error || data?.error) {
+    alert('Failed to load property: ' + (data?.error || error?.message));
+    showOnly('prop-picker-wrap');
+    return;
+  }
+  state.config = data;
+  renderDashboard();
+  showOnly('dashboard');
+}
+
+// ── Dashboard render ───────────────────────────────────────────────────────────
+function renderDashboard() {
+  const { place } = state.config;
+  $('dash-place-name').textContent = place.name;
+  $('navbar-place-name').textContent = place.name;
+  $('navbar-place-name').classList.remove('hidden');
+  $('dash-place-sub').textContent = [place.slug, place.partner_access_token ? 'Token: ' + place.partner_access_token.slice(0,8) + '…' : ''].filter(Boolean).join(' · ');
+  renderSetupTab();
+  renderRoomsTab();
+  renderRatesTab();
+  renderAvailabilityTab();
+  renderPoliciesTab();
+}
+
+// ── Setup tab ─────────────────────────────────────────────────────────────────
+function renderSetupTab() {
+  const p = state.config.place;
+  $('cfg-booking-mode').value       = p.booking_mode || 'request_only';
+  $('cfg-accepts-stay').checked     = !!p.accepts_stay_bookings;
+  $('cfg-bookings-email').value     = p.bookings_email || '';
+  $('cfg-contact-name').value       = p.booking_contact_name || '';
+  $('cfg-checkin-time').value       = p.check_in_time || '';
+  $('cfg-checkout-time').value      = p.check_out_time || '';
+  $('cfg-min-nights').value         = p.min_nights || 1;
+  $('cfg-max-guests').value         = p.max_guests || '';
+  $('cfg-hold-expiry').value        = p.hold_expiry_minutes || '';
+  $('cfg-deposit-req').checked      = !!p.deposit_required;
+  $('cfg-deposit-amount').value     = p.deposit_default_amount || '';
+  $('cfg-deposit-currency').value   = p.deposit_currency || 'USD';
+  $('cfg-deposit-instructions').value = p.deposit_instructions || '';
+  $('cfg-cancel-policy').value      = p.cancellation_policy_text || '';
+  $('cfg-taxes-fees').value         = p.taxes_fees_notes || '';
+  $('cfg-commission').value         = p.commission_terms || '';
+  $('cfg-internal-notes').value     = p.internal_booking_notes || '';
+  setStatus('setup-save-status', '');
+}
+
+async function saveSetup() {
+  const btn = $('save-setup-btn');
+  btn.disabled = true;
+  setStatus('setup-save-status', 'Saving…');
+  $('setup-alert').innerHTML = '';
+
+  const params = {
+    p_admin_token:            state.adminToken,
+    p_place_id:               state.placeId,
+    p_accepts_stay_bookings:  $('cfg-accepts-stay').checked,
+    p_booking_mode:           $('cfg-booking-mode').value || null,
+    p_bookings_email:         $('cfg-bookings-email').value.trim() || null,
+    p_booking_contact_name:   $('cfg-contact-name').value.trim() || null,
+    p_check_in_time:          $('cfg-checkin-time').value || null,
+    p_check_out_time:         $('cfg-checkout-time').value || null,
+    p_min_nights:             intVal('cfg-min-nights'),
+    p_max_guests:             intVal('cfg-max-guests'),
+    p_hold_expiry_minutes:    intVal('cfg-hold-expiry'),
+    p_deposit_required:       $('cfg-deposit-req').checked,
+    p_deposit_default_amount: floatVal('cfg-deposit-amount'),
+    p_deposit_currency:       $('cfg-deposit-currency').value || null,
+    p_deposit_instructions:   $('cfg-deposit-instructions').value.trim() || null,
+    p_cancellation_policy:    $('cfg-cancel-policy').value.trim() || null,
+    p_taxes_fees_notes:       $('cfg-taxes-fees').value.trim() || null,
+    p_commission_terms:       $('cfg-commission').value.trim() || null,
+    p_internal_booking_notes: $('cfg-internal-notes').value.trim() || null,
+  };
+
+  const { data, error } = await db.rpc('admin_configure_place_booking', params);
+  btn.disabled = false;
+  if (error || data?.error) {
+    setStatus('setup-save-status', 'Error: ' + (data?.error || error?.message), 'err');
+    return;
+  }
+  setStatus('setup-save-status', 'Saved', 'ok');
+  // Refresh state
+  state.config.place = { ...state.config.place, ...params };
+}
+
+// ── Rooms tab ─────────────────────────────────────────────────────────────────
+function renderRoomsTab() {
+  const rooms = state.config.room_types || [];
+  $('rooms-count').textContent = rooms.length;
+  $('rooms-alert').innerHTML = '';
+  if (rooms.length === 0) {
+    $('room-list').innerHTML = '<div class="empty">No room types yet. Add one below.</div>';
+    return;
+  }
+  $('room-list').innerHTML = rooms.map((rt, i) => `
+    <div class="item-card" id="room-card-${escHtml(rt.id)}">
+      <div class="item-card-head" onclick="toggleCard('room-card-${escHtml(rt.id)}')">
+        <div>
+          <div class="item-card-head-title">${escHtml(rt.name)}</div>
+          <div class="item-card-head-sub">${rt.room_count} room${rt.room_count !== 1 ? 's' : ''} · Max ${rt.max_guests} guests${rt.base_occupancy ? ` · Base occ. ${rt.base_occupancy}` : ''}</div>
+        </div>
+        <div class="item-card-head-badges">
+          <span class="badge-pill ${rt.is_active ? 'badge-active' : 'badge-inactive'}">
+            ${rt.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+        <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6l4 4 4-4"/>
+        </svg>
+      </div>
+      <div class="item-card-body">
+        ${roomForm(rt)}
+        <div class="form-actions">
+          <button class="btn-primary btn-sm" onclick="saveRoomType('${escHtml(rt.id)}')">Save</button>
+          <span class="save-status" id="room-status-${escHtml(rt.id)}"></span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function roomForm(rt) {
+  const id = rt ? rt.id : 'new';
+  return `
+    <div class="form-grid" id="room-form-${escHtml(id)}">
+      <div class="form-group">
+        <label>Room Type Name</label>
+        <input type="text" id="rf-name-${escHtml(id)}" value="${escHtml(rt?.name)}" placeholder="e.g. Deluxe Ocean Suite" />
+      </div>
+      <div class="form-group">
+        <label>Number of Rooms</label>
+        <input type="number" id="rf-count-${escHtml(id)}" value="${rt?.room_count ?? 1}" min="1" />
+      </div>
+      <div class="form-group">
+        <label>Max Guests per Room</label>
+        <input type="number" id="rf-maxguests-${escHtml(id)}" value="${rt?.max_guests ?? 2}" min="1" />
+      </div>
+      <div class="form-group">
+        <label>Base Occupancy</label>
+        <input type="number" id="rf-baseocc-${escHtml(id)}" value="${rt?.base_occupancy ?? 1}" min="1" />
+      </div>
+      <div class="form-group">
+        <label>Display Order</label>
+        <input type="number" id="rf-order-${escHtml(id)}" value="${rt?.display_order ?? 0}" min="0" />
+      </div>
+      <div class="form-group">
+        <label>Active</label>
+        <div class="toggle-row">
+          <input type="checkbox" id="rf-active-${escHtml(id)}" ${rt?.is_active !== false ? 'checked' : ''} />
+          <div class="toggle-label">Visible for bookings</div>
+        </div>
+      </div>
+      <div class="form-group span2">
+        <label>Description</label>
+        <textarea id="rf-desc-${escHtml(id)}" rows="2" placeholder="Room description shown to guests…">${escHtml(rt?.description)}</textarea>
+      </div>
+      <div class="form-group span2">
+        <label>Amenities (comma-separated)</label>
+        <input type="text" id="rf-amenities-${escHtml(id)}" value="${escHtml((rt?.amenities || []).join(', '))}" placeholder="Ocean view, Air conditioning, Mini bar…" />
+      </div>
+    </div>
+  `;
+}
+
+async function saveRoomType(id) {
+  const isNew = id === 'new';
+  const btn = document.querySelector(isNew ? '#new-room-save-btn' : `#room-card-${id} .btn-primary`);
+  const statusId = isNew ? 'new-room-status' : `room-status-${id}`;
+  if (btn) btn.disabled = true;
+  setStatus(statusId, 'Saving…');
+
+  const params = {
+    p_admin_token:    state.adminToken,
+    p_id:             isNew ? null : id,
+    p_place_id:       isNew ? state.placeId : null,
+    p_name:           $(`rf-name-${id}`)?.value.trim() || null,
+    p_description:    $(`rf-desc-${id}`)?.value.trim() || null,
+    p_max_guests:     intVal(`rf-maxguests-${id}`),
+    p_base_occupancy: intVal(`rf-baseocc-${id}`),
+    p_room_count:     intVal(`rf-count-${id}`),
+    p_amenities:      ($(`rf-amenities-${id}`)?.value || '').split(',').map(s => s.trim()).filter(Boolean),
+    p_is_active:      $(`rf-active-${id}`)?.checked ?? true,
+    p_display_order:  intVal(`rf-order-${id}`),
+  };
+
+  const { data, error } = await db.rpc('admin_upsert_room_type', params);
+  if (btn) btn.disabled = false;
+  if (error || data?.error) {
+    setStatus(statusId, 'Error: ' + (data?.error || error?.message), 'err');
+    return;
+  }
+  setStatus(statusId, 'Saved', 'ok');
+  await refreshConfig();
+  renderRoomsTab();
+  renderRatesTab();
+  renderAvailabilityTab();
+}
+
+function showNewRoomForm() {
+  const existing = $('new-room-form-wrap');
+  if (existing) { existing.remove(); return; }
+  const wrap = document.createElement('div');
+  wrap.id = 'new-room-form-wrap';
+  wrap.className = 'card';
+  wrap.style.marginTop = '12px';
+  wrap.innerHTML = `
+    <div class="card-title">New Room Type</div>
+    ${roomForm(null)}
+    <div class="form-actions">
+      <button class="btn-primary btn-sm" id="new-room-save-btn" onclick="saveRoomType('new')">Create Room Type</button>
+      <button class="btn-ghost btn-sm" onclick="document.getElementById('new-room-form-wrap').remove()">Cancel</button>
+      <span class="save-status" id="new-room-status"></span>
+    </div>
+  `;
+  $('tab-rooms').appendChild(wrap);
+  wrap.querySelector('input[type=text]')?.focus();
+}
+
+// ── Rates tab ─────────────────────────────────────────────────────────────────
+function renderRatesTab() {
+  const rates = state.config.rate_plans || [];
+  const rooms = state.config.room_types || [];
+  $('rates-count').textContent = rates.length;
+  $('rates-alert').innerHTML = '';
+
+  if (rates.length === 0) {
+    $('rate-list').innerHTML = '<div class="empty">No rate plans yet. Add one below.</div>';
+    return;
+  }
+  $('rate-list').innerHTML = rates.map(rp => {
+    const room = rooms.find(r => r.id === rp.room_type_id);
+    return `
+      <div class="item-card" id="rate-card-${escHtml(rp.id)}">
+        <div class="item-card-head" onclick="toggleCard('rate-card-${escHtml(rp.id)}')">
+          <div>
+            <div class="item-card-head-title">${escHtml(rp.name)}</div>
+            <div class="item-card-head-sub">${escHtml(room?.name || 'Unknown room')}${rp.meal_plan ? ' · ' + escHtml(rp.meal_plan) : ''}</div>
+          </div>
+          <div class="item-card-head-badges">
+            ${rp.is_refundable ? `<span class="badge-pill badge-refund">Refundable</span>` : `<span class="badge-pill badge-nonref">Non-refundable</span>`}
+            <span class="badge-pill ${rp.is_active ? 'badge-active' : 'badge-inactive'}">${rp.is_active ? 'Active' : 'Inactive'}</span>
+          </div>
+          <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6l4 4 4-4"/>
+          </svg>
+        </div>
+        <div class="item-card-body">
+          ${rateForm(rp, rooms)}
+          <div class="form-actions">
+            <button class="btn-primary btn-sm" onclick="saveRatePlan('${escHtml(rp.id)}')">Save</button>
+            <span class="save-status" id="rate-status-${escHtml(rp.id)}"></span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function rateForm(rp, rooms) {
+  const id = rp ? rp.id : 'new';
+  const roomOptions = (rooms || state.config.room_types || []).map(r =>
+    `<option value="${escHtml(r.id)}" ${rp?.room_type_id === r.id ? 'selected' : ''}>${escHtml(r.name)}</option>`
+  ).join('');
+  return `
+    <div class="form-grid" id="rate-form-${escHtml(id)}">
+      <div class="form-group">
+        <label>Rate Plan Name</label>
+        <input type="text" id="rpf-name-${escHtml(id)}" value="${escHtml(rp?.name)}" placeholder="e.g. Standard Room Only" />
+      </div>
+      <div class="form-group">
+        <label>Room Type</label>
+        <select id="rpf-room-${escHtml(id)}">${roomOptions}</select>
+      </div>
+      <div class="form-group">
+        <label>Meal Plan</label>
+        <select id="rpf-meal-${escHtml(id)}">
+          <option value="" ${!rp?.meal_plan ? 'selected' : ''}>Room only</option>
+          <option value="BB" ${rp?.meal_plan === 'BB' ? 'selected' : ''}>Bed &amp; Breakfast</option>
+          <option value="HB" ${rp?.meal_plan === 'HB' ? 'selected' : ''}>Half Board</option>
+          <option value="FB" ${rp?.meal_plan === 'FB' ? 'selected' : ''}>Full Board</option>
+          <option value="AI" ${rp?.meal_plan === 'AI' ? 'selected' : ''}>All Inclusive</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Refundable</label>
+        <div class="toggle-row">
+          <input type="checkbox" id="rpf-refund-${escHtml(id)}" ${rp?.is_refundable !== false ? 'checked' : ''} />
+          <div class="toggle-label">Guest can cancel for refund</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Active</label>
+        <div class="toggle-row">
+          <input type="checkbox" id="rpf-active-${escHtml(id)}" ${rp?.is_active !== false ? 'checked' : ''} />
+          <div class="toggle-label">Visible to guests</div>
+        </div>
+      </div>
+      <div class="form-group span2">
+        <label>Description</label>
+        <textarea id="rpf-desc-${escHtml(id)}" rows="2" placeholder="What's included in this rate…">${escHtml(rp?.description)}</textarea>
+      </div>
+      <div class="form-group span2">
+        <label>Inclusions</label>
+        <textarea id="rpf-incl-${escHtml(id)}" rows="2" placeholder="Airport transfer, welcome drink, daily housekeeping…">${escHtml(rp?.inclusions)}</textarea>
+      </div>
+      <div class="form-group span2">
+        <label>Cancellation Policy (rate-specific)</label>
+        <textarea id="rpf-cancel-${escHtml(id)}" rows="2" placeholder="Override the property-level policy for this rate…">${escHtml(rp?.cancellation_policy)}</textarea>
+      </div>
+    </div>
+  `;
+}
+
+async function saveRatePlan(id) {
+  const isNew = id === 'new';
+  const statusId = isNew ? 'new-rate-status' : `rate-status-${id}`;
+  setStatus(statusId, 'Saving…');
+
+  const params = {
+    p_admin_token:         state.adminToken,
+    p_id:                  isNew ? null : id,
+    p_room_type_id:        isNew ? ($(`rpf-room-new`)?.value || null) : null,
+    p_place_id:            isNew ? state.placeId : null,
+    p_name:                $(`rpf-name-${id}`)?.value.trim() || null,
+    p_description:         $(`rpf-desc-${id}`)?.value.trim() || null,
+    p_cancellation_policy: $(`rpf-cancel-${id}`)?.value.trim() || null,
+    p_meal_plan:           $(`rpf-meal-${id}`)?.value || null,
+    p_inclusions:          $(`rpf-incl-${id}`)?.value.trim() || null,
+    p_is_refundable:       $(`rpf-refund-${id}`)?.checked ?? true,
+    p_is_active:           $(`rpf-active-${id}`)?.checked ?? true,
+  };
+  if (!isNew) {
+    // Update room_type_id if the select is present (won't be on existing forms unless we add it)
+    const roomSel = $(`rpf-room-${id}`);
+    if (roomSel) params.p_room_type_id = roomSel.value || null;
+  }
+
+  const { data, error } = await db.rpc('admin_upsert_rate_plan', params);
+  if (error || data?.error) {
+    setStatus(statusId, 'Error: ' + (data?.error || error?.message), 'err');
+    return;
+  }
+  setStatus(statusId, 'Saved', 'ok');
+  await refreshConfig();
+  renderRatesTab();
+}
+
+function showNewRateForm() {
+  if (!state.config.room_types?.length) {
+    $('rates-alert').innerHTML = '<div class="alert alert-warn">Add at least one room type before creating rate plans.</div>';
+    return;
+  }
+  const existing = $('new-rate-form-wrap');
+  if (existing) { existing.remove(); return; }
+  const wrap = document.createElement('div');
+  wrap.id = 'new-rate-form-wrap';
+  wrap.className = 'card';
+  wrap.style.marginTop = '12px';
+  wrap.innerHTML = `
+    <div class="card-title">New Rate Plan</div>
+    ${rateForm(null, state.config.room_types)}
+    <div class="form-actions">
+      <button class="btn-primary btn-sm" id="new-rate-save-btn" onclick="saveRatePlan('new')">Create Rate Plan</button>
+      <button class="btn-ghost btn-sm" onclick="document.getElementById('new-rate-form-wrap').remove()">Cancel</button>
+      <span class="save-status" id="new-rate-status"></span>
+    </div>
+  `;
+  $('tab-rates').appendChild(wrap);
+  wrap.querySelector('input[type=text]')?.focus();
+}
+
+// ── Availability tab ──────────────────────────────────────────────────────────
+function renderAvailabilityTab() {
+  const rooms = state.config.room_types || [];
+  const sel = $('avail-room-select');
+  const prevVal = sel.value;
+  sel.innerHTML = rooms.length
+    ? rooms.map(r => `<option value="${escHtml(r.id)}">${escHtml(r.name)}</option>`).join('')
+    : '<option value="">No room types</option>';
+  if (prevVal && rooms.find(r => r.id === prevVal)) sel.value = prevVal;
+  state.availRoomTypeId = sel.value || null;
+  state.selectedDates = new Set();
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const roomTypeId = $('avail-room-select').value;
+  state.availRoomTypeId = roomTypeId;
+  const avail = state.config.availability_60d || [];
+  const roomAvail = avail.filter(a => a.room_type_id === roomTypeId);
+  const availByDate = {};
+  roomAvail.forEach(a => { availByDate[a.stay_date] = a; });
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const cal = $('avail-calendar');
+
+  const days = [];
+  for (let i = 0; i < 63; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    days.push(d);
+  }
+
+  const weeks = [];
+  let week = [];
+  // Pad start of first week to Monday
+  const startDay = (days[0].getDay() + 6) % 7; // Mon=0
+  for (let p = 0; p < startDay; p++) week.push(null);
+  days.forEach(d => {
+    if (week.length === 7) { weeks.push(week); week = []; }
+    week.push(d);
+  });
+  while (week.length < 7) week.push(null);
+  weeks.push(week);
+
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html = '';
+
+  // Day header
+  html += `<div class="avail-grid" style="margin-bottom:6px">
+    ${dayNames.map(n => `<div style="text-align:center;font-size:10px;font-weight:700;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.05em;padding:4px 0">${n}</div>`).join('')}
+  </div>`;
+
+  weeks.forEach((w, wi) => {
+    const weekStart = w.find(Boolean);
+    if (!weekStart) return;
+    const mon = `${weekStart.toLocaleString('en-US', {month:'short'})} ${weekStart.getDate()}`;
+    html += `<div class="avail-week">
+      <div class="avail-week-label">Week of ${mon}</div>
+      <div class="avail-grid">`;
+    w.forEach(d => {
+      if (!d) { html += `<div></div>`; return; }
+      const ds = d.toISOString().slice(0,10);
+      const isPast = d < today;
+      const av = availByDate[ds];
+      const isSelected = state.selectedDates.has(ds);
+      const isBlackout = av?.is_blackout;
+      const isClosed = av?.is_closed;
+      const cls = [
+        'avail-cell',
+        isPast ? 'past' : '',
+        isSelected ? 'selected' : '',
+        isBlackout ? 'blackout' : '',
+        (!isBlackout && isClosed) ? 'closed' : '',
+      ].filter(Boolean).join(' ');
+      html += `
+        <div class="${cls}" data-date="${ds}" onclick="toggleDate('${ds}')">
+          <div class="avail-cell-date">${d.toLocaleString('en-US',{month:'short',day:'numeric'})}</div>
+          <div class="avail-cell-day">${d.toLocaleString('en-US',{weekday:'short'})}</div>
+          ${av ? `<div class="avail-cell-rooms">${av.available_rooms ?? '—'}</div>
+            <div class="avail-cell-rate">${av.base_nightly_rate ? fmtMoney(av.base_nightly_rate, av.currency) : ''}</div>` : `<div class="avail-cell-rooms" style="color:var(--grey-light)">—</div>`}
+          ${isBlackout ? `<span class="avail-cell-flag blackout">BLKOUT</span>` : ''}
+          ${(!isBlackout && isClosed) ? `<span class="avail-cell-flag closed">CLOSED</span>` : ''}
+        </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  cal.innerHTML = html;
+  updateBulkEditor();
+}
+
+function toggleDate(ds) {
+  if (state.selectedDates.has(ds)) {
+    state.selectedDates.delete(ds);
+    document.querySelector(`[data-date="${ds}"]`)?.classList.remove('selected');
+  } else {
+    state.selectedDates.add(ds);
+    document.querySelector(`[data-date="${ds}"]`)?.classList.add('selected');
+  }
+  updateBulkEditor();
+}
+
+function updateBulkEditor() {
+  const count = state.selectedDates.size;
+  const lbl = $('avail-selected-label');
+  const editor = $('bulk-editor');
+  if (count > 0) {
+    lbl.textContent = `${count} date${count !== 1 ? 's' : ''} selected`;
+    lbl.classList.remove('hidden');
+    editor.classList.remove('hidden');
+    const sorted = [...state.selectedDates].sort();
+    $('bulk-date-range').textContent = sorted.length > 1
+      ? `${sorted[0]} → ${sorted[sorted.length - 1]}`
+      : sorted[0];
+  } else {
+    lbl.classList.add('hidden');
+    editor.classList.add('hidden');
+  }
+}
+
+async function saveBulkAvailability() {
+  if (!state.selectedDates.size || !state.availRoomTypeId) return;
+  const btn = $('bulk-save-btn');
+  btn.disabled = true;
+  setStatus('avail-save-status', 'Saving…');
+
+  const params = {
+    p_admin_token:       state.adminToken,
+    p_room_type_id:      state.availRoomTypeId,
+    p_place_id:          state.placeId,
+    p_dates:             [...state.selectedDates].sort(),
+    p_available_rooms:   intVal('bulk-rooms'),
+    p_is_blackout:       $('bulk-blackout').checked || null,
+    p_is_closed:         $('bulk-closed').checked || null,
+    p_min_nights:        intVal('bulk-min-nights'),
+    p_base_nightly_rate: floatVal('bulk-rate'),
+    p_currency:          $('bulk-currency').value || 'USD',
+    p_notes:             $('bulk-notes').value.trim() || null,
+  };
+
+  const { data, error } = await db.rpc('admin_set_availability', params);
+  btn.disabled = false;
+  if (error || data?.error) {
+    setStatus('avail-save-status', 'Error: ' + (data?.error || error?.message), 'err');
+    return;
+  }
+  setStatus('avail-save-status', `Updated ${data.dates_updated} date${data.dates_updated !== 1 ? 's' : ''}`, 'ok');
+  state.selectedDates = new Set();
+  await refreshConfig();
+  renderCalendar();
+}
+
+// ── Policies tab ──────────────────────────────────────────────────────────────
+function renderPoliciesTab() {
+  const policies = state.config.cancellation_policies || [];
+  const rooms = state.config.room_types || [];
+  const rates = state.config.rate_plans || [];
+  $('policies-count').textContent = policies.length;
+  $('policies-alert').innerHTML = '';
+
+  if (policies.length === 0) {
+    $('policy-list').innerHTML = '<div class="empty">No cancellation policies yet. Add one below.</div>';
+    return;
+  }
+  $('policy-list').innerHTML = policies.map(cp => {
+    const rate = rates.find(r => r.id === cp.rate_plan_id);
+    return `
+      <div class="item-card" id="policy-card-${escHtml(cp.id)}">
+        <div class="item-card-head" onclick="toggleCard('policy-card-${escHtml(cp.id)}')">
+          <div>
+            <div class="item-card-head-title">${escHtml(cp.policy_name)}</div>
+            <div class="item-card-head-sub">${rate ? `Applies to: ${escHtml(rate.name)}` : 'Property default'}${cp.free_cancel_hours ? ` · Free cancel within ${cp.free_cancel_hours}h` : ''}</div>
+          </div>
+          <div class="item-card-head-badges">
+            ${cp.is_default ? `<span class="badge-pill badge-active">Default</span>` : ''}
+            ${cp.is_non_refundable ? `<span class="badge-pill badge-nonref">Non-refundable</span>` : ''}
+          </div>
+          <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6l4 4 4-4"/>
+          </svg>
+        </div>
+        <div class="item-card-body">
+          ${policyForm(cp, rates)}
+          <div class="form-actions">
+            <button class="btn-primary btn-sm" onclick="savePolicy('${escHtml(cp.id)}')">Save</button>
+            <span class="save-status" id="policy-status-${escHtml(cp.id)}"></span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function policyForm(cp, rates) {
+  const id = cp ? cp.id : 'new';
+  const rateOptions = `<option value="">Property default (no rate plan)</option>` +
+    (rates || state.config.rate_plans || []).map(r =>
+      `<option value="${escHtml(r.id)}" ${cp?.rate_plan_id === r.id ? 'selected' : ''}>${escHtml(r.name)}</option>`
+    ).join('');
+  return `
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Policy Name</label>
+        <input type="text" id="cpf-name-${escHtml(id)}" value="${escHtml(cp?.policy_name)}" placeholder="e.g. Flexible Cancellation" />
+      </div>
+      <div class="form-group">
+        <label>Applies to Rate Plan</label>
+        <select id="cpf-rate-${escHtml(id)}">${rateOptions}</select>
+      </div>
+      <div class="form-group">
+        <label>Free Cancel Window (hours)</label>
+        <input type="number" id="cpf-hours-${escHtml(id)}" value="${cp?.free_cancel_hours ?? ''}" min="0" placeholder="e.g. 48" />
+      </div>
+      <div class="form-group">
+        <label>Non-refundable</label>
+        <div class="toggle-row">
+          <input type="checkbox" id="cpf-nonref-${escHtml(id)}" ${cp?.is_non_refundable ? 'checked' : ''} />
+          <div class="toggle-label">No refund on cancellation</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Set as Default Policy</label>
+        <div class="toggle-row">
+          <input type="checkbox" id="cpf-default-${escHtml(id)}" ${cp?.is_default ? 'checked' : ''} />
+          <div class="toggle-label">Apply to bookings without a specific policy</div>
+        </div>
+      </div>
+      <div class="form-group span2">
+        <label>Policy Text (shown to guest)</label>
+        <textarea id="cpf-text-${escHtml(id)}" rows="3" placeholder="Full cancellation policy text…">${escHtml(cp?.policy_text)}</textarea>
+      </div>
+      <div class="form-group span2">
+        <label>Deposit Forfeiture Notes</label>
+        <textarea id="cpf-forfeit-${escHtml(id)}" rows="2" placeholder="If cancelled within 72h of arrival, deposit is forfeited…">${escHtml(cp?.deposit_forfeiture_notes)}</textarea>
+      </div>
+    </div>
+  `;
+}
+
+async function savePolicy(id) {
+  const isNew = id === 'new';
+  const statusId = isNew ? 'new-policy-status' : `policy-status-${id}`;
+  setStatus(statusId, 'Saving…');
+
+  const params = {
+    p_admin_token:              state.adminToken,
+    p_id:                       isNew ? null : id,
+    p_place_id:                 isNew ? state.placeId : null,
+    p_rate_plan_id:             $(`cpf-rate-${id}`)?.value || null,
+    p_policy_name:              $(`cpf-name-${id}`)?.value.trim() || null,
+    p_policy_text:              $(`cpf-text-${id}`)?.value.trim() || null,
+    p_free_cancel_hours:        intVal(`cpf-hours-${id}`),
+    p_is_non_refundable:        $(`cpf-nonref-${id}`)?.checked ?? false,
+    p_deposit_forfeiture_notes: $(`cpf-forfeit-${id}`)?.value.trim() || null,
+    p_is_default:               $(`cpf-default-${id}`)?.checked ?? false,
+  };
+
+  const { data, error } = await db.rpc('admin_upsert_cancellation_policy', params);
+  if (error || data?.error) {
+    setStatus(statusId, 'Error: ' + (data?.error || error?.message), 'err');
+    return;
+  }
+  setStatus(statusId, 'Saved', 'ok');
+  await refreshConfig();
+  renderPoliciesTab();
+}
+
+function showNewPolicyForm() {
+  const existing = $('new-policy-form-wrap');
+  if (existing) { existing.remove(); return; }
+  const wrap = document.createElement('div');
+  wrap.id = 'new-policy-form-wrap';
+  wrap.className = 'card';
+  wrap.style.marginTop = '12px';
+  wrap.innerHTML = `
+    <div class="card-title">New Cancellation Policy</div>
+    ${policyForm(null, state.config.rate_plans)}
+    <div class="form-actions">
+      <button class="btn-primary btn-sm" onclick="savePolicy('new')">Create Policy</button>
+      <button class="btn-ghost btn-sm" onclick="document.getElementById('new-policy-form-wrap').remove()">Cancel</button>
+      <span class="save-status" id="new-policy-status"></span>
+    </div>
+  `;
+  $('tab-policies').appendChild(wrap);
+  wrap.querySelector('input[type=text]')?.focus();
+}
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+function toggleCard(id) {
+  $(id)?.classList.toggle('open');
+}
+
+function setStatus(id, msg, cls) {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'save-status' + (cls ? ' ' + cls : '');
+  if (cls === 'ok') setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3000);
+}
+
+function intVal(id) {
+  const el = $(id);
+  if (!el) return null;
+  const v = parseInt(el.value, 10);
+  return isNaN(v) ? null : v;
+}
+
+function floatVal(id) {
+  const el = $(id);
+  if (!el) return null;
+  const v = parseFloat(el.value);
+  return isNaN(v) ? null : v;
+}
+
+async function refreshConfig() {
+  const { data } = await db.rpc('admin_get_place_booking_config', {
+    p_admin_token: state.adminToken,
+    p_place_id: state.placeId
+  });
+  if (data && !data.error) state.config = data;
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $(`tab-${tab.dataset.tab}`)?.classList.add('active');
+  });
+});
+
+// ── Event listeners ───────────────────────────────────────────────────────────
+$('gate-go').addEventListener('click', async () => {
+  const token = $('gate-input').value.trim();
+  if (!token) return;
+  $('gate-error').classList.remove('show');
+  await authenticate(token);
+});
+$('gate-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('gate-go').click();
+});
+
+$('place-search-btn').addEventListener('click', () => {
+  searchPlaces($('place-search').value.trim() || null);
+});
+$('place-search').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('place-search-btn').click();
+});
+
+$('change-place-btn').addEventListener('click', () => {
+  state.placeId = null; state.config = null;
+  $('navbar-place-name').classList.add('hidden');
+  showOnly('prop-picker-wrap');
+  searchPlaces(null);
+});
+
+$('save-setup-btn').addEventListener('click', saveSetup);
+
+$('add-room-btn').addEventListener('click', showNewRoomForm);
+$('add-rate-btn').addEventListener('click', showNewRateForm);
+$('add-policy-btn').addEventListener('click', showNewPolicyForm);
+
+$('avail-room-select').addEventListener('change', () => {
+  state.selectedDates = new Set();
+  renderCalendar();
+});
+
+$('avail-clear-btn').addEventListener('click', () => {
+  state.selectedDates = new Set();
+  document.querySelectorAll('.avail-cell.selected').forEach(c => c.classList.remove('selected'));
+  updateBulkEditor();
+});
+
+$('avail-select-all-btn').addEventListener('click', () => {
+  const today = new Date(); today.setHours(0,0,0,0);
+  document.querySelectorAll('.avail-cell[data-date]').forEach(c => {
+    const ds = c.dataset.date;
+    if (new Date(ds) >= today) {
+      state.selectedDates.add(ds);
+      c.classList.add('selected');
+    }
+  });
+  updateBulkEditor();
+});
+
+$('bulk-save-btn').addEventListener('click', saveBulkAvailability);
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(async function init() {
+  showLoading();
+  const saved = localStorage.getItem('troddr_admin_token');
+  if (saved) {
+    const ok = await authenticate(saved);
+    if (!ok) {
+      localStorage.removeItem('troddr_admin_token');
+      showOnly('gate');
+    }
+  } else {
+    showOnly('gate');
+  }
+})();
+</script>
+</body>
+</html>
