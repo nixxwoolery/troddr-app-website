@@ -1288,10 +1288,8 @@ $$;
 update public.places
    set accepts_stay_bookings = true
  where accepts_stay_bookings = false
-   and (
-     (bookings_email is not null and length(trim(bookings_email)) > 0)
-     or stay_booking_mode = 'troddr'
-   );
+   and bookings_email is not null
+   and length(trim(bookings_email)) > 0;
 
 -- ================================================================
 -- END hotel-booking-infrastructure.sql

@@ -238,10 +238,14 @@
   /* ── Boot ─────────────────────────────────────────────── */
   async function boot() {
     show('loading');
-    const { data, error } = await db.rpc('admin_search_places_for_booking', {
-      p_admin_token: adminToken, p_query: ''
+    // Verify the token against an always-deployed admin RPC. (We deliberately do
+    // NOT use admin_search_places_for_booking here — that lives in the Phase 2
+    // hotel-booking migration and may not be deployed yet; using it would block
+    // sign-in entirely. get_admin_review_queue returns null for an invalid token.)
+    const { data, error } = await db.rpc('get_admin_review_queue', {
+      p_admin_token: adminToken
     });
-    if (error || (data && data.error)) {
+    if (error || !data) {
       try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
       adminToken = '';
       $('gate-error').classList.add('show');
