@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Welcome to TRODDR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/billing-shared.js"></script>
+<script src="/js/onboarding-recommend.js"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || '';
+</script>
+
+<style>
+  :root {
+    --blue:#0077CC; --blue-light:#e8f4ff; --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea; --amber:#b86e00; --amber-light:#fff4e0;
+    --black:#111111; --grey-dark:#333333; --grey-mid:#666666; --grey-light:#999999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#ffffff; --bg-soft:#f8f9fa;
+    --radius:10px; --radius-lg:16px; --shadow-sm:0 1px 3px rgba(0,0,0,0.06);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', sans-serif; background: var(--bg-soft); color: var(--black); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .hidden { display: none !important; }
+
+  .header { background: #fff; border-bottom: 1px solid var(--border); }
+  .navbar { max-width: 980px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 16px; }
+  .logo { font-size: 26px; font-weight: 700; color: var(--blue); text-decoration: none; letter-spacing: -1px; }
+  .nav-step { margin-left: auto; font-size: 12px; color: var(--grey-mid); font-weight: 600; }
+
+  .progress { height: 4px; background: var(--border-soft); }
+  .progress span { display: block; height: 100%; background: var(--blue); width: 0; transition: width 0.3s ease; }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-sm); }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+  h1 { font-size: clamp(24px, 4vw, 32px); letter-spacing: -0.6px; line-height: 1.15; margin-bottom: 10px; }
+  h2 { font-size: 20px; letter-spacing: -0.3px; margin-bottom: 6px; }
+  .lead { color: var(--grey-mid); font-size: 15px; margin-bottom: 22px; }
+  .muted { color: var(--grey-mid); font-size: 13px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--grey-dark); margin-bottom: 6px; }
+  .field input, .field select, .field textarea {
+    width: 100%; border: 1px solid #dcdcdc; border-radius: 8px; padding: 11px 12px; font: inherit; font-size: 15px; background: #fff;
+  }
+  .field input:disabled { background: var(--bg-soft); color: var(--grey-mid); }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .btn { border: 0; border-radius: 9px; padding: 13px 20px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-primary:disabled { opacity: 0.55; cursor: default; }
+  .btn-ghost { background: #fff; color: var(--grey-dark); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg-soft); }
+  .actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; }
+  .actions .spacer { flex: 1; }
+
+  .err { display: none; background: var(--red-light); color: var(--red); border-radius: 8px; padding: 11px 13px; font-size: 13px; margin-top: 14px; }
+  .err.visible { display: block; }
+  .notice { background: var(--blue-light); color: #075a96; border-radius: 8px; padding: 11px 13px; font-size: 13px; margin-bottom: 18px; }
+
+  /* Choice chips / cards */
+  .choices { display: grid; gap: 10px; }
+  .choices.cols { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .choice {
+    border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s; background: #fff;
+  }
+  .choice:hover { border-color: var(--blue); }
+  .choice.selected { border-color: var(--blue); background: var(--blue-light); }
+  .choice .c-title { font-weight: 700; font-size: 14px; }
+  .choice .c-sub { font-size: 12px; color: var(--grey-mid); margin-top: 2px; }
+
+  .stepper { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .stepper button { width: 42px; height: 42px; border: 0; background: #fff; font-size: 20px; cursor: pointer; color: var(--blue); }
+  .stepper input { width: 60px; text-align: center; border: 0; border-left: 1px solid var(--border); border-right: 1px solid var(--border); height: 42px; font: inherit; font-size: 16px; font-weight: 700; }
+
+  .biz { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; }
+  .biz .pill { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; background: var(--green-light); color: var(--green); margin-left: auto; }
+  .biz .b-name { font-weight: 700; }
+  .biz .b-type { font-size: 11px; color: var(--grey-mid); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .offer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .offer { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .offer .o-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .offer .o-desc { font-size: 13px; color: var(--grey-mid); }
+
+  /* Quote */
+  .quote-card { border: 2px solid var(--blue); border-radius: var(--radius-lg); padding: 22px; }
+  .quote-line { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border-soft); }
+  .quote-line:last-of-type { border-bottom: none; }
+  .ql-label { font-weight: 600; }
+  .ql-sub { font-size: 12px; color: var(--grey-mid); margin-top: 2px; }
+  .ql-amount { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ql-toggle { margin-right: 10px; transform: scale(1.2); accent-color: var(--blue); vertical-align: middle; }
+  .quote-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; padding-top: 14px; border-top: 2px solid var(--black); }
+  .quote-total .t-amount { font-size: 26px; font-weight: 800; letter-spacing: -0.6px; }
+  .est-note { font-size: 12px; color: var(--amber); margin-top: 8px; }
+
+  .center { text-align: center; }
+  .big-check { width: 64px; height: 64px; border-radius: 50%; background: var(--green-light); color: var(--green); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 18px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 40px auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-step" id="nav-step"></span>
+  </div>
+</header>
+<div class="progress"><span id="progress-bar"></span></div>
+
+<div class="wrap">
+  <div id="boot-loading" class="card center"><div class="spinner"></div><p class="muted">Loading your invite…</p></div>
+
+  <!-- STEP: Welcome -->
+  <div class="card hidden" id="step-welcome">
+    <div class="eyebrow">You're invited</div>
+    <h1 id="welcome-title">Welcome to TRODDR</h1>
+    <p class="lead" id="welcome-lead">Let's get your business set up on TRODDR — the app helping Jamaicans discover where to go, eat, and play.</p>
+    <div class="offer-grid" style="margin-bottom: 8px;">
+      <div class="offer"><div class="o-title">Get discovered</div><div class="o-desc">Your listing in front of locals and visitors searching the island.</div></div>
+      <div class="offer"><div class="o-title">Reward regulars</div><div class="o-desc">Run a loyalty program and post specials right in the app.</div></div>
+      <div class="offer"><div class="o-title">Run events</div><div class="o-desc">A full event experience — schedule, vendors, tickets, sponsors.</div></div>
+    </div>
+    <div class="actions"><div class="spacer"></div><button class="btn btn-primary" id="welcome-next">Create your account →</button></div>
+  </div>
+
+  <!-- STEP: Create account -->
+  <div class="card hidden" id="step-account">
+    <div class="eyebrow">Step 1</div>
+    <h2>Create your account</h2>
+    <p class="lead">Set a password for your TRODDR company dashboard.</p>
+    <div class="field"><label>Email</label><input id="acc-email" type="email" disabled /></div>
+    <div class="field"><label>Create a password</label><input id="acc-password" type="password" autocomplete="new-password" placeholder="At least 8 characters" /></div>
+    <div class="field"><label>Confirm password</label><input id="acc-password2" type="password" autocomplete="new-password" /></div>
+    <div class="err" id="acc-err"></div>
+    <div class="notice hidden" id="acc-confirm-notice">We sent a confirmation link to your email. Confirm it, then reopen your invite link to continue.</div>
+    <div class="actions"><div class="spacer"></div><button class="btn btn-primary" id="acc-next">Create account →</button></div>
+  </div>
+
+  <!-- STEP: Confirm businesses -->
+  <div class="card hidden" id="step-confirm">
+    <div class="eyebrow">Step 2</div>
+    <h2>Confirm your business</h2>
+    <p class="lead">TRODDR has these set up for your account. Confirm they're yours.</p>
+    <div id="confirm-list"></div>
+    <p class="muted" id="confirm-empty" style="display:none;">No businesses were pre-attached. You can tell us about them next — TRODDR will add them for you.</p>
+    <div class="actions">
+      <button class="btn btn-ghost" data-back>← Back</button>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="confirm-next">Yes, these are mine →</button>
+    </div>
+  </div>
+
+  <!-- STEP: Profile activity -->
+  <div class="card hidden" id="step-profile">
+    <div class="eyebrow">Step 3</div>
+    <h2>Tell us about your business</h2>
+    <p class="lead">A few quick questions so we can tailor TRODDR to you.</p>
+
+    <div class="field">
+      <label>What kind of business are you?</label>
+      <div class="choices cols" id="q-type">
+        <div class="choice" data-val="hospitality_group"><div class="c-title">Hospitality</div><div class="c-sub">Restaurant, hotel, attraction</div></div>
+        <div class="choice" data-val="event_host"><div class="c-title">Event host</div><div class="c-sub">Organizer, festival, band</div></div>
+        <div class="choice" data-val="sponsor"><div class="c-title">Sponsor</div><div class="c-sub">Activations & reports</div></div>
+        <div class="choice" data-val="mixed"><div class="c-title">A bit of everything</div><div class="c-sub">Mixed</div></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>How many locations / restaurants do you run?</label>
+      <div class="stepper">
+        <button type="button" id="loc-minus">−</button>
+        <input id="q-locations" type="number" min="1" value="1" />
+        <button type="button" id="loc-plus">+</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Do you run events?</label>
+      <div class="choices cols" id="q-events">
+        <div class="choice" data-val="no"><div class="c-title">Not right now</div></div>
+        <div class="choice" data-val="yes"><div class="c-title">Yes, we do</div></div>
+      </div>
+    </div>
+
+    <div id="event-scale-wrap" class="field hidden">
+      <label>What's the biggest event you run?</label>
+      <div class="choices" id="q-scale">
+        <div class="choice" data-val="lite"><div class="c-title">Small / single-day</div><div class="c-sub">Listing + basic info</div></div>
+        <div class="choice" data-val="pro"><div class="c-title">Full event</div><div class="c-sub">Schedule, tickets, sponsors</div></div>
+        <div class="choice" data-val="major"><div class="c-title">Multi-day / large</div><div class="c-sub">Vendors, premium insights</div></div>
+        <div class="choice" data-val="series"><div class="c-title">Festival series</div><div class="c-sub">Parent + child events (e.g. JFDF)</div></div>
+        <div class="choice" data-val="flagship"><div class="c-title">National tentpole</div><div class="c-sub">Sumfest-scale</div></div>
+        <div class="choice" data-val="carnival"><div class="c-title">Carnival</div><div class="c-sub">Jamaica carnival hub</div></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Want analytics on how you're doing?</label>
+      <div class="choices cols" id="q-insights">
+        <div class="choice" data-val="none"><div class="c-title">Maybe later</div></div>
+        <div class="choice" data-val="location"><div class="c-title">Per location</div></div>
+        <div class="choice" data-val="company"><div class="c-title">Company-wide</div></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Interested in sponsor activations?</label>
+      <div class="choices cols" id="q-sponsor">
+        <div class="choice" data-val="no"><div class="c-title">No</div></div>
+        <div class="choice" data-val="yes"><div class="c-title">Yes</div></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" data-back>← Back</button>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="profile-next">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP: Billing details -->
+  <div class="card hidden" id="step-billing">
+    <div class="eyebrow">Step 4</div>
+    <h2>Billing details</h2>
+    <p class="lead">For your invoices. Approved locations and events are managed by TRODDR.</p>
+    <div class="field"><label>Legal / business name *</label><input id="bi-legal" /></div>
+    <div class="field"><label>Trading name</label><input id="bi-trading" /></div>
+    <div class="field-row">
+      <div class="field"><label>Billing contact name</label><input id="bi-contact" /></div>
+      <div class="field"><label>Billing phone</label><input id="bi-phone" /></div>
+    </div>
+    <div class="field"><label>Billing email *</label><input id="bi-email" type="email" /></div>
+    <div class="field-row">
+      <div class="field"><label>Country</label><input id="bi-country" value="Jamaica" /></div>
+      <div class="field"><label>Tax / GCT ID (optional)</label><input id="bi-tax" /></div>
+    </div>
+    <div class="field"><label>Address</label><input id="bi-address" /></div>
+    <div class="field-row">
+      <div class="field"><label>Preferred invoice currency</label>
+        <select id="bi-currency"><option value="JMD">JMD (J$)</option><option value="USD">USD (US$)</option></select></div>
+      <div class="field"><label>Your role / title</label><input id="bi-role" /></div>
+    </div>
+    <div class="err" id="bi-err"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" data-back>← Back</button>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="billing-next">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP: What we offer (value) -->
+  <div class="card hidden" id="step-value">
+    <div class="eyebrow">Built for you</div>
+    <h2 id="value-title">Here's what TRODDR can do for you</h2>
+    <p class="lead">Based on what you told us — your tailored toolkit.</p>
+    <div class="offer-grid" id="value-grid"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" data-back>← Back</button>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="value-next">See my plan →</button>
+    </div>
+  </div>
+
+  <!-- STEP: Quote / paywall -->
+  <div class="card hidden" id="step-quote">
+    <div class="eyebrow">Your personalized plan</div>
+    <h2 id="quote-title">Here's what we recommend</h2>
+    <p class="lead">Tailored to your footprint. Toggle add-ons to fit your budget — TRODDR confirms final pricing before you pay.</p>
+    <div class="quote-card">
+      <div id="quote-lines"></div>
+      <div class="quote-total">
+        <div><strong>Estimated total</strong><div class="ql-sub" id="quote-total-sub"></div></div>
+        <div class="t-amount" id="quote-total-amount">—</div>
+      </div>
+      <div class="est-note hidden" id="quote-est-note">Some items are ranged estimates — TRODDR will confirm exact pricing on your invoice.</div>
+    </div>
+    <div class="field" style="margin-top:18px;"><label>Anything else we should know? (optional)</label><textarea id="quote-notes"></textarea></div>
+    <div class="err" id="quote-err"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" data-back>← Back</button>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="quote-next">Accept &amp; set up billing →</button>
+    </div>
+  </div>
+
+  <!-- STEP: Done -->
+  <div class="card center hidden" id="step-done">
+    <div class="big-check">✓</div>
+    <h2>You're all set!</h2>
+    <p class="lead" id="done-msg">Your dashboard is ready. TRODDR will review your selections and send your invoice shortly — your account activates once payment is verified.</p>
+    <button class="btn btn-primary" id="done-go">Go to my dashboard →</button>
+  </div>
+
+  <!-- Invite problem -->
+  <div class="card hidden" id="step-invalid">
+    <div class="eyebrow">Hmm</div>
+    <h2 id="invalid-title">This invite link isn't usable</h2>
+    <p class="lead" id="invalid-msg"></p>
+    <a class="btn btn-primary" href="/company/billing" style="text-decoration:none; display:inline-block;">Go to sign in</a>
+  </div>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const BS = window.BillingShared;
+  const REC = window.OnboardingRecommend;
+  const $ = (id) => document.getElementById(id);
+
+  const params = new URLSearchParams(location.search);
+  const inviteToken = params.get('invite') || '';
+
+  let invite = null;          // get_onboarding_invite payload
+  let catalog = null;         // get_billing_catalog_for_quote payload
+  let profile = {};           // wizard answers
+  let recommendation = null;  // current recommendation
+  let resumeMode = false;     // authed user, no invite
+
+  // Steps in order (welcome/account skipped in resume mode).
+  const STEPS = ['welcome', 'account', 'confirm', 'profile', 'billing', 'value', 'quote', 'done'];
+  let stepIdx = 0;
+
+  function showStep(name) {
+    STEPS.concat(['invalid']).forEach((s) => $('step-' + s).classList.add('hidden'));
+    $('boot-loading').classList.add('hidden');
+    $('step-' + name).classList.remove('hidden');
+    const idx = STEPS.indexOf(name);
+    if (idx >= 0) {
+      stepIdx = idx;
+      $('progress-bar').style.width = Math.round((idx / (STEPS.length - 1)) * 100) + '%';
+      $('nav-step').textContent = name === 'done' ? '' : `Step ${idx} of ${STEPS.length - 2}`;
+    }
+    window.scrollTo(0, 0);
+  }
+  function showInvalid(msg) {
+    STEPS.forEach((s) => $('step-' + s).classList.add('hidden'));
+    $('boot-loading').classList.add('hidden');
+    $('invalid-msg').textContent = msg || 'Contact TRODDR for a new link.';
+    $('step-invalid').classList.remove('hidden');
+  }
+  function setErr(id, msg) { const e = $(id); e.textContent = msg; e.classList.add('visible'); }
+  function clearErr(id) { $(id).classList.remove('visible'); }
+
+  function next() { showStep(STEPS[Math.min(stepIdx + 1, STEPS.length - 1)]); }
+  function back() {
+    let i = stepIdx - 1;
+    // Don't walk back into account creation once signed in.
+    if (resumeMode && STEPS[i] === 'account') i = STEPS.indexOf('confirm');
+    if (STEPS[i] === 'account' || STEPS[i] === 'welcome') i = STEPS.indexOf('confirm');
+    showStep(STEPS[Math.max(i, 0)]);
+  }
+  document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', back));
+
+  /* ---------- Single-choice chip groups ---------- */
+  function wireChoice(groupId, onPick) {
+    $(groupId).querySelectorAll('.choice').forEach((c) => c.addEventListener('click', () => {
+      $(groupId).querySelectorAll('.choice').forEach((x) => x.classList.remove('selected'));
+      c.classList.add('selected');
+      if (onPick) onPick(c.dataset.val);
+    }));
+  }
+  function pickedVal(groupId) {
+    const el = $(groupId).querySelector('.choice.selected');
+    return el ? el.dataset.val : null;
+  }
+
+  wireChoice('q-type');
+  wireChoice('q-events', (v) => $('event-scale-wrap').classList.toggle('hidden', v !== 'yes'));
+  wireChoice('q-scale');
+  wireChoice('q-insights');
+  wireChoice('q-sponsor');
+
+  $('loc-minus').addEventListener('click', () => { const i = $('q-locations'); i.value = Math.max(1, (Number(i.value) || 1) - 1); });
+  $('loc-plus').addEventListener('click', () => { const i = $('q-locations'); i.value = (Number(i.value) || 1) + 1; });
+
+  /* ---------- Welcome ---------- */
+  $('welcome-next').addEventListener('click', () => showStep('account'));
+
+  /* ---------- Account creation ---------- */
+  $('acc-next').addEventListener('click', async () => {
+    clearErr('acc-err');
+    const pw = $('acc-password').value, pw2 = $('acc-password2').value;
+    if (pw.length < 8) { setErr('acc-err', 'Password must be at least 8 characters.'); return; }
+    if (pw !== pw2) { setErr('acc-err', 'Passwords do not match.'); return; }
+    const btn = $('acc-next'); btn.disabled = true; btn.textContent = 'Creating…';
+    try {
+      const { data, error } = await db.auth.signUp({ email: invite.email, password: pw });
+      if (error) throw error;
+      // If no session, email confirmation is required.
+      if (!data.session) {
+        const signin = await db.auth.signInWithPassword({ email: invite.email, password: pw });
+        if (signin.error) { $('acc-confirm-notice').classList.remove('hidden'); return; }
+      }
+      const acc = await db.rpc('accept_onboarding_invite', { p_token: inviteToken });
+      if (acc.error) throw acc.error;
+      if (!acc.data.ok) { setErr('acc-err', acc.data.error); return; }
+      await afterLinked();
+      showStep('confirm');
+    } catch (e) {
+      setErr('acc-err', e.message || String(e));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create account →';
+    }
+  });
+
+  // Pull catalog + prefill billing once the user is linked to a company.
+  async function afterLinked() {
+    const cat = await db.rpc('get_billing_catalog_for_quote');
+    if (!cat.error && cat.data && cat.data.ok) catalog = cat.data;
+    const bill = await db.rpc('get_company_billing');
+    if (!bill.error && bill.data && bill.data.ok) {
+      const co = bill.data.company || {};
+      $('bi-legal').value = co.legal_name || co.name || (invite && invite.company_name) || '';
+      $('bi-trading').value = co.trading_name || '';
+      $('bi-email').value = co.billing_email || (invite && invite.email) || '';
+      $('bi-currency').value = co.preferred_currency || 'JMD';
+      // Stash attached footprint for the recommender.
+      profile._attached = { locations: (bill.data.locations || []).length, events: (bill.data.events || []).length };
+      if (bill.data.locations && bill.data.locations.length) {
+        $('q-locations').value = bill.data.locations.length;
+      }
+    }
+  }
+
+  /* ---------- Confirm businesses ---------- */
+  function renderConfirm() {
+    const places = (invite && invite.claimable && invite.claimable.places) || [];
+    const events = (invite && invite.claimable && invite.claimable.events) || [];
+    const rows = []
+      .concat(places.map((p) => ({ name: p.name, type: 'Location' })))
+      .concat(events.map((e) => ({ name: e.title, type: 'Event' })));
+    $('confirm-empty').style.display = rows.length ? 'none' : 'block';
+    $('confirm-list').innerHTML = rows.map((r) => `
+      <div class="biz">
+        <div><div class="b-name">${BS.esc(r.name)}</div><div class="b-type">${BS.esc(r.type)}</div></div>
+        <span class="pill">Approved</span>
+      </div>`).join('');
+  }
+  $('confirm-next').addEventListener('click', () => showStep('profile'));
+
+  /* ---------- Profile ---------- */
+  // Prefill business type from the company account_type if known.
+  $('profile-next').addEventListener('click', async () => {
+    profile.business_type = pickedVal('q-type') || profile.business_type || 'hospitality_group';
+    profile.location_count = Number($('q-locations').value) || 1;
+    profile.does_events = pickedVal('q-events') === 'yes';
+    profile.event_scale = profile.does_events ? pickedVal('q-scale') : null;
+    profile.wants_insights = pickedVal('q-insights') || 'none';
+    profile.sponsor_interest = pickedVal('q-sponsor') === 'yes';
+    profile.billing_cycle = 'annual';
+    try { await db.rpc('submit_onboarding_profile', { p_profile: profile }); } catch (e) { /* non-blocking */ }
+    // Default business type into billing step
+    showStep('billing');
+  });
+
+  /* ---------- Billing details ---------- */
+  $('billing-next').addEventListener('click', async () => {
+    clearErr('bi-err');
+    if (!$('bi-legal').value.trim()) { setErr('bi-err', 'Legal / business name is required.'); return; }
+    if (!$('bi-email').value.trim() || $('bi-email').value.indexOf('@') < 0) { setErr('bi-err', 'A valid billing email is required.'); return; }
+    const btn = $('billing-next'); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const { data, error } = await db.rpc('submit_company_onboarding', { p_info: {
+        legal_name: $('bi-legal').value.trim(),
+        trading_name: $('bi-trading').value.trim() || null,
+        billing_contact_name: $('bi-contact').value.trim() || null,
+        billing_email: $('bi-email').value.trim(),
+        billing_phone: $('bi-phone').value.trim() || null,
+        country: $('bi-country').value.trim() || null,
+        address: $('bi-address').value.trim() || null,
+        tax_id: $('bi-tax').value.trim() || null,
+        preferred_currency: $('bi-currency').value,
+        business_type: profile.business_type || 'hospitality_group',
+        role_title: $('bi-role').value.trim() || null,
+      }});
+      if (error) throw error;
+      if (!data.ok) { setErr('bi-err', data.error); return; }
+      profile.billing_cycle = 'annual';
+      renderValue();
+      showStep('value');
+    } catch (e) {
+      setErr('bi-err', e.message || String(e));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Continue →';
+    }
+  });
+
+  /* ---------- Value screen (tailored) ---------- */
+  function renderValue() {
+    const offers = [];
+    offers.push({ t: 'Loyalty & specials', d: 'Reward regulars and post specials — included with your plan.' });
+    if ((profile.location_count || 1) >= 1) offers.push({ t: 'Get discovered', d: 'Your locations surfaced to locals and visitors across the app.' });
+    if (profile.wants_insights && profile.wants_insights !== 'none')
+      offers.push({ t: 'Insights', d: profile.wants_insights === 'company' ? 'Company-wide analytics rollup.' : 'Per-location analytics dashboards.' });
+    if (profile.does_events) offers.push({ t: 'Troddr Events', d: 'A full in-app event experience: schedule, vendors, tickets, sponsors, maps.' });
+    if (profile.sponsor_interest) offers.push({ t: 'Sponsor activations', d: 'Branded activations, check-ins, and sponsor reporting.' });
+    $('value-grid').innerHTML = offers.map((o) => `
+      <div class="offer"><div class="o-title">${BS.esc(o.t)}</div><div class="o-desc">${BS.esc(o.d)}</div></div>`).join('');
+  }
+  $('value-next').addEventListener('click', () => { renderQuote(); showStep('quote'); });
+
+  /* ---------- Quote ---------- */
+  let quoteToggles = {}; // code -> included bool
+
+  function renderQuote() {
+    if (!catalog) { setErr('quote-err', 'Pricing is loading — try again in a moment.'); return; }
+    recommendation = REC.recommend(
+      Object.assign({}, profile, { billing_cycle: profile.billing_cycle || 'annual' }),
+      profile._attached || { locations: 0, events: 0 },
+      catalog
+    );
+    // Initialize toggles (plan always on; products default on).
+    recommendation.lines.forEach((l) => { if (l.kind === 'product') quoteToggles[l.code] = (quoteToggles[l.code] !== false); });
+    paintQuote();
+  }
+
+  function paintQuote() {
+    const cur = recommendation.currency;
+    let total = 0, anyEstimate = false;
+    const html = recommendation.lines.map((l) => {
+      const included = l.kind === 'plan' ? true : (quoteToggles[l.code] !== false);
+      if (included) { total += l.amount; if (l.estimate) anyEstimate = true; }
+      const toggle = l.kind === 'product'
+        ? `<input type="checkbox" class="ql-toggle" data-toggle="${l.code}" ${included ? 'checked' : ''}>`
+        : '';
+      return `
+        <div class="quote-line" style="${included ? '' : 'opacity:0.5;'}">
+          <div>${toggle}<span class="ql-label">${BS.esc(l.label)}</span>
+            ${l.sublabel ? `<div class="ql-sub">${BS.esc(l.sublabel)}</div>` : ''}
+            ${l.note ? `<div class="ql-sub">${BS.esc(l.note)}</div>` : ''}
+          </div>
+          <div class="ql-amount">${l.estimate ? 'from ' : ''}${BS.money(l.amount, cur)}</div>
+        </div>`;
+    }).join('');
+    $('quote-lines').innerHTML = html;
+    $('quote-total-amount').textContent = (anyEstimate ? 'from ' : '') + BS.money(total, cur);
+    $('quote-total-sub').textContent = recommendation.billing_cycle === 'annual' ? 'billed annually + one-time items' : 'billed monthly + one-time items';
+    $('quote-est-note').classList.toggle('hidden', !anyEstimate);
+    document.querySelectorAll('[data-toggle]').forEach((cb) => cb.addEventListener('change', () => {
+      quoteToggles[cb.dataset.toggle] = cb.checked;
+      paintQuote();
+    }));
+  }
+
+  $('quote-next').addEventListener('click', async () => {
+    clearErr('quote-err');
+    const products = recommendation.lines
+      .filter((l) => l.kind === 'product' && quoteToggles[l.code] !== false)
+      .map((l) => ({ code: l.code, quantity: 1 }));
+    const selection = {
+      plan_key: recommendation.plan_key,
+      billing_cycle: recommendation.billing_cycle,
+      products: products,
+      notes: $('quote-notes').value.trim() || null,
+    };
+    const btn = $('quote-next'); btn.disabled = true; btn.textContent = 'Setting up…';
+    try {
+      const { data, error } = await db.rpc('submit_onboarding_quote', { p_selection: selection });
+      if (error) throw error;
+      if (!data.ok) { setErr('quote-err', data.error); return; }
+      if (data.message) $('done-msg').textContent = data.message + ' Your account activates once payment is verified.';
+      showStep('done');
+    } catch (e) {
+      setErr('quote-err', e.message || String(e));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Accept & set up billing →';
+    }
+  });
+
+  $('done-go').addEventListener('click', () => { location.href = '/company/billing'; });
+
+  /* ---------- Boot ---------- */
+  async function boot() {
+    if (inviteToken) {
+      const { data, error } = await db.rpc('get_onboarding_invite', { p_token: inviteToken });
+      if (error) { showInvalid('We could not load this invite. Please try again.'); return; }
+      if (!data.ok) { showInvalid(data.message); return; }
+      invite = data;
+      $('welcome-title').textContent = `Welcome, ${data.company_name}`;
+      $('acc-email').value = data.email;
+      renderConfirm();
+
+      // If they're already signed in with the right email, skip to confirm.
+      const sess = await db.auth.getSession();
+      if (sess.data && sess.data.session) {
+        const acc = await db.rpc('accept_onboarding_invite', { p_token: inviteToken });
+        if (!acc.error && acc.data && acc.data.ok) { await afterLinked(); showStep('confirm'); return; }
+      }
+      showStep('welcome');
+      return;
+    }
+
+    // Resume mode: authed user with incomplete onboarding, no token.
+    const sess = await db.auth.getSession();
+    if (!sess.data || !sess.data.session) { location.href = '/company/billing'; return; }
+    resumeMode = true;
+    const bill = await db.rpc('get_company_billing');
+    if (bill.error || !bill.data || !bill.data.ok) { location.href = '/company/billing'; return; }
+    if (bill.data.onboarding && bill.data.onboarding.status === 'complete') { location.href = '/company/billing'; return; }
+    invite = { company_name: bill.data.company.name, email: bill.data.me.email,
+               claimable: { places: (bill.data.locations || []).map((l) => ({ name: l.name })),
+                            events: (bill.data.events || []).map((e) => ({ title: e.title })) } };
+    await afterLinked();
+    renderConfirm();
+    showStep('confirm');
+  }
+
+  boot();
+</script>
+</body>
+</html>

@@ -897,11 +897,10 @@
       return;
     }
     billing = data;
-    // Onboarding gate: confirm billing details before full use.
+    // Onboarding gate: send unfinished accounts to the guided wizard
+    // (resume mode — no invite token needed once signed in).
     if (data.onboarding && data.onboarding.status !== 'complete') {
-      $('nav-user').textContent = data.me.email;
-      show('nav-user'); show('signout-btn');
-      showOnboarding();
+      location.href = '/onboarding';
       return;
     }
     showOnly('view-dashboard');

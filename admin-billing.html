@@ -300,6 +300,28 @@
       </div>
 
       <div class="card">
+        <h2>Onboarding</h2>
+        <div id="cd-onboarding-summary" class="muted" style="margin-bottom: 10px;"></div>
+        <div id="cd-invites"></div>
+        <div style="border:1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-top: 12px;">
+          <div style="font-weight:700; font-size:13px; margin-bottom:8px;">Generate onboarding invite link</div>
+          <div class="frow">
+            <div><label class="f">Owner email (they'll create their account)</label><input class="f" id="inv-email" type="email" /></div>
+            <div><label class="f">Expires in (days)</label><input class="f" id="inv-expires" type="number" value="14" min="1" /></div>
+          </div>
+          <label class="f">Pre-attach locations (search &amp; click to add)</label>
+          <input class="f" id="inv-loc-search" placeholder="Type a place name…" />
+          <div id="inv-loc-results" style="margin-top:6px;"></div>
+          <label class="f">Pre-attach events (search &amp; click to add)</label>
+          <input class="f" id="inv-event-search" placeholder="Type an event name…" />
+          <div id="inv-event-results" style="margin-top:6px;"></div>
+          <div id="inv-picked" class="muted" style="margin-top:8px;"></div>
+          <div style="margin-top:10px;"><button class="btn primary" id="inv-create">Create invite link</button></div>
+          <div id="inv-result" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>Invoices <button class="btn primary" id="cd-new-invoice" style="margin-left:auto;">+ New invoice for this company</button></h2>
         <div id="cd-invoices"></div>
       </div>
@@ -1067,9 +1089,107 @@
       if (res) { await loadAll(); openCompany(co.id); }
     }));
 
+    // Onboarding summary + invites
+    const ob = d.onboarding || {};
+    const prof = ob.profile || {};
+    const profBits = [];
+    if (prof.business_type) profBits.push(prof.business_type.replace(/_/g, ' '));
+    if (prof.location_count) profBits.push(prof.location_count + ' location(s)');
+    if (prof.does_events) profBits.push('events: ' + (prof.event_scale || 'yes'));
+    if (prof.wants_insights && prof.wants_insights !== 'none') profBits.push('insights: ' + prof.wants_insights);
+    if (prof.sponsor_interest) profBits.push('sponsor interest');
+    $('cd-onboarding-summary').innerHTML =
+      `Status: <b>${esc(ob.status || 'unknown')}</b>` +
+      (profBits.length ? ' · Profile: ' + esc(profBits.join(', ')) : ' · No profile captured yet');
+
+    const invites = d.invites || [];
+    $('cd-invites').innerHTML = invites.length ? `
+      <table class="tbl"><thead><tr><th>Email</th><th>Status</th><th>Link</th><th>Expires</th><th></th></tr></thead>
+      <tbody>${invites.map((iv) => `
+        <tr>
+          <td>${esc(iv.email)}</td>
+          <td>${pill(iv.status === 'pending' ? { label: 'Pending', cls: 'warn' }
+                    : iv.status === 'accepted' ? { label: 'Accepted', cls: 'good' }
+                    : { label: iv.status, cls: 'neutral' })}</td>
+          <td><a href="#" data-copy-invite="${esc(location.origin + iv.url)}">Copy link</a></td>
+          <td>${BS.fmtDate(iv.expires_at)}</td>
+          <td>${iv.status === 'pending' ? `<button class="btn danger" data-revoke-invite="${iv.id}">Revoke</button>` : ''}</td>
+        </tr>`).join('')}</tbody></table>`
+      : '<div class="muted">No invites yet.</div>';
+    document.querySelectorAll('[data-copy-invite]').forEach((a) => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigator.clipboard.writeText(a.dataset.copyInvite).then(() => toast('Invite link copied.'));
+    }));
+    document.querySelectorAll('[data-revoke-invite]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Revoke this invite link?')) return;
+      const res = await action('admin_revoke_onboarding_invite', {
+        p_admin_token: adminToken, p_invite_id: b.dataset.revokeInvite,
+      }, 'Invite revoked.');
+      if (res) openCompany(co.id);
+    }));
+
     // Audit
     $('cd-audit').innerHTML = renderAuditRows((d.audit || []).map((a) => ({ ...a, company: co.name })));
   }
+
+  // Invite generator: pre-attach pickers accumulate ids, then create.
+  let invPlaceIds = [], invEventIds = [], invPlaceNames = {}, invEventNames = {};
+  function renderInvPicked() {
+    const bits = invPlaceIds.map((id) => '📍 ' + (invPlaceNames[id] || id))
+      .concat(invEventIds.map((id) => '🎫 ' + (invEventNames[id] || id)));
+    $('inv-picked').innerHTML = bits.length ? 'Will attach: ' + bits.map(esc).join(', ') : '';
+  }
+  function wireInvSearch(inputId, resultsId, fn, idArr, nameMap) {
+    let t = null;
+    $(inputId).addEventListener('input', () => {
+      clearTimeout(t);
+      const q = $(inputId).value.trim();
+      if (q.length < 2) { $(resultsId).innerHTML = ''; return; }
+      t = setTimeout(async () => {
+        try {
+          const results = await rpc(fn, { p_admin_token: adminToken, p_query: q });
+          $(resultsId).innerHTML = (results || []).map((r) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 2px; font-size:13px; border-bottom:1px solid var(--border-soft);">
+              <div><b>${esc(r.name || r.title)}</b></div>
+              <button class="btn" data-inv-pick="${r.id}" data-inv-name="${esc(r.name || r.title)}">Add</button>
+            </div>`).join('') || '<div class="muted">No matches.</div>';
+          $(resultsId).querySelectorAll('[data-inv-pick]').forEach((b) => b.addEventListener('click', () => {
+            const id = b.dataset.invPick;
+            if (!idArr.includes(id)) { idArr.push(id); nameMap[id] = b.dataset.invName; }
+            $(inputId).value = ''; $(resultsId).innerHTML = '';
+            renderInvPicked();
+          }));
+        } catch (e) { console.error(e); }
+      }, 300);
+    });
+  }
+  wireInvSearch('inv-loc-search', 'inv-loc-results', 'admin_search_places', invPlaceIds, invPlaceNames);
+  wireInvSearch('inv-event-search', 'inv-event-results', 'admin_search_events', invEventIds, invEventNames);
+
+  $('inv-create').addEventListener('click', async () => {
+    const email = $('inv-email').value.trim();
+    if (!email) { alert('Enter the owner email.'); return; }
+    const res = await action('admin_create_onboarding_invite', {
+      p_admin_token: adminToken, p_company_id: companyDetail.company.id,
+      p_email: email, p_place_ids: invPlaceIds, p_event_ids: invEventIds,
+      p_expires_days: Number($('inv-expires').value) || 14,
+    }, 'Invite created.');
+    if (res) {
+      const link = location.origin + res.url;
+      $('inv-result').innerHTML = `
+        <div style="background:var(--green-light); border-radius:8px; padding:10px 12px; font-size:13px;">
+          Invite link ready:<br><a href="${esc(link)}" target="_blank" rel="noopener">${esc(link)}</a>
+          <button class="btn" data-copy-new="${esc(link)}" style="margin-left:8px;">Copy</button>
+        </div>`;
+      $('inv-result').querySelector('[data-copy-new]').addEventListener('click', () =>
+        navigator.clipboard.writeText(link).then(() => toast('Copied.')));
+      $('inv-email').value = ''; invPlaceIds = []; invEventIds = []; renderInvPicked();
+      await loadAll(); // refresh counts
+      // Re-open to show the new invite in the list without losing the result box
+      const data = await rpc('admin_get_company', { p_admin_token: adminToken, p_company_id: companyDetail.company.id });
+      if (data) { companyDetail = data; }
+    }
+  });
 
   $('back-to-companies').addEventListener('click', () => {
     $('company-detail-view').classList.add('hidden');

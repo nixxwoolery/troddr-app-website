@@ -288,3 +288,51 @@ only appears when the company is on a loyalty-family plan. `/partner/billing`
 was rebuilt from the old static placeholder into a real read-only view (plan,
 status, paid-through, locations, events, entitlements, invoices with PDF) that
 hands off to `/company/billing` for any action.
+
+---
+
+## Interactive onboarding & personalized quote (follow-up)
+
+Added by `supabase/company-onboarding.sql` (run after `company-billing-loyalty.sql`),
+tested by `supabase/tests/company-onboarding-tests.sql`. New pages: `onboarding.html`
+(`/onboarding`), helper `js/onboarding-recommend.js`.
+
+Replaces the bare "admin pre-registers email → user signs in → confirms billing" path
+with a guided invite → signup → confirm → profile → value → personalized quote →
+dashboard flow.
+
+### Invite links
+`company_onboarding_invites` (token, company, email, claimable snapshot, expiry, status).
+Admin generates one from the company detail panel in `/admin/billing`:
+`admin_create_onboarding_invite(token, company, email, place_ids[], event_ids[], days)`
+registers the owner email (`admin_upsert_company_user`), **pre-attaches** the chosen
+places/events (admin attachment = the approval), and returns `/onboarding?invite=…`.
+`admin_revoke_onboarding_invite` revokes pending links. `get_onboarding_invite` (anon)
+powers the branded welcome screen; revoked/expired/used links are rejected.
+
+### The wizard (`onboarding.html`)
+Steps: Welcome → Create account (`auth.signUp` + `accept_onboarding_invite`, which links
+the new auth user to the pre-created company via `_resolve_company_user`) → Confirm
+businesses → Profiling activity (`submit_onboarding_profile`) → Billing details
+(reuses `submit_company_onboarding`) → tailored "What Troddr offers" → personalized quote
+→ dashboard. Supports **resume mode**: an authed user with incomplete onboarding hitting
+`/company/billing` is redirected to `/onboarding` (no token needed). Email-confirmation
+projects get a "confirm then reopen the link" state.
+
+### Recommendation + quote
+`js/onboarding-recommend.js` maps profile + attached footprint → a loyalty plan tier
+(1→foundation_loyalty/fp_single, 2→fp_duo, 3→fp_trio, 4-5→fp_group) + event/insights/
+sponsor products, priced from `get_billing_catalog_for_quote()` (authenticated catalog
+read), with ranged products shown "from $X". Add-ons are toggleable; the total
+recalculates live.
+
+`submit_onboarding_quote(selection)` is the paywall: it **re-prices everything
+server-side from the catalog** (ignores client-sent prices; ranged → `min_amount`),
+auto-creates a **DRAFT** invoice via the shared internal `_save_invoice()` helper, records
+a `company_requests` row, writes a notification, and sets `onboarding_status='complete'`.
+It never issues the invoice and never activates access — an admin reviews and issues it,
+the company pays, and admin verification activates entitlements (the core invariant
+holds; asserted by the tests). Until then the dashboard is read-only.
+
+`admin_get_company` now also returns `onboarding` (status/profile/quote) and `invites`,
+surfaced in the admin company detail panel.
