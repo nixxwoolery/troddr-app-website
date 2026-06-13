@@ -138,7 +138,10 @@ alter table public.bookings
   add column if not exists cancellation_reason    text,
   add column if not exists expires_at             timestamptz,
   add column if not exists needs_troddr_attention boolean      not null default false,
-  add column if not exists attention_reason       text;
+  add column if not exists attention_reason       text,
+  add column if not exists counter_date           date,
+  add column if not exists counter_time           text,
+  add column if not exists supplier_confirmation_number text;
 
 alter table public.bookings
   drop constraint if exists bookings_manual_payment_status_check;
