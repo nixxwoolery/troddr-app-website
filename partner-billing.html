@@ -429,15 +429,18 @@
         </div>
       </div>
 
-      <!-- Fallback when the listing has no company billing account yet -->
+      <!-- Shown when the listing has no company billing account yet. The
+           primary action opens the editable form so the partner can enter
+           their own details; email/message are secondary help options. -->
       <div class="billing-card" id="manage-setup" style="display:none;">
-        <div class="lead" id="manage-lead">Get set up for billing</div>
+        <div class="lead" id="manage-lead">Set up your billing details</div>
         <div class="desc" id="manage-desc">
-          This listing isn't attached to a TRODDR company billing account yet. Email billing@troddr.com or
-          message us below and we'll set up your account.
+          Add your business and billing contact information and save — we'll create your billing account from it.
+          Prefer us to set it up for you? Email billing@troddr.com or message us.
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="cta-button" id="manage-setup-cta" href="mailto:billing@troddr.com">Email billing@troddr.com</a>
+          <button type="button" class="cta-button" id="enter-billing-cta">Enter billing details</button>
+          <a class="cta-button ghost" id="manage-setup-cta" href="mailto:billing@troddr.com">Email billing@troddr.com</a>
           <button type="button" class="cta-button ghost" id="contact-billing-cta-2">Message us</button>
         </div>
       </div>
@@ -713,8 +716,25 @@
     });
   }
 
+  // Reveal the editable form (from the "set up billing" card or directly).
+  function showBillingForm() {
+    wireBillingForm();
+    $('manage-setup').style.display = 'none';
+    $('manage-edit').style.display = '';
+    const lead = document.querySelector('#manage-edit .lead');
+    if (lead) lead.textContent = 'Set up your billing details';
+    const cur = $('bf-currency'); if (cur && !cur.value) cur.value = 'USD';
+    const country = $('bf-country'); if (country && !country.value) country.value = 'Jamaica';
+    $('bf-business')?.focus();
+  }
+
   async function loadBillingProfile(token) {
     wireBillingForm();
+    const enterBtn = $('enter-billing-cta');
+    if (enterBtn && !enterBtn.dataset.wired) {
+      enterBtn.dataset.wired = '1';
+      enterBtn.addEventListener('click', showBillingForm);
+    }
     try {
       const { data, error } = await db.rpc('partner_get_billing_profile', { p_token: token });
       if (error) throw error;
