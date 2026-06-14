@@ -3,7 +3,7 @@
 // the path form in [id].js, with the same shared-only by-id fallback.
 
 import {
-  BASE_URL, isBot, isUuid, sbRpc, firstImage, formatTripDateRange,
+  BASE_URL, isBot, sbRpc, firstImage, formatTripDateRange,
   renderOgPage, serveHumanPage,
 } from '../_lib/og.js';
 
@@ -28,11 +28,6 @@ async function fetchByToken(token) {
   return null;
 }
 
-async function fetchById(id) {
-  if (!isUuid(id)) return null;
-  return looksShared(await sbRpc('get_shared_itinerary_by_id', { _itinerary_id: id }));
-}
-
 export default async function handler(request) {
   const url = new URL(request.url);
   const tripId = url.searchParams.get('tripId') || '';
@@ -45,7 +40,7 @@ export default async function handler(request) {
     return serveHumanPage(url.origin, `/itinerary.html${q ? `?${q}` : ''}`);
   }
 
-  const itinerary = (await fetchByToken(token)) || (await fetchById(tripId));
+  const itinerary = await fetchByToken(token);
   const canonicalUrl = `${BASE_URL}/itinerary${tripId ? `?tripId=${encodeURIComponent(tripId)}` : ''}`;
 
   if (debug) {

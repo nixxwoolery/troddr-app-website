@@ -46,7 +46,7 @@
       { "source": "/specials/:slug", "destination": "/specials.html" },
 
       {
-        "source": "/itinerary/:token",
+        "source": "/itinerary/:id",
         "has": [
           {
             "type": "header",
@@ -54,10 +54,10 @@
             "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
           }
         ],
-        "destination": "/api/og/itinerary/:token"
+        "destination": "/api/og/itinerary/:id"
       },
       {
-        "source": "/itinerary/:token",
+        "source": "/itinerary/:id",
         "destination": "/itinerary.html"
       },
   
@@ -134,7 +134,7 @@
       "permanent": false
     },
     {
-      "source": "/itinerary/:token",
+      "source": "/itinerary/:id",
       "missing": [
         {
           "type": "header",
@@ -142,7 +142,7 @@
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
         }
       ],
-      "destination": "/app?redirect=/itinerary/:token",
+      "destination": "/app?redirect=/itinerary/:id",
       "permanent": false
     },
     {

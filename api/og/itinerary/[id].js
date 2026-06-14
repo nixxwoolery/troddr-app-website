@@ -3,13 +3,15 @@
 // TOKEN-GATED. Shares look like /itinerary/{uuid}?token={shareToken}. The
 // itinerary id is in the path; the share token is in the ?token= query. We
 // validate against get_shared_itinerary (a security-definer RPC that only
-// returns *shared* trips). If the token is absent/invalid we fall back to
-// get_shared_itinerary_by_id using the path id — also shared-only, so it never
-// leaks a private trip — which makes the card resilient if a client strips the
-// query string. Only when neither resolves do we show a generic card.
+// returns *shared* trips); with no valid token we show a generic card and never
+// leak a private trip.
+//
+// NOTE: the vercel.json route MUST name the path param :id (not :token) — a
+// :token path param collides with the ?token= query and Vercel overwrites the
+// real share token with the itinerary id, breaking validation.
 
 import {
-  BASE_URL, isBot, isUuid, lastPathSegment, sbRpc,
+  BASE_URL, isBot, lastPathSegment, sbRpc,
   firstImage, formatTripDateRange, renderOgPage, serveHumanPage,
 } from '../_lib/og.js';
 
@@ -38,13 +40,6 @@ async function fetchByToken(token) {
   return null;
 }
 
-// Shared-only lookup by itinerary id (same RPC the public trip page falls back
-// to). Returns null for private/unshared trips, so it cannot leak.
-async function fetchById(id) {
-  if (!isUuid(id)) return null;
-  return looksShared(await sbRpc('get_shared_itinerary_by_id', { _itinerary_id: id }));
-}
-
 export default async function handler(request) {
   const url = new URL(request.url);
   const id = lastPathSegment(url.pathname); // itinerary id (path)
@@ -56,7 +51,7 @@ export default async function handler(request) {
     return serveHumanPage(url.origin, `/itinerary.html?${q}`);
   }
 
-  const itinerary = (await fetchByToken(token)) || (await fetchById(id));
+  const itinerary = await fetchByToken(token);
 
   const canonicalUrl = `${BASE_URL}/itinerary/${encodeURIComponent(id)}${
     token ? `?token=${encodeURIComponent(token)}` : ''
