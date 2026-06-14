@@ -1035,33 +1035,8 @@
       </div>
     </section>
 
-    <section class="section" id="metrics">
-      <div class="section-head">
-        <h2 class="section-title">Discovery</h2>
-      </div>
-      <div class="stats-grid" id="stats-grid"></div>
-      <div id="discovery-card" style="margin-top:14px;"></div>
-    </section>
-
-    <section class="section" id="ratings" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Rating Breakdown</h2>
-          <div class="section-sub">Average score across each dimension guests rate you on.</div>
-        </div>
-      </div>
-      <div class="ratings-card" id="ratings-card"></div>
-    </section>
-
-    <section class="section" id="feedback">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Recent Feedback</h2>
-          <div class="section-sub">The most recent 20 reviews left by guests.</div>
-        </div>
-      </div>
-      <div class="feedback-feed" id="feedback-feed"></div>
-    </section>
+    <!-- Discovery, Ratings Breakdown, and Recent Feedback now live on the
+         Insights & Feedback page (/partner/feedback). -->
 
     <section class="section" id="guides" style="display:none">
       <div class="section-head">
@@ -2143,25 +2118,16 @@
     safe('renderHero',       () => renderHero(data.place));
     safe('renderPreview',    () => renderPreview(data.place));
     safe('renderSummary',    () => renderSummary(data));
-    safe('renderStats',      () => renderStats(data));
-    const hasRatings = (() => {
-      const r = (data && data.stats && data.stats.avg_ratings) || {};
-      return ['taste', 'service', 'value', 'vibe', 'ambiance', 'cleanliness', 'wait_time', 'speed']
-        .some(dim => r[dim] != null);
-    })();
-    safe('renderRatings',    () => renderRatings(data));
-    safe('renderFeedback',   () => renderFeedback(data));
+    // Discovery, Ratings Breakdown, and Recent Feedback moved to /partner/feedback.
     safe('setupHoursEditor',   () => setupHoursEditor(data.place, data.closures || []));
     safe('setupContactEditor', () => setupContactEditor(data.place));
-    // Discovery (PostHog) + Featured in Guides load async without blocking
-    loadDiscovery();
+    // Featured in Guides loads async without blocking
     loadGuides();
 
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
     safe('setupSidebar',       () => setupSidebar(caps && caps.capabilities, {
-      hasRatings: hasRatings,
       partner: caps && caps.partner,
     }));
     safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));

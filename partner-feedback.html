@@ -439,6 +439,24 @@
     color: var(--brand-text);
   }
 
+  /* ── DISCOVERY STATS (moved from listing) ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 14px 14px; min-width: 0; }
+  .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--grey-mid); margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--black); letter-spacing: -1px; line-height: 1.1; }
+  .stat-sub { font-size: 12px; color: var(--grey-mid); margin-top: 6px; }
+  @media (max-width: 720px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ── RATING BREAKDOWN BARS (moved from listing) ── */
+  .ratings-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; }
+  .rating-row { display: grid; grid-template-columns: 120px 1fr 60px; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+  .rating-row:last-child { border-bottom: none; }
+  .rating-name { font-size: 13px; font-weight: 600; color: var(--grey-dark); text-transform: capitalize; }
+  .rating-bar { height: 8px; background: var(--bg-soft); border-radius: 100px; overflow: hidden; }
+  .rating-bar-fill { height: 100%; background: var(--brand-primary); border-radius: 100px; transition: width 0.3s ease; }
+  .rating-value { font-size: 14px; font-weight: 700; color: var(--black); text-align: right; font-variant-numeric: tabular-nums; }
+  .rating-value .of { color: var(--grey-light); font-weight: 500; }
+
   /* ── FEEDBACK FEED ── */
   .feedback-feed {
     display: grid; gap: 10px;
@@ -663,11 +681,29 @@
 
   <main class="main">
 
+    <section class="section" id="metrics">
+      <div class="section-head">
+        <h2 class="section-title">Discovery</h2>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div id="discovery-card" style="margin-top:14px;"></div>
+    </section>
+
     <section class="section" id="summary">
       <div class="section-head">
         <h2 class="section-title">Summary</h2>
       </div>
       <div class="summary-grid" id="summary-grid"></div>
+    </section>
+
+    <section class="section" id="ratings" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Ratings Breakdown</h2>
+          <div class="section-sub">Average score across each dimension guests rate you on.</div>
+        </div>
+      </div>
+      <div class="ratings-card" id="ratings-card"></div>
     </section>
 
     <section class="section" id="distribution">
@@ -688,6 +724,16 @@
         </div>
       </div>
       <div class="tags-card" id="tags-card"></div>
+    </section>
+
+    <section class="section" id="recent">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Recent Feedback</h2>
+          <div class="section-sub">The most recent 20 reviews left by guests.</div>
+        </div>
+      </div>
+      <div class="feedback-feed" id="recent-feed"></div>
     </section>
 
     <section class="section" id="feed">
@@ -1034,6 +1080,126 @@
     return true;
   }
 
+  // ── Discovery stats (moved from listing; uses get_partner_listing_by_token) ──
+  function renderDiscoveryStats(listing) {
+    const s = (listing && listing.stats) || {};
+    const metricValue = (v) => v == null ? 'Soon' : v;
+    const metricSub = (v, readyText) => v == null ? 'needs app tracking' : readyText;
+    const cards = [
+      { label: 'Marked Visits',      value: s.marked_visits ?? 0,  sub: s.marked_visits_30d > 0 ? `${s.marked_visits_30d} in last 30d` : 'all-time' },
+      { label: 'Added to Itinerary', value: metricValue(s.itinerary_adds), sub: metricSub(s.itinerary_adds, 'saved into trip plans') },
+      { label: 'Favourites',         value: metricValue(s.favourites_count), sub: metricSub(s.favourites_count, 'saved by guests') },
+      { label: 'Unique Visitors',    value: s.unique_visitors ?? 0, sub: 'distinct guests' },
+      { label: 'Feedback Submitted', value: s.feedback_count ?? 0,  sub: s.feedback_30d > 0 ? `${s.feedback_30d} in last 30d` : (s.feedback_count ? 'all-time' : 'none yet') },
+      { label: 'Overall Rating',     value: s.overall_rating != null ? s.overall_rating : 'N/A', sub: s.overall_rating != null ? 'out of 5' : 'awaiting reviews' },
+    ];
+    $('stats-grid').innerHTML = cards.map(c => `
+      <div class="stat">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${c.value}</div>
+        ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+      </div>`).join('');
+  }
+
+  // ── Ratings breakdown (moved from listing; avg per dimension) ──
+  function renderRatingsBreakdown(listing) {
+    const r = (listing && listing.stats && listing.stats.avg_ratings) || {};
+    const DIMENSIONS = ['taste', 'service', 'value', 'vibe', 'ambiance', 'cleanliness', 'wait_time', 'speed'];
+    const populated = DIMENSIONS.filter((dim) => r[dim] != null);
+    if (!populated.length) return; // stays hidden until at least one rating exists
+    $('ratings-card').innerHTML = populated.map((dim) => {
+      const score = r[dim];
+      const pct = (score / 5) * 100;
+      return `
+        <div class="rating-row">
+          <div class="rating-name">${titleCase(dim)}</div>
+          <div class="rating-bar"><div class="rating-bar-fill" style="width:${pct}%"></div></div>
+          <div class="rating-value">${score}<span class="of"> / 5</span></div>
+        </div>`;
+    }).join('');
+    $('ratings').style.display = '';
+  }
+
+  // ── Discovery card (PostHog via Edge Function; moved from listing) ──
+  async function loadDiscovery(token) {
+    if (!token) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/posthog-stats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` },
+        body: JSON.stringify({ token, range_days: 30 }),
+      });
+      if (!res.ok) return;
+      const d = await res.json();
+      if (!d || d.ok === false) return;
+      renderDiscoveryCard(d);
+    } catch (e) {
+      console.warn('[partner-feedback] discovery failed:', e);
+    }
+  }
+
+  function renderDiscoveryCard(d) {
+    const card = document.createElement('div');
+    card.className = 'discovery-card';
+    let html = `
+      <div class="discovery-totals">
+        <div class="ds-stat"><div class="ds-num">${d.total_views || 0}</div><div class="ds-lbl">Total views (last ${d.range_days || 30}d)</div></div>
+        <div class="ds-stat"><div class="ds-num">${d.unique_visitors || 0}</div><div class="ds-lbl">Unique visitors</div></div>
+      </div>`;
+    if (d.trend && d.trend.length) {
+      const max = Math.max(1, ...d.trend.map(x => x.views || 0));
+      html += `<div class="discovery-section-title">Daily views</div><div class="ds-trend">` +
+        d.trend.map(x => `<div class="ds-trend-bar ${x.views === 0 ? 'empty' : ''}" style="height:${(x.views / max) * 100}%" title="${x.day}: ${x.views} views"></div>`).join('') + `</div>`;
+    }
+    if (d.top_referrers && d.top_referrers.length) {
+      const max = Math.max(...d.top_referrers.map(r => r.views));
+      html += `<div class="discovery-section-title">Top traffic sources</div>` +
+        d.top_referrers.slice(0, 6).map(r => `<div class="ds-bar-row"><span class="name">${escapeHtml(r.source)}</span><div class="ds-bar"><div class="ds-bar-fill" style="width:${(r.views / max) * 100}%"></div></div><span class="n">${r.views}</span></div>`).join('');
+    }
+    if (d.top_countries && d.top_countries.length) {
+      const max = Math.max(...d.top_countries.map(c => c.views));
+      html += `<div class="discovery-section-title">Top countries</div>` +
+        d.top_countries.slice(0, 6).map(c => `<div class="ds-bar-row"><span class="name">${escapeHtml(c.country)}</span><div class="ds-bar"><div class="ds-bar-fill" style="width:${(c.views / max) * 100}%"></div></div><span class="n">${c.views}</span></div>`).join('');
+    }
+    card.innerHTML = html;
+    $('discovery-card').innerHTML = '';
+    $('discovery-card').appendChild(card);
+  }
+
+  // ── Recent Feedback (latest 20; moved from listing) ──
+  function renderRecent() {
+    const feed = (allFeedback || []).slice(0, 20);
+    if (!feed.length) {
+      $('recent-feed').innerHTML = `
+        <div class="empty-state-card">
+          <div class="empty-state-icon"><svg width="24" height="24"><use href="#ic-chat"/></svg></div>
+          <div class="empty-state-title">No feedback yet</div>
+          <div class="empty-state-body">Reviews will appear here as guests submit them after visiting.</div>
+        </div>`;
+      return;
+    }
+    $('recent-feed').innerHTML = feed.map(fb => {
+      const ratings = fb.ratings || {};
+      const pills = Object.entries(ratings).filter(([, v]) => v != null)
+        .map(([k, v]) => `<span class="fb-rating-pill ${v <= 2 ? 'low' : ''}"><span class="name">${titleCase(k)}</span> <strong>${v}</strong></span>`).join('');
+      const tags = (fb.quick_tags || []).map(t => `<span class="fb-tag">${escapeHtml(humanizeTag(t))}</span>`).join('');
+      const wr = fb.would_return === true
+        ? `<div class="fb-return yes"><svg width="11" height="11"><use href="#ic-check"/></svg> Would visit again</div>`
+        : fb.would_return === false
+          ? `<div class="fb-return no"><svg width="11" height="11"><use href="#ic-x"/></svg> Would not return</div>` : '';
+      return `
+        <div class="fb-card">
+          <div class="fb-head">
+            <div class="fb-id">${maskedLabel(fb.user_id || fb.id)}</div>
+            <div class="fb-time">${fmtRelative(fb.created_at)}</div>
+          </div>
+          ${pills ? `<div class="fb-ratings">${pills}</div>` : ''}
+          ${tags ? `<div class="fb-tags">${tags}</div>` : ''}
+          ${wr}
+        </div>`;
+    }).join('');
+  }
+
   function renderFeed() {
     const filtered = allFeedback.filter(matchesFilters);
     if (!filtered.length) {
@@ -1139,13 +1305,18 @@
     };
     if (!token) { showError(); return; }
 
-    const [feedbackRes, capsRes] = await Promise.all([
+    // Discovery + Ratings were consolidated onto this page, so we also pull
+    // the listing RPC (stats / avg_ratings). allSettled keeps the page alive
+    // if that secondary fetch fails.
+    const [feedbackRes, capsRes, listingRes] = await Promise.allSettled([
       db.rpc('get_partner_feedback_by_token',     { p_token: token }),
       db.rpc('get_partner_capabilities_by_token', { p_token: token }),
-    ]);
+      db.rpc('get_partner_listing_by_token',      { p_token: token }),
+    ]).then(rs => rs.map(r => r.status === 'fulfilled' ? r.value : { error: r.reason }));
 
     const data = feedbackRes.data;
     const caps = capsRes.data;
+    const listing = listingRes && listingRes.data;
 
     const intentional = window.PartnerAuth?.consumeIntent('/partner/feedback');
     const entities = (caps && caps.partner && caps.partner.entities) || [];
@@ -1183,11 +1354,15 @@
     };
     safe('applyBrand',         () => applyBrand(data.program));
     safe('renderHero',         () => renderHero(data.place, data.stats));
+    safe('renderDiscoveryStats', () => renderDiscoveryStats(listing));
     safe('renderSummary',      () => renderSummary(data));
+    safe('renderRatingsBreakdown', () => renderRatingsBreakdown(listing));
     safe('renderDistribution', () => renderDistribution(data));
     safe('renderTags',         () => renderTags(data));
+    safe('renderRecent',       () => renderRecent());
     safe('renderFilters',      () => renderFilters());
     safe('renderFeed',         () => renderFeed());
+    loadDiscovery(token);
   }
 
   load();

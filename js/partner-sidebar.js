@@ -74,12 +74,12 @@
       { label: 'Opening Hours',       section: 'hours' },
     ] },
     { group: 'Insights & Feedback', icon: 'ic-chart', page: '/partner/feedback', cap: 'feedback', children: [
-      { label: 'Discovery',             section: 'metrics',     page: '/partner/listing' },
+      { label: 'Discovery',             section: 'metrics' },
       { label: 'Summary',               section: 'summary' },
       { label: 'Distribution',          section: 'distribution' },
       { label: 'What users are saying', section: 'tags' },
+      { label: 'Recent Feedback',       section: 'recent' },
       { label: 'All Feedback',          section: 'feed' },
-      { label: 'Recent Feedback',       section: 'feedback',    page: '/partner/listing' },
     ] },
     { group: 'Booking', icon: 'ic-calendar', page: '/partner/bookings', cap: 'bookings', children: [
       { label: 'Booking Requests', section: 'view-main' },
@@ -104,22 +104,23 @@
   ];
 
   const NAV_GROUP = [
+    // Group Insights is a true multi-location feature — only shown when the
+    // account owns 2+ places (a restaurant chain / hotel group, etc.).
+    // It leads the group nav as the account-wide overview.
+    { group: 'Group Insights', icon: 'ic-grid', page: '/partner/group', minPlaces: 2 },
     { group: 'Listing', icon: 'ic-doc', page: '/partner/listing', cap: 'listing', children: [
       { label: 'Contact Info',    section: 'contact', page: '/partner/listing' },
       { label: 'Operating Hours', section: 'hours',   page: '/partner/listing' },
     ] },
     { group: 'Community Insights', icon: 'ic-users', page: '/partner/feedback', cap: 'feedback', children: [
       { label: 'Summary',                section: 'summary',      page: '/partner/feedback' },
-      { label: 'Discovery',              section: 'metrics',      page: '/partner/listing' },
-      { label: 'Ratings Breakdown',      section: 'ratings',      page: '/partner/listing' },
-      { label: 'Recent Feedback',        section: 'feedback',     page: '/partner/listing' },
+      { label: 'Discovery',              section: 'metrics',      page: '/partner/feedback' },
+      { label: 'Ratings Breakdown',      section: 'ratings',      page: '/partner/feedback' },
+      { label: 'Recent Feedback',        section: 'recent',       page: '/partner/feedback' },
       { label: 'Distribution',           section: 'distribution', page: '/partner/feedback' },
       { label: 'What guests are saying', section: 'tags',         page: '/partner/feedback' },
       { label: 'All Feedback',           section: 'feed',         page: '/partner/feedback' },
     ] },
-    // Group Insights is a true multi-location feature — only shown when the
-    // account owns 2+ places (a restaurant chain / hotel group, etc.).
-    { group: 'Group Insights', icon: 'ic-grid', page: '/partner/group', minPlaces: 2 },
     { group: 'Specials & Promos', icon: 'ic-tag', page: '/partner/specials', cap: 'specials', children: [
       { label: 'Overview', section: 'summary', page: '/partner/specials' },
     ] },

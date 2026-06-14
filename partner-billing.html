@@ -639,9 +639,9 @@
     $('events-list').innerHTML = '<div class="empty-state">No company billing account yet.</div>';
     $('entitlements-empty').classList.remove('hidden');
     $('invoices-empty').classList.remove('hidden');
-    // Manage Billing: show the "get set up" card, hide the editable form.
-    $('manage-edit').style.display = 'none';
-    $('manage-setup').style.display = '';
+    // Note: the Manage Billing editable form is controlled by
+    // loadBillingProfile() and is shown even without a billing account yet,
+    // so partners can enter their own details.
   }
 
   /* ---------------- Editable billing profile ---------------- */
@@ -714,19 +714,30 @@
   }
 
   async function loadBillingProfile(token) {
-    $('manage-setup').style.display = 'none';
-    $('manage-edit').style.display = '';
     wireBillingForm();
     try {
       const { data, error } = await db.rpc('partner_get_billing_profile', { p_token: token });
       if (error) throw error;
       if (data && data.ok) {
+        // Show the editable form whether or not a billing account exists yet.
+        $('manage-setup').style.display = 'none';
+        $('manage-edit').style.display = '';
         fillBillingForm(data.profile);
+        const lead = document.querySelector('#manage-edit .lead');
+        if (lead) lead.textContent = data.is_new ? 'Set up your billing details' : 'Billing details';
+        if (data.is_new) {
+          setFormMsg('Enter your billing details below and save to set up your account.', '');
+        }
       } else if (data && data.error === 'no_company') {
-        renderNoCompany();
+        // Events: billing is admin-attached — show the setup card.
+        $('manage-edit').style.display = 'none';
+        $('manage-setup').style.display = '';
       }
     } catch (e) {
       console.error('[partner-billing] profile load failed:', e);
+      // Still let the partner enter details even if the read failed.
+      $('manage-setup').style.display = 'none';
+      $('manage-edit').style.display = '';
       setFormMsg('Couldn’t load your saved details. You can still enter and save them.', 'err');
     }
   }
@@ -798,7 +809,6 @@
       if (bErr) throw bErr;
       if (billing && billing.ok) {
         renderBilling(billing);
-        loadBillingProfile(token);
       } else {
         renderNoCompany();
       }
@@ -806,6 +816,9 @@
       console.error('[partner-billing] billing load failed:', e);
       renderNoCompany();
     }
+    // Always load the editable billing profile form so partners can enter
+    // or update their own details (creates the account on first save).
+    loadBillingProfile(token);
   }
 
   load();

@@ -79,6 +79,8 @@ security definer
 set search_path = public
 as $$
 declare
+  v_place      places%rowtype;
+  v_event_id   uuid;
   v_company_id uuid;
   v_c          company_accounts%rowtype;
 begin
@@ -86,30 +88,57 @@ begin
     return jsonb_build_object('ok', false, 'error', 'invalid_token');
   end if;
 
-  v_company_id := public._partner_token_company_id(p_token);
-  if v_company_id is null then
-    -- Either the token is bad, or the listing has no company billing
-    -- account yet. The caller (page) treats no_company as "set up needed".
-    return jsonb_build_object('ok', false, 'error', 'no_company',
-      'message', 'This listing is not attached to a TRODDR company billing account yet.');
+  select * into v_place from public.places where partner_access_token = p_token;
+  if v_place.id is null then
+    select id into v_event_id from public.events where partner_access_token = p_token;
+    if v_event_id is null then
+      return jsonb_build_object('ok', false, 'error', 'invalid_token');
+    end if;
   end if;
 
-  select * into v_c from public.company_accounts where id = v_company_id;
+  v_company_id := public._partner_token_company_id(p_token);
 
-  return jsonb_build_object(
-    'ok', true,
-    'profile', jsonb_build_object(
-      'business_name',  coalesce(nullif(v_c.legal_name, ''), v_c.name),
-      'trading_name',   v_c.trading_name,
-      'contact_name',   v_c.contact_name,
-      'billing_email',  v_c.billing_email,
-      'billing_phone',  coalesce(nullif(v_c.billing_phone, ''), v_c.contact_phone),
-      'address',        v_c.address,
-      'country',        v_c.country,
-      'tax_id',         v_c.tax_id,
-      'preferred_currency', coalesce(v_c.preferred_currency, 'USD')
-    )
-  );
+  -- Existing billing account → return its saved details.
+  if v_company_id is not null then
+    select * into v_c from public.company_accounts where id = v_company_id;
+    return jsonb_build_object(
+      'ok', true, 'is_new', false,
+      'profile', jsonb_build_object(
+        'business_name',  coalesce(nullif(v_c.legal_name, ''), v_c.name),
+        'trading_name',   v_c.trading_name,
+        'contact_name',   v_c.contact_name,
+        'billing_email',  v_c.billing_email,
+        'billing_phone',  coalesce(nullif(v_c.billing_phone, ''), v_c.contact_phone),
+        'address',        v_c.address,
+        'country',        v_c.country,
+        'tax_id',         v_c.tax_id,
+        'preferred_currency', coalesce(v_c.preferred_currency, 'USD')
+      )
+    );
+  end if;
+
+  -- No billing account yet. For a place token, return a blank but
+  -- pre-filled profile so the partner can enter their own details and
+  -- save (which creates the account). Events are admin-attached only.
+  if v_place.id is not null then
+    return jsonb_build_object(
+      'ok', true, 'is_new', true,
+      'profile', jsonb_build_object(
+        'business_name',  v_place.name,
+        'trading_name',   null,
+        'contact_name',   null,
+        'billing_email',  coalesce(nullif(v_place.bookings_email, ''), ''),
+        'billing_phone',  coalesce(nullif(v_place.phone_number, ''), ''),
+        'address',        null,
+        'country',        'Jamaica',
+        'tax_id',         null,
+        'preferred_currency', 'USD'
+      )
+    );
+  end if;
+
+  return jsonb_build_object('ok', false, 'error', 'no_company',
+    'message', 'Billing for events is set up by TRODDR — email billing@troddr.com to get started.');
 end;
 $$;
 
@@ -128,19 +157,30 @@ security definer
 set search_path = public
 as $$
 declare
+  v_place      places%rowtype;
+  v_event_id   uuid;
   v_company_id uuid;
   v_business   text;
   v_email      text;
   v_currency   text;
+  v_trading    text;
+  v_contact    text;
+  v_phone      text;
+  v_address    text;
+  v_country    text;
+  v_tax        text;
+  v_created    boolean := false;
 begin
   if p_token is null or length(trim(p_token)) = 0 then
     return jsonb_build_object('ok', false, 'error', 'Invalid or revoked token');
   end if;
 
-  v_company_id := public._partner_token_company_id(p_token);
-  if v_company_id is null then
-    return jsonb_build_object('ok', false, 'error',
-      'This listing is not attached to a TRODDR company billing account yet. Email billing@troddr.com to get set up.');
+  select * into v_place from public.places where partner_access_token = p_token;
+  if v_place.id is null then
+    select id into v_event_id from public.events where partner_access_token = p_token;
+    if v_event_id is null then
+      return jsonb_build_object('ok', false, 'error', 'Invalid or revoked token');
+    end if;
   end if;
 
   -- Validation (mirrors the authenticated onboarding flow).
@@ -159,16 +199,59 @@ begin
     return jsonb_build_object('ok', false, 'error', 'Preferred currency must be USD or JMD.');
   end if;
 
+  v_trading := nullif(trim(coalesce(p_info ->> 'trading_name', '')), '');
+  v_contact := nullif(trim(coalesce(p_info ->> 'contact_name', '')), '');
+  v_phone   := nullif(trim(coalesce(p_info ->> 'billing_phone', '')), '');
+  v_address := nullif(trim(coalesce(p_info ->> 'address', '')), '');
+  v_country := nullif(trim(coalesce(p_info ->> 'country', '')), '');
+  v_tax     := nullif(trim(coalesce(p_info ->> 'tax_id', '')), '');
+
+  v_company_id := public._partner_token_company_id(p_token);
+
+  -- No billing account yet → create one and link this place (place tokens
+  -- only — events stay admin-attached). This is a billing PROFILE only; no
+  -- plan, entitlements, or invoices are created.
+  if v_company_id is null then
+    if v_place.id is null then
+      return jsonb_build_object('ok', false, 'error',
+        'Billing for events is set up by TRODDR — email billing@troddr.com to get started.');
+    end if;
+
+    insert into public.company_accounts
+      (name, legal_name, trading_name, billing_email, contact_name, billing_phone,
+       address, country, tax_id, preferred_currency, status, source_type, onboarding_status)
+    values
+      (v_business, v_business, v_trading, v_email, v_contact, v_phone,
+       v_address, v_country, v_tax, v_currency, 'active', 'manual', 'complete')
+    returning id into v_company_id;
+
+    insert into public.company_locations
+      (company_account_id, place_id, status, approved_by, label)
+    values
+      (v_company_id, v_place.id, 'approved', 'partner self-service', v_place.name)
+    on conflict (company_account_id, place_id) do nothing;
+
+    v_created := true;
+
+    perform public._billing_audit('system', 'partner dashboard', v_company_id,
+      'partner_billing_account_created',
+      jsonb_build_object('channel', 'partner_link', 'place_id', v_place.id,
+        'business_name', v_business, 'billing_email', v_email));
+
+    return jsonb_build_object('ok', true, 'created', true, 'message', 'Billing details saved.');
+  end if;
+
+  -- Existing billing account → update its contact/profile fields.
   update public.company_accounts
      set name               = v_business,   -- display/account name shown on invoices
          legal_name         = v_business,
-         trading_name       = nullif(trim(coalesce(p_info ->> 'trading_name', '')), ''),
-         contact_name       = nullif(trim(coalesce(p_info ->> 'contact_name', '')), ''),
+         trading_name       = v_trading,
+         contact_name       = v_contact,
          billing_email      = v_email,
-         billing_phone      = nullif(trim(coalesce(p_info ->> 'billing_phone', '')), ''),
-         address            = nullif(trim(coalesce(p_info ->> 'address', '')), ''),
-         country            = nullif(trim(coalesce(p_info ->> 'country', '')), ''),
-         tax_id             = nullif(trim(coalesce(p_info ->> 'tax_id', '')), ''),
+         billing_phone      = v_phone,
+         address            = v_address,
+         country            = v_country,
+         tax_id             = v_tax,
          preferred_currency = v_currency,
          updated_at         = now()
    where id = v_company_id;
@@ -181,7 +264,7 @@ begin
       'billing_email', v_email,
       'preferred_currency', v_currency));
 
-  return jsonb_build_object('ok', true, 'message', 'Billing details saved.');
+  return jsonb_build_object('ok', true, 'created', false, 'message', 'Billing details saved.');
 end;
 $$;
 
