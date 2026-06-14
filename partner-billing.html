@@ -170,6 +170,32 @@
   }
   .cta-button:hover { filter: brightness(1.08); }
   .cta-button.ghost { background: #fff; color: var(--grey-dark); border: 1px solid var(--border); }
+  .cta-button:disabled { opacity: 0.6; cursor: default; filter: none; }
+
+  /* ── Billing profile form ── */
+  .bform { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; margin: 4px 0 18px; }
+  .bform .field { display: flex; flex-direction: column; gap: 6px; }
+  .bform .field.full { grid-column: 1 / -1; }
+  .bform label { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--grey-mid); }
+  .bform label .opt { color: var(--grey-light); font-weight: 600; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+  .bform input, .bform select, .bform textarea {
+    font-family: inherit; font-size: 14px; color: var(--black);
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; width: 100%; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .bform textarea { resize: vertical; min-height: 64px; }
+  .bform input:focus, .bform select:focus, .bform textarea:focus {
+    outline: none; border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(0,119,204,0.12);
+  }
+  .bform-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .bform-note { font-size: 12px; color: var(--grey-mid); margin: 0 0 16px; line-height: 1.55; }
+  .form-msg { font-size: 13px; font-weight: 600; }
+  .form-msg.ok  { color: var(--green); }
+  .form-msg.err { color: var(--red); }
+  .manage-divider { height: 1px; background: var(--border); margin: 20px 0 18px; }
+  .manage-sub { font-size: 13px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+  @media (max-width: 640px) { .bform { grid-template-columns: 1fr; } }
 
   .state { text-align: center; padding: 40px 24px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); }
   .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
@@ -336,15 +362,83 @@
       <div class="section-head">
         <h2 class="section-title">Manage Billing</h2>
       </div>
-      <div class="billing-card">
-        <div class="lead" id="manage-lead">Confirm payments &amp; manage your account</div>
+
+      <!-- Editable billing profile (contact details) -->
+      <div class="billing-card" id="manage-edit" style="display:none;">
+        <div class="lead">Billing details</div>
+        <p class="bform-note">
+          Keep your business and billing contact information up to date — this is what appears on your
+          invoices and where we send billing notices. Payments, plan changes, and invoices stay secured to
+          your company billing sign-in below.
+        </p>
+        <form class="bform" id="billing-form" autocomplete="off">
+          <div class="field full">
+            <label for="bf-business">Registered business name</label>
+            <input type="text" id="bf-business" name="business_name" placeholder="e.g. Negril Footeprints Ltd." required>
+          </div>
+          <div class="field">
+            <label for="bf-trading">Trading name <span class="opt">(optional)</span></label>
+            <input type="text" id="bf-trading" name="trading_name" placeholder="e.g. Negril Footeprints Hotel">
+          </div>
+          <div class="field">
+            <label for="bf-contact">Billing contact name</label>
+            <input type="text" id="bf-contact" name="contact_name" placeholder="Full name">
+          </div>
+          <div class="field">
+            <label for="bf-email">Billing email</label>
+            <input type="email" id="bf-email" name="billing_email" placeholder="billing@yourbusiness.com" required>
+          </div>
+          <div class="field">
+            <label for="bf-phone">Phone number <span class="opt">(optional)</span></label>
+            <input type="tel" id="bf-phone" name="billing_phone" placeholder="+1 876 000 0000">
+          </div>
+          <div class="field full">
+            <label for="bf-address">Billing address <span class="opt">(optional)</span></label>
+            <textarea id="bf-address" name="address" placeholder="Street, town, parish"></textarea>
+          </div>
+          <div class="field">
+            <label for="bf-country">Country <span class="opt">(optional)</span></label>
+            <input type="text" id="bf-country" name="country" placeholder="Jamaica">
+          </div>
+          <div class="field">
+            <label for="bf-tax">Tax ID / TRN <span class="opt">(optional)</span></label>
+            <input type="text" id="bf-tax" name="tax_id" placeholder="GCT / TRN if applicable">
+          </div>
+          <div class="field">
+            <label for="bf-currency">Preferred currency</label>
+            <select id="bf-currency" name="preferred_currency">
+              <option value="USD">USD — US Dollar</option>
+              <option value="JMD">JMD — Jamaican Dollar</option>
+            </select>
+          </div>
+          <div class="field full bform-actions">
+            <button type="submit" class="cta-button" id="bf-save">Save billing details</button>
+            <span class="form-msg" id="bf-msg" aria-live="polite"></span>
+          </div>
+        </form>
+
+        <div class="manage-divider"></div>
+        <div class="manage-sub">Payments &amp; plan changes</div>
+        <p class="bform-note">
+          To confirm a payment, download receipts, or request more admin users, Insights, or Event coverage,
+          sign in to your company billing account with your registered email.
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="cta-button ghost" id="manage-cta" href="/company/billing">Sign in to Company Billing →</a>
+          <button type="button" class="cta-button ghost" id="contact-billing-cta">Have questions? Message us</button>
+        </div>
+      </div>
+
+      <!-- Fallback when the listing has no company billing account yet -->
+      <div class="billing-card" id="manage-setup" style="display:none;">
+        <div class="lead" id="manage-lead">Get set up for billing</div>
         <div class="desc" id="manage-desc">
-          This page is view-only. To confirm a payment, download receipts, request more admin users,
-          Insights, or Event coverage, sign in to your company billing account with your registered email.
+          This listing isn't attached to a TRODDR company billing account yet. Email billing@troddr.com or
+          message us below and we'll set up your account.
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="cta-button" id="manage-cta" href="/company/billing">Sign in to Company Billing →</a>
-          <button type="button" class="cta-button ghost" id="contact-billing-cta">Have questions? Message us</button>
+          <a class="cta-button" id="manage-setup-cta" href="mailto:billing@troddr.com">Email billing@troddr.com</a>
+          <button type="button" class="cta-button ghost" id="contact-billing-cta-2">Message us</button>
         </div>
       </div>
     </section>
@@ -545,16 +639,101 @@
     $('events-list').innerHTML = '<div class="empty-state">No company billing account yet.</div>';
     $('entitlements-empty').classList.remove('hidden');
     $('invoices-empty').classList.remove('hidden');
-    $('manage-lead').textContent = 'Get set up for billing';
-    $('manage-desc').textContent =
-      'This listing isn\'t attached to a TRODDR company billing account yet. ' +
-      'Email billing@troddr.com or message us below and we\'ll set up your Founding Partner account.';
-    $('manage-cta').textContent = 'Email billing@troddr.com';
-    $('manage-cta').href = 'mailto:billing@troddr.com';
+    // Manage Billing: show the "get set up" card, hide the editable form.
+    $('manage-edit').style.display = 'none';
+    $('manage-setup').style.display = '';
+  }
+
+  /* ---------------- Editable billing profile ---------------- */
+  let PARTNER_TOKEN = '';
+
+  function setFormMsg(text, kind) {
+    const el = $('bf-msg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'form-msg' + (kind ? ' ' + kind : '');
+  }
+
+  function fillBillingForm(p) {
+    p = p || {};
+    const set = (id, v) => { const el = $(id); if (el) el.value = v || ''; };
+    set('bf-business', p.business_name);
+    set('bf-trading',  p.trading_name);
+    set('bf-contact',  p.contact_name);
+    set('bf-email',    p.billing_email);
+    set('bf-phone',    p.billing_phone);
+    set('bf-address',  p.address);
+    set('bf-country',  p.country);
+    set('bf-tax',      p.tax_id);
+    const cur = $('bf-currency');
+    if (cur) cur.value = (p.preferred_currency === 'JMD') ? 'JMD' : 'USD';
+  }
+
+  function wireBillingForm() {
+    const form = $('billing-form');
+    if (!form || form.dataset.wired) return;
+    form.dataset.wired = '1';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('bf-save');
+      const info = {
+        business_name:      $('bf-business').value,
+        trading_name:       $('bf-trading').value,
+        contact_name:       $('bf-contact').value,
+        billing_email:      $('bf-email').value,
+        billing_phone:      $('bf-phone').value,
+        address:            $('bf-address').value,
+        country:            $('bf-country').value,
+        tax_id:             $('bf-tax').value,
+        preferred_currency: $('bf-currency').value,
+      };
+      // Lightweight client-side guard (server validates authoritatively).
+      if (!info.business_name.trim()) { setFormMsg('Registered business name is required.', 'err'); return; }
+      if (!/.+@.+\..+/.test(info.billing_email.trim())) { setFormMsg('Enter a valid billing email.', 'err'); return; }
+
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Saving…';
+      setFormMsg('', '');
+      try {
+        const { data, error } = await db.rpc('partner_update_billing_profile', { p_token: PARTNER_TOKEN, p_info: info });
+        if (error) throw error;
+        if (data && data.ok) {
+          setFormMsg(data.message || 'Billing details saved.', 'ok');
+        } else {
+          setFormMsg((data && data.error) || 'Couldn’t save. Please try again.', 'err');
+        }
+      } catch (err) {
+        console.error('[partner-billing] save failed:', err);
+        setFormMsg('Couldn’t save right now. Please try again, or email billing@troddr.com.', 'err');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+  }
+
+  async function loadBillingProfile(token) {
+    $('manage-setup').style.display = 'none';
+    $('manage-edit').style.display = '';
+    wireBillingForm();
+    try {
+      const { data, error } = await db.rpc('partner_get_billing_profile', { p_token: token });
+      if (error) throw error;
+      if (data && data.ok) {
+        fillBillingForm(data.profile);
+      } else if (data && data.error === 'no_company') {
+        renderNoCompany();
+      }
+    } catch (e) {
+      console.error('[partner-billing] profile load failed:', e);
+      setFormMsg('Couldn’t load your saved details. You can still enter and save them.', 'err');
+    }
   }
 
   async function load() {
     const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    PARTNER_TOKEN = token;
     const showError = (caps) => {
       hide('view-loading'); show('view-error');
       window.PartnerAuth?.mountSessionControl('partner');
@@ -594,10 +773,10 @@
     safe('renderHero', () => {
       const entityName = (data.place && data.place.name) || (data.event && data.event.title) || 'Your account';
       $('hero-title').textContent = `${entityName} · Billing`;
-      $('hero-sub').textContent = 'Your plan, invoices, and account — view only. Sign in to company billing to make changes.';
+      $('hero-sub').textContent = 'Edit your billing details below. Plan, invoices, and payments stay secured to your company billing sign-in.';
     });
     safe('wireContactCta', () => {
-      document.getElementById('contact-billing-cta').addEventListener('click', () => {
+      const openMessenger = () => {
         const fab = document.getElementById('msg-fab');
         if (fab) fab.click();
         setTimeout(() => {
@@ -606,6 +785,10 @@
           if (subj) subj.value = 'Billing question';
           if (body) body.focus();
         }, 80);
+      };
+      ['contact-billing-cta', 'contact-billing-cta-2'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', openMessenger);
       });
     });
 
@@ -613,8 +796,12 @@
     try {
       const { data: billing, error: bErr } = await db.rpc('get_partner_billing_by_token', { p_token: token });
       if (bErr) throw bErr;
-      if (billing && billing.ok) renderBilling(billing);
-      else renderNoCompany();
+      if (billing && billing.ok) {
+        renderBilling(billing);
+        loadBillingProfile(token);
+      } else {
+        renderNoCompany();
+      }
     } catch (e) {
       console.error('[partner-billing] billing load failed:', e);
       renderNoCompany();

@@ -640,51 +640,70 @@ const FILTERS = [
 
 async function load() {
   partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
-  if (!partnerToken) { showError(); return; }
+  if (!partnerToken) { showError('auth'); return; }
 
-  const [capsRes, bkRes] = await Promise.all([
-    db.rpc('get_partner_capabilities_by_token', { p_token: partnerToken }),
-    db.rpc('get_partner_bookings_v2', { p_token: partnerToken }),
-  ]);
+  // Resolve capabilities (auth) and bookings (data) independently so a
+  // booking-data problem never masquerades as an expired-link error.
+  let capsRes, bkRes;
+  try {
+    [capsRes, bkRes] = await Promise.all([
+      db.rpc('get_partner_capabilities_by_token', { p_token: partnerToken }),
+      db.rpc('get_partner_bookings_v2', { p_token: partnerToken }),
+    ]);
+  } catch (e) {
+    showError('auth');
+    return;
+  }
 
-  const caps = capsRes.data;
+  const caps = capsRes && capsRes.data;
+
+  // A null/errored capabilities response means the token itself is bad.
+  if (!caps || (capsRes && capsRes.error)) { showError('auth'); return; }
 
   const intentional = window.PartnerAuth?.consumeIntent('/partner/bookings');
-  const entities = (caps && caps.partner && caps.partner.entities) || [];
+  const entities = (caps.partner && caps.partner.entities) || [];
   if (!intentional && entities.length > 1) { window.PartnerAuth?.navigate('/partner/group', partnerToken); return; }
-  if (!intentional && caps && caps.type === 'event') { window.PartnerAuth?.navigate('/partner/event', partnerToken); return; }
+  if (!intentional && caps.type === 'event') { window.PartnerAuth?.navigate('/partner/event', partnerToken); return; }
 
-  if (bkRes.error || !bkRes.data || bkRes.data.error) { showError(caps && caps.capabilities); return; }
-
-  const payload = bkRes.data;
-  allBookings   = payload.bookings || [];
-  const stats   = payload.stats   || {};
-
+  // Token is valid — always render the dashboard frame.
   hide('view-loading'); show('view-main');
   window.PartnerAuth?.mountSessionControl('partner');
-  window.PartnerSidebar?.mount({ active: '/partner/bookings', capabilities: caps && caps.capabilities, partner: caps && caps.partner });
+  window.PartnerSidebar?.mount({ active: '/partner/bookings', capabilities: caps.capabilities, partner: caps.partner });
   window.PartnerSidebar?.setupScrollspy();
 
   // Brand
-  const prog = caps && caps.program;
+  const prog = caps.program;
   if (prog) {
     const r = document.documentElement.style;
-    if (prog.primary_color)   r.setProperty('--brand-primary',  prog.primary_color);
-    if (prog.accent_color)    r.setProperty('--brand-accent',   prog.accent_color);
-    if (prog.text_color)      r.setProperty('--brand-text',     prog.text_color);
+    if (prog.primary_color) r.setProperty('--brand-primary', prog.primary_color);
+    if (prog.accent_color)  r.setProperty('--brand-accent',  prog.accent_color);
+    if (prog.text_color)    r.setProperty('--brand-text',    prog.text_color);
   }
 
-  // Hero
-  $('hero-title').textContent = payload.place_name || 'Bookings';
-  $('hero-sub').textContent   = `${allBookings.length} booking${allBookings.length === 1 ? '' : 's'} · ${payload.booking_mode?.replace(/_/g, ' ') || 'request only'}`;
+  const placeName = (caps.place && caps.place.name) || (bkRes && bkRes.data && bkRes.data.place_name) || 'Bookings';
+  $('hero-title').textContent = placeName;
+
+  // Distinguish "no bookings yet" (fine) from "couldn't load bookings" (error).
+  const bkData    = bkRes && bkRes.data;
+  const dataError = (bkRes && bkRes.error) || !bkData || (bkData && bkData.error);
+  if (dataError) {
+    renderBookingsUnavailable(bkRes && bkRes.error, (bkData && bkData.error) || null);
+    return;
+  }
+
+  const payload = bkData;
+  allBookings   = payload.bookings || [];
+  const stats   = payload.stats   || {};
+
+  $('hero-sub').textContent = `${allBookings.length} booking${allBookings.length === 1 ? '' : 's'} · ${(payload.booking_mode || 'request_only').replace(/_/g, ' ')}`;
 
   // Stats
-  $('stat-total').textContent     = stats.total     ?? '—';
+  $('stat-total').textContent     = stats.total     ?? '0';
   $('stat-pending').textContent   = (stats.pending  ?? 0) + (stats.held ?? 0);
-  $('stat-confirmed').textContent = stats.confirmed ?? '—';
-  $('stat-month').textContent     = stats.this_month ?? '—';
+  $('stat-confirmed').textContent = stats.confirmed ?? '0';
+  $('stat-month').textContent     = stats.this_month ?? '0';
 
-  // Default to first filter that has results
+  // Default to first filter that has results.
   if (!allBookings.some(FILTERS.find(f => f.id === activeStatus).match)) {
     activeStatus = (FILTERS.find(f => allBookings.some(f.match)) || FILTERS[FILTERS.length-1]).id;
   }
@@ -693,7 +712,45 @@ async function load() {
   setupFilters();
 }
 
-function showError(caps) {
+// Valid token but the bookings RPC failed (most commonly the
+// hotel-booking-infrastructure.sql migration hasn't been applied yet,
+// surfacing as Postgres 42883 undefined_function / 42703 undefined_column).
+// Render the frame with an accurate, non-alarming notice + retry.
+function renderBookingsUnavailable(err, payloadError) {
+  const code = err && err.code;
+  const setupPending = code === '42883' || code === '42703' || payloadError === 'invalid_token';
+
+  $('hero-sub').textContent = setupPending ? 'Booking inbox is finishing setup' : 'Couldn’t load bookings';
+
+  ['stat-total','stat-pending','stat-confirmed','stat-month'].forEach((id) => { if ($(id)) $(id).textContent = '—'; });
+  const chipRow = $('chip-row'); if (chipRow) chipRow.style.display = 'none';
+  const filterBar = document.querySelector('.filter-bar'); if (filterBar) filterBar.style.display = 'none';
+
+  const wrap = $('table-wrap');
+  if (!wrap) return;
+  const title = setupPending ? 'Booking inbox is being set up' : 'We couldn’t load your bookings';
+  const body  = setupPending
+    ? 'Your booking management workspace is finishing configuration for this property. This usually clears within a few minutes. Try again shortly, or email us if it persists.'
+    : 'Something went wrong loading your booking requests. Please try again — if it keeps happening, reach out and we’ll take a look.';
+  wrap.innerHTML = `
+    <div class="empty-state-card">
+      <div class="empty-state-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+        </svg>
+      </div>
+      <div class="empty-state-title">${title}</div>
+      <p class="empty-state-body">${body}</p>
+      <button type="button" class="empty-state-cta" onclick="window.location.reload()">Try again</button>
+      <p class="empty-state-body" style="margin-top:12px;font-size:12px;">
+        Need help? Email <a href="mailto:hello@troddr.com">hello@troddr.com</a>.
+      </p>
+    </div>`;
+}
+
+// 'auth'  → genuinely invalid/expired token (full error page).
+// 'data'  → handled inline by renderBookingsUnavailable instead.
+function showError(kind, caps) {
   hide('view-loading'); show('view-error');
   window.PartnerAuth?.mountSessionControl('partner');
   window.PartnerSidebar?.mount({ active: '/partner/bookings', capabilities: caps });

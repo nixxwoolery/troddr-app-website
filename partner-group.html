@@ -260,6 +260,33 @@
   .state-msg { font-size: 14px; line-height: 1.5; }
   .hidden { display: none; }
 
+  /* ── Group Insights ── */
+  .gi-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .gi-stat { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 16px 14px; box-shadow: var(--shadow-sm); }
+  .gi-stat .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-mid); }
+  .gi-stat .val { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: var(--black); line-height: 1.1; margin-top: 6px; }
+  .gi-stat .val.brand { color: var(--brand-primary); }
+  .gi-stat .sub { font-size: 11px; color: var(--grey-light); margin-top: 4px; }
+  @media (max-width: 880px) { .gi-stats { grid-template-columns: repeat(2, 1fr); } }
+
+  .gi-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+  .gi-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .gi-table thead th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-light); padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-soft); }
+  .gi-table thead th.num, .gi-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .gi-table tbody td { padding: 13px 16px; border-bottom: 1px solid var(--border); color: var(--grey-dark); vertical-align: middle; }
+  .gi-table tbody tr:last-child td { border-bottom: none; }
+  .gi-table tbody tr:hover { background: var(--bg-soft); }
+  .gi-loc-name { font-weight: 700; color: var(--black); }
+  .gi-loc-sub { font-size: 11px; color: var(--grey-light); }
+  .gi-rating { font-weight: 700; color: var(--black); }
+  .gi-rating .star { color: #f5a623; }
+  .gi-dash { color: var(--grey-light); }
+  .gi-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .gi-tag { font-size: 12px; font-weight: 600; color: var(--grey-dark); background: var(--bg-soft); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; }
+  .gi-tag b { color: var(--brand-primary); margin-left: 4px; }
+  .gi-empty { padding: 26px 18px; text-align: center; color: var(--grey-mid); font-size: 13px; }
+  @media (max-width: 720px) { .gi-table .hide-sm { display: none; } }
+
   @media (max-width: 720px) {
     .layout { grid-template-columns: 1fr; gap: 16px; }
     .sidebar { position: static; }
@@ -308,6 +335,44 @@
   <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
 
   <main class="main">
+
+    <section class="section" id="group-insights">
+      <div class="section-head">
+        <h2 class="section-title">Group Insights</h2>
+        <div class="section-sub">Guest feedback rolled up across every location in your group.</div>
+      </div>
+
+      <div class="gi-stats" id="gi-stats">
+        <div class="gi-stat"><div class="lbl">Locations</div><div class="val" id="gi-locations">—</div><div class="sub">in this group</div></div>
+        <div class="gi-stat"><div class="lbl">Total Reviews</div><div class="val" id="gi-total">—</div><div class="sub" id="gi-total-sub">all time</div></div>
+        <div class="gi-stat"><div class="lbl">Avg Rating</div><div class="val brand" id="gi-rating">—</div><div class="sub">across the group</div></div>
+        <div class="gi-stat"><div class="lbl">Would Visit Again</div><div class="val" id="gi-return">—</div><div class="sub">of guests who answered</div></div>
+      </div>
+
+      <div class="gi-card" id="gi-board-card">
+        <table class="gi-table">
+          <thead>
+            <tr>
+              <th>Location</th>
+              <th class="num">Reviews</th>
+              <th class="num hide-sm">Last 30d</th>
+              <th class="num">Avg Rating</th>
+              <th class="num hide-sm">Visit Again</th>
+            </tr>
+          </thead>
+          <tbody id="gi-board"></tbody>
+        </table>
+        <div class="gi-empty hidden" id="gi-board-empty">
+          No guest feedback yet. Reviews across your locations will appear here as guests leave them.
+        </div>
+      </div>
+
+      <div class="section-head" id="gi-tags-head" style="margin-top:24px; display:none;">
+        <h2 class="section-title">What guests are saying</h2>
+        <div class="section-sub">Most common tags across the group.</div>
+      </div>
+      <div class="gi-tags" id="gi-tags"></div>
+    </section>
 
     <section class="section" id="places-section" style="display:none">
       <div class="section-head">
@@ -397,11 +462,75 @@
     });
   }
 
-  function mountSidebar(capabilities) {
+  function fmtRating(r) {
+    return (r == null) ? '<span class="gi-dash">—</span>'
+      : `<span class="gi-rating">${Number(r).toFixed(1)}<span class="star"> ★</span></span>`;
+  }
+  function fmtPct(rate) {
+    return (rate == null) ? '<span class="gi-dash">—</span>' : Math.round(rate * 100) + '%';
+  }
+
+  function renderGroupInsights(gi) {
+    if (!gi || !gi.ok) return;
+    const t = gi.totals || {};
+    $('gi-locations').textContent = t.locations ?? '—';
+    $('gi-total').textContent     = t.total ?? '0';
+    $('gi-total-sub').textContent = `${t.count_30d ?? 0} in last 30 days`;
+    $('gi-rating').innerHTML      = (t.overall_rating == null) ? 'N/A' : `${Number(t.overall_rating).toFixed(1)} ★`;
+    $('gi-return').textContent    = (t.would_return_rate == null) ? 'N/A' : Math.round(t.would_return_rate * 100) + '%';
+
+    const locs = gi.locations || [];
+    const board = $('gi-board');
+    if (!locs.length) {
+      board.innerHTML = '';
+      $('gi-board-empty').classList.remove('hidden');
+    } else {
+      $('gi-board-empty').classList.add('hidden');
+      board.innerHTML = locs.map((l) => {
+        const place = [l.town, l.parish].filter(Boolean).join(', ');
+        return `
+          <tr>
+            <td>
+              <div class="gi-loc-name">${escapeHtml(l.name || 'Untitled')}</div>
+              ${place ? `<div class="gi-loc-sub">${escapeHtml(place)}</div>` : ''}
+            </td>
+            <td class="num">${l.total ?? 0}</td>
+            <td class="num hide-sm">${l.count_30d ?? 0}</td>
+            <td class="num">${fmtRating(l.overall_rating)}</td>
+            <td class="num hide-sm">${fmtPct(l.would_return_rate)}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    const tags = gi.top_tags || [];
+    if (tags.length) {
+      $('gi-tags-head').style.display = '';
+      $('gi-tags').innerHTML = tags.slice(0, 16).map((t) =>
+        `<span class="gi-tag">${escapeHtml(t.tag)}<b>${t.count}</b></span>`).join('');
+    } else {
+      $('gi-tags-head').style.display = 'none';
+      $('gi-tags').innerHTML = '';
+    }
+  }
+
+  async function loadGroupInsights(token) {
+    try {
+      const { data, error } = await db.rpc('get_partner_group_insights_by_token', { p_token: token });
+      if (error) throw error;
+      if (data && data.ok) renderGroupInsights(data);
+    } catch (e) {
+      console.error('[partner-group] insights load failed:', e);
+      // Leave the section in its default "—" state; the page still works.
+      $('gi-board-empty').classList.remove('hidden');
+    }
+  }
+
+  function mountSidebar(capabilities, partner) {
     if (!window.PartnerSidebar) return;
     window.PartnerSidebar.mount({
       active: '/partner/group',
       capabilities: capabilities || {},
+      partner: partner || null,
       hasGroupLanding: true,
       jumpLinks: [],
     });
@@ -468,7 +597,16 @@
     hide('view-loading');
     show('view-dashboard');
     window.PartnerAuth?.mountSessionControl('partner');
-    mountSidebar(data.capabilities);
+    mountSidebar(data.capabilities, partner);
+
+    // Group Insights is a multi-location feature — only for accounts that
+    // own 2+ places (a restaurant chain, hotel group, etc.).
+    const placeCount = entities.filter((e) => e.type === 'place').length;
+    if (placeCount >= 2) {
+      loadGroupInsights(token);
+    } else {
+      $('group-insights').style.display = 'none';
+    }
   }
 
   load();

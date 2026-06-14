@@ -1,13 +1,25 @@
 /* ============================================================
- * Unified partner sidebar.
+ * Unified partner sidebar  (v2 — nested, collapsible).
  *
- * Each partner page mounts the same nav structure via
- * PartnerSidebar.mount({ active, capabilities, jumpLinks, partner }).
+ * One shared component mounted on every partner page via
+ *   PartnerSidebar.mount({ active, capabilities, partner })
  *
- * Sections are capability-driven : if the partner doesn't have
- * a section (e.g. event partner without listings), it isn't shown.
- * "On this page" jump-links sit at the top so they're visible
- * without scrolling.
+ * The nav is a two-level tree defined centrally below, so the
+ * structure is identical on every page. There are two trees:
+ *
+ *   • NAV_INDIVIDUAL — shown on every single-location page
+ *     (Listing, Insights & Feedback, Booking, Promote,
+ *      Specials & Promotions, Account, Event)
+ *
+ *   • NAV_GROUP — shown on the group landing (/partner/group)
+ *     (Listing, Community Insights, Group Insights,
+ *      Specials & Promos, Billing)
+ *
+ * Sections are capability-driven: a section with a `cap` is only
+ * rendered when capabilities[cap] is truthy. The section whose
+ * `page` matches the current page is auto-expanded and its
+ * same-page children act as scroll-spy anchors; every other
+ * section is collapsed and its children navigate cross-page.
  * ============================================================ */
 (function () {
   if (window.PartnerSidebar) return;
@@ -27,13 +39,13 @@
     'ic-edit':      '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
     'ic-info':      '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
     'ic-map':       '<path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/>',
-    'ic-pass':      '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M9 6v12M3 12h6"/>',
-    'ic-bus':       '<path d="M8 21h8M5 17h14a2 2 0 0 0 2-2v-7a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v7a2 2 0 0 0 2 2zm2 0v3m10-3v3M3 13h18M7 12.5h.01M17 12.5h.01"/>',
     'ic-mic':       '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>',
     'ic-ticket':    '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2zm10-4v14"/>',
     'ic-plus':      '<path d="M12 5v14M5 12h14"/>',
     'ic-list':      '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     'ic-grid':      '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+    'ic-megaphone': '<path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    'ic-chevron':   '<path d="M9 6l6 6-6 6"/>',
   };
 
   function ensureIcons() {
@@ -48,58 +60,73 @@
     document.body.insertBefore(wrapper.firstChild, document.body.firstChild);
   }
 
-  // Section spec : capability-driven cross-page nav.
-  // Only items whose `cap` is truthy in `capabilities` are rendered.
-  // Sections with zero rendered items are hidden entirely.
-  const SECTIONS = [
-    {
-      group: 'Listing',
-      items: [
-        { href: '/partner/listing',  icon: 'ic-doc',      label: 'Listing',            cap: 'listing' },
-        { href: '/partner/feedback', icon: 'ic-users',    label: 'Community Insights', cap: 'feedback' },
-        { href: '/partner/bookings', icon: 'ic-calendar', label: 'Booking Requests',   cap: 'bookings' },
-      ],
-    },
-    {
-      group: 'Promote',
-      items: [
-        { href: '/partner/specials', icon: 'ic-tag',  label: 'Specials & Promos', cap: 'specials' },
-        { href: '/partner/loyalty',  icon: 'ic-bolt', label: 'Loyalty',           cap: 'loyalty' },
-      ],
-    },
-    {
-      group: 'Event',
-      items: [
-        { href: '/partner/event',            icon: 'ic-calendar',  label: 'Event Dashboard', cap: 'event' },
-        { href: '/partner/event-floorplan',  icon: 'ic-floorplan', label: 'Floor Plan',      cap: 'event' },
-      ],
-    },
-    {
-      group: 'Account',
-      items: [
-        { href: '/partner/billing', icon: 'ic-dollar', label: 'Billing', cap: 'billing' },
-      ],
-    },
+  // ── Central nav trees ──────────────────────────────────────
+  // section: { group, icon, page, cap, children:[ { label, section, page? } ] }
+  //   cap   — capability key; omit/null to always show.
+  //   page  — route this section's header navigates to.
+  //   child.section — anchor id on the child's target page.
+  //   child.page    — override target page (cross-page link); defaults to section.page.
+
+  const NAV_INDIVIDUAL = [
+    { group: 'Listing', icon: 'ic-doc', page: '/partner/listing', cap: 'listing', children: [
+      { label: 'Preview',             section: 'preview' },
+      { label: 'Content Info & Links', section: 'contact' },
+      { label: 'Opening Hours',       section: 'hours' },
+    ] },
+    { group: 'Insights & Feedback', icon: 'ic-chart', page: '/partner/feedback', cap: 'feedback', children: [
+      { label: 'Discovery',             section: 'metrics',     page: '/partner/listing' },
+      { label: 'Summary',               section: 'summary' },
+      { label: 'Distribution',          section: 'distribution' },
+      { label: 'What users are saying', section: 'tags' },
+      { label: 'All Feedback',          section: 'feed' },
+      { label: 'Recent Feedback',       section: 'feedback',    page: '/partner/listing' },
+    ] },
+    { group: 'Booking', icon: 'ic-calendar', page: '/partner/bookings', cap: 'bookings', children: [
+      { label: 'Booking Requests', section: 'view-main' },
+    ] },
+    { group: 'Promote', icon: 'ic-megaphone', page: '/partner/loyalty', cap: 'loyalty' },
+    { group: 'Specials & Promotions', icon: 'ic-tag', page: '/partner/specials', cap: 'specials', children: [
+      { label: 'Specials Summary',     section: 'summary' },
+      { label: 'Active Specials',      section: 'active' },
+      { label: 'Submit a New Special', section: 'upload' },
+    ] },
+    { group: 'Event', icon: 'ic-calendar', page: '/partner/event', cap: 'event', children: [
+      { label: 'Event Dashboard', section: '' },
+      { label: 'Floor Plan',      section: '', page: '/partner/event-floorplan' },
+    ] },
+    { group: 'Account', icon: 'ic-dollar', page: '/partner/billing', cap: 'billing', children: [
+      { label: 'Billing Summary',             section: 'summary' },
+      { label: 'Locations & Events',          section: 'account' },
+      { label: 'Active Add-ons & Entitlements', section: 'addons' },
+      { label: 'Invoices',                    section: 'invoices' },
+      { label: 'Manage Billing',              section: 'manage' },
+    ] },
   ];
 
-  function pageLinkHtml(item, active) {
-    const isActive = item.href && active && item.href === active;
-    const icon = `<svg><use href="#${item.icon}"/></svg>`;
-    const cls = isActive ? 'page-link active' : 'page-link';
-    return `<a class="${cls}" data-href="${item.href}">${icon} ${escapeHtml(item.label)}</a>`;
-  }
-
-  function jumpLinkHtml(link) {
-    // Special: header-only entry (no section, just visual group label).
-    if (link.header) {
-      const hidden = link.hidden ? ' style="display:none"' : '';
-      return `<div class="sidebar-title" style="padding-top:14px;"${hidden}>${escapeHtml(link.header)}</div>`;
-    }
-    const icon = link.icon ? `<svg><use href="#${link.icon}"/></svg> ` : '';
-    const idAttr = link.id ? ` id="${link.id}"` : '';
-    const hidden = link.hidden ? ' style="display:none"' : '';
-    return `<a href="#${link.section}" class="jump-link" data-section="${link.section}"${idAttr}${hidden}>${icon}${escapeHtml(link.label)}</a>`;
-  }
+  const NAV_GROUP = [
+    { group: 'Listing', icon: 'ic-doc', page: '/partner/listing', cap: 'listing', children: [
+      { label: 'Contact Info',    section: 'contact', page: '/partner/listing' },
+      { label: 'Operating Hours', section: 'hours',   page: '/partner/listing' },
+    ] },
+    { group: 'Community Insights', icon: 'ic-users', page: '/partner/feedback', cap: 'feedback', children: [
+      { label: 'Summary',                section: 'summary',      page: '/partner/feedback' },
+      { label: 'Discovery',              section: 'metrics',      page: '/partner/listing' },
+      { label: 'Ratings Breakdown',      section: 'ratings',      page: '/partner/listing' },
+      { label: 'Recent Feedback',        section: 'feedback',     page: '/partner/listing' },
+      { label: 'Distribution',           section: 'distribution', page: '/partner/feedback' },
+      { label: 'What guests are saying', section: 'tags',         page: '/partner/feedback' },
+      { label: 'All Feedback',           section: 'feed',         page: '/partner/feedback' },
+    ] },
+    // Group Insights is a true multi-location feature — only shown when the
+    // account owns 2+ places (a restaurant chain / hotel group, etc.).
+    { group: 'Group Insights', icon: 'ic-grid', page: '/partner/group', minPlaces: 2 },
+    { group: 'Specials & Promos', icon: 'ic-tag', page: '/partner/specials', cap: 'specials', children: [
+      { label: 'Overview', section: 'summary', page: '/partner/specials' },
+    ] },
+    { group: 'Billing', icon: 'ic-dollar', page: '/partner/billing', cap: 'billing', children: [
+      { label: 'Group Billing', section: 'summary', page: '/partner/billing' },
+    ] },
+  ];
 
   function escapeHtml(s) {
     if (s == null) return '';
@@ -107,21 +134,70 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  function iconSvg(id) { return id ? `<svg class="psb-ic"><use href="#${id}"/></svg>` : ''; }
+
+  function childTargetPage(section, child) { return child.page || section.page; }
+
+  // ── Build a single section ─────────────────────────────────
+  function sectionHtml(section, active) {
+    const isActive = section.page === active;
+    const children = section.children || [];
+    const hasChildren = children.length > 0;
+    const openCls = isActive && hasChildren ? ' open' : '';
+    const activeCls = isActive ? ' active' : '';
+
+    let html = `<div class="psb-group${activeCls}${openCls}">`;
+
+    // Header row: anchor navigates to the section's page; the (sibling)
+    // chevron button toggles children open/closed.
+    const chevron = hasChildren
+      ? `<button type="button" class="psb-toggle" aria-label="Toggle ${escapeHtml(section.group)}"><svg class="psb-chev"><use href="#ic-chevron"/></svg></button>`
+      : '';
+    html += `<div class="psb-head">`
+          +   `<a class="psb-grouplink" data-href="${section.page}">`
+          +     `${iconSvg(section.icon)}<span class="psb-label">${escapeHtml(section.group)}</span>`
+          +   `</a>${chevron}`
+          + `</div>`;
+
+    // Children.
+    if (hasChildren) {
+      html += `<div class="psb-sub">`;
+      children.forEach((child) => {
+        const tPage = childTargetPage(section, child);
+        const samePage = tPage === active;
+        const anchor = child.section || '';
+        if (samePage && anchor) {
+          // Live scroll-spy anchor on the current page.
+          html += `<a class="psb-sublink jump-link" href="#${anchor}" data-section="${anchor}">${escapeHtml(child.label)}</a>`;
+        } else {
+          // Cross-page navigation (optionally to an anchor).
+          html += `<a class="psb-sublink" data-href="${tPage}" data-hash="${anchor}">${escapeHtml(child.label)}</a>`;
+        }
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
   function buildHtml(opts) {
     const active = opts.active || '';
     const caps = opts.capabilities || {};
-    // Multi-entity is inferred from the partner blob when the caller passes
-    // it ; otherwise fall back to the explicit hasGroupLanding flag.
     const partnerEntities = (opts.partner && Array.isArray(opts.partner.entities))
-      ? opts.partner.entities
-      : null;
+      ? opts.partner.entities : null;
     const hasMultipleEntities = (partnerEntities && partnerEntities.length > 1)
       || opts.hasGroupLanding === true;
+    // A "group" in the multi-location sense = 2+ places (restaurant chain,
+    // hotel group, etc.). Used to gate group-only nav like Group Insights.
+    const placeCount = partnerEntities
+      ? partnerEntities.filter((e) => e && e.type === 'place').length : 0;
+
+    const tree = (active === '/partner/group') ? NAV_GROUP : NAV_INDIVIDUAL;
 
     let html = '';
 
-    // Entity picker container (revealed + populated by the page's
-    // renderEntityPicker after PartnerSidebar.mount).
+    // Entity picker (revealed + populated by the page after mount).
     html += `
       <div class="entity-picker hidden" id="entity-picker">
         <div class="partner-tag">Switch entity</div>
@@ -131,55 +207,131 @@
       <div class="sidebar-divider" id="entity-picker-divider" style="display:none"></div>
     `;
 
-    // "All Entities" link back to the group landing, shown on every page
-    // (except the group landing itself) when the partner has more than one.
+    // "All Entities" back-link for group members on a location page.
     if (hasMultipleEntities && active !== '/partner/group') {
-      html += `<a class="page-link" data-href="/partner/group"><svg><use href="#ic-grid"/></svg> All Entities</a>`;
+      html += `<div class="psb-head psb-solo">`
+            +   `<a class="psb-grouplink" data-href="/partner/group">`
+            +     `${iconSvg('ic-grid')}<span class="psb-label">All Entities</span></a>`
+            + `</div>`;
       html += `<div class="sidebar-divider"></div>`;
     }
 
-    // "On this page" jump-links.
-    if (opts.jumpLinks && opts.jumpLinks.length) {
-      html += `<div class="sidebar-title">On this page</div>`;
-      opts.jumpLinks.forEach((link) => { html += jumpLinkHtml(link); });
-      html += `<div class="sidebar-divider"></div>`;
-    }
-
-    // Cross-page nav, capability-driven.
-    SECTIONS.forEach((section) => {
-      const visible = section.items.filter((item) => caps[item.cap]);
-      if (!visible.length) return;
-      html += `<div class="sidebar-title">${escapeHtml(section.group)}</div>`;
-      visible.forEach((item) => { html += pageLinkHtml(item, active); });
+    html += `<nav class="psb-nav">`;
+    tree.forEach((section) => {
+      if (section.cap && !caps[section.cap]) return;
+      if (section.minPlaces && placeCount < section.minPlaces) return;
+      html += sectionHtml(section, active);
     });
+    html += `</nav>`;
 
     return html;
   }
 
+  // ── Navigation wiring ──────────────────────────────────────
+  function getToken() {
+    try {
+      return (window.PartnerAuth && window.PartnerAuth.getToken({ require: false }))
+        || new URLSearchParams(location.search).get('token') || '';
+    } catch (e) { return ''; }
+  }
+
+  function pageUrl(path, token) {
+    const url = new URL(path, window.location.origin);
+    if (token) url.searchParams.set('token', token);
+    return url.toString();
+  }
+
+  function goTo(path, hash) {
+    const token = getToken();
+    try { sessionStorage.setItem('__partner_intent', path); } catch (e) {}
+    try { if (token) sessionStorage.setItem('troddr_partner_token', token); } catch (e) {}
+    let dest = pageUrl(path, token);
+    if (hash) dest += '#' + hash;
+    window.location.href = dest;
+  }
+
+  function smoothScrollTo(anchor) {
+    const el = anchor ? document.getElementById(anchor) : null;
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return true;
+    }
+    return false;
+  }
+
+  // Wire one sidebar element's interactive parts. Idempotent — a
+  // re-mount or a second `.sidebar` element won't double-bind handlers.
+  function wireSidebar(root, active) {
+    const token = getToken();
+
+    // Group / solo header links → navigate to their page.
+    root.querySelectorAll('.psb-grouplink').forEach((a) => {
+      const href = a.dataset.href;
+      if (!href) return;
+      a.setAttribute('href', pageUrl(href, token));
+      if (a.dataset.wired) return;
+      a.dataset.wired = '1';
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (href === active) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+        goTo(href);
+      });
+    });
+
+    // Chevron toggles — open/close without navigating.
+    root.querySelectorAll('.psb-toggle').forEach((btn) => {
+      if (btn.dataset.wired) return;
+      btn.dataset.wired = '1';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const group = btn.closest('.psb-group');
+        if (group) group.classList.toggle('open');
+      });
+    });
+
+    // Sub-links.
+    root.querySelectorAll('.psb-sublink').forEach((a) => {
+      const crossPage = a.dataset.href;
+      if (crossPage) {
+        const hash = a.dataset.hash || '';
+        a.setAttribute('href', pageUrl(crossPage, token) + (hash ? '#' + hash : ''));
+        if (a.dataset.wired) return;
+        a.dataset.wired = '1';
+        a.addEventListener('click', (e) => { e.preventDefault(); goTo(crossPage, hash); });
+      } else {
+        if (a.dataset.wired) return;
+        a.dataset.wired = '1';
+        a.addEventListener('click', (e) => {
+          const anchor = a.dataset.section;
+          if (anchor && document.getElementById(anchor)) {
+            e.preventDefault();
+            smoothScrollTo(anchor);
+          }
+        });
+      }
+    });
+  }
+
   /** Mount the sidebar into every .sidebar element on the page. */
   function mount(opts) {
+    opts = opts || {};
     ensureIcons();
     const sidebars = document.querySelectorAll('.sidebar');
     if (!sidebars.length) return;
-    const html = buildHtml(opts || {});
-    sidebars.forEach((sb) => { sb.innerHTML = html; });
-    if (window.PartnerAuth) {
-      window.PartnerAuth.setupPageLinks(opts && opts.capabilities);
-    }
+    const html = buildHtml(opts);
+    sidebars.forEach((sb) => { sb.innerHTML = html; wireSidebar(sb, opts.active || ''); });
   }
 
-  /** Activate scrollspy for jump-links currently in the sidebar. */
+  /** Scroll-spy for the active section's same-page anchors. */
   function setupScrollspy() {
-    const jumpLinks = document.querySelectorAll('.jump-link');
+    const jumpLinks = document.querySelectorAll('.psb-sublink.jump-link');
     if (!jumpLinks.length) return;
     const sections = Array.from(jumpLinks)
       .map((l) => document.getElementById(l.dataset.section))
       .filter(Boolean);
     function update() {
       const scrollY = window.scrollY + 120;
-      // Skip sections inside hidden ancestors (e.g. inactive view panes).
-      // offsetParent is null for any element with display:none in its
-      // ancestor chain, which gives us a reliable visibility check.
       const visible = sections.filter((sec) => sec.offsetParent !== null);
       let activeId = visible[0] && visible[0].id;
       visible.forEach((sec) => { if (sec.offsetTop <= scrollY) activeId = sec.id; });

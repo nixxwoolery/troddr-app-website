@@ -394,11 +394,147 @@
   background: var(--bg-soft, #f8f9fa) !important;
 }
 
+/* ============================================================
+ * UNIFIED NESTED SIDEBAR  (v2 component — js/partner-sidebar.js)
+ * These rules use !important to win over each page's own
+ * `.sidebar a` styles, guaranteeing one identical sidebar on
+ * every partner page regardless of page-level CSS.
+ * ============================================================ */
+.sidebar .psb-nav {
+  display: flex; flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar .psb-group { display: flex; flex-direction: column; }
+
+/* Header row : anchor + optional chevron toggle. */
+.sidebar .psb-head {
+  display: flex !important;
+  align-items: center;
+  border-radius: 9px;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar .psb-head:hover { background: var(--bg-soft, #f8f9fa); }
+.sidebar .psb-group.active > .psb-head,
+.sidebar .psb-head.psb-solo:hover {
+  background: var(--bg-soft, #f8f9fa);
+}
+.sidebar .psb-group.active > .psb-head {
+  background: var(--brand-primary, #0077CC) !important;
+}
+
+.sidebar .psb-grouplink {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  flex: 1; min-width: 0;
+  padding: 9px 10px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  color: var(--grey-dark, #333) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  border-radius: 9px !important;
+  cursor: pointer;
+}
+.sidebar .psb-group.active > .psb-head .psb-grouplink,
+.sidebar .psb-group.active > .psb-head .psb-toggle {
+  color: var(--brand-text, #fff) !important;
+}
+.sidebar .psb-ic { width: 16px !important; height: 16px !important; flex-shrink: 0; }
+.sidebar .psb-label {
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.sidebar .psb-toggle {
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: transparent; border: none;
+  padding: 0; margin-right: 8px;
+  width: 22px; height: 28px;
+  color: var(--grey-mid, #666);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.sidebar .psb-toggle:hover { background: rgba(0,0,0,0.06); }
+.sidebar .psb-group.active > .psb-head .psb-toggle:hover { background: rgba(255,255,255,0.2); }
+.sidebar .psb-chev { width: 13px; height: 13px; transition: transform 0.18s ease; }
+.sidebar .psb-group.open > .psb-head .psb-chev { transform: rotate(90deg); }
+
+/* Children : indented, left guide rail, collapsed by default. */
+.sidebar .psb-sub {
+  display: none;
+  flex-direction: column;
+  gap: 1px;
+  margin: 3px 0 6px 22px;
+  padding-left: 11px;
+  border-left: 1px solid var(--border, #e8e8e8);
+}
+.sidebar .psb-group.open > .psb-sub { display: flex; }
+.sidebar .psb-sublink {
+  display: block !important;
+  padding: 6px 10px !important;
+  margin: 0 !important;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--grey-mid, #666) !important;
+  text-decoration: none !important;
+  background: transparent !important;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar .psb-sublink:hover {
+  background: var(--bg-soft, #f8f9fa) !important;
+  color: var(--black, #111) !important;
+}
+.sidebar .psb-sublink.active {
+  color: var(--brand-primary, #0077CC) !important;
+  background: var(--bg-soft, #f8f9fa) !important;
+  font-weight: 700 !important;
+}
+
 /* Mobile : sidebar scrolls horizontally as a chip rail. */
 @media (max-width: 720px) {
   .sidebar {
     max-height: none !important;
     overflow-y: visible !important;
   }
+  /* Flatten the nested tree into a horizontal rail of top-level
+     sections; hide chevrons and sub-items to keep it tappable. */
+  .sidebar .psb-nav {
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .sidebar .psb-nav::-webkit-scrollbar { display: none; }
+  .sidebar .psb-group { flex: 0 0 auto; }
+  .sidebar .psb-toggle,
+  .sidebar .psb-sub,
+  .sidebar .psb-solo + .sidebar-divider { display: none !important; }
+  .sidebar .psb-head { white-space: nowrap; }
+  .sidebar .psb-grouplink {
+    border: 1px solid var(--border, #e8e8e8) !important;
+    border-radius: 100px !important;
+    padding: 8px 14px !important;
+  }
+  .sidebar .psb-group.active > .psb-head .psb-grouplink {
+    border-color: var(--brand-primary, #0077CC) !important;
+  }
 }
+
+/* ============================================================
+ * UNIFIED PAGE PRIMITIVES
+ * Shared section / card / heading / button baselines so every
+ * partner page renders with the same spacing, radius, and type.
+ * Page CSS can still override where it loads later in the head.
+ * ============================================================ */
+.section { scroll-margin-top: 88px; }
+.section-title { letter-spacing: -0.3px; }
+.empty-state-card { box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.04)); }
 
