@@ -129,6 +129,23 @@
     ] },
   ];
 
+  // Event dashboard is a single page with internal view-panes. Each nav item
+  // carries a `section` anchor; the page listens for the `psb:select` event
+  // (dispatched on click) to switch to the right pane before scrolling.
+  const NAV_EVENT = [
+    { group: 'Event Overview', icon: 'ic-info', page: '/partner/event', section: 'overview', children: [
+      { label: 'Event Details', section: 'info' },
+      { label: 'Edit',          section: 'edit' },
+    ] },
+    { group: 'Event Insights', icon: 'ic-chart', page: '/partner/event', section: 'engagement', children: [
+      { label: 'All Vendors Performance', section: 'vendors' },
+    ] },
+    { group: 'Event Planning', icon: 'ic-grid', page: '/partner/event', section: 'builder-root', children: [
+      { label: 'Floor Plan', section: 'builder-root' },
+    ] },
+    { group: 'Billing', icon: 'ic-dollar', page: '/partner/event', section: 'billing' },
+  ];
+
   function escapeHtml(s) {
     if (s == null) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -154,8 +171,9 @@
     const chevron = hasChildren
       ? `<button type="button" class="psb-toggle" aria-label="Toggle ${escapeHtml(section.group)}"><svg class="psb-chev"><use href="#ic-chevron"/></svg></button>`
       : '';
+    const headAnchor = (isActive && section.section) ? ` data-section="${section.section}"` : '';
     html += `<div class="psb-head">`
-          +   `<a class="psb-grouplink" data-href="${section.page}">`
+          +   `<a class="psb-grouplink" data-href="${section.page}"${headAnchor}>`
           +     `${iconSvg(section.icon)}<span class="psb-label">${escapeHtml(section.group)}</span>`
           +   `</a>${chevron}`
           + `</div>`;
@@ -194,7 +212,10 @@
     const placeCount = partnerEntities
       ? partnerEntities.filter((e) => e && e.type === 'place').length : 0;
 
-    const tree = (active === '/partner/group') ? NAV_GROUP : NAV_INDIVIDUAL;
+    const isEvent = active === '/partner/event' || active === '/partner/event-floorplan';
+    const tree = (active === '/partner/group') ? NAV_GROUP
+               : isEvent ? NAV_EVENT
+               : NAV_INDIVIDUAL;
 
     let html = '';
 
@@ -260,6 +281,15 @@
     return false;
   }
 
+  // In-page section selection. Pages with internal view-panes (the event
+  // dashboard) listen for `psb:select` to switch to the right pane *before*
+  // we scroll; pages without panes simply scroll.
+  function selectSection(anchor) {
+    if (!anchor) return;
+    document.dispatchEvent(new CustomEvent('psb:select', { detail: { section: anchor } }));
+    smoothScrollTo(anchor);
+  }
+
   // Wire one sidebar element's interactive parts. Idempotent — a
   // re-mount or a second `.sidebar` element won't double-bind handlers.
   function wireSidebar(root, active) {
@@ -274,7 +304,12 @@
       a.dataset.wired = '1';
       a.addEventListener('click', (e) => {
         e.preventDefault();
-        if (href === active) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+        if (href === active) {
+          const sec = a.dataset.section;
+          if (sec) selectSection(sec);
+          else window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
         goTo(href);
       });
     });
@@ -307,7 +342,7 @@
           const anchor = a.dataset.section;
           if (anchor && document.getElementById(anchor)) {
             e.preventDefault();
-            smoothScrollTo(anchor);
+            selectSection(anchor);
           }
         });
       }

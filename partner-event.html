@@ -7,12 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/partner-shared.css">
+<link rel="stylesheet" href="/css/floorplan-builder.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
 <script src="/js/partner-sidebar.js"></script>
 <script src="/js/partner-errors.js"></script>
+<script src="/js/floorplan-builder.js" defer></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -2292,7 +2294,7 @@
 
   <main class="main">
 
-      <div class="view-tabs" role="tablist" aria-label="Event dashboard sections" id="view-tabs">
+      <div class="view-tabs" role="tablist" aria-label="Event dashboard sections" id="view-tabs" style="display:none">
         <button type="button" class="view-tab is-active" data-view="overview" role="tab" aria-selected="true">Overview</button>
         <button type="button" class="view-tab" data-view="analytics" role="tab" aria-selected="false">Analytics</button>
         <button type="button" class="view-tab" data-view="details" role="tab" aria-selected="false">Details</button>
@@ -2662,6 +2664,19 @@
       </section>
 
       </div><!-- /view-pane-editor -->
+
+      <!-- ── PLANNING : Floor Plan (merged from the standalone page) ── -->
+      <div class="view-pane" id="view-pane-planning" data-view="planning" role="tabpanel" hidden>
+        <section class="section" id="builder-section">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Floor Plan</h2>
+              <div class="section-sub">Build the site map your guests will see — booths, stages, bars and more.</div>
+            </div>
+          </div>
+          <div id="builder-root"></div>
+        </section>
+      </div><!-- /view-pane-planning -->
 
       <!-- ── Vendor edit modal ── -->
       <div class="ve-modal-backdrop" id="ve-modal-backdrop">
@@ -5478,6 +5493,85 @@
     });
   }
 
+  // ── Floor plan (merged from the standalone floor-plan page) ──────
+  let _floorBuilder = null;
+
+  async function _floorUploadBackground(file) {
+    const ev   = (window.__eventData && window.__eventData.event) || {};
+    const ext  = (file.name.split('.').pop() || 'png').toLowerCase();
+    const slug = ev.slug || ev.id || 'event';
+    const path = `${slug}/floor-plan-${Date.now()}.${ext}`;
+    const { data, error } = await db.storage.from('event-floorplans').upload(path, file, {
+      upsert: true, contentType: file.type,
+    });
+    if (error) {
+      const msg = (error.message || error.error || 'Upload failed.');
+      const blocked = /not found|policy/i.test(String(msg))
+        ? ' (Make sure the "event-floorplans" bucket exists in Supabase Storage with the right policies.)' : '';
+      throw new Error(msg + blocked);
+    }
+    const { data: pub } = db.storage.from('event-floorplans').getPublicUrl(data.path);
+    return pub.publicUrl;
+  }
+
+  async function _floorSave({ backgroundUrl, elements }) {
+    const { data, error } = await db.rpc('update_event_floor_plan', {
+      p_token: _getToken(), p_floor_plan_url: backgroundUrl, p_floor_plan_markers: elements,
+    });
+    if (error || !data || !data.ok) {
+      return { ok: false, error: (error && (error.message || error.code)) || (data && data.error) || 'Save failed' };
+    }
+    return { ok: true };
+  }
+
+  async function _floorCreateInvite() {
+    try {
+      const { data, error } = await db.rpc('create_event_map_invite', {
+        p_token: _getToken(), p_designer_name: null, p_designer_email: null,
+        p_scopes: ['markers'], p_expires_in_days: 14,
+      });
+      if (error || !data || !data.token) {
+        alert((error && error.message) || (data && data.error) || 'Could not create invite.');
+        return;
+      }
+      const url = `${location.origin}/m/${data.token}`;
+      navigator.clipboard?.writeText(url).catch(() => {});
+      alert('Designer link copied to clipboard:\n\n' + url + '\n\nValid for 14 days. The designer gets the same builder, limited to this event\'s layout.');
+    } catch (err) { alert((err && err.message) || 'Network error.'); }
+  }
+
+  function _floorCopyPublicLink() {
+    const ev = (window.__eventData && window.__eventData.event) || {};
+    if (!ev.slug) { alert('This event has no public link yet.'); return; }
+    const url = `${location.origin}/map/${ev.slug}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+    alert('Public map link copied to clipboard:\n\n' + url + '\n\nGuests can open it on any phone — no app or login needed. Remember to Save so the link shows your latest layout.');
+  }
+
+  // Lazy-init on first activation of the Planning pane (the canvas must be
+  // visible to measure itself).
+  function initFloorPlan() {
+    if (_floorBuilder) return;
+    const root = document.getElementById('builder-root');
+    if (!root || typeof FloorplanBuilder === 'undefined') return;
+    const d = window.__eventData || {};
+    const e = d.event || {};
+    _floorBuilder = FloorplanBuilder.mount({
+      container: root,
+      elements: Array.isArray(e.floor_plan_markers) ? e.floor_plan_markers : [],
+      backgroundUrl: e.floor_plan_url || null,
+      vendors: Array.isArray(d.vendors) ? d.vendors : [],
+      saveLabel: 'Save',
+      onSave: _floorSave,
+      onUploadBackground: _floorUploadBackground,
+      actions: [
+        { label: 'Designer link', icon: 'fpb-copy', onClick: _floorCreateInvite },
+        { label: 'Public link',   icon: 'fpb-link', onClick: _floorCopyPublicLink },
+      ],
+    });
+  }
+  window.initFloorPlan = initFloorPlan;
+
   // ── Load ─────────────────────────────────────────────────
   function showLoadError(err, fallback) {
     const friendly = window.friendlyError
@@ -5655,7 +5749,7 @@
 <script>
   // View routing: ?view=overview | analytics | details
   (function () {
-    const VIEWS = ['overview', 'analytics', 'details', 'editor'];
+    const VIEWS = ['overview', 'analytics', 'details', 'editor', 'planning'];
     const DEFAULT_VIEW = 'overview';
 
     function resolveView(name) {
@@ -5679,6 +5773,10 @@
         tab.setAttribute('aria-selected', match ? 'true' : 'false');
       });
       if (opts && opts.scrollTop) window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+      // Floor plan canvas must be visible to measure itself — init on first show.
+      if (view === 'planning' && typeof window.initFloorPlan === 'function') {
+        requestAnimationFrame(() => window.initFloorPlan());
+      }
       // Nudge the sidebar scrollspy to recompute now that visible
       // sections have changed.
       window.dispatchEvent(new Event('scroll'));
@@ -5705,6 +5803,18 @@
     }
 
     window.addEventListener('popstate', () => applyView(paramView()));
+
+    // The unified sidebar drives the views: when a sidebar item is selected,
+    // switch to the pane that contains its target section (then it scrolls).
+    document.addEventListener('psb:select', (e) => {
+      const sectionId = e.detail && e.detail.section;
+      if (!sectionId) return;
+      const el = document.getElementById(sectionId);
+      const pane = el && el.closest('.view-pane');
+      const view = pane ? pane.getAttribute('data-view') : null;
+      if (view && view !== paramView()) navigateTo(view, false);
+      else if (view === 'planning' && typeof window.initFloorPlan === 'function') window.initFloorPlan();
+    });
 
     function wireSectionEditButtons() {
       document.querySelectorAll('.section-edit-btn[data-edit-target]').forEach(btn => {
