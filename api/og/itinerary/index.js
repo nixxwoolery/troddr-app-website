@@ -3,7 +3,7 @@
 // the path form in [id].js, with the same shared-only by-id fallback.
 
 import {
-  BASE_URL, isBot, sbRpc, firstImage, formatTripDateRange,
+  BASE_URL, isBot, sbRpc, formatTripDateRange,
   renderOgPage, serveHumanPage,
 } from '../_lib/og.js';
 
@@ -80,7 +80,7 @@ export default async function handler(request) {
     title: `My trip to ${destination}`,
     ogTitle,
     description: [dateRange, stopsLabel].filter(Boolean).join(' · ') || `My trip to ${destination}, planned on TRODDR.`,
-    imageUrl: firstImage(...places.map((p) => p?.image), trip.cover_image, trip.image),
+    imageUrl: `${BASE_URL}/api/og/itinerary-image?id=${encodeURIComponent(tripId)}&token=${encodeURIComponent(token)}`,
     canonicalUrl,
     type: 'website',
     imageTitle: `I'm going to ${destination}`,

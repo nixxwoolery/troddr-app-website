@@ -265,6 +265,27 @@ export function isUuid(s) {
   );
 }
 
+// Validate a share token against get_shared_itinerary (shared-only RPC),
+// trying the dash/dashless variants the app uses. Returns the raw payload
+// ({ itinerary, places }) or null. Never leaks private trips.
+export async function fetchSharedItinerary(token) {
+  if (!token) return null;
+  const ok = (d) => (d && (d.itinerary || d.title) ? d : null);
+  const tryToken = async (t) => ok(await sbRpc('get_shared_itinerary', { _token: t }));
+
+  let r = await tryToken(token);
+  if (r) return r;
+  if (token.includes('-')) {
+    r = await tryToken(token.replace(/-/g, ''));
+    if (r) return r;
+  }
+  if (/^[0-9a-fA-F]{32}$/.test(token)) {
+    r = await tryToken(token.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5'));
+    if (r) return r;
+  }
+  return null;
+}
+
 // Format a trip's start/end into a friendly range:
 //   same month → "July 18 – 19", diff month → "July 18 – August 2",
 //   diff year  → "July 18, 2026 – January 2, 2027", start only → "July 18".

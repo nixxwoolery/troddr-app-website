@@ -99,8 +99,10 @@ export default async function handler(request) {
     [dateRange, stopsLabel].filter(Boolean).join(' · ') ||
     `My trip to ${destination}, planned on TRODDR.`;
 
-  // Use a photo from one of the trip's stops; branded card only if none has one.
-  const imageUrl = firstImage(...places.map((p) => p?.image), trip.cover_image, trip.image);
+  // og:image is the generated collage (hero photo + destination + dates +
+  // stops + thumbnails + footer) so the single tappable card looks like the
+  // in-app trip card. It re-validates the token server-side before rendering.
+  const imageUrl = `${BASE_URL}/api/og/itinerary-image?id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
 
   return renderOgPage({
     title: `My trip to ${destination}`,
