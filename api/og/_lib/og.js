@@ -182,6 +182,8 @@ export function renderOgPage({
   type = 'website',
   imageTitle,
   imageSubtitle,
+  imageWidth = 1200,
+  imageHeight = 630,
 }) {
   const image =
     makeAbsolute(imageUrl) ||
@@ -210,8 +212,8 @@ export function renderOgPage({
   <meta property="og:description" content="${d}" />
   <meta property="og:image" content="${img}" />
   <meta property="og:image:secure_url" content="${img}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image:width" content="${imageWidth}" />
+  <meta property="og:image:height" content="${imageHeight}" />
   <meta property="og:image:alt" content="${t}" />
 
   <!-- Twitter -->

@@ -1,9 +1,9 @@
 // api/og/itinerary-image.js
 //
-// Generated 1200×630 collage used as the og:image for a shared itinerary —
-// mirrors the in-app trip card (hero photo, destination, dates, stops, stop
-// names, thumbnails, "View this trip on troddr.com"). This is what makes the
-// single tappable link-preview card look like the app's share card.
+// Generated PORTRAIT collage used as the og:image for a shared itinerary —
+// mirrors the in-app trip card (hero photo, "Trip itinerary" pill, destination,
+// dates, stops, stop names, thumbnails, "View this trip on troddr.com").
+// Portrait orientation matches the in-app card and renders tall in iMessage.
 //
 //   /api/og/itinerary-image?id={id}&token={shareToken}
 //
@@ -15,6 +15,10 @@ import { fetchSharedItinerary, firstImage, formatTripDateRange } from './_lib/og
 
 export const config = { runtime: 'edge' };
 
+export const CARD_W = 1080;
+export const CARD_H = 1542;
+const PHOTO_H = 1392;
+const FOOTER_H = CARD_H - PHOTO_H; // 150
 const BLUE = '#0077cc';
 
 const h = (type, props, ...children) => ({
@@ -30,32 +34,54 @@ function safeImg(url) {
   return url.replace(/enc_avif/g, 'enc_auto');
 }
 
-function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) {
-  const metaText = [dateRange, stopsLabel].filter(Boolean).join('   ·   ');
+const calendarIcon = () =>
+  h(
+    'svg',
+    { width: 46, height: 46, viewBox: '0 0 24 24', fill: 'none' },
+    h('rect', { x: 3, y: 4.5, width: 18, height: 16.5, rx: 2.5, stroke: '#fff', strokeWidth: 2 }),
+    h('path', { d: 'M3 9.5 H21', stroke: '#fff', strokeWidth: 2 }),
+    h('path', { d: 'M8 2.5 V6.5', stroke: '#fff', strokeWidth: 2, strokeLinecap: 'round' }),
+    h('path', { d: 'M16 2.5 V6.5', stroke: '#fff', strokeWidth: 2, strokeLinecap: 'round' })
+  );
 
+const pinIcon = () =>
+  h(
+    'svg',
+    { width: 46, height: 46, viewBox: '0 0 24 24', fill: 'none' },
+    h('path', {
+      d: 'M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z',
+      stroke: '#fff',
+      strokeWidth: 2,
+      strokeLinejoin: 'round',
+    }),
+    h('circle', { cx: 12, cy: 10, r: 2.6, stroke: '#fff', strokeWidth: 2 })
+  );
+
+function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) {
   return h(
     'div',
     {
       style: {
-        width: '1200px',
-        height: '630px',
+        width: `${CARD_W}px`,
+        height: `${CARD_H}px`,
         display: 'flex',
         flexDirection: 'column',
         fontFamily: 'sans-serif',
+        backgroundColor: '#0a0a0a',
       },
     },
     // Photo stack
     h(
       'div',
-      { style: { display: 'flex', position: 'relative', width: '1200px', height: '566px' } },
+      { style: { display: 'flex', position: 'relative', width: `${CARD_W}px`, height: `${PHOTO_H}px` } },
       hero
         ? h('img', {
             src: safeImg(hero),
-            width: 1200,
-            height: 566,
-            style: { position: 'absolute', top: 0, left: 0, width: '1200px', height: '566px', objectFit: 'cover' },
+            width: CARD_W,
+            height: PHOTO_H,
+            style: { position: 'absolute', top: 0, left: 0, width: `${CARD_W}px`, height: `${PHOTO_H}px`, objectFit: 'cover' },
           })
-        : h('div', { style: { display: 'flex', position: 'absolute', top: 0, left: 0, width: '1200px', height: '566px', backgroundColor: BLUE } }),
+        : h('div', { style: { display: 'flex', position: 'absolute', top: 0, left: 0, width: `${CARD_W}px`, height: `${PHOTO_H}px`, backgroundColor: BLUE } }),
       // Legibility gradient
       h('div', {
         style: {
@@ -63,9 +89,9 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
           position: 'absolute',
           top: 0,
           left: 0,
-          width: '1200px',
-          height: '566px',
-          backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.85) 100%)',
+          width: `${CARD_W}px`,
+          height: `${PHOTO_H}px`,
+          backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0.12) 55%, rgba(0,0,0,0.82) 100%)',
         },
       }),
       // Content
@@ -79,41 +105,49 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '1200px',
-            height: '566px',
-            padding: '48px 56px',
+            width: `${CARD_W}px`,
+            height: `${PHOTO_H}px`,
+            padding: '48px',
           },
         },
         // Top bar
         h(
           'div',
           { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-          h('div', { style: { display: 'flex', color: '#fff', fontSize: '26px', fontWeight: 800, letterSpacing: '2px' } }, 'TRODDR'),
-          h('div', {
-            style: { display: 'flex', color: '#fff', fontSize: '22px', fontWeight: 700, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: '999px', padding: '8px 18px' },
-          }, 'Trip itinerary')
+          h('div', { style: { display: 'flex', color: '#fff', fontSize: '45px', fontWeight: 800, letterSpacing: '4px' } }, 'TRODDR'),
+          h(
+            'div',
+            { style: { display: 'flex', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.38)', borderRadius: '999px', padding: '16px 30px' } },
+            h('div', { style: { display: 'flex', color: '#fff', fontSize: '38px', fontWeight: 700 } }, 'Trip itinerary')
+          )
         ),
         // Bottom block
         h(
           'div',
-          { style: { display: 'flex', flexDirection: 'column' } },
-          h('div', { style: { display: 'flex', color: '#fff', fontSize: '84px', fontWeight: 800, letterSpacing: '-1px', lineHeight: 1 } }, destination),
-          metaText
-            ? h('div', { style: { display: 'flex', color: '#fff', fontSize: '30px', fontWeight: 600, marginTop: '16px' } }, metaText)
-            : null,
+          { style: { display: 'flex', flexDirection: 'column', paddingLeft: '12px', paddingBottom: '8px' } },
+          h('div', { style: { display: 'flex', color: '#fff', fontSize: '132px', fontWeight: 800, letterSpacing: '-2px', lineHeight: 1 } }, destination),
+          h(
+            'div',
+            { style: { display: 'flex', alignItems: 'center', marginTop: '28px' } },
+            ...(dateRange
+              ? [calendarIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '46px', fontWeight: 600, marginLeft: '14px', marginRight: '48px' } }, dateRange)]
+              : []),
+            pinIcon(),
+            h('div', { style: { display: 'flex', color: '#fff', fontSize: '46px', fontWeight: 600, marginLeft: '14px' } }, stopsLabel)
+          ),
           names
-            ? h('div', { style: { display: 'flex', color: 'rgba(255,255,255,0.9)', fontSize: '26px', marginTop: '12px' } }, names)
+            ? h('div', { style: { display: 'flex', color: 'rgba(255,255,255,0.92)', fontSize: '42px', marginTop: '28px' } }, names)
             : null,
           thumbs.length > 0
             ? h(
                 'div',
-                { style: { display: 'flex', marginTop: '20px' } },
+                { style: { display: 'flex', marginTop: '32px' } },
                 ...thumbs.map((u) =>
                   h('img', {
                     src: safeImg(u),
-                    width: 84,
-                    height: 84,
-                    style: { width: '84px', height: '84px', borderRadius: '12px', objectFit: 'cover', marginRight: '12px' },
+                    width: 156,
+                    height: 156,
+                    style: { width: '156px', height: '156px', borderRadius: '28px', objectFit: 'cover', marginRight: '24px' },
                   })
                 )
               )
@@ -124,9 +158,9 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
     // Footer bar
     h(
       'div',
-      { style: { display: 'flex', width: '1200px', height: '64px', backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' } },
-      h('div', { style: { display: 'flex', color: '#fff', fontSize: '28px', fontWeight: 600 } }, 'View this trip on '),
-      h('div', { style: { display: 'flex', color: '#fff', fontSize: '28px', fontWeight: 800, marginLeft: '8px' } }, 'troddr.com')
+      { style: { display: 'flex', width: `${CARD_W}px`, height: `${FOOTER_H}px`, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' } },
+      h('div', { style: { display: 'flex', color: '#fff', fontSize: '50px', fontWeight: 600 } }, 'View this trip on '),
+      h('div', { style: { display: 'flex', color: '#fff', fontSize: '50px', fontWeight: 800, marginLeft: '12px' } }, 'troddr.com')
     )
   );
 }
@@ -154,11 +188,11 @@ export default async function handler(request) {
 
   const fields = payload
     ? fieldsFrom(payload)
-    : { destination: 'My Itinerary', dateRange: '', stopsLabel: '', names: 'Plan your trip on TRODDR', hero: undefined, thumbs: [] };
+    : { destination: 'My Itinerary', dateRange: '', stopsLabel: 'Plan your trip on TRODDR', names: '', hero: undefined, thumbs: [] };
 
   return new ImageResponse(buildCard(fields), {
-    width: 1200,
-    height: 630,
+    width: CARD_W,
+    height: CARD_H,
     headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' },
   });
 }

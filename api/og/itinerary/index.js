@@ -85,5 +85,7 @@ export default async function handler(request) {
     type: 'website',
     imageTitle: `I'm going to ${destination}`,
     imageSubtitle: [dateRange, stopsLabel].filter(Boolean).join(' · ') || 'My itinerary',
+    imageWidth: 1080,
+    imageHeight: 1542,
   });
 }
