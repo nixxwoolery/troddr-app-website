@@ -1,31 +1,31 @@
 // api/og/itinerary/[id].js — Open Graph card for /itinerary/{id}?token={token}
 //
 // TOKEN-GATED. Shares look like /itinerary/{uuid}?token={shareToken}. The
-// itinerary id is in the path; the *share token* is in the ?token= query and
-// is the only thing that authorizes exposing trip details. We validate it
-// against get_shared_itinerary (a security-definer RPC that only returns
-// shared trips). On a missing/invalid token we return a generic branded card
-// and never leak a private itinerary.
+// itinerary id is in the path; the share token is in the ?token= query. We
+// validate against get_shared_itinerary (a security-definer RPC that only
+// returns *shared* trips). If the token is absent/invalid we fall back to
+// get_shared_itinerary_by_id using the path id — also shared-only, so it never
+// leaks a private trip — which makes the card resilient if a client strips the
+// query string. Only when neither resolves do we show a generic card.
 
 import {
-  BASE_URL, isBot, lastPathSegment, sbRpc,
-  firstImage, renderOgPage, serveHumanPage,
+  BASE_URL, isBot, isUuid, lastPathSegment, sbRpc,
+  firstImage, formatTripDateRange, renderOgPage, serveHumanPage,
 } from '../_lib/og.js';
 
 export const config = { runtime: 'edge' };
 
-// Validate the share token, trying the dash/dashless variants the app uses.
-async function fetchSharedItinerary(token) {
-  if (!token) return null;
+function looksShared(data) {
+  return data && (data.title || data.items) ? data : null;
+}
 
-  const tryToken = async (t) => {
-    const data = await sbRpc('get_shared_itinerary', { _token: t });
-    return data && (data.title || data.items) ? data : null;
-  };
+// Validate the share token, trying the dash/dashless variants the app uses.
+async function fetchByToken(token) {
+  if (!token) return null;
+  const tryToken = async (t) => looksShared(await sbRpc('get_shared_itinerary', { _token: t }));
 
   let result = await tryToken(token);
   if (result) return result;
-
   if (token.includes('-')) {
     result = await tryToken(token.replace(/-/g, ''));
     if (result) return result;
@@ -38,17 +38,12 @@ async function fetchSharedItinerary(token) {
   return null;
 }
 
-const fmtDay = (iso) => {
-  if (!iso) return '';
-  try {
-    return new Date(`${String(iso).slice(0, 10)}T12:00:00`).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return '';
-  }
-};
+// Shared-only lookup by itinerary id (same RPC the public trip page falls back
+// to). Returns null for private/unshared trips, so it cannot leak.
+async function fetchById(id) {
+  if (!isUuid(id)) return null;
+  return looksShared(await sbRpc('get_shared_itinerary_by_id', { _itinerary_id: id }));
+}
 
 export default async function handler(request) {
   const url = new URL(request.url);
@@ -56,13 +51,12 @@ export default async function handler(request) {
   const token = url.searchParams.get('token') || ''; // share token (authorizes)
   const debug = url.searchParams.get('debug') === '1';
 
-  // Humans → the real itinerary page (keeps both id + token).
   if (!isBot(request.headers.get('user-agent')) && !debug) {
     const q = `tripId=${encodeURIComponent(id)}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
     return serveHumanPage(url.origin, `/itinerary.html?${q}`);
   }
 
-  const itinerary = await fetchSharedItinerary(token);
+  const itinerary = (await fetchByToken(token)) || (await fetchById(id));
 
   const canonicalUrl = `${BASE_URL}/itinerary/${encodeURIComponent(id)}${
     token ? `?token=${encodeURIComponent(token)}` : ''
@@ -70,36 +64,41 @@ export default async function handler(request) {
 
   if (debug) {
     return new Response(
-      JSON.stringify({ id, hasToken: !!token, found: !!itinerary, destination: itinerary?.destination, stops: itinerary?.items?.length || 0 }, null, 2),
+      JSON.stringify({ id, hasToken: !!token, found: !!itinerary, destination: itinerary?.destination, stops: itinerary?.items?.length || 0, imageUrl: firstImage(itinerary?.items?.find((i) => i?.image)?.image) }, null, 2),
       { headers: { 'Content-Type': 'application/json' } }
     );
   }
 
-  // No valid token → generic, non-leaking card.
+  // No shared trip resolved → generic, non-leaking card.
   if (!itinerary) {
     return renderOgPage({
-      title: 'A Trip on TRODDR',
-      description: 'Plan and share your Caribbean trip on TRODDR.',
+      title: 'My TRODDR Itinerary',
+      ogTitle: 'My itinerary on TRODDR',
+      description: 'Plan and share your trip on TRODDR.',
       imageUrl: null,
       canonicalUrl,
       type: 'website',
-      imageTitle: 'A Trip on TRODDR',
-      imageSubtitle: 'Plan your Caribbean trip',
+      imageTitle: 'My itinerary',
+      imageSubtitle: 'Plan your trip on TRODDR',
     });
   }
 
   const destination = itinerary.destination || 'Jamaica';
   const stops = Array.isArray(itinerary.items) ? itinerary.items.length : 0;
-  const dateRange =
-    itinerary.start_date && itinerary.end_date
-      ? `${fmtDay(itinerary.start_date)} – ${fmtDay(itinerary.end_date)}`
-      : '';
-  const subtitle = [dateRange, stops ? `${stops} ${stops === 1 ? 'stop' : 'stops'}` : '']
-    .filter(Boolean)
-    .join(' · ');
+  const dateRange = formatTripDateRange(itinerary.start_date, itinerary.end_date);
+  const stopsLabel = stops ? `${stops} ${stops === 1 ? 'stop' : 'stops'}` : '';
 
-  const title = `Trip to ${destination} — TRODDR`;
-  const description = subtitle || `A trip to ${destination}, planned on TRODDR.`;
+  // iMessage shows only og:title — stack the trip pitch so it all lands in the
+  // card caption: "I'm going to St. Ann, July 18 – 19" / "Here's my itinerary".
+  const ogTitle = [
+    `I'm going to ${destination}${dateRange ? `, ${dateRange}` : ''}`,
+    "Here's my itinerary",
+  ].join('\n');
+  const description =
+    [dateRange, stopsLabel].filter(Boolean).join(' · ') ||
+    `My trip to ${destination}, planned on TRODDR.`;
+
+  // Use a photo from one of the trip's stops; branded card only if none has one.
   const imageUrl = firstImage(
     itinerary.items?.find((i) => i?.image)?.image,
     itinerary.cover_image,
@@ -107,12 +106,13 @@ export default async function handler(request) {
   );
 
   return renderOgPage({
-    title,
+    title: `My trip to ${destination}`,
+    ogTitle,
     description,
     imageUrl,
     canonicalUrl,
     type: 'website',
-    imageTitle: `Trip to ${destination}`,
-    imageSubtitle: subtitle || 'Planned on TRODDR',
+    imageTitle: `I'm going to ${destination}`,
+    imageSubtitle: [dateRange, stopsLabel].filter(Boolean).join(' · ') || 'My itinerary',
   });
 }

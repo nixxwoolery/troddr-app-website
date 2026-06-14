@@ -264,3 +264,26 @@ export function isUuid(s) {
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s)
   );
 }
+
+// Format a trip's start/end into a friendly range:
+//   same month → "July 18 – 19", diff month → "July 18 – August 2",
+//   diff year  → "July 18, 2026 – January 2, 2027", start only → "July 18".
+export function formatTripDateRange(start, end) {
+  const toDate = (s) => {
+    if (!s) return null;
+    const d = new Date(`${String(s).slice(0, 10)}T12:00:00`);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const s = toDate(start);
+  const e = toDate(end);
+  const md = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const mdy = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  if (s && e) {
+    if (s.getFullYear() !== e.getFullYear()) return `${mdy(s)} – ${mdy(e)}`;
+    if (s.getMonth() === e.getMonth() && s.getDate() === e.getDate()) return md(s);
+    if (s.getMonth() === e.getMonth()) return `${md(s)} – ${e.getDate()}`;
+    return `${md(s)} – ${md(e)}`;
+  }
+  return s ? md(s) : '';
+}
