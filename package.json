@@ -1,0 +1,10 @@
+{
+  "name": "troddr-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TRODDR marketing/web app — static HTML site plus Vercel edge functions for link-unfurl (Open Graph) previews.",
+  "type": "module",
+  "dependencies": {
+    "@vercel/og": "^0.6.5"
+  }
+}

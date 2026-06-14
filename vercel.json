@@ -10,7 +10,7 @@
           {
             "type": "header",
             "key": "user-agent",
-            "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
           }
         ],
         "destination": "/api/og/:slug"
@@ -23,7 +23,7 @@
           {
             "type": "header",
             "key": "user-agent",
-            "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
           }
         ],
         "destination": "/api/og/guides/:slug"
@@ -38,7 +38,7 @@
           {
             "type": "header",
             "key": "user-agent",
-            "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
           }
         ],
         "destination": "/api/og/specials/:slug"
@@ -51,7 +51,7 @@
           {
             "type": "header",
             "key": "user-agent",
-            "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
           }
         ],
         "destination": "/api/og/itinerary/:token"
@@ -67,7 +67,7 @@
           {
             "type": "header",
             "key": "user-agent",
-            "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
           }
         ],
         "destination": "/api/og/events/:slug"
@@ -110,7 +110,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
         }
       ],
       "destination": "/app?redirect=/events/:slug",
@@ -122,7 +122,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
         }
       ],
       "destination": "/app?redirect=/specials/:slug",
@@ -139,7 +139,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Applebot|Googlebot).*"
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
         }
       ],
       "destination": "/app?redirect=/itinerary/:token",

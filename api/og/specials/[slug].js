@@ -1,187 +1,58 @@
-export const config = {
-    runtime: 'edge',
-  };
-  
-  const SUPABASE_URL = process.env.SUPABASE_URL || 'https://rprpwudhplodaqmmwqkf.supabase.co';
-  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
-  
-  const BOT_PATTERNS = [
-    /facebookexternalhit/i, /Facebot/i, /Twitterbot/i, /WhatsApp/i,
-    /LinkedInBot/i, /Slackbot/i, /TelegramBot/i, /Discordbot/i,
-    /Pinterest/i, /Applebot/i, /iMessage/i, /Googlebot/i, /bingbot/i,
-  ];
-  
-  function isBot(userAgent) {
-    if (!userAgent) return false;
-    return BOT_PATTERNS.some(pattern => pattern.test(userAgent));
+// api/og/specials/[slug].js — Open Graph card for /specials/{special_slug}
+
+import {
+  BASE_URL, isBot, lastPathSegment, sbSelect,
+  firstImage, renderOgPage, serveHumanPage,
+} from '../_lib/og.js';
+
+export const config = { runtime: 'edge' };
+
+async function fetchSpecial(slug) {
+  // Specials are looked up by special_slug; fall back to slug for safety.
+  let rows = await sbSelect(
+    `specials?special_slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`
+  );
+  if (rows[0]) return rows[0];
+  rows = await sbSelect(`specials?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`);
+  return rows[0] || null;
+}
+
+export default async function handler(request) {
+  const url = new URL(request.url);
+  const slug = lastPathSegment(url.pathname);
+  const debug = url.searchParams.get('debug') === '1';
+
+  if (!isBot(request.headers.get('user-agent')) && !debug) {
+    return serveHumanPage(url.origin, `/specials.html?special_slug=${encodeURIComponent(slug)}`);
   }
-  
-  async function fetchSpecial(slug) {
-    try {
-      // Try slug field
-      let res = await fetch(
-        `${SUPABASE_URL}/rest/v1/specials?slug=eq.${encodeURIComponent(slug)}&select=*`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
-      let data = await res.json();
-      if (data && data.length > 0) return data[0];
-  
-      // Fallback to special_slug
-      res = await fetch(
-        `${SUPABASE_URL}/rest/v1/specials?special_slug=eq.${encodeURIComponent(slug)}&select=*`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
-      data = await res.json();
-      return data?.[0] || null;
-    } catch (e) {
-      console.error('Fetch error:', e);
-      return null;
-    }
+
+  const special = await fetchSpecial(slug);
+
+  const name =
+    special?.title || special?.name ||
+    slug.replace(/-/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase());
+  const placeName = special?.place_name || special?.restaurant_name || '';
+  const title = `${name}${placeName ? ` at ${placeName}` : ''} — TRODDR`;
+  const description = special?.description
+    ? special.description.slice(0, 200)
+    : `Check out this special${placeName ? ` at ${placeName}` : ''} on TRODDR.`;
+  const imageUrl = firstImage(special?.image_urls, special?.image, special?.image_url, special?.cover_image);
+  const canonicalUrl = `${BASE_URL}/specials/${encodeURIComponent(special?.special_slug || slug)}`;
+
+  if (debug) {
+    return new Response(
+      JSON.stringify({ slug, found: !!special, name, placeName, imageUrl, fields: special ? Object.keys(special) : [] }, null, 2),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
   }
-  
-  function makeAbsolute(url) {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    return `https://www.troddr.com${url.startsWith('/') ? '' : '/'}${url}`;
-  }
-  
-  function getImageUrl(special) {
-    if (!special) return null;
-    
-    const imageFields = [special.image, special.image_url, special.cover_image, special.thumbnail];
-    
-    for (const field of imageFields) {
-      if (!field) continue;
-      
-      try {
-        const parsed = typeof field === 'string' ? JSON.parse(field) : field;
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return makeAbsolute(parsed[0]);
-        }
-      } catch {
-        if (Array.isArray(field) && field.length > 0) {
-          return makeAbsolute(field[0]);
-        }
-        if (typeof field === 'string' && field.trim()) {
-          return makeAbsolute(field.trim());
-        }
-      }
-    }
-    
-    return null;
-  }
-  
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-  
-  export default async function handler(request) {
-    const url = new URL(request.url);
-    const userAgent = request.headers.get('user-agent') || '';
-    
-    const pathParts = url.pathname.split('/');
-    const slug = pathParts[pathParts.length - 1] || '';
-    const decodedSlug = decodeURIComponent(slug);
-    
-    const debugMode = url.searchParams.get('debug') === '1';
-    
-    // Regular users → serve specials.html
-    if (!isBot(userAgent) && !debugMode) {
-      try {
-        const htmlResponse = await fetch(`${url.origin}/specials.html?special_slug=${encodeURIComponent(decodedSlug)}`);
-        const html = await htmlResponse.text();
-        return new Response(html, {
-          status: 200,
-          headers: { 'Content-Type': 'text/html; charset=utf-8' },
-        });
-      } catch (e) {
-        return Response.redirect(`${url.origin}/specials.html?special_slug=${encodeURIComponent(decodedSlug)}`, 302);
-      }
-    }
-    
-    // Bots → return OG meta tags
-    const special = await fetchSpecial(decodedSlug);
-    
-    if (debugMode) {
-      return new Response(JSON.stringify({
-        slug: decodedSlug,
-        found: !!special,
-        title: special?.title || special?.name,
-        description: special?.description,
-        imageField: special?.image || special?.image_url,
-        extractedImage: getImageUrl(special),
-        allFields: special ? Object.keys(special) : [],
-      }, null, 2), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-    
-    const baseUrl = 'https://www.troddr.com';
-    const title = special?.title || special?.name || decodedSlug.replace(/-/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
-    const placeName = special?.place_name || special?.restaurant_name || '';
-    
-    const ogTitle = `${title}${placeName ? ` at ${placeName}` : ''} | TRODDR Special`;
-    const description = special?.description 
-      ? special.description.substring(0, 200) 
-      : `Check out this special${placeName ? ` at ${placeName}` : ''} on TRODDR!`;
-    
-    const image = getImageUrl(special) || `${baseUrl}/images/og-default.jpg`;
-    const canonical = `${baseUrl}/specials/${encodeURIComponent(decodedSlug)}`;
-    
-    const html = `<!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(ogTitle)}</title>
-    <meta name="description" content="${escapeHtml(description)}" />
-    
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="${escapeHtml(canonical)}" />
-    <meta property="og:title" content="${escapeHtml(ogTitle)}" />
-    <meta property="og:description" content="${escapeHtml(description)}" />
-    <meta property="og:image" content="${escapeHtml(image)}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:site_name" content="TRODDR" />
-    
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="${escapeHtml(canonical)}" />
-    <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />
-    <meta name="twitter:description" content="${escapeHtml(description)}" />
-    <meta name="twitter:image" content="${escapeHtml(image)}" />
-    
-    <link rel="canonical" href="${escapeHtml(canonical)}" />
-    <link rel="icon" type="image/png" href="/images/troddr_logo.png" />
-  </head>
-  <body>
-    <h1>${escapeHtml(title)}</h1>
-    ${placeName ? `<p>at ${escapeHtml(placeName)}</p>` : ''}
-    <p>${escapeHtml(description)}</p>
-    <p><a href="${escapeHtml(canonical)}">View on TRODDR</a></p>
-  </body>
-  </html>`;
-  
-    return new Response(html, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
-      },
-    });
-  }
+
+  return renderOgPage({
+    title,
+    description,
+    imageUrl,
+    canonicalUrl,
+    type: 'website',
+    imageTitle: name,
+    imageSubtitle: placeName || 'TRODDR Special',
+  });
+}
