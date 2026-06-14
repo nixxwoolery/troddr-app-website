@@ -11,15 +11,32 @@
 // token doesn't resolve (never leaks a private trip).
 
 import { ImageResponse } from '@vercel/og';
-import { fetchSharedItinerary, firstImage, formatTripDateRange } from './_lib/og.js';
+import { fetchSharedItinerary, firstImage } from './_lib/og.js';
 
 export const config = { runtime: 'edge' };
 
 export const CARD_W = 1080;
-export const CARD_H = 1542;
-const PHOTO_H = 1392;
+export const CARD_H = 1440; // a touch wider (less tall) to match the in-app card
+const PHOTO_H = 1290;
 const FOOTER_H = CARD_H - PHOTO_H; // 150
 const BLUE = '#0077cc';
+
+// Short date for the card face: "Jul 18–19" / "Jul 18 – Aug 2" / "Jul 18".
+function shortRange(start, end) {
+  const toD = (s) => (s ? new Date(`${String(s).slice(0, 10)}T12:00:00`) : null);
+  const s = toD(start);
+  const e = toD(end);
+  if (!s || isNaN(s.getTime())) return '';
+  const md = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (!e || isNaN(e.getTime()) || s.toDateString() === e.toDateString()) return md(s);
+  if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) return `${md(s)}–${e.getDate()}`;
+  return `${md(s)} – ${md(e)}`;
+}
+
+// Pull the first usable image from a place OR an event (different field names).
+function stopImage(item) {
+  return firstImage(item?.image, item?.image_urls, item?.featured_image_url, item?.cover_image, item?.images);
+}
 
 const h = (type, props, ...children) => ({
   type,
@@ -125,18 +142,30 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
         h(
           'div',
           { style: { display: 'flex', flexDirection: 'column', paddingLeft: '12px', paddingBottom: '8px' } },
-          h('div', { style: { display: 'flex', color: '#fff', fontSize: '132px', fontWeight: 800, letterSpacing: '-2px', lineHeight: 1 } }, destination),
+          h('div', { style: { display: 'flex', color: '#fff', fontSize: '140px', fontWeight: 800, letterSpacing: '-2px', lineHeight: 1 } }, destination),
           h(
             'div',
             { style: { display: 'flex', alignItems: 'center', marginTop: '28px' } },
             ...(dateRange
-              ? [calendarIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '46px', fontWeight: 600, marginLeft: '14px', marginRight: '48px' } }, dateRange)]
+              ? [calendarIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '46px', fontWeight: 700, marginLeft: '14px', marginRight: '48px' } }, dateRange)]
               : []),
             pinIcon(),
-            h('div', { style: { display: 'flex', color: '#fff', fontSize: '46px', fontWeight: 600, marginLeft: '14px' } }, stopsLabel)
+            h('div', { style: { display: 'flex', color: '#fff', fontSize: '46px', fontWeight: 700, marginLeft: '14px' } }, stopsLabel)
           ),
           names
-            ? h('div', { style: { display: 'flex', color: 'rgba(255,255,255,0.92)', fontSize: '42px', marginTop: '28px' } }, names)
+            ? h('div', {
+                style: {
+                  display: 'block',
+                  color: 'rgba(255,255,255,0.95)',
+                  fontSize: '42px',
+                  fontWeight: 600,
+                  marginTop: '24px',
+                  maxWidth: '948px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                },
+              }, names)
             : null,
           thumbs.length > 0
             ? h(
@@ -167,15 +196,20 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
 
 function fieldsFrom(payload) {
   const trip = payload?.itinerary || payload || {};
-  const places = payload?.places || payload?.items || [];
+  // Stops = places + events (events come from itinerary_events; the RPC must
+  // return them under `events`/`items` for them to appear here).
+  const stopsList = [
+    ...(payload?.places || []),
+    ...(payload?.events || payload?.items || []),
+  ];
   const destination = trip.destination || 'My Trip';
-  const stops = places.length;
-  const imgs = places.map((p) => firstImage(p?.image)).filter(Boolean);
+  const stops = stopsList.length;
+  const imgs = stopsList.map(stopImage).filter(Boolean);
   return {
     destination,
-    dateRange: formatTripDateRange(trip.start_date, trip.end_date),
+    dateRange: shortRange(trip.start_date, trip.end_date),
     stopsLabel: stops ? `${stops} ${stops === 1 ? 'stop' : 'stops'}` : '',
-    names: places.map((p) => p?.name).filter(Boolean).slice(0, 3).join('   ·   '),
+    names: stopsList.map((p) => p?.name || p?.title).filter(Boolean).join('   ·   '),
     hero: imgs[0],
     thumbs: imgs.slice(1, 5),
   };
