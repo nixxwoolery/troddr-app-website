@@ -17,13 +17,13 @@ async function fetchEvent(slug) {
   return rows[0] || null;
 }
 
-// "2026-07-18" → "Sat, Jul 18". Noon avoids any TZ date rollback.
+// "2026-07-18" → "Saturday, July 18". Noon avoids any TZ date rollback.
 function formatEventDate(startDate) {
   if (!startDate) return '';
   try {
     return new Date(`${startDate}T12:00:00`).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
     });
   } catch {
@@ -48,33 +48,37 @@ export default async function handler(request) {
     slug.replace(/-/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase());
   const venue = event?.venue_name || event?.venue || event?.location || '';
   const dateLabel = formatEventDate(event?.start_date);
-  const subtitle = [venue && `📍 ${venue}`, dateLabel && `🗓️ ${dateLabel}`]
-    .filter(Boolean)
-    .join(' · ');
+  const venueDate = [venue, dateLabel].filter(Boolean).join(' · ');
 
-  const title = `${name} — TRODDR`;
+  // iMessage (and several other clients) show ONLY og:title + the domain in the
+  // unfurl caption — never og:description. So stack the name, venue and date
+  // into og:title so all three render in the card's bottom section:
+  //   A taste of Reggae Sumfest
+  //   Plantation Cove
+  //   Saturday, July 18
+  const ogTitle = [name, venue, dateLabel].filter(Boolean).join('\n');
+  // Secondary line for clients that DO show a description (FB, Slack, Twitter).
   const description =
-    subtitle ||
-    (event?.description
-      ? event.description.slice(0, 200)
-      : `Check out ${name} on TRODDR.`);
+    (event?.description ? event.description.slice(0, 200) : venueDate) ||
+    `Check out ${name} on TRODDR.`;
   const imageUrl = firstImage(event?.featured_image_url, event?.image_urls, event?.image);
   const canonicalUrl = `${BASE_URL}/events/${encodeURIComponent(event?.slug || slug)}`;
 
   if (debug) {
     return new Response(
-      JSON.stringify({ slug, found: !!event, name, venue, dateLabel, subtitle, imageUrl, fields: event ? Object.keys(event) : [] }, null, 2),
+      JSON.stringify({ slug, found: !!event, name, venue, dateLabel, ogTitle, imageUrl, fields: event ? Object.keys(event) : [] }, null, 2),
       { headers: { 'Content-Type': 'application/json' } }
     );
   }
 
   return renderOgPage({
-    title,
+    title: name,
+    ogTitle,
     description,
     imageUrl,
     canonicalUrl,
     type: 'website',
     imageTitle: name,
-    imageSubtitle: subtitle || 'TRODDR Event',
+    imageSubtitle: venueDate || 'TRODDR Event',
   });
 }

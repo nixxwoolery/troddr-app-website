@@ -160,7 +160,11 @@ export async function serveHumanPage(origin, htmlPath) {
  * Render the complete, consistent OG/Twitter meta page served to crawlers.
  *
  * @param {object}  opts
- * @param {string}  opts.title         Card title (already branded as you want it).
+ * @param {string}  opts.title         Page <title> / fallback social title.
+ * @param {string} [opts.ogTitle]      og:title / twitter:title when it should
+ *                                     differ from the page title (e.g. a
+ *                                     multi-line "name\nvenue\ndate" caption
+ *                                     for clients that only show the title).
  * @param {string}  opts.description   Card subtitle / description line.
  * @param {?string} opts.imageUrl      Real entity photo (absolute https). When
  *                                     falsy, a branded fallback image is used.
@@ -171,6 +175,7 @@ export async function serveHumanPage(origin, htmlPath) {
  */
 export function renderOgPage({
   title,
+  ogTitle,
   description,
   imageUrl,
   canonicalUrl,
@@ -183,6 +188,7 @@ export function renderOgPage({
     fallbackImageUrl({ title: imageTitle ?? title, subtitle: imageSubtitle ?? description });
 
   const t = escapeHtml(title);
+  const ot = escapeHtml(ogTitle || title); // og:/twitter: title (may be multi-line)
   const d = escapeHtml(description);
   const img = escapeHtml(image);
   const canonical = escapeHtml(canonicalUrl);
@@ -200,7 +206,7 @@ export function renderOgPage({
   <meta property="og:type" content="${ogType}" />
   <meta property="og:site_name" content="TRODDR" />
   <meta property="og:url" content="${canonical}" />
-  <meta property="og:title" content="${t}" />
+  <meta property="og:title" content="${ot}" />
   <meta property="og:description" content="${d}" />
   <meta property="og:image" content="${img}" />
   <meta property="og:image:secure_url" content="${img}" />
@@ -212,7 +218,7 @@ export function renderOgPage({
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@troddr" />
   <meta name="twitter:url" content="${canonical}" />
-  <meta name="twitter:title" content="${t}" />
+  <meta name="twitter:title" content="${ot}" />
   <meta name="twitter:description" content="${d}" />
   <meta name="twitter:image" content="${img}" />
 
