@@ -9,7 +9,8 @@ import {
 
 export const config = { runtime: 'edge' };
 
-const looksShared = (data) => (data && (data.title || data.items) ? data : null);
+// get_shared_itinerary returns { itinerary: {...}, places: [...] } when valid.
+const looksShared = (data) => (data && (data.itinerary || data.title) ? data : null);
 
 async function fetchByToken(token) {
   if (!token) return null;
@@ -63,9 +64,11 @@ export default async function handler(request) {
     });
   }
 
-  const destination = itinerary.destination || 'Jamaica';
-  const stops = Array.isArray(itinerary.items) ? itinerary.items.length : 0;
-  const dateRange = formatTripDateRange(itinerary.start_date, itinerary.end_date);
+  const trip = itinerary.itinerary || itinerary || {};
+  const places = itinerary.places || itinerary.items || [];
+  const destination = trip.destination || 'Jamaica';
+  const stops = places.length;
+  const dateRange = formatTripDateRange(trip.start_date, trip.end_date);
   const stopsLabel = stops ? `${stops} ${stops === 1 ? 'stop' : 'stops'}` : '';
 
   const ogTitle = [
@@ -77,7 +80,7 @@ export default async function handler(request) {
     title: `My trip to ${destination}`,
     ogTitle,
     description: [dateRange, stopsLabel].filter(Boolean).join(' · ') || `My trip to ${destination}, planned on TRODDR.`,
-    imageUrl: firstImage(itinerary.items?.find((i) => i?.image)?.image, itinerary.cover_image, itinerary.image),
+    imageUrl: firstImage(...places.map((p) => p?.image), trip.cover_image, trip.image),
     canonicalUrl,
     type: 'website',
     imageTitle: `I'm going to ${destination}`,

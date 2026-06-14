@@ -17,8 +17,10 @@ import {
 
 export const config = { runtime: 'edge' };
 
+// get_shared_itinerary returns { itinerary: {...}, places: [...] } for a valid
+// share token, or null otherwise.
 function looksShared(data) {
-  return data && (data.title || data.items) ? data : null;
+  return data && (data.itinerary || data.title) ? data : null;
 }
 
 // Validate the share token, trying the dash/dashless variants the app uses.
@@ -57,9 +59,13 @@ export default async function handler(request) {
     token ? `?token=${encodeURIComponent(token)}` : ''
   }`;
 
+  // Normalize the RPC shape: { itinerary: {...}, places: [...] }.
+  const trip = itinerary?.itinerary || itinerary || {};
+  const places = itinerary?.places || itinerary?.items || [];
+
   if (debug) {
     return new Response(
-      JSON.stringify({ id, hasToken: !!token, found: !!itinerary, destination: itinerary?.destination, stops: itinerary?.items?.length || 0, imageUrl: firstImage(itinerary?.items?.find((i) => i?.image)?.image) }, null, 2),
+      JSON.stringify({ id, hasToken: !!token, found: !!itinerary, destination: trip.destination, stops: places.length, imageUrl: firstImage(...places.map((p) => p?.image)) }, null, 2),
       { headers: { 'Content-Type': 'application/json' } }
     );
   }
@@ -78,9 +84,9 @@ export default async function handler(request) {
     });
   }
 
-  const destination = itinerary.destination || 'Jamaica';
-  const stops = Array.isArray(itinerary.items) ? itinerary.items.length : 0;
-  const dateRange = formatTripDateRange(itinerary.start_date, itinerary.end_date);
+  const destination = trip.destination || 'Jamaica';
+  const stops = places.length;
+  const dateRange = formatTripDateRange(trip.start_date, trip.end_date);
   const stopsLabel = stops ? `${stops} ${stops === 1 ? 'stop' : 'stops'}` : '';
 
   // iMessage shows only og:title — stack the trip pitch so it all lands in the
@@ -94,11 +100,7 @@ export default async function handler(request) {
     `My trip to ${destination}, planned on TRODDR.`;
 
   // Use a photo from one of the trip's stops; branded card only if none has one.
-  const imageUrl = firstImage(
-    itinerary.items?.find((i) => i?.image)?.image,
-    itinerary.cover_image,
-    itinerary.image
-  );
+  const imageUrl = firstImage(...places.map((p) => p?.image), trip.cover_image, trip.image);
 
   return renderOgPage({
     title: `My trip to ${destination}`,
