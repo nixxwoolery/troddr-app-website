@@ -1,7 +1,7 @@
 // api/og/itinerary-image.js
 //
-// Generated square image used as the og:image for a shared itinerary. The trip
-// card sits on a black stage so link previews render like the in-app share card.
+// Generated portrait image used as the og:image for a shared itinerary.
+// It mirrors the in-app trip card without an extra square stage around it.
 //
 //   /api/og/itinerary-image?id={id}&token={shareToken}
 //
@@ -13,14 +13,21 @@ import { fetchSharedItinerary, firstImage } from './_lib/og.js';
 
 export const config = { runtime: 'edge' };
 
-export const CANVAS_W = 1200;
-export const CANVAS_H = 1200;
-export const CARD_W = 960;
-export const CARD_H = 1118;
-const PHOTO_H = 1048;
+export const CANVAS_W = 1080;
+export const CANVAS_H = 1500;
+export const CARD_W = CANVAS_W;
+export const CARD_H = CANVAS_H;
+const PHOTO_H = 1380;
 const FOOTER_H = CARD_H - PHOTO_H;
-const CARD_RADIUS = 46;
 const BLUE = '#0077cc';
+const TEXT_THICKEN = '0 0 1px rgba(255,255,255,0.9), 0 1px 1px rgba(255,255,255,0.35)';
+const THICK_OFFSETS = [
+  ['0px', '0px'],
+  ['1px', '0px'],
+  ['-1px', '0px'],
+  ['0px', '1px'],
+  ['0px', '-1px'],
+];
 
 // Short date for the card face: "Jul 18–19" / "Jul 18 – Aug 2" / "Jul 18".
 function shortRange(start, end) {
@@ -78,11 +85,30 @@ const pinIcon = () =>
 const itineraryIcon = () =>
   h(
     'svg',
-    { width: 28, height: 28, viewBox: '0 0 24 24', fill: 'none' },
+    { width: 34, height: 34, viewBox: '0 0 24 24', fill: 'none' },
     h('rect', { x: 4, y: 5, width: 4, height: 14, rx: 1, fill: '#fff' }),
     h('rect', { x: 10, y: 3, width: 4, height: 18, rx: 1, fill: '#fff' }),
     h('rect', { x: 16, y: 5, width: 4, height: 14, rx: 1, fill: '#fff' })
   );
+
+function thickText(text, style) {
+  const layerStyle = {
+    display: 'flex',
+    position: 'absolute',
+    color: style.color,
+    fontSize: style.fontSize,
+    fontWeight: style.fontWeight,
+  };
+  if (style.lineHeight !== undefined) layerStyle.lineHeight = style.lineHeight;
+  if (style.textShadow !== undefined) layerStyle.textShadow = style.textShadow;
+  if (style.whiteSpace !== undefined) layerStyle.whiteSpace = style.whiteSpace;
+  return h(
+    'div',
+    { style: { ...style, display: 'flex', position: 'relative' } },
+    ...THICK_OFFSETS.map(([left, top]) => h('div', { style: { ...layerStyle, left, top } }, text)),
+    h('div', { style: { display: 'flex', opacity: 0 } }, text)
+  );
+}
 
 function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) {
   return h(
@@ -94,9 +120,8 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'flex-start',
-        paddingLeft: '240px',
         fontFamily: 'sans-serif',
-        backgroundColor: '#000',
+        backgroundColor: '#0a0a0a',
       },
     },
     h(
@@ -107,7 +132,6 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
           flexDirection: 'column',
           width: `${CARD_W}px`,
           height: `${CARD_H}px`,
-          borderRadius: `${CARD_RADIUS}px`,
           overflow: 'hidden',
           backgroundColor: '#0a0a0a',
         },
@@ -146,58 +170,59 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
               left: 0,
               width: `${CARD_W}px`,
               height: `${PHOTO_H}px`,
-              padding: '42px',
+              padding: '56px',
             },
           },
           h(
             'div',
             { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' } },
-            h('div', { style: { display: 'flex', color: '#fff', fontSize: '10px', fontWeight: 900, marginLeft: '92px' } }, 'TRODDR'),
+            thickText('TRODDR', { display: 'flex', color: '#fff', fontSize: '12px', fontWeight: 1000, marginLeft: '112px', marginTop: '30px', textShadow: TEXT_THICKEN }),
             h(
               'div',
               { style: { display: 'flex', alignItems: 'center' } },
               itineraryIcon(),
-              h('div', { style: { display: 'flex', color: '#fff', fontSize: '30px', fontWeight: 900, marginLeft: '12px' } }, 'Trip itinerary')
+              thickText('Trip itinerary', { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 1000, marginLeft: '14px', textShadow: TEXT_THICKEN })
             )
           ),
           h(
             'div',
             { style: { display: 'flex', flexDirection: 'column' } },
-            h('div', { style: { display: 'flex', color: '#fff', fontSize: '78px', fontWeight: 900, lineHeight: 1 } }, destination),
+            thickText(destination, { display: 'flex', color: '#fff', fontSize: '100px', fontWeight: 1000, lineHeight: 1, textShadow: TEXT_THICKEN }),
             h(
               'div',
               { style: { display: 'flex', alignItems: 'center', marginTop: '28px' } },
               ...(dateRange
-                ? [calendarIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '34px', fontWeight: 900, marginLeft: '10px', marginRight: '36px' } }, dateRange)]
+                ? [calendarIcon(), thickText(dateRange, { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 1000, marginLeft: '12px', marginRight: '50px', textShadow: TEXT_THICKEN })]
                 : []),
               pinIcon(),
-              h('div', { style: { display: 'flex', color: '#fff', fontSize: '34px', fontWeight: 900, marginLeft: '10px' } }, stopsLabel)
+              thickText(stopsLabel, { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 1000, marginLeft: '12px', textShadow: TEXT_THICKEN })
             ),
             names
               ? h('div', {
                   style: {
                     display: 'block',
                     color: 'rgba(255,255,255,0.95)',
-                    fontSize: '34px',
-                    fontWeight: 700,
-                    marginTop: '24px',
-                    maxWidth: '876px',
+                    fontSize: '40px',
+                    fontWeight: 900,
+                    marginTop: '32px',
+                    maxWidth: '968px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
+                    textShadow: TEXT_THICKEN,
                   },
                 }, names)
               : null,
             thumbs.length > 0
               ? h(
                   'div',
-                  { style: { display: 'flex', marginTop: '34px' } },
+                  { style: { display: 'flex', marginTop: '42px' } },
                   ...thumbs.map((u) =>
                     h('img', {
                       src: safeImg(u),
-                      width: 154,
-                      height: 154,
-                      style: { width: '154px', height: '154px', borderRadius: '20px', border: '2px solid rgba(255,255,255,0.45)', objectFit: 'cover', marginRight: '24px' },
+                      width: 188,
+                      height: 188,
+                      style: { width: '188px', height: '188px', borderRadius: '20px', border: '2px solid rgba(255,255,255,0.45)', objectFit: 'cover', marginRight: '28px' },
                     })
                   )
                 )
@@ -208,7 +233,7 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
       h(
         'div',
         { style: { display: 'flex', width: `${CARD_W}px`, height: `${FOOTER_H}px`, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' } },
-        h('div', { style: { display: 'flex', color: '#fff', fontSize: '34px', fontWeight: 800 } }, 'View this trip on troddr')
+        h('div', { style: { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 800 } }, 'View this trip on troddr')
       )
     )
   );

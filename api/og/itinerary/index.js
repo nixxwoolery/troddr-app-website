@@ -9,7 +9,7 @@ import {
 
 export const config = { runtime: 'edge' };
 
-const ITINERARY_SHARE_IMAGE_VERSION = '20260615-wide-v2';
+const ITINERARY_SHARE_IMAGE_VERSION = '20260615-portrait-v3';
 
 // get_shared_itinerary returns { itinerary: {...}, places: [...] } when valid.
 const looksShared = (data) => (data && (data.itinerary || data.title) ? data : null);
@@ -87,7 +87,7 @@ export default async function handler(request) {
     type: 'website',
     imageTitle: `I'm going to ${destination}`,
     imageSubtitle: [dateRange, stopsLabel].filter(Boolean).join(' · ') || 'My itinerary',
-    imageWidth: 1200,
-    imageHeight: 1200,
+    imageWidth: 1080,
+    imageHeight: 1500,
   });
 }
