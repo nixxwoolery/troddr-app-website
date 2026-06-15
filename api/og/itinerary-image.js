@@ -20,14 +20,9 @@ export const CARD_H = CANVAS_H;
 const PHOTO_H = 1380;
 const FOOTER_H = CARD_H - PHOTO_H;
 const BLUE = '#0077cc';
-const TEXT_THICKEN = '0 0 1px rgba(255,255,255,0.9), 0 1px 1px rgba(255,255,255,0.35)';
-const THICK_OFFSETS = [
-  ['0px', '0px'],
-  ['1px', '0px'],
-  ['-1px', '0px'],
-  ['0px', '1px'],
-  ['0px', '-1px'],
-];
+const CARD_FONT = 'Inter';
+const INTER_CSS_URL = 'https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&display=swap';
+let interFontsPromise;
 
 // Short date for the card face: "Jul 18–19" / "Jul 18 – Aug 2" / "Jul 18".
 function shortRange(start, end) {
@@ -91,23 +86,38 @@ const itineraryIcon = () =>
     h('rect', { x: 16, y: 5, width: 4, height: 14, rx: 1, fill: '#fff' })
   );
 
-function thickText(text, style) {
-  const layerStyle = {
-    display: 'flex',
-    position: 'absolute',
-    color: style.color,
-    fontSize: style.fontSize,
-    fontWeight: style.fontWeight,
-  };
-  if (style.lineHeight !== undefined) layerStyle.lineHeight = style.lineHeight;
-  if (style.textShadow !== undefined) layerStyle.textShadow = style.textShadow;
-  if (style.whiteSpace !== undefined) layerStyle.whiteSpace = style.whiteSpace;
-  return h(
-    'div',
-    { style: { ...style, display: 'flex', position: 'relative' } },
-    ...THICK_OFFSETS.map(([left, top]) => h('div', { style: { ...layerStyle, left, top } }, text)),
-    h('div', { style: { display: 'flex', opacity: 0 } }, text)
-  );
+async function loadInterFonts() {
+  if (!interFontsPromise) {
+    interFontsPromise = (async () => {
+      try {
+        const cssRes = await fetch(INTER_CSS_URL, {
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+        });
+        if (!cssRes.ok) return [];
+        const css = await cssRes.text();
+        const fonts = [];
+        const blocks = css.match(/@font-face\s*{[^}]+}/g) || [];
+        for (const weight of [700, 800, 900]) {
+          const block = blocks.find((b) => b.includes(`font-weight: ${weight}`) && b.includes('U+0000-00FF')) ||
+            blocks.find((b) => b.includes(`font-weight: ${weight}`));
+          const url = block?.match(/url\((https:\/\/[^)]+)\)/)?.[1];
+          if (!url) continue;
+          const fontRes = await fetch(url);
+          if (!fontRes.ok) continue;
+          fonts.push({
+            name: CARD_FONT,
+            data: await fontRes.arrayBuffer(),
+            weight,
+            style: 'normal',
+          });
+        }
+        return fonts;
+      } catch {
+        return [];
+      }
+    })();
+  }
+  return interFontsPromise;
 }
 
 function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) {
@@ -171,31 +181,32 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
               width: `${CARD_W}px`,
               height: `${PHOTO_H}px`,
               padding: '56px',
+              fontFamily: CARD_FONT,
             },
           },
           h(
             'div',
             { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' } },
-            thickText('TRODDR', { display: 'flex', color: '#fff', fontSize: '12px', fontWeight: 1000, marginLeft: '112px', marginTop: '30px', textShadow: TEXT_THICKEN }),
+            h('div', { style: { display: 'flex', color: '#fff', fontSize: '12px', fontWeight: 800, marginLeft: '112px', marginTop: '30px' } }, 'TRODDR'),
             h(
               'div',
               { style: { display: 'flex', alignItems: 'center' } },
               itineraryIcon(),
-              thickText('Trip itinerary', { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 1000, marginLeft: '14px', textShadow: TEXT_THICKEN })
+              h('div', { style: { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 800, marginLeft: '14px' } }, 'Trip itinerary')
             )
           ),
           h(
             'div',
             { style: { display: 'flex', flexDirection: 'column' } },
-            thickText(destination, { display: 'flex', color: '#fff', fontSize: '100px', fontWeight: 1000, lineHeight: 1, textShadow: TEXT_THICKEN }),
+            h('div', { style: { display: 'flex', color: '#fff', fontSize: '100px', fontWeight: 900, lineHeight: 1 } }, destination),
             h(
               'div',
               { style: { display: 'flex', alignItems: 'center', marginTop: '28px' } },
               ...(dateRange
-                ? [calendarIcon(), thickText(dateRange, { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 1000, marginLeft: '12px', marginRight: '50px', textShadow: TEXT_THICKEN })]
+                ? [calendarIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 800, marginLeft: '12px', marginRight: '50px' } }, dateRange)]
                 : []),
               pinIcon(),
-              thickText(stopsLabel, { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 1000, marginLeft: '12px', textShadow: TEXT_THICKEN })
+              h('div', { style: { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 800, marginLeft: '12px' } }, stopsLabel)
             ),
             names
               ? h('div', {
@@ -203,13 +214,12 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
                     display: 'block',
                     color: 'rgba(255,255,255,0.95)',
                     fontSize: '40px',
-                    fontWeight: 900,
+                    fontWeight: 700,
                     marginTop: '32px',
                     maxWidth: '968px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    textShadow: TEXT_THICKEN,
                   },
                 }, names)
               : null,
@@ -233,7 +243,7 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
       h(
         'div',
         { style: { display: 'flex', width: `${CARD_W}px`, height: `${FOOTER_H}px`, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' } },
-        h('div', { style: { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 800 } }, 'View this trip on troddr')
+        h('div', { style: { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 500 } }, 'View this trip on troddr')
       )
     )
   );
@@ -263,17 +273,23 @@ function fieldsFrom(payload) {
 export default async function handler(request) {
   const url = new URL(request.url);
   const token = url.searchParams.get('token') || '';
-  const payload = await fetchSharedItinerary(token);
+  const [payload, fonts] = await Promise.all([
+    fetchSharedItinerary(token),
+    loadInterFonts(),
+  ]);
 
   const fields = payload
     ? fieldsFrom(payload)
     : { destination: 'My Itinerary', dateRange: '', stopsLabel: 'Plan your trip on TRODDR', names: '', hero: undefined, thumbs: [] };
 
-  return new ImageResponse(buildCard(fields), {
+  const responseOptions = {
     width: CANVAS_W,
     height: CANVAS_H,
     headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' },
-  });
+  };
+  if (fonts.length) responseOptions.fonts = fonts;
+
+  return new ImageResponse(buildCard(fields), responseOptions);
 }
 
-export { buildCard, fieldsFrom };
+export { buildCard, fieldsFrom, loadInterFonts };

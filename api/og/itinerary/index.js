@@ -9,7 +9,7 @@ import {
 
 export const config = { runtime: 'edge' };
 
-const ITINERARY_SHARE_IMAGE_VERSION = '20260615-portrait-v3';
+const ITINERARY_SHARE_IMAGE_VERSION = '20260615-inter-v4';
 
 // get_shared_itinerary returns { itinerary: {...}, places: [...] } when valid.
 const looksShared = (data) => (data && (data.itinerary || data.title) ? data : null);
