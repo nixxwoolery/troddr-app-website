@@ -842,7 +842,10 @@
     }
 
 function setupItineraryShare(ident, meta){
-  const url = location.href.split('#')[0];
+  const SHARE_PREVIEW_VERSION = '20260615-wide-v2';
+  const shareUrl = new URL(location.href.split('#')[0]);
+  shareUrl.searchParams.set('preview', SHARE_PREVIEW_VERSION);
+  const url = shareUrl.toString();
   const range = (meta.start_date && meta.end_date) ? `${new Date(meta.start_date).toDateString()} to ${new Date(meta.end_date).toDateString()}` : '';
   const text = `I'm going to ${meta.destination || 'Jamaica'} ${range ? 'from ' + range + ' ' : ''}with ${ (meta.items_count ?? '') } stops! Check out my trip plans!`;
   const shareData = { title: meta.title || 'TRODDR Itinerary', text, url };

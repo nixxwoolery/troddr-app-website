@@ -9,6 +9,8 @@ import {
 
 export const config = { runtime: 'edge' };
 
+const ITINERARY_SHARE_IMAGE_VERSION = '20260615-wide-v2';
+
 // get_shared_itinerary returns { itinerary: {...}, places: [...] } when valid.
 const looksShared = (data) => (data && (data.itinerary || data.title) ? data : null);
 
@@ -80,12 +82,12 @@ export default async function handler(request) {
     title: `My trip to ${destination}`,
     ogTitle,
     description: [dateRange, stopsLabel].filter(Boolean).join(' · ') || `My trip to ${destination}, planned on TRODDR.`,
-    imageUrl: `${BASE_URL}/api/og/itinerary-image?id=${encodeURIComponent(tripId)}&token=${encodeURIComponent(token)}`,
+    imageUrl: `${BASE_URL}/api/og/itinerary-image?id=${encodeURIComponent(tripId)}&token=${encodeURIComponent(token)}&v=${ITINERARY_SHARE_IMAGE_VERSION}`,
     canonicalUrl,
     type: 'website',
     imageTitle: `I'm going to ${destination}`,
     imageSubtitle: [dateRange, stopsLabel].filter(Boolean).join(' · ') || 'My itinerary',
-    imageWidth: 1080,
-    imageHeight: 1440,
+    imageWidth: 1200,
+    imageHeight: 1200,
   });
 }

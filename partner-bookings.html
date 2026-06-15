@@ -751,6 +751,9 @@ function renderBookingsUnavailable(err, payloadError) {
 // 'auth'  → genuinely invalid/expired token (full error page).
 // 'data'  → handled inline by renderBookingsUnavailable instead.
 function showError(kind, caps) {
+  // Clear the "Loading…" hero so the banner matches the error state.
+  $('hero-title').textContent = 'Bookings';
+  $('hero-sub').textContent   = '';
   hide('view-loading'); show('view-error');
   window.PartnerAuth?.mountSessionControl('partner');
   window.PartnerSidebar?.mount({ active: '/partner/bookings', capabilities: caps });

@@ -17,6 +17,8 @@ import {
 
 export const config = { runtime: 'edge' };
 
+const ITINERARY_SHARE_IMAGE_VERSION = '20260615-wide-v2';
+
 // get_shared_itinerary returns { itinerary: {...}, places: [...] } for a valid
 // share token, or null otherwise.
 function looksShared(data) {
@@ -102,7 +104,7 @@ export default async function handler(request) {
   // og:image is the generated collage (hero photo + destination + dates +
   // stops + thumbnails + footer) so the single tappable card looks like the
   // in-app trip card. It re-validates the token server-side before rendering.
-  const imageUrl = `${BASE_URL}/api/og/itinerary-image?id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
+  const imageUrl = `${BASE_URL}/api/og/itinerary-image?id=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}&v=${ITINERARY_SHARE_IMAGE_VERSION}`;
 
   return renderOgPage({
     title: `My trip to ${destination}`,
@@ -113,7 +115,7 @@ export default async function handler(request) {
     type: 'website',
     imageTitle: `I'm going to ${destination}`,
     imageSubtitle: [dateRange, stopsLabel].filter(Boolean).join(' · ') || 'My itinerary',
-    imageWidth: 1080,
-    imageHeight: 1440,
+    imageWidth: 1200,
+    imageHeight: 1200,
   });
 }
