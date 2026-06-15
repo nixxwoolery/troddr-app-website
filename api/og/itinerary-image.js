@@ -15,7 +15,7 @@ export const config = { runtime: 'edge' };
 
 export const CANVAS_W = 1200;
 export const CANVAS_H = 1200;
-export const CARD_W = 824;
+export const CARD_W = 960;
 export const CARD_H = 1118;
 const PHOTO_H = 1048;
 const FOOTER_H = CARD_H - PHOTO_H;
@@ -93,8 +93,8 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
         height: `${CANVAS_H}px`,
         display: 'flex',
         alignItems: 'flex-start',
-        justifyContent: 'center',
-        paddingLeft: '336px',
+        justifyContent: 'flex-start',
+        paddingLeft: '240px',
         fontFamily: 'sans-serif',
         backgroundColor: '#000',
       },
@@ -152,36 +152,36 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
           h(
             'div',
             { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' } },
-            h('div', { style: { display: 'flex', color: '#fff', fontSize: '10px', fontWeight: 800, marginLeft: '92px' } }, 'TRODDR'),
+            h('div', { style: { display: 'flex', color: '#fff', fontSize: '10px', fontWeight: 900, marginLeft: '92px' } }, 'TRODDR'),
             h(
               'div',
               { style: { display: 'flex', alignItems: 'center' } },
               itineraryIcon(),
-              h('div', { style: { display: 'flex', color: '#fff', fontSize: '28px', fontWeight: 800, marginLeft: '12px' } }, 'Trip itinerary')
+              h('div', { style: { display: 'flex', color: '#fff', fontSize: '30px', fontWeight: 900, marginLeft: '12px' } }, 'Trip itinerary')
             )
           ),
           h(
             'div',
             { style: { display: 'flex', flexDirection: 'column' } },
-            h('div', { style: { display: 'flex', color: '#fff', fontSize: '66px', fontWeight: 800, lineHeight: 1 } }, destination),
+            h('div', { style: { display: 'flex', color: '#fff', fontSize: '78px', fontWeight: 900, lineHeight: 1 } }, destination),
             h(
               'div',
               { style: { display: 'flex', alignItems: 'center', marginTop: '28px' } },
               ...(dateRange
-                ? [calendarIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '31px', fontWeight: 800, marginLeft: '10px', marginRight: '34px' } }, dateRange)]
+                ? [calendarIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '34px', fontWeight: 900, marginLeft: '10px', marginRight: '36px' } }, dateRange)]
                 : []),
               pinIcon(),
-              h('div', { style: { display: 'flex', color: '#fff', fontSize: '31px', fontWeight: 800, marginLeft: '10px' } }, stopsLabel)
+              h('div', { style: { display: 'flex', color: '#fff', fontSize: '34px', fontWeight: 900, marginLeft: '10px' } }, stopsLabel)
             ),
             names
               ? h('div', {
                   style: {
                     display: 'block',
                     color: 'rgba(255,255,255,0.95)',
-                    fontSize: '30px',
-                    fontWeight: 600,
+                    fontSize: '34px',
+                    fontWeight: 700,
                     marginTop: '24px',
-                    maxWidth: '740px',
+                    maxWidth: '876px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -195,9 +195,9 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
                   ...thumbs.map((u) =>
                     h('img', {
                       src: safeImg(u),
-                      width: 146,
-                      height: 146,
-                      style: { width: '146px', height: '146px', borderRadius: '20px', border: '2px solid rgba(255,255,255,0.45)', objectFit: 'cover', marginRight: '24px' },
+                      width: 154,
+                      height: 154,
+                      style: { width: '154px', height: '154px', borderRadius: '20px', border: '2px solid rgba(255,255,255,0.45)', objectFit: 'cover', marginRight: '24px' },
                     })
                   )
                 )
@@ -208,7 +208,7 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
       h(
         'div',
         { style: { display: 'flex', width: `${CARD_W}px`, height: `${FOOTER_H}px`, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' } },
-        h('div', { style: { display: 'flex', color: '#fff', fontSize: '31px', fontWeight: 700 } }, 'View this trip on troddr')
+        h('div', { style: { display: 'flex', color: '#fff', fontSize: '34px', fontWeight: 800 } }, 'View this trip on troddr')
       )
     )
   );
