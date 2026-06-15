@@ -187,7 +187,7 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
           h(
             'div',
             { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' } },
-            h('div', { style: { display: 'flex', color: '#fff', fontSize: '12px', fontWeight: 800, marginLeft: '112px', marginTop: '30px' } }, 'TRODDR'),
+            // h('div', { style: { display: 'flex', color: '#fff', fontSize: '12px', fontWeight: 800, marginLeft: '112px', marginTop: '30px' } }, 'TRODDR'),
             h(
               'div',
               { style: { display: 'flex', alignItems: 'center' } },
