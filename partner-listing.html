@@ -643,6 +643,13 @@
     color: var(--grey-dark);
   }
   .hours-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .ci-opt { display:flex; align-items:flex-start; gap:10px; padding:11px 12px; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; transition:border-color 0.12s; }
+  .ci-opt:hover { border-color: var(--brand-primary); }
+  .ci-opt input { margin-top:3px; flex-shrink:0; }
+  .ci-opt span { display:flex; flex-direction:column; }
+  .ci-opt strong { font-size:13px; font-weight:600; color:var(--black); }
+  .ci-opt em { font-size:11px; color:var(--grey-mid); font-style:normal; margin-top:1px; }
+  #ci-detail.disabled { opacity:0.45; pointer-events:none; }
   .hours-btn.primary {
     background: var(--brand-primary);
     border-color: var(--brand-primary);
@@ -1114,6 +1121,58 @@
           <button type="button" class="hours-btn primary" id="closure-add">Add</button>
         </div>
         <div class="hours-status" id="closure-status"></div>
+      </div>
+    </section>
+
+    <section class="section" id="checkin">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Check-in &amp; Loyalty</h2>
+          <div class="section-sub">Control whether guests can check in to your venue from the TRODDR app, how they check in, and what they earn. Turn the master switch off to hide the check-in button entirely.</div>
+        </div>
+      </div>
+      <div class="hours-card" id="checkin-card">
+        <div id="checkin-fields" style="display:none">
+
+          <label class="ci-row ci-master" style="display:flex; align-items:flex-start; gap:12px; padding:14px; border:1px solid var(--border); border-radius:10px; background:var(--bg-soft); cursor:pointer; margin-bottom:18px;">
+            <input type="checkbox" id="ci-checkin_enabled" style="margin-top:3px;">
+            <span>
+              <span style="display:block; font-size:14px; font-weight:700; color:var(--black);">Enable check-in</span>
+              <span style="display:block; font-size:12px; color:var(--grey-mid); margin-top:2px;">Master switch. When off, no check-in button appears anywhere, regardless of the options below.</span>
+            </span>
+          </label>
+
+          <div id="ci-detail">
+            <div class="hours-section-title">How guests check in</div>
+            <div class="ci-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:18px;">
+              <label class="ci-opt"><input type="checkbox" id="ci-nfc_enabled"><span><strong>NFC tap</strong><em>Tap a physical TRODDR tag.</em></span></label>
+              <label class="ci-opt"><input type="checkbox" id="ci-qr_enabled"><span><strong>QR code</strong><em>Scan a printed QR code.</em></span></label>
+              <label class="ci-opt"><input type="checkbox" id="ci-manual_code_enabled"><span><strong>Manual code</strong><em>Type a code shown at the venue.</em></span></label>
+              <label class="ci-opt"><input type="checkbox" id="ci-in_app_checkin_enabled"><span><strong>In-app check-in</strong><em>Tap a button in the app (no tag).</em></span></label>
+            </div>
+
+            <div id="ci-inapp-opts" style="margin:-8px 0 18px; padding-left:4px;">
+              <label class="ci-opt" style="border:none; padding:0;"><input type="checkbox" id="ci-requires_proximity"><span><strong>Require proximity for in-app check-in</strong><em>Guest's device must be near the venue.</em></span></label>
+            </div>
+
+            <div class="hours-section-title">What a check-in earns</div>
+            <div class="ci-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:18px;">
+              <label class="ci-opt"><input type="checkbox" id="ci-xp_enabled"><span><strong>Award XP</strong><em>Counts toward TRODDR tiers.</em></span></label>
+              <label class="ci-opt"><input type="checkbox" id="ci-loyalty_enabled"><span><strong>Stamp loyalty card</strong><em>Only for NFC/QR/manual (trusted) check-ins.</em></span></label>
+            </div>
+
+            <div class="form-field" style="max-width:280px;">
+              <label for="ci-cooldown_minutes">Cooldown between check-ins (minutes)</label>
+              <input type="number" id="ci-cooldown_minutes" min="0" step="1" placeholder="Default (360)">
+            </div>
+          </div>
+        </div>
+
+        <div class="hours-status" id="checkin-status"></div>
+        <div class="hours-actions">
+          <span style="font-size: 11px; color: var(--grey-light);">Controls the check-in button in the TRODDR app.</span>
+          <button type="button" class="hours-btn primary" id="checkin-save">Save check-in settings</button>
+        </div>
       </div>
     </section>
 
@@ -2121,6 +2180,7 @@
     // Discovery, Ratings Breakdown, and Recent Feedback moved to /partner/feedback.
     safe('setupHoursEditor',   () => setupHoursEditor(data.place, data.closures || []));
     safe('setupContactEditor', () => setupContactEditor(data.place));
+    safe('setupCheckinSettings', () => setupCheckinSettings(token));
     // Featured in Guides loads async without blocking
     loadGuides();
 
@@ -2131,6 +2191,66 @@
       partner: caps && caps.partner,
     }));
     safe('renderEntityPicker', () => renderEntityPicker(caps && caps.partner));
+  }
+
+  // ── Check-in & loyalty settings ──────────────────────────────────
+  // Reads/writes place_checkin_settings via the token-scoped RPCs (authored in
+  // the app repo). Degrades to defaults + an empty form if the RPC isn't
+  // deployed yet, so saving simply creates the first settings row.
+  async function setupCheckinSettings(token) {
+    const wrap   = $('checkin-fields');
+    const status = $('checkin-status');
+    const saveBtn= $('checkin-save');
+    const FLAGS = ['checkin_enabled','nfc_enabled','qr_enabled','manual_code_enabled',
+                   'in_app_checkin_enabled','requires_proximity','xp_enabled','loyalty_enabled'];
+    const setStatus = (msg, kind) => {
+      status.textContent = msg || '';
+      status.style.color = kind === 'error' ? 'var(--red)' : (kind === 'ok' ? 'var(--green)' : 'var(--grey-mid)');
+    };
+
+    const defaults = { checkin_enabled:false, nfc_enabled:false, qr_enabled:false,
+      manual_code_enabled:false, in_app_checkin_enabled:false, requires_proximity:true,
+      xp_enabled:true, loyalty_enabled:false, cooldown_minutes:null };
+
+    let settings = defaults;
+    try {
+      const { data, error } = await db.rpc('get_checkin_settings_by_partner_token', { p_token: token });
+      if (!error && data) settings = (Array.isArray(data) ? data[0] : data) || defaults;
+    } catch { /* RPC not deployed → defaults */ }
+
+    FLAGS.forEach(f => { const el = $('ci-' + f); if (el) el.checked = !!settings[f]; });
+    $('ci-cooldown_minutes').value = settings.cooldown_minutes ?? '';
+
+    const reflect = () => {
+      $('ci-detail').classList.toggle('disabled', !$('ci-checkin_enabled').checked);
+      $('ci-inapp-opts').style.display = $('ci-in_app_checkin_enabled').checked ? '' : 'none';
+    };
+    $('ci-checkin_enabled').onchange = reflect;
+    $('ci-in_app_checkin_enabled').onchange = reflect;
+    reflect();
+
+    wrap.style.display = '';
+
+    saveBtn.onclick = async () => {
+      saveBtn.disabled = true; const orig = saveBtn.textContent; saveBtn.textContent = 'Saving…';
+      setStatus('');
+      const cdRaw = $('ci-cooldown_minutes').value.trim();
+      const { error } = await db.rpc('upsert_checkin_settings_by_partner_token', {
+        p_token: token,
+        p_checkin_enabled:        $('ci-checkin_enabled').checked,
+        p_nfc_enabled:            $('ci-nfc_enabled').checked,
+        p_qr_enabled:             $('ci-qr_enabled').checked,
+        p_manual_code_enabled:    $('ci-manual_code_enabled').checked,
+        p_in_app_checkin_enabled: $('ci-in_app_checkin_enabled').checked,
+        p_requires_proximity:     $('ci-requires_proximity').checked,
+        p_xp_enabled:             $('ci-xp_enabled').checked,
+        p_loyalty_enabled:        $('ci-loyalty_enabled').checked,
+        p_cooldown_minutes:       cdRaw === '' ? null : Math.max(0, parseInt(cdRaw, 10) || 0),
+      });
+      saveBtn.disabled = false; saveBtn.textContent = orig;
+      if (error) { setStatus('Could not save: ' + error.message, 'error'); return; }
+      setStatus('Saved', 'ok');
+    };
   }
 
   load();

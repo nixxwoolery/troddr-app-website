@@ -72,6 +72,7 @@
       { label: 'Preview',             section: 'preview' },
       { label: 'Content Info & Links', section: 'contact' },
       { label: 'Opening Hours',       section: 'hours' },
+      { label: 'Check-in & Loyalty',  section: 'checkin' },
     ] },
     { group: 'Insights & Feedback', icon: 'ic-chart', page: '/partner/feedback', cap: 'feedback', children: [
       { label: 'Discovery',             section: 'metrics' },
@@ -85,6 +86,7 @@
       { label: 'Booking Requests', section: 'view-main' },
     ] },
     { group: 'Promote', icon: 'ic-megaphone', page: '/partner/loyalty', cap: 'loyalty' },
+    { group: 'Insider Perks', icon: 'ic-ticket', page: '/partner/perks', cap: 'loyalty' },
     { group: 'Specials & Promotions', icon: 'ic-tag', page: '/partner/specials', cap: 'specials', children: [
       { label: 'Specials Summary',     section: 'summary' },
       { label: 'Active Specials',      section: 'active' },

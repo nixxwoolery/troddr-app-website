@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Insider Perks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --blue:#0077CC; --blue-light:#e8f4ff; --blue-mid:#cce5f6;
+    --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea;
+    --amber:#b86e00; --amber-light:#fff4e0;
+    --purple:#6c3fc5; --purple-light:#f0ebff;
+    --teal:#0d7d6b; --teal-light:#e2f5f2;
+    --black:#111111; --grey-dark:#333333; --grey-mid:#666666; --grey-light:#999999;
+    --border:#e8e8e8; --border-soft:#f0f0f0;
+    --bg:#ffffff; --bg-soft:#f8f9fa;
+    --radius-sm:6px; --radius:10px; --radius-lg:16px;
+    --shadow-sm:0 1px 3px rgba(0,0,0,0.06); --shadow:0 4px 16px rgba(0,0,0,0.08);
+    --brand-primary:#0077CC; --brand-accent:#C3D600; --brand-text:#ffffff; --brand-secondary:#ffffff;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Poppins',sans-serif; background:var(--bg-soft); color:var(--black); font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+
+  .header { position:sticky; top:0; z-index:200; background:#fff; border-bottom:1px solid var(--border); }
+  .navbar { max-width:1280px; margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; gap:24px; }
+  .logo { font-size:26px; font-weight:700; color:var(--blue); text-decoration:none; letter-spacing:-1px; }
+  .nav-badge { background:var(--bg-soft); color:var(--grey-dark); font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; padding:5px 12px; border-radius:6px; border:1px solid var(--border); margin-left:auto; }
+
+  .page-hero { background:var(--brand-primary); color:var(--brand-text); padding:32px 24px 56px; text-align:center; position:relative; overflow:hidden; }
+  .hero-inner { position:relative; max-width:720px; margin:0 auto; z-index:1; }
+  .hero-eyebrow { display:inline-block; background:rgba(255,255,255,0.12); color:var(--brand-text); font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; padding:5px 14px; border-radius:4px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.18); }
+  .page-hero h1 { font-size:clamp(28px,4.5vw,40px); font-weight:700; line-height:1.15; margin-bottom:10px; letter-spacing:-0.6px; }
+  .hero-reward { color:rgba(255,255,255,0.92); font-size:14px; font-weight:600; }
+
+  .layout { max-width:1320px; margin:-32px auto 0; padding:0 16px; display:grid; grid-template-columns:240px 1fr; gap:24px; position:relative; z-index:10; }
+  .sidebar { position:sticky; top:76px; align-self:start; height:max-content; background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:10px; box-shadow:var(--shadow-sm); }
+  .main { min-width:0; padding-bottom:80px; }
+
+  .section { margin-bottom:36px; scroll-margin-top:80px; }
+  .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; }
+  .section-title { font-size:18px; font-weight:700; color:var(--black); letter-spacing:-0.3px; }
+  .section-sub { font-size:12px; color:var(--grey-mid); font-weight:500; margin-top:2px; }
+
+  .btn { height:36px; padding:0 16px; border-radius:8px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid transparent; transition:all 0.12s; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  .btn-primary { background:var(--blue); color:#fff; }
+  .btn-primary:hover:not(:disabled) { background:#005fa3; }
+  .btn-ghost { background:#fff; color:var(--grey-dark); border-color:var(--border); }
+  .btn-ghost:hover { background:var(--bg-soft); }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .perk-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+  .perk-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:10px; }
+  .perk-card.inactive { opacity:0.62; }
+  .perk-top { display:flex; align-items:flex-start; gap:10px; }
+  .perk-icon { width:36px; height:36px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; background:var(--bg-soft); border:1px solid var(--border-soft); }
+  .perk-title { font-size:14px; font-weight:700; color:var(--black); line-height:1.3; }
+  .perk-type { font-size:11px; color:var(--grey-mid); font-weight:600; margin-top:1px; }
+  .perk-desc { font-size:12px; color:var(--grey-dark); line-height:1.45; }
+  .perk-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .chip { font-size:10px; font-weight:700; letter-spacing:0.04em; padding:3px 9px; border-radius:999px; border:1px solid transparent; }
+  .chip.member { background:var(--bg-soft); color:var(--grey-mid); border-color:var(--border); }
+  .chip.regular { background:var(--teal-light); color:var(--teal); }
+  .chip.insider { background:var(--blue-light); color:var(--blue); }
+  .chip.inner_circle { background:var(--amber-light); color:var(--amber); }
+  .chip.limit { background:var(--purple-light); color:var(--purple); }
+  .chip.muted { background:var(--bg-soft); color:var(--grey-light); border-color:var(--border); }
+  .perk-actions { display:flex; gap:8px; margin-top:auto; padding-top:6px; border-top:1px solid var(--border-soft); }
+  .perk-actions button { flex:1; height:32px; font-size:12px; font-weight:600; border-radius:6px; cursor:pointer; border:1px solid var(--border); background:#fff; color:var(--grey-dark); transition:all 0.12s; }
+  .perk-actions button:hover { background:var(--bg-soft); }
+  .perk-actions .toggle.on { color:var(--green); border-color:#c0e8d0; }
+  .perk-actions .toggle.off { color:var(--amber); border-color:#f0dca8; }
+
+  .empty { text-align:center; padding:48px 24px; border:1px dashed var(--border); border-radius:var(--radius-lg); background:#fff; }
+  .empty h3 { font-size:15px; font-weight:700; margin-bottom:6px; }
+  .empty p { font-size:13px; color:var(--grey-mid); margin-bottom:16px; }
+
+  /* Modal editor */
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:400; display:none; }
+  .overlay.open { display:block; }
+  .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:520px; max-width:94vw; max-height:92vh; overflow-y:auto; background:#fff; border-radius:var(--radius-lg); box-shadow:0 12px 48px rgba(0,0,0,0.2); z-index:401; display:none; }
+  .modal.open { display:block; }
+  .modal-head { position:sticky; top:0; background:#fff; padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+  .modal-title { font-size:15px; font-weight:700; flex:1; }
+  .modal-close { width:30px; height:30px; border-radius:7px; background:var(--bg-soft); border:1px solid var(--border); cursor:pointer; font-size:16px; color:var(--grey-mid); }
+  .modal-body { padding:20px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--grey-mid); margin-bottom:5px; }
+  .field input, .field textarea, .field select { width:100%; padding:9px 11px; border:1px solid var(--border); border-radius:6px; font-family:inherit; font-size:13px; background:var(--bg-soft); transition:border-color 0.12s; }
+  .field input:focus, .field textarea:focus, .field select:focus { outline:none; border-color:var(--blue); background:#fff; }
+  .field textarea { resize:vertical; min-height:64px; }
+  .field-hint { font-size:11px; color:var(--grey-light); margin-top:4px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .switch-row { display:flex; align-items:center; gap:10px; margin:6px 0 4px; }
+  .switch-row input { width:auto; }
+  .modal-foot { display:flex; justify-content:flex-end; gap:8px; padding:0 20px 20px; }
+
+  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--black); color:#fff; padding:11px 20px; border-radius:10px; font-size:13px; font-weight:500; opacity:0; transition:all 0.25s; z-index:500; pointer-events:none; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #toast.error { background:var(--red); }
+
+  .hidden { display:none !important; }
+  .state { text-align:center; padding:60px 24px; }
+  .state-title { font-size:18px; font-weight:700; margin-bottom:8px; }
+  .state-msg { font-size:13px; color:var(--grey-mid); max-width:440px; margin:0 auto; }
+
+  @media (max-width:860px){ .layout{ grid-template-columns:1fr; } .sidebar{ position:static; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Insider Perks</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Partner Dashboard</span>
+    <h1>Insider Perks</h1>
+    <p class="hero-reward">Reward your TRODDR regulars with tier-gated perks they unlock by visiting.</p>
+  </div>
+</section>
+
+<!-- LOADING -->
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main"><div class="state"><div class="state-title">Loading perks…</div></div></div>
+</div>
+
+<!-- ERROR -->
+<div class="layout hidden" id="view-error">
+  <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
+  <div class="main">
+    <div class="state">
+      <div class="state-title">We couldn't load this page</div>
+      <p class="state-msg">This link may have expired or been revoked. Try another section from the sidebar, or reply to any TRODDR email if you think this is a mistake.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="layout hidden" id="view-main">
+  <aside class="sidebar"><!-- mounted by /js/partner-sidebar.js --></aside>
+  <main class="main">
+    <section class="section" id="perks">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Your Perks</h2>
+          <div class="section-sub">Perks unlock by a guest's network tier. <strong>Member</strong> perks are open to everyone; higher tiers reward your most loyal visitors.</div>
+        </div>
+        <button class="btn btn-primary" id="btn-new">+ New Perk</button>
+      </div>
+      <div id="perk-container"></div>
+    </section>
+  </main>
+</div>
+
+<!-- EDITOR MODAL -->
+<div class="overlay" id="overlay"></div>
+<div class="modal" id="modal">
+  <div class="modal-head">
+    <span class="modal-title" id="modal-title">New Perk</span>
+    <button class="modal-close" id="modal-close">&times;</button>
+  </div>
+  <div class="modal-body">
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="f-title" maxlength="80" placeholder="e.g. Complimentary welcome drink">
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="f-desc" maxlength="280" placeholder="What the guest gets, and any conditions staff should know."></textarea>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Perk Type</label>
+        <select id="f-type"></select>
+      </div>
+      <div class="field">
+        <label>Required Tier</label>
+        <select id="f-tier"></select>
+        <div class="field-hint" id="tier-hint"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Redemption Limit</label>
+      <input type="number" id="f-limit" min="0" step="1" placeholder="Leave blank for unlimited">
+      <div class="field-hint">Total times this perk can ever be redeemed across all guests. Blank = unlimited.</div>
+    </div>
+    <div class="switch-row">
+      <input type="checkbox" id="f-active" checked>
+      <label for="f-active" style="margin:0; text-transform:none; letter-spacing:0; font-size:13px; font-weight:600; color:var(--grey-dark)">Active (visible to guests in the app)</label>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" id="btn-cancel">Cancel</button>
+    <button class="btn btn-primary" id="btn-save">Save Perk</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+const $ = (id) => document.getElementById(id);
+const show = (id) => $(id).classList.remove('hidden');
+const hide = (id) => $(id).classList.add('hidden');
+
+let partnerToken = '';
+let perks = [];
+let editingId = null;
+
+// Canonical tiers — must match lib/insider/tiers.ts (app repo) and the
+// partner_perks.required_tier CHECK constraint.
+const TIERS = [
+  { slug:'member',       label:'Member',       hint:'Open to everyone with the app.' },
+  { slug:'regular',      label:'Regular',      hint:'Guests at level 3+ on TRODDR.' },
+  { slug:'insider',      label:'Insider',      hint:'Guests at level 5+ on TRODDR.' },
+  { slug:'inner_circle', label:'Inner Circle', hint:'Your most loyal — level 8+ on TRODDR.' },
+];
+const TIER_LABEL = Object.fromEntries(TIERS.map(t => [t.slug, t.label]));
+
+// Perk type vocabulary from the Insider spec. icon is a plain emoji-free glyph.
+const PERK_TYPES = [
+  { slug:'welcome_drink',   label:'Welcome drink',     icon:'🍸' },
+  { slug:'birthday_dessert',label:'Birthday dessert',  icon:'🎂' },
+  { slug:'priority_table',  label:'Priority table',    icon:'🪑' },
+  { slug:'off_menu_item',   label:'Off-menu item',     icon:'👨‍🍳' },
+  { slug:'event_invite',    label:'Event invite',      icon:'🎟️' },
+  { slug:'discount',        label:'Discount',          icon:'%' },
+  { slug:'room_upgrade',    label:'Room upgrade',      icon:'🛏️' },
+  { slug:'late_checkout',   label:'Late checkout',     icon:'🕓' },
+  { slug:'free_add_on',     label:'Free add-on',       icon:'➕' },
+  { slug:'regular_special', label:'Regular-only special', icon:'⭐' },
+  { slug:'other',           label:'Other',             icon:'🎁' },
+];
+const TYPE_BY_SLUG = Object.fromEntries(PERK_TYPES.map(t => [t.slug, t]));
+const typeMeta = (s) => TYPE_BY_SLUG[s] || TYPE_BY_SLUG.other;
+
+function esc(s){ if(!s) return ''; return String(s).replace(/[<>&"]/g,(c)=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+function toast(msg, kind){ const t=$('toast'); t.textContent=msg; t.className=(kind==='error'?'error ':'')+'show'; setTimeout(()=>t.className='',2400); }
+
+// ── Load ──────────────────────────────────────────────────────────
+async function load() {
+  partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+  const showError = (caps) => { hide('view-loading'); show('view-error'); window.PartnerAuth?.mountSessionControl('partner'); mountSidebar(caps); };
+  if (!partnerToken) { showError(); return; }
+
+  let capsRes, perksRes;
+  try {
+    [capsRes, perksRes] = await Promise.all([
+      db.rpc('get_partner_capabilities_by_token', { p_token: partnerToken }),
+      db.rpc('get_perks_by_partner_token',        { p_token: partnerToken }),
+    ]);
+  } catch { showError(); return; }
+
+  const caps = capsRes && capsRes.data;
+  if (!caps || (capsRes && capsRes.error)) { showError(caps && caps.capabilities); return; }
+
+  // Group / event partners get routed to their proper home (same as other pages).
+  const intentional = window.PartnerAuth?.consumeIntent('/partner/perks');
+  const entities = (caps.partner && caps.partner.entities) || [];
+  if (!intentional && entities.length > 1) { window.PartnerAuth?.navigate('/partner/group', partnerToken); return; }
+  if (!intentional && caps.type === 'event') { window.PartnerAuth?.navigate('/partner/event', partnerToken); return; }
+
+  hide('view-loading'); show('view-main');
+  window.PartnerAuth?.mountSessionControl('partner');
+  mountSidebar(caps.capabilities, caps.partner);
+
+  // A 404 here means the partner_perks RPCs aren't deployed yet — show an
+  // empty state rather than an error so the page is still usable.
+  perks = (perksRes && !perksRes.error && Array.isArray(perksRes.data)) ? perksRes.data : [];
+  renderPerks();
+}
+
+function mountSidebar(capabilities, partner) {
+  window.PartnerSidebar?.mount({ active: '/partner/perks', capabilities: capabilities || {}, partner });
+  window.PartnerSidebar?.setupScrollspy?.();
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function renderPerks() {
+  const c = $('perk-container');
+  if (!perks.length) {
+    c.innerHTML = `<div class="empty">
+      <h3>No perks yet</h3>
+      <p>Create your first Insider perk — a welcome drink, a priority table, a regular-only special — and reward the guests who keep coming back.</p>
+      <button class="btn btn-primary" onclick="openEditor()">+ Create your first perk</button>
+    </div>`;
+    return;
+  }
+  c.innerHTML = `<div class="perk-grid">${perks.map(perkCard).join('')}</div>`;
+}
+
+function perkCard(p) {
+  const tm = typeMeta(p.perk_type);
+  const tier = p.required_tier || 'member';
+  const limitChip = (p.redemption_limit == null)
+    ? `<span class="chip muted">Unlimited</span>`
+    : `<span class="chip limit">Limit ${p.redemption_limit}</span>`;
+  return `<div class="perk-card ${p.active ? '' : 'inactive'}">
+    <div class="perk-top">
+      <div class="perk-icon">${tm.icon}</div>
+      <div style="min-width:0">
+        <div class="perk-title">${esc(p.title)}</div>
+        <div class="perk-type">${esc(tm.label)}</div>
+      </div>
+    </div>
+    ${p.description ? `<div class="perk-desc">${esc(p.description)}</div>` : ''}
+    <div class="perk-meta">
+      <span class="chip ${tier}">${TIER_LABEL[tier] || 'Member'}</span>
+      ${limitChip}
+      ${p.active ? '' : '<span class="chip muted">Hidden</span>'}
+    </div>
+    <div class="perk-actions">
+      <button onclick="openEditor('${p.id}')">Edit</button>
+      <button class="toggle ${p.active ? 'on' : 'off'}" onclick="toggleActive('${p.id}')">${p.active ? 'Active' : 'Inactive'}</button>
+    </div>
+  </div>`;
+}
+
+// ── Editor ────────────────────────────────────────────────────────
+function fillSelects() {
+  $('f-type').innerHTML = PERK_TYPES.map(t => `<option value="${t.slug}">${esc(t.label)}</option>`).join('');
+  $('f-tier').innerHTML = TIERS.map(t => `<option value="${t.slug}">${esc(t.label)}</option>`).join('');
+}
+function updateTierHint() {
+  const t = TIERS.find(x => x.slug === $('f-tier').value);
+  $('tier-hint').textContent = t ? t.hint : '';
+}
+
+function openEditor(id) {
+  fillSelects();
+  editingId = id || null;
+  const p = id ? perks.find(x => x.id === id) : null;
+  $('modal-title').textContent = p ? 'Edit Perk' : 'New Perk';
+  $('f-title').value = p ? (p.title || '') : '';
+  $('f-desc').value  = p ? (p.description || '') : '';
+  $('f-type').value  = p ? (p.perk_type || 'other') : 'welcome_drink';
+  $('f-tier').value  = p ? (p.required_tier || 'member') : 'member';
+  $('f-limit').value = (p && p.redemption_limit != null) ? p.redemption_limit : '';
+  $('f-active').checked = p ? !!p.active : true;
+  updateTierHint();
+  $('overlay').classList.add('open');
+  $('modal').classList.add('open');
+  setTimeout(() => $('f-title').focus(), 50);
+}
+function closeEditor() {
+  $('overlay').classList.remove('open');
+  $('modal').classList.remove('open');
+  editingId = null;
+}
+
+async function savePerk() {
+  const title = $('f-title').value.trim();
+  if (!title) { toast('Give the perk a title', 'error'); return; }
+  const limitRaw = $('f-limit').value.trim();
+  const limit = limitRaw === '' ? null : Math.max(0, parseInt(limitRaw, 10) || 0);
+
+  const btn = $('btn-save');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const { data, error } = await db.rpc('upsert_perk_by_partner_token', {
+    p_token: partnerToken,
+    p_perk_id: editingId,
+    p_title: title,
+    p_description: $('f-desc').value.trim() || null,
+    p_required_tier: $('f-tier').value,
+    p_perk_type: $('f-type').value,
+    p_redemption_limit: limit,
+    p_active: $('f-active').checked,
+  });
+
+  btn.disabled = false; btn.textContent = 'Save Perk';
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+
+  const saved = Array.isArray(data) ? data[0] : data;
+  if (saved) {
+    const idx = perks.findIndex(x => x.id === saved.id);
+    if (idx >= 0) perks[idx] = saved; else perks.unshift(saved);
+  }
+  closeEditor();
+  renderPerks();
+  toast(editingId ? 'Perk updated' : 'Perk created');
+}
+
+async function toggleActive(id) {
+  const p = perks.find(x => x.id === id);
+  if (!p) return;
+  const { data, error } = await db.rpc('upsert_perk_by_partner_token', {
+    p_token: partnerToken,
+    p_perk_id: id,
+    p_title: p.title,
+    p_description: p.description,
+    p_required_tier: p.required_tier,
+    p_perk_type: p.perk_type,
+    p_redemption_limit: p.redemption_limit,
+    p_active: !p.active,
+  });
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  const saved = Array.isArray(data) ? data[0] : data;
+  if (saved) { const idx = perks.findIndex(x => x.id === id); if (idx >= 0) perks[idx] = saved; }
+  renderPerks();
+  toast(saved && saved.active ? 'Perk activated' : 'Perk hidden');
+}
+
+// ── Events ────────────────────────────────────────────────────────
+$('btn-new').onclick    = () => openEditor();
+$('btn-save').onclick   = savePerk;
+$('btn-cancel').onclick = closeEditor;
+$('modal-close').onclick= closeEditor;
+$('overlay').onclick    = closeEditor;
+$('f-tier').onchange    = updateTierHint;
+
+load();
+</script>
+
+<script src="/js/partner-errors.js"></script>
+<script src="/js/partner-messages.js" defer></script>
+</body>
+</html>

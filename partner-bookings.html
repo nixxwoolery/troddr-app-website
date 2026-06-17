@@ -314,6 +314,78 @@ body {
 .dval.muted { color: var(--grey-mid); }
 .dgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
+/* ── TRODDR Insider panel (guest profile snapshot) ───────────────── */
+.ins-panel {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; background: #fff;
+}
+.ins-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-soft);
+}
+.ins-mark {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--grey-light); flex: 1;
+}
+.ins-tier {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 4px 10px; border-radius: 999px; border: 1px solid transparent;
+}
+.ins-tier.member       { background: var(--bg-soft);    color: var(--grey-mid); border-color: var(--border); }
+.ins-tier.regular      { background: var(--teal-light);  color: var(--teal); }
+.ins-tier.insider      { background: var(--blue-light);  color: var(--blue); }
+.ins-tier.inner_circle { background: var(--amber-light); color: var(--amber); }
+.ins-body { padding: 14px; }
+.ins-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.ins-stat {
+  flex: 1; min-width: 84px; padding: 8px 10px; border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); background: var(--bg-soft); text-align: center;
+}
+.ins-stat .num { font-size: 16px; font-weight: 800; color: var(--black); line-height: 1.1; }
+.ins-stat .lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-light); margin-top: 3px; }
+.ins-sub {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--grey-light); margin: 12px 0 7px;
+}
+.ins-loyalty {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); background: var(--bg-soft); margin-bottom: 4px;
+}
+.ins-bar { flex: 1; height: 7px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.ins-bar > span { display: block; height: 100%; background: var(--teal); border-radius: 999px; }
+.ins-loyalty .meta { font-size: 11px; font-weight: 700; color: var(--grey-dark); white-space: nowrap; }
+.ins-loyalty .reward { font-size: 11px; color: var(--grey-mid); }
+.ins-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ins-tag {
+  font-size: 11px; font-weight: 600; color: var(--purple);
+  background: var(--purple-light); padding: 4px 9px; border-radius: 999px;
+}
+.ins-note {
+  font-size: 12px; color: var(--grey-dark); font-style: italic;
+  padding: 8px 10px; border-left: 2px solid var(--border); background: var(--bg-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.ins-empty { font-size: 12px; color: var(--grey-light); }
+.ins-perklist { display: flex; flex-direction: column; gap: 6px; }
+.ins-perk {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); background: var(--bg-soft);
+}
+.ins-perk-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ins-perk-title { font-size: 12px; font-weight: 700; color: var(--black); }
+.ins-perk-sub { font-size: 10px; color: var(--grey-mid); font-weight: 600; }
+.ins-redeem {
+  flex-shrink: 0; height: 28px; padding: 0 12px; border-radius: 6px;
+  border: 1.5px solid var(--teal); background: var(--teal-light); color: var(--teal);
+  font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.12s;
+}
+.ins-redeem:hover:not(:disabled) { background: var(--teal); color: #fff; }
+.ins-redeem.done { background: var(--green-light); border-color: #c0e8d0; color: var(--green); cursor: default; }
+.ins-redeem:disabled { cursor: default; opacity: 0.9; }
+
 /* Drawer editable fields */
 .dfield { margin-bottom: 10px; }
 .dfield label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey-mid); margin-bottom: 4px; }
@@ -895,6 +967,12 @@ function renderDrawer(b, openPanel) {
   // Build drawer HTML
   $('drawer-body').innerHTML = `
 
+  <!-- TRODDR INSIDER (guest profile snapshot, only when shared) -->
+  <div class="dsec" id="d-insider" style="display:none">
+    <div class="dsec-title">TRODDR Insider</div>
+    <div id="d-insider-body"></div>
+  </div>
+
   <!-- BOOKING SUMMARY -->
   <div class="dsec">
     <div class="dsec-title">Booking Summary</div>
@@ -1127,6 +1205,225 @@ function renderDrawer(b, openPanel) {
 
   // Load timeline
   loadTimeline(b.id);
+
+  // Load the guest's TRODDR Insider snapshot (only renders if they shared)
+  loadGuestProfile(b);
+}
+
+// ── TRODDR Insider guest profile ───────────────────────────────────
+// Frozen snapshot captured at booking time. Returned by the
+// security-definer RPC get_booking_guest_profile(p_token) ONLY when the
+// guest opted into profile sharing — un-shared bookings return shared:false
+// and the panel stays hidden. Degrades silently if the RPC isn't deployed.
+
+const TIER_LABEL = { member: 'Member', regular: 'Regular', insider: 'Insider', inner_circle: 'Inner Circle' };
+
+function prettyTag(t) {
+  return String(t || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+async function loadGuestProfile(b) {
+  const sec = $('d-insider');
+  if (!sec) return;
+  if (!b.token) { sec.style.display = 'none'; return; }
+
+  let row;
+  try {
+    const { data, error } = await db.rpc('get_booking_guest_profile', { p_token: b.token });
+    if (error) { sec.style.display = 'none'; return; }      // RPC missing / failed → hide
+    row = Array.isArray(data) ? data[0] : data;
+  } catch { sec.style.display = 'none'; return; }
+
+  // Drawer may have moved on to another booking while we awaited.
+  if (!drawerBooking || drawerBooking.id !== b.id) return;
+  if (!row) { sec.style.display = 'none'; return; }
+
+  if (!row.shared) {
+    // Never leak un-shared data — show only that nothing was shared.
+    sec.style.display = '';
+    $('d-insider-body').innerHTML =
+      `<p class="ins-empty">Guest didn't share a TRODDR Insider profile for this booking.</p>`;
+    return;
+  }
+
+  sec.style.display = '';
+  const snap = row.snapshot || {};
+  $('d-insider-body').innerHTML = renderInsiderPanel(snap, b);
+
+  // "For this visit": render the special request now, fill occasion async.
+  renderVisitBlock(b, b.occasion || null);
+  loadOccasion(b);
+
+  // Staff perk redemption — only when we have the guest's user_id (shared).
+  if (row.user_id) loadInsiderPerks(row.user_id, snap.tier || 'member');
+}
+
+function renderVisitBlock(b, occasion) {
+  const host = $('ins-visit');
+  if (!host) return;
+  if (!occasion && !b.notes) { host.innerHTML = ''; return; }
+  host.innerHTML = `
+    <div class="ins-sub">For this visit</div>
+    ${occasion ? `<div class="drow"><span class="dlabel">Occasion</span><span class="dval">${esc(occasion)}</span></div>` : ''}
+    ${b.notes ? `<div class="ins-note">"${esc(b.notes)}"</div>` : ''}`;
+}
+
+// Occasion lives on the full booking row, returned by get_booking_detail_by_token
+// (booking.occasion) but not by the booking-list RPC. Fetch it once and patch
+// the visit block in; harmless no-op if the column/value is absent.
+async function loadOccasion(b) {
+  if (!b || !b.token || b.occasion) return;   // already have it → skip the call
+  let detail;
+  try {
+    const { data, error } = await db.rpc('get_booking_detail_by_token', { p_token: b.token });
+    detail = (!error && data && !data.error) ? data : null;
+  } catch { return; }
+  // Drawer may have moved to another booking while we awaited.
+  if (!drawerBooking || drawerBooking.id !== b.id) return;
+  const occ = detail && detail.booking && detail.booking.occasion;
+  if (occ) {
+    b.occasion = occ;                          // cache on the booking object
+    renderVisitBlock(b, occ);
+  }
+}
+
+function renderInsiderPanel(s, b) {
+  const tier  = s.tier || 'member';
+  const net   = s.network || {};
+  const venue = s.venue || {};
+  const tags  = (s.preferences && s.preferences.tags) || [];
+  const loy   = venue.loyalty;
+
+  const stat = (num, lbl) => `<div class="ins-stat"><div class="num">${num ?? 0}</div><div class="lbl">${lbl}</div></div>`;
+
+  let loyaltyHtml = '';
+  if (loy && loy.required_stamps) {
+    const cur = Math.max(0, loy.current_stamps || 0);
+    const req = loy.required_stamps;
+    const pct = Math.min(100, Math.round((cur / req) * 100));
+    loyaltyHtml = `
+      <div class="ins-sub">Loyalty at this venue</div>
+      <div class="ins-loyalty">
+        <span class="meta">${cur}/${req}</span>
+        <span class="ins-bar"><span style="width:${pct}%"></span></span>
+        ${loy.reward ? `<span class="reward">${esc(loy.reward)}</span>` : ''}
+      </div>
+      ${loy.completed_cycles ? `<div class="ins-empty" style="margin-top:2px">${loy.completed_cycles} reward${loy.completed_cycles>1?'s':''} earned here before</div>` : ''}`;
+  }
+
+  const tagsHtml = tags.length ? `
+    <div class="ins-sub">Preference signals</div>
+    <div class="ins-tags">${tags.slice(0, 12).map(t => `<span class="ins-tag">${esc(prettyTag(t))}</span>`).join('')}</div>` : '';
+
+  // Occasion + special request for THIS visit. Special request = b.notes.
+  // occasion isn't carried by the booking-list RPC, so it's filled in async by
+  // loadOccasion() from get_booking_detail_by_token; ins-visit is its mount.
+  const visitHtml = `<div id="ins-visit"></div>`;
+
+  const noteHtml = venue.your_note ? `
+    <div class="ins-sub">Their note about you</div>
+    <div class="ins-note">"${esc(venue.your_note)}"</div>` : '';
+
+  return `
+  <div class="ins-panel">
+    <div class="ins-head">
+      <span class="ins-mark">TRODDR Insider</span>
+      <span class="ins-tier ${tier}">${TIER_LABEL[tier] || 'Member'}</span>
+    </div>
+    <div class="ins-body">
+      <div class="ins-stats">
+        ${stat(net.visits, 'Network visits')}
+        ${stat(venue.visits_here, 'Visits here')}
+        ${stat(venue.checkins, 'Check-ins here')}
+        ${stat(net.saved_places, 'Saved places')}
+      </div>
+      ${venue.saved ? `<div class="ins-empty" style="margin:-4px 0 4px">★ Has saved this venue${venue.last_visit ? ` · last visit ${fmtDate(String(venue.last_visit).slice(0,10))}` : ''}</div>` : (venue.last_visit ? `<div class="ins-empty" style="margin:-4px 0 4px">Last visit ${fmtDate(String(venue.last_visit).slice(0,10))}</div>` : '')}
+      ${loyaltyHtml}
+      ${tagsHtml}
+      ${noteHtml}
+      ${visitHtml}
+      <div id="ins-perks"></div>
+    </div>
+  </div>`;
+}
+
+// ── Insider perk redemption (staff) ────────────────────────────────
+// Surfaces this venue's perks that the guest's tier unlocks, with a Redeem
+// action. Requires the guest to have shared their profile (so we have their
+// user_id). redeem_perk_by_partner_token enforces redemption_limit server-side.
+
+const PERK_TIER_RANK = { member: 0, regular: 1, insider: 2, inner_circle: 3 };
+const PERK_TYPE_LABEL = {
+  welcome_drink: 'Welcome drink', birthday_dessert: 'Birthday dessert',
+  priority_table: 'Priority table', off_menu_item: 'Off-menu item',
+  event_invite: 'Event invite', discount: 'Discount', room_upgrade: 'Room upgrade',
+  late_checkout: 'Late checkout', free_add_on: 'Free add-on',
+  regular_special: 'Regular-only special', other: 'Perk',
+};
+let _perksCache = null;       // venue perks, fetched once per page load
+const _redeemedPerkIds = new Set();  // optimistic per-session dedupe
+
+async function fetchVenuePerks() {
+  if (_perksCache) return _perksCache;
+  try {
+    const { data, error } = await db.rpc('get_perks_by_partner_token', { p_token: partnerToken });
+    _perksCache = (!error && Array.isArray(data)) ? data : [];
+  } catch { _perksCache = []; }
+  return _perksCache;
+}
+
+async function loadInsiderPerks(userId, guestTier) {
+  const host = $('ins-perks');
+  if (!host || !userId) return;
+  const guestRank = PERK_TIER_RANK[guestTier] ?? 0;
+  const perks = (await fetchVenuePerks())
+    .filter(p => p.active && (PERK_TIER_RANK[p.required_tier] ?? 0) <= guestRank);
+  if (!perks.length) return;
+
+  host.innerHTML = `
+    <div class="ins-sub">Perks this guest can redeem</div>
+    <div class="ins-perklist">
+      ${perks.map(p => {
+        const done = _redeemedPerkIds.has(p.id);
+        return `<div class="ins-perk">
+          <div class="ins-perk-info">
+            <span class="ins-perk-title">${esc(p.title)}</span>
+            <span class="ins-perk-sub">${esc(PERK_TYPE_LABEL[p.perk_type] || 'Perk')}${p.redemption_limit != null ? ` · limit ${p.redemption_limit}` : ''}</span>
+          </div>
+          <button class="ins-redeem${done ? ' done' : ''}" data-perk="${p.id}" ${done ? 'disabled' : ''}>${done ? '✓ Redeemed' : 'Redeem'}</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  host.querySelectorAll('.ins-redeem').forEach(btn => {
+    btn.onclick = () => redeemPerk(btn.dataset.perk, userId, btn);
+  });
+}
+
+async function redeemPerk(perkId, userId, btn) {
+  if (!drawerBooking) return;
+  let staff = localStorage.getItem('troddr_staff_name');
+  if (!staff) {
+    staff = (window.prompt('Your name (recorded with this redemption):') || '').trim();
+    if (staff) localStorage.setItem('troddr_staff_name', staff);
+  }
+  btn.disabled = true; btn.textContent = 'Redeeming…';
+  const { error } = await db.rpc('redeem_perk_by_partner_token', {
+    p_token: partnerToken,
+    p_perk_id: perkId,
+    p_user_id: userId,
+    p_booking_id: drawerBooking.id,
+    p_redeemed_by: staff || null,
+  });
+  if (error) {
+    btn.disabled = false; btn.textContent = 'Redeem';
+    toast('Error: ' + error.message, 'error');
+    return;
+  }
+  _redeemedPerkIds.add(perkId);
+  btn.disabled = true; btn.classList.add('done'); btn.textContent = '✓ Redeemed';
+  toast('Perk redeemed', 'ok');
 }
 
 async function loadTimeline(bookingId) {
