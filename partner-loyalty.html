@@ -352,6 +352,283 @@
     line-height: 1.5;
   }
 
+  /* ── PROGRAM SETTINGS ──────────────────────────────────── */
+  .settings-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: var(--shadow-sm);
+  }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.8fr) minmax(180px, 1.2fr) minmax(150px, 0.9fr);
+    gap: 14px;
+    align-items: start;
+  }
+  .settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .settings-field.wide { grid-column: 1 / -1; }
+  .settings-field label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .settings-field input,
+  .settings-field select,
+  .settings-field textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 11px;
+    font: inherit;
+    font-size: 13px;
+    background: #fff;
+    color: var(--black);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .settings-field textarea {
+    min-height: 76px;
+    resize: vertical;
+  }
+  .settings-field input:focus,
+  .settings-field select:focus,
+  .settings-field textarea:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(0,119,204,0.08);
+  }
+  .settings-subgrid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(130px, 1fr));
+    gap: 14px;
+    padding-top: 4px;
+  }
+  .settings-preview {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+    gap: 14px;
+    align-items: stretch;
+    margin-top: 2px;
+  }
+  .loyalty-card-preview {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--brand-primary), #111);
+    color: var(--brand-text);
+    padding: 18px;
+    min-height: 138px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    position: relative;
+  }
+  .loyalty-card-preview.silver { background: linear-gradient(135deg, #eef1f4, #9aa4ad); color: #1f2933; }
+  .loyalty-card-preview.gold { background: linear-gradient(135deg, #ffe8a3, #b7791f); color: #1f2933; }
+  .loyalty-card-preview.platinum { background: linear-gradient(135deg, #f7f7fb, #6b7280); color: #111; }
+  .loyalty-card-preview.brand { background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent)); color: var(--brand-text); }
+  .preview-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .preview-name {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+  }
+  .preview-level {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.22);
+    white-space: nowrap;
+  }
+  .preview-stamps {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .preview-stamp {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .preview-stamp svg { width: 16px; height: 16px; }
+  .preview-stamp.logo {
+    background-size: cover;
+    background-position: center;
+  }
+  .preview-note {
+    font-size: 12px;
+    color: var(--grey-mid);
+    line-height: 1.5;
+    align-self: center;
+  }
+  .settings-hint {
+    font-size: 11px;
+    color: var(--grey-mid);
+    line-height: 1.45;
+  }
+  .settings-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .settings-save {
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--brand-primary);
+    color: var(--brand-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .settings-save:hover { transform: translateY(-1px); }
+  .settings-save:disabled { opacity: 0.58; cursor: wait; transform: none; }
+  .settings-status {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--grey-mid);
+  }
+  .settings-status.ok { color: var(--green); }
+  .settings-status.error { color: var(--red); }
+  @media (max-width: 760px) {
+    .settings-grid { grid-template-columns: 1fr; }
+    .settings-field.wide { grid-column: auto; }
+    .settings-subgrid,
+    .settings-preview { grid-template-columns: 1fr; }
+  }
+
+  /* ── REDEMPTIONS ───────────────────────────────────────── */
+  .redemption-list {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .report-toolbar {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .report-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .report-field label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .report-field input {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 13px;
+    min-height: 36px;
+  }
+  .report-btn {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--grey-dark);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    min-height: 36px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .report-btn.primary {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
+  }
+  .report-status {
+    font-size: 12px;
+    color: var(--grey-mid);
+    font-weight: 600;
+  }
+  .redemption-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.8fr) minmax(0, 1.5fr) minmax(130px, 0.6fr) minmax(120px, 0.6fr);
+    gap: 14px;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .redemption-row:last-child { border-bottom: none; }
+  .redemption-date {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--black);
+  }
+  .redemption-meta {
+    font-size: 11px;
+    color: var(--grey-mid);
+    margin-top: 2px;
+  }
+  .redemption-reward {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--black);
+  }
+  .redemption-note {
+    font-size: 12px;
+    color: var(--grey-mid);
+    margin-top: 2px;
+  }
+  .redemption-pill {
+    justify-self: start;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--green-light);
+    color: var(--green);
+  }
+  @media (max-width: 780px) {
+    .redemption-row { grid-template-columns: 1fr; gap: 8px; }
+  }
+
   /* ── FUNNEL ─────────────────────────────────────────────── */
   .funnel {
     background: #fff;
@@ -542,7 +819,14 @@
     color: var(--brand-accent);
     flex-shrink: 0;
   }
+  .bowl.logo {
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid var(--border);
+  }
   .bowl.empty { color: var(--border); }
+  .bowl.logo.empty { opacity: 0.28; filter: grayscale(1); }
 
   .stamp-count {
     font-size: 13px; font-weight: 700;
@@ -734,6 +1018,18 @@
     <symbol id="ic-bowl" viewBox="0 0 24 24">
       <path d="M16.2 11L20.3 4.5L22 5.5L18.6 11H16.2M15.6 12H2V15C2 18.9 5.1 22 9 22H15C18.9 22 22 18.9 22 15V12H15.6Z" fill="currentColor"/>
     </symbol>
+    <symbol id="ic-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 10h2a3 3 0 0 1 0 6h-2"/><path d="M7 3v2M11 3v2M15 3v2"/>
+    </symbol>
+    <symbol id="ic-cocktail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 3h16l-8 9L4 3z"/><path d="M12 12v8M8 20h8"/><path d="M17 3l3-2"/>
+    </symbol>
+    <symbol id="ic-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 4C12 4 5 8 5 16a4 4 0 0 0 4 4c8 0 11-8 11-16z"/><path d="M5 19c4-6 8-9 15-15"/>
+    </symbol>
+    <symbol id="ic-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>
+    </symbol>
     <!-- Lock -->
     <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="4" y="11" width="16" height="10" rx="2"/>
@@ -855,6 +1151,16 @@
   <!-- ── MAIN ── -->
   <main class="main">
 
+    <section class="section" id="settings">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Program Settings</h2>
+          <div class="section-sub">Update the reward structure guests see in the TRODDR app.</div>
+        </div>
+      </div>
+      <div id="program-settings"></div>
+    </section>
+
     <section class="section" id="health">
       <div class="section-head">
         <h2 class="section-title">Member Insights</h2>
@@ -885,6 +1191,16 @@
       </div>
       <div class="filter-bar" id="member-filters"></div>
       <div class="card" id="members-card"></div>
+    </section>
+
+    <section class="section" id="redemptions">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Redemptions</h2>
+          <div class="section-sub">A dated ledger of rewards used, similar to collecting completed paper cards.</div>
+        </div>
+      </div>
+      <div id="redemptions-card"></div>
     </section>
 
     <section class="section" id="revenue">
@@ -923,6 +1239,12 @@
   const $  = (id) => document.getElementById(id);
   const show = (id) => $(id).classList.remove('hidden');
   const hide = (id) => $(id).classList.add('hidden');
+  let partnerToken = '';
+  function todayKey() {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  }
 
   // ── Helpers ──────────────────────────────────────────────
   function fmtRelative(ts) {
@@ -942,6 +1264,20 @@
     if (!ts) return 'N/A';
     return new Date(ts).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
+  function fmtDateTime(ts) {
+    if (!ts) return 'N/A';
+    return new Date(ts).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
+  function fmtDateOnly(ts) {
+    if (!ts) return 'N/A';
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
   function maskedLabel(userId) {
     if (!userId) return 'Loyalty member';
     const tail = String(userId).replace(/-/g, '').slice(-4);
@@ -950,6 +1286,45 @@
   function pluralize(n, s, p) { return n === 1 ? s : (p || s + 's'); }
   function fmtMoney(n) {
     return 'J$' + Math.round(n).toLocaleString('en-US');
+  }
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/[<>&"]/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;' }[c]));
+  }
+  function escapeAttr(s) {
+    return escapeHtml(s).replace(/'/g, '&#39;');
+  }
+
+  const STAMP_ICONS = [
+    { id: 'bowl', label: 'Bowl', symbol: 'ic-bowl' },
+    { id: 'star', label: 'Star', symbol: 'ic-star' },
+    { id: 'coffee', label: 'Coffee', symbol: 'ic-coffee' },
+    { id: 'cocktail', label: 'Cocktail', symbol: 'ic-cocktail' },
+    { id: 'leaf', label: 'Leaf', symbol: 'ic-leaf' },
+    { id: 'music', label: 'Music', symbol: 'ic-music' },
+    { id: 'logo', label: 'Logo', symbol: null },
+  ];
+  const CARD_THEMES = [
+    { id: 'classic', label: 'Classic' },
+    { id: 'silver', label: 'Silver' },
+    { id: 'gold', label: 'Gold' },
+    { id: 'platinum', label: 'Platinum' },
+    { id: 'brand', label: 'Brand colors' },
+  ];
+  function stampIconSvg(icon, logoUrl) {
+    const match = STAMP_ICONS.find(i => i.id === icon) || STAMP_ICONS[0];
+    if (match.id === 'logo' && logoUrl) {
+      return `<span class="preview-stamp logo" style="background-image:url('${escapeAttr(logoUrl)}')"></span>`;
+    }
+    const symbol = match.symbol || 'ic-star';
+    return `<span class="preview-stamp"><svg><use href="#${symbol}"/></svg></span>`;
+  }
+  function cardLevel(cycles, program) {
+    const n = cycles || 0;
+    if (n >= (program.platinum_after_redemptions || 10)) return { label: 'Platinum', class: 'vip' };
+    if (n >= (program.gold_after_redemptions || 5)) return { label: 'Gold', class: 'close' };
+    if (n >= (program.silver_after_redemptions || 2)) return { label: 'Silver', class: 'regular' };
+    return { label: 'Classic', class: 'first' };
   }
 
   // ── Brand application ───────────────────────────────────
@@ -971,6 +1346,212 @@
       <svg width="14" height="14"><use href="#ic-arrow"/></svg>
       <span>${reward}</span>
     `;
+  }
+
+  // ── Program Settings ────────────────────────────────────
+  function renderProgramSettings(data) {
+    const program = data.program || {};
+    const spend = program.spend_per_stamp == null ? '' : program.spend_per_stamp;
+    const icon = program.stamp_icon || 'bowl';
+    const theme = program.card_theme || 'classic';
+    $('program-settings').innerHTML = `
+      <form class="settings-card" id="program-form">
+        <div class="settings-grid">
+          <div class="settings-field">
+            <label for="program-required">Stamps to redeem</label>
+            <input id="program-required" type="number" min="1" max="100" step="1" value="${escapeAttr(program.required_stamps || 10)}" inputmode="numeric">
+            <div class="settings-hint">How many stamps a guest needs before earning the reward.</div>
+          </div>
+          <div class="settings-field">
+            <label for="program-reward">Reward</label>
+            <input id="program-reward" type="text" maxlength="120" value="${escapeAttr(program.reward || '')}" placeholder="e.g. Free dessert">
+            <div class="settings-hint">Shown anywhere the program promise appears.</div>
+          </div>
+          <div class="settings-field">
+            <label for="program-spend">Spend per stamp</label>
+            <input id="program-spend" type="number" min="0" step="1" value="${escapeAttr(spend)}" inputmode="decimal" placeholder="1500">
+            <div class="settings-hint">Used for estimated impact, in JMD.</div>
+          </div>
+          <div class="settings-field wide">
+            <label for="program-fine-print">Fine print</label>
+            <textarea id="program-fine-print" maxlength="280" placeholder="Optional terms staff and guests should know.">${escapeHtml(program.fine_print || '')}</textarea>
+          </div>
+          <div class="settings-subgrid">
+            <div class="settings-field">
+              <label for="program-stamp-icon">Stamp icon</label>
+              <select id="program-stamp-icon">
+                ${STAMP_ICONS.map(i => `<option value="${i.id}" ${i.id === icon ? 'selected' : ''}>${escapeHtml(i.label)}</option>`).join('')}
+              </select>
+              <div class="settings-hint">Pick the mark guests collect on their card.</div>
+            </div>
+            <div class="settings-field">
+              <label for="program-logo-url">Logo icon URL</label>
+              <input id="program-logo-url" type="url" maxlength="500" value="${escapeAttr(program.stamp_logo_url || '')}" placeholder="https://...">
+              <div class="settings-hint">Used when the stamp icon is set to Logo.</div>
+            </div>
+            <div class="settings-field">
+              <label for="program-card-theme">Card design</label>
+              <select id="program-card-theme">
+                ${CARD_THEMES.map(t => `<option value="${t.id}" ${t.id === theme ? 'selected' : ''}>${escapeHtml(t.label)}</option>`).join('')}
+              </select>
+              <div class="settings-hint">Sets the default card look before levels upgrade it.</div>
+            </div>
+          </div>
+          <div class="settings-subgrid">
+            <div class="settings-field">
+              <label for="program-silver">Silver after</label>
+              <input id="program-silver" type="number" min="1" max="999" step="1" value="${escapeAttr(program.silver_after_redemptions || 2)}" inputmode="numeric">
+              <div class="settings-hint">Completed cards.</div>
+            </div>
+            <div class="settings-field">
+              <label for="program-gold">Gold after</label>
+              <input id="program-gold" type="number" min="1" max="999" step="1" value="${escapeAttr(program.gold_after_redemptions || 5)}" inputmode="numeric">
+              <div class="settings-hint">Completed cards.</div>
+            </div>
+            <div class="settings-field">
+              <label for="program-platinum">Platinum after</label>
+              <input id="program-platinum" type="number" min="1" max="999" step="1" value="${escapeAttr(program.platinum_after_redemptions || 10)}" inputmode="numeric">
+              <div class="settings-hint">Completed cards.</div>
+            </div>
+          </div>
+          <div class="settings-field wide">
+            <label for="program-design-notes">Card design request</label>
+            <textarea id="program-design-notes" maxlength="500" placeholder="Optional: describe a custom card style for TRODDR to review.">${escapeHtml(program.card_design_notes || '')}</textarea>
+          </div>
+          <div class="settings-preview">
+            <div class="loyalty-card-preview ${escapeAttr(theme)}" id="card-preview">
+              <div class="preview-top">
+                <div>
+                  <div class="preview-name">${escapeHtml(data.place && data.place.name ? data.place.name : 'Your business')}</div>
+                  <div class="settings-hint" style="color:currentColor; opacity:.78">${escapeHtml(program.reward || 'Reward')}</div>
+                </div>
+                <div class="preview-level">Preview</div>
+              </div>
+              <div class="preview-stamps" id="stamp-preview">
+                ${Array.from({ length: Math.min(program.required_stamps || 10, 10) }, () => stampIconSvg(icon, program.stamp_logo_url)).join('')}
+              </div>
+            </div>
+            <div class="preview-note">Cards can level up automatically based on completed redemptions. Upload-style custom design support still needs storage, but a logo URL works now for stamp icons.</div>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button class="settings-save" id="program-save" type="submit">Save changes</button>
+          <span class="settings-status" id="program-status"></span>
+        </div>
+      </form>`;
+
+    $('program-form').addEventListener('submit', saveProgramSettings);
+    ['program-stamp-icon', 'program-logo-url', 'program-card-theme', 'program-required'].forEach(id => {
+      const el = $(id);
+      if (el) el.addEventListener('input', updateProgramPreview);
+    });
+  }
+
+  function updateProgramPreview() {
+    const preview = $('card-preview');
+    const stamps = $('stamp-preview');
+    if (!preview || !stamps) return;
+    const theme = $('program-card-theme').value || 'classic';
+    const icon = $('program-stamp-icon').value || 'bowl';
+    const logoUrl = $('program-logo-url').value.trim();
+    const required = Math.max(1, Math.min(parseInt($('program-required').value, 10) || 10, 10));
+    preview.className = `loyalty-card-preview ${theme}`;
+    stamps.innerHTML = Array.from({ length: required }, () => stampIconSvg(icon, logoUrl)).join('');
+  }
+
+  function setProgramStatus(message, kind) {
+    const el = $('program-status');
+    if (!el) return;
+    el.textContent = message || '';
+    el.className = 'settings-status' + (kind ? ` ${kind}` : '');
+  }
+
+  function renderDashboard(data) {
+    const safe = (name, fn) => {
+      try { fn(); } catch (e) { console.error('[partner-loyalty] ' + name + ' failed:', e); }
+    };
+    safe('applyBrand',             () => applyBrand(data.program));
+    safe('renderHero',             () => renderHero(data.place, data.program));
+    safe('renderProgramSettings',  () => renderProgramSettings(data));
+    safe('renderStats',            () => renderStats(data));
+    safe('buildActions',           () => buildActions(data));
+    safe('renderFunnel',           () => renderFunnel(data));
+    safe('renderRevenue',          () => renderRevenue(data));
+    safe('renderMemberFilters',    () => renderMemberFilters(data));
+    safe('renderMembers',          () => renderMembers(data));
+    safe('renderRedemptions',      () => renderRedemptions(data));
+    safe('renderLocked',           () => renderLocked(data));
+  }
+
+  async function refreshDashboardAfterSave() {
+    const { data, error } = await db.rpc('get_loyalty_analytics_by_token', { p_token: partnerToken });
+    if (error || !data || !data.program) throw new Error(error ? error.message : 'Could not reload program');
+    renderDashboard(data);
+    setProgramStatus('Saved', 'ok');
+  }
+
+  async function saveProgramSettings(evt) {
+    evt.preventDefault();
+    const btn = $('program-save');
+    const required = parseInt($('program-required').value, 10);
+    const reward = $('program-reward').value.trim();
+    const spendRaw = $('program-spend').value.trim();
+    const spend = spendRaw === '' ? null : Number(spendRaw);
+    const finePrint = $('program-fine-print').value.trim();
+    const stampIcon = $('program-stamp-icon').value;
+    const logoUrl = $('program-logo-url').value.trim();
+    const cardTheme = $('program-card-theme').value;
+    const silver = parseInt($('program-silver').value, 10);
+    const gold = parseInt($('program-gold').value, 10);
+    const platinum = parseInt($('program-platinum').value, 10);
+    const designNotes = $('program-design-notes').value.trim();
+
+    if (!Number.isInteger(required) || required < 1 || required > 100) {
+      setProgramStatus('Stamps must be between 1 and 100.', 'error');
+      return;
+    }
+    if (!reward) {
+      setProgramStatus('Add a reward before saving.', 'error');
+      return;
+    }
+    if (spend !== null && (!Number.isFinite(spend) || spend < 0)) {
+      setProgramStatus('Spend per stamp must be zero or higher.', 'error');
+      return;
+    }
+    if (![silver, gold, platinum].every(Number.isInteger) || silver < 1 || gold <= silver || platinum <= gold) {
+      setProgramStatus('Levels must increase in order: Silver, Gold, Platinum.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    setProgramStatus('Saving...', '');
+
+    try {
+      const { data, error } = await db.rpc('update_loyalty_program_by_token', {
+        p_token: partnerToken,
+        p_required_stamps: required,
+        p_reward: reward,
+        p_spend_per_stamp: spend,
+        p_fine_print: finePrint || null,
+        p_stamp_icon: stampIcon,
+        p_stamp_logo_url: logoUrl || null,
+        p_card_theme: cardTheme,
+        p_silver_after_redemptions: silver,
+        p_gold_after_redemptions: gold,
+        p_platinum_after_redemptions: platinum,
+        p_card_design_notes: designNotes || null,
+      });
+      const result = Array.isArray(data) ? data[0] : data;
+      if (error || !result || result.ok === false) {
+        throw new Error(error ? error.message : (result && result.error) || 'Could not save program');
+      }
+      await refreshDashboardAfterSave();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Save changes';
+      setProgramStatus(err.message || 'Could not save changes.', 'error');
+    }
   }
 
   // ── Stats: Member Insights (6 cards) ────────────────────
@@ -1195,6 +1776,7 @@
   function memberBadges(m, program) {
     const required = program.required_stamps || 10;
     const badges = [];
+    badges.push(cardLevel(m.completed_cycles, program));
     const seg = memberSegment(m, program);
     badges.push(seg);
     if (!m.is_redeemed && m.current_stamps >= required - 2 && m.current_stamps < required) {
@@ -1244,10 +1826,18 @@
     }
   }
 
-  function bowlsHtml(filled, total) {
+  function bowlsHtml(filled, total, program) {
     let out = '';
+    const icon = (program && program.stamp_icon) || 'bowl';
+    const logoUrl = program && program.stamp_logo_url;
+    const meta = STAMP_ICONS.find(i => i.id === icon) || STAMP_ICONS[0];
     for (let i = 0; i < total; i++) {
-      out += `<svg class="bowl ${i < filled ? '' : 'empty'}"><use href="#ic-bowl"/></svg>`;
+      const empty = i < filled ? '' : 'empty';
+      if (meta.id === 'logo' && logoUrl) {
+        out += `<span class="bowl logo ${empty}" style="background-image:url('${escapeAttr(logoUrl)}')"></span>`;
+      } else {
+        out += `<svg class="bowl ${empty}"><use href="#${meta.symbol || 'ic-star'}"/></svg>`;
+      }
     }
     return out;
   }
@@ -1285,7 +1875,6 @@
 
     card.innerHTML = filtered.map(m => {
       const badges  = memberBadges(m, program);
-      const seg     = badges[0];
       const lastSeen = m.last_stamped_at ? fmtRelative(m.last_stamped_at) : 'no visits yet';
       const isExpanded = expandedMember === m.card_id;
       const totalVisits = m.current_stamps + m.completed_cycles * required;
@@ -1295,12 +1884,12 @@
           <div>
             <div class="member-id">${maskedLabel(m.user_id || m.card_id)}</div>
             <div class="member-meta">
-              <span class="badge ${seg.class}">${seg.label}</span>
+              ${badges.slice(0, 2).map(b => `<span class="badge ${b.class}">${b.label}</span>`).join('')}
               <span>Last visit: ${lastSeen}</span>
             </div>
           </div>
           <div>
-            <div class="bowls">${bowlsHtml(m.current_stamps, required)}</div>
+            <div class="bowls">${bowlsHtml(m.current_stamps, required, program)}</div>
             <div class="stamp-count">
               ${m.current_stamps}<span class="total"> / ${required} stamps</span>
               ${m.completed_cycles > 0 ? ` · ${m.completed_cycles}× redeemed` : ''}
@@ -1350,6 +1939,277 @@
         renderMembers(data);
       });
     });
+  }
+
+  // ── Redemptions ─────────────────────────────────────────
+  function renderRedemptions(data) {
+    const redemptions = data.redemptions || [];
+    const host = $('redemptions-card');
+    if (!host) return;
+
+    const toolbar = `
+      <div class="report-toolbar">
+        <div class="report-field">
+          <label for="report-date">Report date</label>
+          <input id="report-date" type="date" value="${todayKey()}">
+        </div>
+        <button class="report-btn primary" id="btn-eod-report" type="button">End-of-day PDF</button>
+        <button class="report-btn" id="btn-open-cards-pdf" type="button">Open cards PDF</button>
+        <button class="report-btn" id="btn-open-cards-csv" type="button">Open cards CSV</button>
+        <span class="report-status" id="report-status"></span>
+      </div>`;
+
+    if (!redemptions.length) {
+      host.innerHTML = `
+        ${toolbar}
+        <div class="state" style="text-align:left;">
+          <div class="state-title">No recorded redemptions yet</div>
+          <p class="state-msg" style="margin:0; max-width:620px;">
+            When a completed card is redeemed, it should be written here with the date, reward, staff/source, and card details.
+            Existing completed-cycle totals are still shown on member cards, but historical dates only appear once redemptions are recorded in the ledger.
+          </p>
+        </div>`;
+      bindReportActions();
+      return;
+    }
+
+    host.innerHTML = `${toolbar}<div class="redemption-list">
+      ${redemptions.map(r => `
+        <div class="redemption-row">
+          <div>
+            <div class="redemption-date">${fmtDateTime(r.redeemed_at)}</div>
+            <div class="redemption-meta">${maskedLabel(r.user_id || r.card_id)}</div>
+          </div>
+          <div>
+            <div class="redemption-reward">${escapeHtml(r.reward || 'Reward redeemed')}</div>
+            ${r.notes ? `<div class="redemption-note">${escapeHtml(r.notes)}</div>` : ''}
+          </div>
+          <div class="redemption-pill">${r.stamps_spent || 0} stamps</div>
+          <div class="redemption-meta">
+            ${r.redeemed_by ? `By ${escapeHtml(r.redeemed_by)}` : escapeHtml(r.source || 'Recorded')}
+            ${r.cycle_number ? `<br>Card ${r.cycle_number}` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+    bindReportActions();
+  }
+
+  function bindReportActions() {
+    const eod = $('btn-eod-report');
+    const cardsPdf = $('btn-open-cards-pdf');
+    const cardsCsv = $('btn-open-cards-csv');
+    if (eod) eod.addEventListener('click', () => openEndOfDayReport());
+    if (cardsPdf) cardsPdf.addEventListener('click', () => openOpenCardsReport());
+    if (cardsCsv) cardsCsv.addEventListener('click', () => exportOpenCardsCsv());
+  }
+
+  function setReportStatus(message, kind) {
+    const el = $('report-status');
+    if (!el) return;
+    el.textContent = message || '';
+    el.style.color = kind === 'error' ? 'var(--red)' : 'var(--grey-mid)';
+  }
+
+  async function loadReportPayload() {
+    const date = $('report-date') ? $('report-date').value : todayKey();
+    setReportStatus('Preparing...', '');
+    const { data, error } = await db.rpc('get_loyalty_redemption_report_by_token', {
+      p_token: partnerToken,
+      p_report_date: date,
+    });
+    const result = Array.isArray(data) ? data[0] : data;
+    if (error || !result || result.ok === false) {
+      throw new Error(error ? error.message : (result && result.error) || 'Could not load report');
+    }
+    return result;
+  }
+
+  function reportStyles() {
+    return `
+      <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; color: #111; margin: 0; padding: 28px; }
+        .head { display: flex; justify-content: space-between; gap: 20px; border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 18px; }
+        .brand { font-size: 26px; font-weight: 800; color: #0077CC; letter-spacing: -1px; }
+        .title { font-size: 20px; font-weight: 800; margin-top: 4px; }
+        .muted { color: #666; font-size: 12px; line-height: 1.5; }
+        .meta { text-align: right; font-size: 12px; color: #333; line-height: 1.55; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
+        .stat { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+        .stat .k { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+        .stat .v { font-size: 24px; font-weight: 800; margin-top: 4px; }
+        h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .08em; margin: 22px 0 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { text-align: left; background: #f4f6f8; border-bottom: 1px solid #ddd; padding: 9px 8px; }
+        td { border-bottom: 1px solid #eee; padding: 9px 8px; vertical-align: top; }
+        .num { text-align: right; }
+        .empty { border: 1px dashed #ccc; border-radius: 8px; padding: 14px; color: #666; font-size: 12px; }
+        .sign { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 32px; }
+        .line { border-top: 1px solid #111; padding-top: 7px; font-size: 11px; color: #444; }
+        .foot { margin-top: 28px; color: #777; font-size: 10px; text-align: center; }
+        @media print { body { padding: 18px; } button { display:none; } }
+      </style>`;
+  }
+
+  function reportWindow(doc) {
+    const w = window.open('', '_blank');
+    if (!w) { alert('Allow pop-ups to open the PDF report.'); return; }
+    w.document.open();
+    w.document.write(doc);
+    w.document.close();
+  }
+
+  function reportHead(payload, title) {
+    const place = payload.place || {};
+    return `
+      <div class="head">
+        <div>
+          <div class="brand">troddr</div>
+          <div class="title">${escapeHtml(title)}</div>
+          <div class="muted">${escapeHtml(place.name || 'Loyalty partner')}</div>
+        </div>
+        <div class="meta">
+          <strong>Report date:</strong> ${fmtDateOnly(payload.report_date)}<br>
+          <strong>Generated:</strong> ${fmtDateTime(payload.generated_at)}<br>
+          <strong>Reference:</strong> ${escapeHtml((payload.program && payload.program.id) || '')}
+        </div>
+      </div>`;
+  }
+
+  function redemptionsTable(rows) {
+    if (!rows.length) return '<div class="empty">No redemptions recorded for this date.</div>';
+    return `<table>
+      <thead><tr><th>Time</th><th>Member / Card</th><th>Reward</th><th class="num">Stamps</th><th>Source</th><th>Notes</th></tr></thead>
+      <tbody>
+        ${rows.map(r => `<tr>
+          <td>${fmtDateTime(r.redeemed_at)}</td>
+          <td>${maskedLabel(r.user_id || r.card_id)}<br><span class="muted">Card ${escapeHtml(r.cycle_number || '')}</span></td>
+          <td>${escapeHtml(r.reward || 'Reward')}</td>
+          <td class="num">${r.stamps_spent || 0}</td>
+          <td>${r.redeemed_by ? 'By ' + escapeHtml(r.redeemed_by) : escapeHtml(r.source || 'Recorded')}</td>
+          <td>${escapeHtml(r.notes || '')}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  function openCardsTable(rows, program) {
+    if (!rows.length) return '<div class="empty">No open cards with outstanding stamps.</div>';
+    const required = (program && program.required_stamps) || 10;
+    return `<table>
+      <thead><tr><th>Member / Card</th><th class="num">Current stamps</th><th class="num">To reward</th><th>Level</th><th>Last stamp</th><th>Created</th></tr></thead>
+      <tbody>
+        ${rows.map(c => {
+          const level = cardLevel(c.completed_cycles, program || {});
+          return `<tr>
+            <td>${maskedLabel(c.user_id || c.card_id)}<br><span class="muted">${escapeHtml(c.card_id || '')}</span></td>
+            <td class="num">${c.current_stamps || 0} / ${required}</td>
+            <td class="num">${Math.max(required - (c.current_stamps || 0), 0)}</td>
+            <td>${escapeHtml(level.label)}<br><span class="muted">${c.completed_cycles || 0} completed</span></td>
+            <td>${c.last_stamped_at ? fmtDateOnly(c.last_stamped_at) : 'N/A'}</td>
+            <td>${fmtDateOnly(c.created_at)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  async function openEndOfDayReport() {
+    try {
+      const payload = await loadReportPayload();
+      const rows = payload.redemptions || [];
+      const stamps = rows.reduce((sum, r) => sum + (Number(r.stamps_spent) || 0), 0);
+      const unique = new Set(rows.map(r => r.card_id).filter(Boolean)).size;
+      const doc = `<!doctype html><html><head><title>TRODDR EOD Redemptions</title>${reportStyles()}</head><body>
+        ${reportHead(payload, 'End-of-Day Redemption Report')}
+        <div class="stats">
+          <div class="stat"><div class="k">Redemptions</div><div class="v">${rows.length}</div></div>
+          <div class="stat"><div class="k">Unique cards</div><div class="v">${unique}</div></div>
+          <div class="stat"><div class="k">Stamps redeemed</div><div class="v">${stamps}</div></div>
+          <div class="stat"><div class="k">Open cards</div><div class="v">${(payload.open_cards || []).length}</div></div>
+        </div>
+        <h2>Redemption Ledger</h2>
+        ${redemptionsTable(rows)}
+        <div class="sign"><div class="line">Staff sign-off</div><div class="line">Manager sign-off</div></div>
+        <div class="foot">TRODDR · Redemption report · troddr.com</div>
+        <script>window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 250); });<\/script>
+      </body></html>`;
+      reportWindow(doc);
+      setReportStatus('Report opened', '');
+    } catch (err) {
+      setReportStatus(err.message || 'Could not open report.', 'error');
+    }
+  }
+
+  async function openOpenCardsReport() {
+    try {
+      const payload = await loadReportPayload();
+      const cards = payload.open_cards || [];
+      const required = (payload.program && payload.program.required_stamps) || 10;
+      const outstanding = cards.reduce((sum, c) => sum + (Number(c.current_stamps) || 0), 0);
+      const doc = `<!doctype html><html><head><title>TRODDR Open Loyalty Cards</title>${reportStyles()}</head><body>
+        ${reportHead(payload, 'Open Loyalty Cards')}
+        <div class="stats">
+          <div class="stat"><div class="k">Open cards</div><div class="v">${cards.length}</div></div>
+          <div class="stat"><div class="k">Outstanding stamps</div><div class="v">${outstanding}</div></div>
+          <div class="stat"><div class="k">Stamps per reward</div><div class="v">${required}</div></div>
+          <div class="stat"><div class="k">Reward</div><div class="v" style="font-size:15px;">${escapeHtml((payload.program && payload.program.reward) || 'Reward')}</div></div>
+        </div>
+        <h2>Cards Not Yet Redeemed</h2>
+        ${openCardsTable(cards, payload.program)}
+        <div class="foot">TRODDR · Open card export · troddr.com</div>
+        <script>window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 250); });<\/script>
+      </body></html>`;
+      reportWindow(doc);
+      setReportStatus('Open cards report opened', '');
+    } catch (err) {
+      setReportStatus(err.message || 'Could not open open-card report.', 'error');
+    }
+  }
+
+  function csvEscape(v) {
+    const s = v == null ? '' : String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  async function exportOpenCardsCsv() {
+    try {
+      const payload = await loadReportPayload();
+      const cards = payload.open_cards || [];
+      const program = payload.program || {};
+      const required = program.required_stamps || 10;
+      const rows = [
+        ['card_id','member','current_stamps','required_stamps','stamps_to_reward','completed_cards','level','last_stamped_at','created_at','reward'],
+        ...cards.map(c => {
+          const level = cardLevel(c.completed_cycles, program);
+          return [
+            c.card_id,
+            maskedLabel(c.user_id || c.card_id),
+            c.current_stamps || 0,
+            required,
+            Math.max(required - (c.current_stamps || 0), 0),
+            c.completed_cycles || 0,
+            level.label,
+            c.last_stamped_at || '',
+            c.created_at || '',
+            program.reward || '',
+          ];
+        })
+      ];
+      const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `troddr-open-loyalty-cards-${payload.report_date || todayKey()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setReportStatus('CSV downloaded', '');
+    } catch (err) {
+      setReportStatus(err.message || 'Could not download CSV.', 'error');
+    }
   }
 
   // ── Locked / unlock cards ───────────────────────────────
@@ -1450,10 +2310,12 @@
       capabilities: capabilities,
       partner: opts && opts.partner,
       jumpLinks: [
+        { section: 'settings', icon: 'ic-doc',    label: 'Program Settings' },
         { section: 'health',  icon: 'ic-shield', label: 'Member Insights' },
         { section: 'actions', icon: 'ic-bolt',   label: 'Action Center' },
         { section: 'funnel',  icon: 'ic-chart',  label: 'Loyalty Funnel' },
         { section: 'members', icon: 'ic-users',  label: 'Members' },
+        { section: 'redemptions', icon: 'ic-star', label: 'Redemptions' },
         { section: 'revenue', icon: 'ic-dollar', label: 'Estimated Impact' },
         { section: 'unlocks', icon: 'ic-lock',   label: 'Unlocks' },
       ],
@@ -1464,6 +2326,7 @@
   // ── Load ────────────────────────────────────────────────
   async function load() {
     const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+    partnerToken = token;
     const showError = (caps) => {
       hide('view-loading'); show('view-error');
       window.PartnerAuth?.mountSessionControl('partner');
@@ -1505,18 +2368,7 @@
     setupSidebar(caps && caps.capabilities, { partner: caps && caps.partner });
     renderEntityPicker(caps && caps.partner);
 
-    const safe = (name, fn) => {
-      try { fn(); } catch (e) { console.error('[partner-loyalty] ' + name + ' failed:', e); }
-    };
-    safe('applyBrand',          () => applyBrand(data.program));
-    safe('renderHero',          () => renderHero(data.place, data.program));
-    safe('renderStats',         () => renderStats(data));
-    safe('buildActions',        () => buildActions(data));
-    safe('renderFunnel',        () => renderFunnel(data));
-    safe('renderRevenue',       () => renderRevenue(data));
-    safe('renderMemberFilters', () => renderMemberFilters(data));
-    safe('renderMembers',       () => renderMembers(data));
-    safe('renderLocked',        () => renderLocked(data));
+    renderDashboard(data);
   }
 
   load();

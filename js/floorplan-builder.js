@@ -55,13 +55,59 @@
 
   const ZONE_COLORS = ['#b03a2e', '#1f2937', '#0e7490', '#6d28d9', '#b45309', '#166534'];
   const TABLE_COLOR = '#b08850';
+  const COUNTER_COLOR = '#0891b2';
   const TEXT_SIZES = [{ id: 's', label: 'Small', v: 0.011 }, { id: 'm', label: 'Medium', v: 0.016 }, { id: 'l', label: 'Large', v: 0.024 }, { id: 'xl', label: 'X-Large', v: 0.034 }];
   const PRESET_FT = ['10x10', '10x20', '10x30', '20x20', '20x30'];
+  // Booth name-label size multipliers.
+  const LBL_SIZES = { s: 0.8, m: 1, l: 1.4, xl: 1.9 };
+
+  // ── Object library (the "Object" tool) ────────────────────
+  // Generic placeable furniture/structures. Each has a real-world default
+  // footprint in feet. `connect:true` kinds snap end-to-end into a group
+  // (bars, barrier runs). `round` draws as an ellipse. `text` lets the
+  // shape carry a label that renders inside it.
+  // `ic:true` renders the object's icon inside the box; `deco` tags a kind for
+  // special canvas styling (trees, lights). `connect:true` snaps into runs.
+  const OBJECTS = [
+    { kind: 'table-round', cat: 'Seating',        label: 'Round table',   icon: 'fpb-circle',  shape: 'round', ftW: 5,  ftH: 5,   color: '#b08850' },
+    { kind: 'table-rect',  cat: 'Seating',        label: 'Banquet table', icon: 'fpb-square',  shape: 'rect',  ftW: 8,  ftH: 2.5, color: '#b08850' },
+    { kind: 'cocktail',    cat: 'Seating',        label: 'Cocktail table',icon: 'fpb-circle',  shape: 'round', ftW: 2.5,ftH: 2.5, color: '#a9885a' },
+    { kind: 'chair',       cat: 'Seating',        label: 'Chair',         icon: 'fpb-chair',   shape: 'rect',  ftW: 1.6,ftH: 1.6, color: '#8d6e63' },
+    { kind: 'bench',       cat: 'Seating',        label: 'Bench',         icon: 'fpb-square',  shape: 'rect',  ftW: 5,  ftH: 1.5, color: '#8d6e63' },
+    { kind: 'food-truck',  cat: 'Food & bar',     label: 'Food truck',    icon: 'fpb-truck',   shape: 'rect',  ftW: 20, ftH: 8,   color: '#b45309', text: true, ic: true },
+    { kind: 'counter',     cat: 'Food & bar',     label: 'Bar / counter', icon: 'fpb-counter', shape: 'rect',  ftW: 8,  ftH: 2,   color: '#0891b2', connect: true },
+    { kind: 'food-tent',   cat: 'Food & bar',     label: 'Food tent',     icon: 'fpb-square',  shape: 'rect',  ftW: 10, ftH: 10,  color: '#1a9e57', text: true },
+    { kind: 'stage',       cat: 'Structures',     label: 'Stage',         icon: 'fpb-music',   shape: 'rect',  ftW: 24, ftH: 16,  color: '#262626', text: true },
+    { kind: 'dancefloor',  cat: 'Structures',     label: 'Dance floor',   icon: 'fpb-grid-ic', shape: 'rect',  ftW: 20, ftH: 20,  color: '#6d28d9', text: true },
+    { kind: 'tent',        cat: 'Structures',     label: 'Marquee tent',  icon: 'fpb-square',  shape: 'rect',  ftW: 20, ftH: 20,  color: '#e2e8f0', text: true },
+    { kind: 'restroom-blk',cat: 'Access & safety',label: 'Restrooms',     icon: 'fpb-restroom',shape: 'rect',  ftW: 12, ftH: 10,  color: '#475569', text: true, ic: true },
+    { kind: 'ticket',      cat: 'Access & safety',label: 'Ticket booth',  icon: 'fpb-info',    shape: 'rect',  ftW: 8,  ftH: 8,   color: '#d4a017', text: true, ic: true },
+    { kind: 'barrier',     cat: 'Access & safety',label: 'Crowd barrier', icon: 'fpb-counter', shape: 'rect',  ftW: 8,  ftH: 0.7, color: '#475569', connect: true },
+    { kind: 'generator',   cat: 'Access & safety',label: 'Generator',     icon: 'fpb-square',  shape: 'rect',  ftW: 8,  ftH: 4,   color: '#334155', text: true, ic: true },
+    { kind: 'tree',        cat: 'Decor & site',   label: 'Tree',          icon: 'fpb-tree',    shape: 'round', ftW: 16, ftH: 16,  color: '#2f7d4f', deco: 'tree' },
+    { kind: 'planter',     cat: 'Decor & site',   label: 'Planter / shrub',icon: 'fpb-tree',   shape: 'round', ftW: 4,  ftH: 4,   color: '#3f9d63', deco: 'tree' },
+    { kind: 'lights',      cat: 'Decor & site',   label: 'String lights', icon: 'fpb-lights',  shape: 'rect',  ftW: 24, ftH: 0.6, color: '#f5b301', connect: true, deco: 'lights' },
+    { kind: 'fence',       cat: 'Decor & site',   label: 'Fencing',       icon: 'fpb-fence',   shape: 'rect',  ftW: 10, ftH: 0.5, color: '#6b7280', connect: true, deco: 'fence' },
+    { kind: 'rect',        cat: 'Basic',          label: 'Rectangle',     icon: 'fpb-square',  shape: 'rect',  ftW: 6,  ftH: 6,   color: '#64748b', text: true },
+    { kind: 'circle',      cat: 'Basic',          label: 'Circle',        icon: 'fpb-circle',  shape: 'round', ftW: 6,  ftH: 6,   color: '#64748b', text: true },
+  ];
+  const OBJ_BY_KIND = Object.fromEntries(OBJECTS.map(o => [o.kind, o]));
+  const OBJ_CATS = OBJECTS.reduce((a, o) => (a.includes(o.cat) ? a : a.concat(o.cat)), []);
+  const DEFAULT_OBJ = 'table-round';
+
 
   const WORLD_DEFAULT = { w: 1600, h: 1000 };
-  const GRID = 20;            // world px
-  const SNAP_PX = 7;          // screen px snap threshold
-  const MIN_SIZE = 14;        // world px minimum shape size
+  const SNAP_PX = 7;          // screen px snap threshold (for edge magnets)
+  const ROT_SNAP = 15;        // rotation snap (degrees)
+
+  // ── Real-world scale ──────────────────────────────────────
+  // Everything is to-scale: world px = feet × ppf (pixels-per-foot).
+  const DEFAULT_PPF = 12;            // px per foot for a fresh blank canvas
+  const DEFAULT_SITE_FT = { w: 200, h: 120 }; // default blank-canvas site size
+  const DEFAULT_BG = '#ffffff';      // canvas paper colour
+  const SNAP_FT = 1;                 // snap increment (feet)
+  const MIN_FT = 1;                  // minimum shape size (feet)
+  const GRID_MAJOR_FT = 10;          // bold grid line every N feet
 
   // ── Icon sprite (lucide outlines), injected once per page ──
   const SYMBOLS = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>'
@@ -97,6 +143,18 @@
     + '<symbol id="fpb-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>'
     + '<symbol id="fpb-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.5 10l-5.6 1.3L12 17l-1.9-5.7L4.5 10l5.6-1.3L12 3z"/></symbol>'
     + '<symbol id="fpb-grid-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></symbol>'
+    + '<symbol id="fpb-counter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="9" width="20" height="6" rx="1"/><path d="M2 12h20"/></symbol>'
+    + '<symbol id="fpb-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 8.7 8.7 21.3a1 1 0 0 1-1.4 0l-4.6-4.6a1 1 0 0 1 0-1.4L15.3 2.7a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></symbol>'
+    + '<symbol id="fpb-shapes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="11" height="11" rx="1.5"/><circle cx="15.5" cy="15.5" r="6"/></symbol>'
+    + '<symbol id="fpb-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></symbol>'
+    + '<symbol id="fpb-measure" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 8v8"/><path d="M21 8v8"/><path d="M8 10v4"/><path d="M13 10v4"/></symbol>'
+    + '<symbol id="fpb-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>'
+    + '<symbol id="fpb-tree" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 6 9h3l-4 5h4l-3 4h12l-3-4h4l-4-5h3z"/><path d="M12 18v4"/></symbol>'
+    + '<symbol id="fpb-lights" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5c5 5 15 5 20 0"/><path d="M6 7v2"/><path d="M12 8v2"/><path d="M18 7v2"/><circle cx="6" cy="11" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="11" r="1.5"/></symbol>'
+    + '<symbol id="fpb-fence" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16"/><path d="M4 14h16"/><path d="M6 4v16"/><path d="M12 4v16"/><path d="M18 4v16"/></symbol>'
+    + '<symbol id="fpb-layer-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 16 9 5 9-5"/></symbol>'
+    + '<symbol id="fpb-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></symbol>'
+    + '<symbol id="fpb-palette2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1 0 1.6-.8 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1a1.6 1.6 0 0 1 1.6-1.6H16c3 0 5.5-2.5 5.5-5.5C21.5 6.2 17.2 2 12 2z"/></symbol>'
     + '</defs></svg>';
 
   // ── Small helpers ─────────────────────────────────────────
@@ -122,40 +180,57 @@
     el.id = el.id || uid();
     el.type = el.type || 'pin';
     el.x = num(el.x); el.y = num(el.y);
+    // Legacy types fold into the unified `shape` object model.
+    if (el.type === 'table') { el.type = 'shape'; el.kind = el.shape === 'rect' ? 'table-rect' : 'table-round'; }
+    else if (el.type === 'counter') { el.type = 'shape'; el.kind = 'counter'; }
     if (el.type !== 'pin' && el.type !== 'text') { el.w = num(el.w, 0.04); el.h = num(el.h, 0.06); }
     if (el.type === 'pin' || el.type === 'booth') {
       el.icon = CAT_BY_ID[el.icon] ? el.icon : (LEGACY_ICONS[el.icon] || DEFAULT_CAT);
       el.color = el.color || CAT_BY_ID[el.icon].color;
     }
     if (el.type === 'text') el.fontSize = num(el.fontSize, 0.016);
-    if (el.type === 'table') { el.shape = el.shape === 'rect' ? 'rect' : 'round'; el.color = el.color || TABLE_COLOR; }
+    if (el.type === 'shape') {
+      const o = OBJ_BY_KIND[el.kind] || OBJ_BY_KIND[DEFAULT_OBJ];
+      el.kind = o.kind;
+      el.shape = o.shape;
+      el.color = el.color || o.color;
+      if (o.connect) el.groupId = el.groupId || null;
+    }
+    if (el.type === 'booth' || el.type === 'zone' || el.type === 'shape') el.rot = num(el.rot, 0);
     return el;
   }
 
-  // ── Starter template (modelled on a typical festival site map) ──
+  // ── Starter template (a to-scale 220 × 140 ft festival site) ──
+  const TEMPLATE_SITE_FT = { w: 220, h: 140 };
   function festivalTemplate() {
     const els = [];
-    const W = WORLD_DEFAULT.w, H = WORLD_DEFAULT.h;
-    const bw = 64 / W, bh = 64 / H;
+    const W = TEMPLATE_SITE_FT.w, H = TEMPLATE_SITE_FT.h;   // feet
+    // Everything below is in real feet; fractions are ft / site-ft.
+    const boothFt = 10, bw = boothFt / W, bh = boothFt / H, gapFt = 2;
     let n = 1;
-    const booth = (cxPx, cyPx, cat) => els.push(normalizeElement({
-      id: uid(), type: 'booth', x: cxPx / W, y: cyPx / H, w: bw, h: bh,
-      number: n++, label: '', icon: cat, color: CAT_BY_ID[cat].color,
+    const booth = (cxFt, cyFt, cat) => els.push(normalizeElement({
+      id: uid(), type: 'booth', x: cxFt / W, y: cyFt / H, w: bw, h: bh,
+      number: n++, label: '', icon: cat, color: CAT_BY_ID[cat].color, size: `${boothFt}x${boothFt}`,
     }));
-    // Bottom row (booths 1..12) and top row (13..24), like vendor rows along the site edges.
-    for (let i = 0; i < 12; i++) booth(140 + i * 70, 880, i < 2 ? 'drink' : 'food');
-    for (let i = 0; i < 12; i++) booth(140 + i * 70, 130, i % 5 === 0 ? 'merch' : 'food');
-    // Big zones
-    els.push(normalizeElement({ id: uid(), type: 'zone', x: 760 / W, y: 230 / H, w: 200 / W, h: 130 / H, label: 'Stage', color: '#1f2937' }));
-    els.push(normalizeElement({ id: uid(), type: 'zone', x: 1050 / W, y: 230 / H, w: 220 / W, h: 120 / H, label: 'Bar', color: '#0e7490' }));
-    els.push(normalizeElement({ id: uid(), type: 'zone', x: 420 / W, y: 240 / H, w: 240 / W, h: 140 / H, label: 'VIP Lounge', color: '#b45309' }));
-    // Scattered tables in the middle field
-    [[420, 560], [560, 640], [700, 540], [860, 620], [1020, 540], [1180, 620], [620, 460], [940, 460], [1240, 500], [300, 640]]
-      .forEach(([x, y]) => els.push(normalizeElement({ id: uid(), type: 'table', x: x / W, y: y / H, w: 38 / W, h: 38 / H, shape: 'round', color: TABLE_COLOR })));
+    // Vendor rows along the top and bottom edges (10 ft booths, 2 ft aisles).
+    for (let i = 0; i < 12; i++) booth(20 + i * (boothFt + gapFt), 125, i < 2 ? 'drink' : 'food');
+    for (let i = 0; i < 12; i++) booth(20 + i * (boothFt + gapFt), 18, i % 5 === 0 ? 'merch' : 'food');
+    // Big zones (feet)
+    els.push(normalizeElement({ id: uid(), type: 'zone', x: 105 / W, y: 32 / H, w: 30 / W, h: 20 / H, label: 'Stage', color: '#1f2937' }));
+    els.push(normalizeElement({ id: uid(), type: 'zone', x: 60 / W, y: 34 / H, w: 34 / W, h: 20 / H, label: 'VIP Lounge', color: '#b45309' }));
+    // A bar built from three connected 16 ft counters (one group).
+    const barGid = 'bar_' + uid();
+    [150, 166, 182].forEach((cx) => els.push(normalizeElement({
+      id: uid(), type: 'counter', x: cx / W, y: 34 / H, w: 16 / W, h: 2 / H,
+      label: 'Bar', color: COUNTER_COLOR, groupId: barGid, size: '16x2',
+    })));
+    // Scattered cocktail tables (5 ft round) in the middle field
+    [[60, 78], [80, 90], [100, 75], [122, 86], [145, 75], [168, 86], [88, 64], [134, 64], [176, 70], [44, 90]]
+      .forEach(([x, y]) => els.push(normalizeElement({ id: uid(), type: 'table', x: x / W, y: y / H, w: 5 / W, h: 5 / H, shape: 'round', color: TABLE_COLOR })));
     // Pins
-    els.push(normalizeElement({ id: uid(), type: 'pin', x: 800 / W, y: 940 / H, label: 'Entrance', icon: 'entrance' }));
-    els.push(normalizeElement({ id: uid(), type: 'pin', x: 1480 / W, y: 320 / H, label: 'Restrooms', icon: 'restroom' }));
-    els.push(normalizeElement({ id: uid(), type: 'pin', x: 120 / W, y: 320 / H, label: 'First Aid', icon: 'medic' }));
+    els.push(normalizeElement({ id: uid(), type: 'pin', x: 110 / W, y: 134 / H, label: 'Entrance', icon: 'entrance' }));
+    els.push(normalizeElement({ id: uid(), type: 'pin', x: 205 / W, y: 45 / H, label: 'Restrooms', icon: 'restroom' }));
+    els.push(normalizeElement({ id: uid(), type: 'pin', x: 16 / W, y: 45 / H, label: 'First Aid', icon: 'medic' }));
     return els;
   }
 
@@ -166,14 +241,30 @@
       this.container = opts.container;
       this.readOnly = !!opts.readOnly;
       this.vendors = Array.isArray(opts.vendors) ? opts.vendors : [];
-      this.elements = (Array.isArray(opts.elements) ? opts.elements : []).map(normalizeElement);
+      const raw = (Array.isArray(opts.elements) ? opts.elements : []).slice();
+      // Pull the scale meta entry (if any) out of the markers array.
+      const metaIdx = raw.findIndex(m => m && m.type === 'meta');
+      const meta = metaIdx >= 0 ? raw.splice(metaIdx, 1)[0] : null;
+      this.elements = raw.filter(m => m && m.type !== 'meta').map(normalizeElement);
       this.bgUrl = (opts.backgroundUrl && !isBlankUri(opts.backgroundUrl)) ? opts.backgroundUrl : null;
-      this.world = Object.assign({}, WORLD_DEFAULT);
+      // Scale: ppf (px per foot) is the single source of truth. siteFt is the
+      // blank-canvas extent in feet. For image backgrounds the world comes from
+      // the image's natural pixels and only ppf (calibration) is meaningful.
+      this.ppf = meta && meta.ppf > 0 ? num(meta.ppf, DEFAULT_PPF) : DEFAULT_PPF;
+      this.siteFt = meta && meta.siteFtW > 0
+        ? { w: num(meta.siteFtW, DEFAULT_SITE_FT.w), h: num(meta.siteFtH, DEFAULT_SITE_FT.h) }
+        : Object.assign({}, DEFAULT_SITE_FT);
+      this.calibrated = !!(meta && meta.calibrated);
+      this.bg = (meta && meta.bg) || DEFAULT_BG;     // canvas paper colour
+      this.world = this.bgUrl
+        ? Object.assign({}, WORLD_DEFAULT)                       // replaced on image load
+        : { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
       this.tool = 'select';
-      this.selectedId = null;
+      this._sel = [];                            // selected element ids (multi-select)
       this.pinCategory = 'info';
       this.boothCategory = DEFAULT_CAT;
-      this.lastBoothSize = { w: 64, h: 64 };   // world px
+      this.objKind = DEFAULT_OBJ;                 // active object-library item
+      this.lastBoothFt = { w: 10, h: 10 };      // default booth footprint (feet)
       this.snap = true;
       this.dirty = false;
       this.undoStack = [];
@@ -241,10 +332,11 @@
       const tools = [
         ['select', 'fpb-cursor', 'Select', 'V'],
         ['booth', 'fpb-square', 'Booth', 'B'],
+        ['object', 'fpb-shapes', 'Object', 'O'],
         ['zone', 'fpb-zone-ic', 'Zone', 'Z'],
-        ['table', 'fpb-circle', 'Table', 'O'],
         ['text', 'fpb-type', 'Text', 'T'],
         ['pin', 'fpb-pin', 'Pin', 'P'],
+        ['measure', 'fpb-measure', 'Measure', 'M'],
       ].map(([id, ic, lb, k]) => `<button type="button" class="fpb-tool-btn" data-tool="${id}" title="${lb} (${k})"><svg><use href="#${ic}"/></svg>${lb}<span class="kbd">${k}</span></button>`).join('');
 
       const extra = (o.actions || []).map((a, i) =>
@@ -260,6 +352,7 @@
     <div class="fpb-tools" data-ref="tools">${tools}</div>
     <span class="fpb-tb-sep"></span>
     <label class="fpb-toggle" title="Snap to grid and to other booths"><input type="checkbox" data-ref="snapToggle" checked />Snap</label>
+    <button type="button" class="fpb-btn" data-ref="scaleBtn" title="Set the canvas scale (feet)"><svg><use href="#fpb-ruler"/></svg><span data-ref="scaleLabel">Scale</span></button>
     <span class="fpb-opacity" data-ref="opacityWrap" hidden>Image <input type="range" min="10" max="100" value="100" data-ref="opacityRange" /></span>
     <span class="fpb-tb-spacer"></span>
     <span class="fpb-dirty clean" data-ref="dirtyLabel">No unsaved changes</span>
@@ -275,12 +368,14 @@
     <div class="fpb-viewport" data-ref="viewport">
       <div class="fpb-canvas" data-ref="canvas">
         <img class="fpb-bg" data-ref="bg" alt="" hidden />
-        <div class="fpb-grid" data-ref="grid" style="background-size:${GRID}px ${GRID}px;"></div>
+        <div class="fpb-grid" data-ref="grid"></div>
         <div class="fpb-els" data-ref="els"></div>
         <div class="fpb-guide-v" data-ref="guideV" hidden></div>
         <div class="fpb-guide-h" data-ref="guideH" hidden></div>
         <div class="fpb-rubber" data-ref="rubber" hidden></div>
+        <div class="fpb-callipers" data-ref="callipers" hidden></div>
       </div>
+      <div class="fpb-dim" data-ref="dim" hidden></div>
       <div class="fpb-hint" data-ref="hint" hidden></div>
       <div class="fpb-zoom">
         <button type="button" data-ref="zoomIn" title="Zoom in">＋</button>
@@ -289,9 +384,13 @@
       </div>
       <div class="fpb-empty" data-ref="empty" hidden>
         <h3>Build your event floor plan</h3>
-        <p>Lay out numbered booths, stages, bars and tables on a blank canvas — or start from a template and rearrange it. You can add a venue photo behind it any time.</p>
+        <p>Lay out numbered booths, stages, bars and tables on a to-scale canvas — or start from a template and rearrange it. You can add a venue photo behind it any time.</p>
+        <div class="fpb-sitedims">
+          <label>Site size</label>
+          <input data-ref="siteW" type="number" min="10" max="5000" value="${DEFAULT_SITE_FT.w}" /><span>×</span><input data-ref="siteH" type="number" min="10" max="5000" value="${DEFAULT_SITE_FT.h}" /><span>ft</span>
+        </div>
         <div class="choices">
-          <button type="button" class="choice" data-ref="startBlank"><svg><use href="#fpb-grid-ic"/></svg>Blank canvas<small>Draw everything yourself</small></button>
+          <button type="button" class="choice" data-ref="startBlank"><svg><use href="#fpb-grid-ic"/></svg>Blank canvas<small>Drawn to your site size</small></button>
           <button type="button" class="choice" data-ref="startTemplate"><svg><use href="#fpb-sparkle"/></svg>Festival starter<small>Booth rows, stage, bar &amp; tables to rearrange</small></button>
           ${o.onUploadBackground ? `<label class="choice"><svg><use href="#fpb-upload"/></svg>Venue image<small>Upload a map or aerial photo to build on</small><input type="file" data-ref="emptyUpload" accept="image/png,image/jpeg" /></label>` : ''}
         </div>
@@ -317,6 +416,7 @@
       const $ = this.$;
       $.tools.querySelectorAll('[data-tool]').forEach(b => b.addEventListener('click', () => this.setTool(b.dataset.tool)));
       $.snapToggle.addEventListener('change', () => { this.snap = $.snapToggle.checked; this.updateGridVisibility(); });
+      if ($.scaleBtn) $.scaleBtn.addEventListener('click', () => this.openScale());
       $.undoBtn.addEventListener('click', () => this.undo());
       $.redoBtn.addEventListener('click', () => this.redo());
       $.exportBtn.addEventListener('click', () => this.exportPng());
@@ -327,10 +427,17 @@
       if ($.opacityRange) $.opacityRange.addEventListener('input', () => { this.$.bg.style.opacity = $.opacityRange.value / 100; });
       if ($.bgInput) $.bgInput.addEventListener('change', (e) => this.uploadBackground(e.target.files[0], this.$.status));
       if ($.emptyUpload) $.emptyUpload.addEventListener('change', (e) => this.uploadBackground(e.target.files[0], this.$.emptyStatus));
-      if ($.startBlank) $.startBlank.addEventListener('click', () => { this.showEmpty(false); });
+      if ($.startBlank) $.startBlank.addEventListener('click', () => {
+        if ($.siteW && $.siteH) this.setSiteFt($.siteW.value, $.siteH.value);
+        this.showEmpty(false);
+      });
       if ($.startTemplate) $.startTemplate.addEventListener('click', () => {
         this.pushUndo();
+        this.siteFt = Object.assign({}, TEMPLATE_SITE_FT);
+        this.world = { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
         this.elements = festivalTemplate();
+        this.sizeCanvas();
+        this.updateGridVisibility();
         this.showEmpty(false);
         this.setDirty(true);
         this.renderAll();
@@ -342,19 +449,23 @@
     }
 
     setTool(tool) {
+      // Switching to a placement tool clears the selection so its palette shows.
+      if (tool !== 'select' && this.selectedId) this.selectedId = null;
       this.tool = tool;
       const $ = this.$;
       $.tools.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
       $.viewport.className = 'fpb-viewport tool-' + tool;
       if (this.panzoom) this.panzoom.setOptions({ disablePan: tool !== 'select' });
       const hints = {
-        booth: 'Click to stamp a booth, or drag to draw one. Booths auto-number — press V when done.',
-        zone: 'Drag to draw a zone (stage, bar, emporium…). Click for a default size.',
-        table: 'Click to place a table. Drag to size it.',
+        booth: 'Click to stamp a booth, or drag to draw one. Set its real size (ft) on the right — the box scales to match.',
+        object: 'Pick an object on the right (table, chair, bar, barrier, ticket booth…), then click or drag to place it. Connectable pieces snap into runs.',
+        zone: 'Drag to draw a zone (stage area, VIP, emporium…). Click for a default size.',
         text: 'Click anywhere to add a text label.',
         pin: 'Pick a category on the right, then click the map to drop a pin.',
+        measure: 'Drag to measure a distance in feet. Nothing is placed.',
       };
       this.hint(hints[tool] || '');
+      this.renderElements();
       this.renderSide();
     }
 
@@ -372,6 +483,8 @@
 
     updateGridVisibility() {
       if (this.readOnly) return;   // viewers never see the grid
+      this.updateGrid();
+      this.updateScaleLabel();
       // Grid lines show on the blank canvas, or whenever snapping is on over an image (faint guide).
       this.$.grid.style.display = (!this.bgUrl || this.snap) ? '' : 'none';
       this.$.grid.style.opacity = this.bgUrl ? 0.5 : 1;
@@ -387,14 +500,19 @@
         img.src = url;
         img.onload = () => {
           this.world = { w: img.naturalWidth || WORLD_DEFAULT.w, h: img.naturalHeight || WORLD_DEFAULT.h };
+          // A fresh image has no real scale yet — guess one so booths aren't
+          // absurd, and flag it so we can nudge the organizer to calibrate.
+          if (!this.calibrated) this.ppf = Math.max(4, Math.round(this.world.w / 240));
           this.sizeCanvas();
+          this.updateGridVisibility();
           this.fit();
+          this.renderSide();
         };
         if (this.$.opacityWrap) this.$.opacityWrap.hidden = false;
       } else {
         img.hidden = true;
         img.removeAttribute('src');
-        this.world = Object.assign({}, WORLD_DEFAULT);
+        this.world = { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
         this.sizeCanvas();
         this.fit();
         if (this.$.opacityWrap) this.$.opacityWrap.hidden = true;
@@ -403,10 +521,213 @@
       if (!silent) this.setDirty(true);
     }
 
+    // Blank-canvas site dimensions (feet) → resize the world, keeping booths
+    // at their real footprint (their feet are derived from the old scale first).
+    setSiteFt(wFt, hFt) {
+      wFt = clamp(num(wFt, this.siteFt.w), 10, 5000);
+      hFt = clamp(num(hFt, this.siteFt.h), 10, 5000);
+      if (this.bgUrl) return;                       // images carry their own scale
+      const fts = this.elements.map(el => (el.w != null)
+        ? { id: el.id, wf: this.elWidthFt(el), hf: this.elHeightFt(el) } : null);
+      this.siteFt = { w: wFt, h: hFt };
+      this.world = { w: wFt * this.ppf, h: hFt * this.ppf };
+      // Re-derive fractional w/h so footprints stay constant in feet.
+      fts.forEach(f => { if (!f) return; const el = this.byId(f.id); if (el) { el.w = this.ftToFracW(f.wf); el.h = this.ftToFracH(f.hf); } });
+      this.sizeCanvas();
+      this.updateGridVisibility();
+      this.fit();
+      this.setDirty(true);
+    }
+
+    updateScaleLabel() {
+      if (!this.$.scaleLabel) return;
+      this.$.scaleLabel.textContent = this.bgUrl
+        ? (this.calibrated ? `${this.fmtFt(this.ppf)} px/ft` : 'Set scale')
+        : `${Math.round(this.siteFt.w)}×${Math.round(this.siteFt.h)} ft`;
+      this.$.scaleBtn.classList.toggle('attn', !!this.bgUrl && !this.calibrated);
+    }
+
+    // ── Layer order ─────────────────────────────────────────
+    toFront(el) { this.pushUndo(); this.elements = this.elements.filter(x => x !== el); this.elements.push(el); this.setDirty(true); this.renderElements(); }
+    toBack(el) { this.pushUndo(); this.elements = this.elements.filter(x => x !== el); this.elements.unshift(el); this.setDirty(true); this.renderElements(); }
+
+    // ── Right-click context menu ────────────────────────────
+    closeContextMenu() {
+      document.querySelectorAll('.fpb-ctx').forEach(m => m.remove());   // clear any (stray) menus
+      this._ctx = null;
+      if (this._ctxOff) { window.removeEventListener('pointerdown', this._ctxOff, true); this._ctxOff = null; }
+    }
+    openContextMenu(e, id) {
+      this.closeContextMenu();
+      const el = id ? this.byId(id) : null;
+      const multi = this._sel.length > 1;
+      const item = (label, icon, fn, danger) => ({ label, icon, fn, danger });
+      const sub = (label, icon, swatches, fn) => ({ label, icon, swatches, fn });
+      const palette = ['#1a9e57', '#0891b2', '#262626', '#6d28d9', '#d4a017', '#b45309', '#475569', '#b08850'];
+      let items;
+      if (el) {
+        const inZone = el.type === 'zone' ? this.elements.filter(o => o !== el && o.type !== 'zone' && this.zoneContains(el, o)) : [];
+        items = [
+          !multi && item('Edit', 'fpb-edit', () => { this.select(el.id); }),
+          (el.type === 'zone' && inZone.length) && item(`Select all inside (${inZone.length})`, 'fpb-shapes', () => { this._sel = inZone.map(o => o.id); this.renderAll(); }),
+          (el.type !== 'pin' && el.type !== 'text') && sub(multi ? 'Colour all' : 'Colour', 'fpb-palette2', palette, (c) => {
+            this.pushUndo(); (multi ? this.selectedEls() : [el]).forEach(o => { if (o.type !== 'pin' && o.type !== 'text') o.color = c; }); this.setDirty(true); this.renderElements();
+          }),
+          this.isRotatable(el) && item('Rotate 90°', 'fpb-rotate', () => { this.pushUndo(); (multi ? this.selectedEls() : [el]).forEach(o => { if (o.rot != null) o.rot = (((o.rot + 90) % 360) + 360) % 360; }); this.setDirty(true); this.renderElements(); }),
+          item('Bring to front', 'fpb-layer-up', () => (multi ? this.selectedEls() : [el]).forEach(o => this.toFront(o))),
+          item('Send to back', 'fpb-layer-up', () => (multi ? this.selectedEls() : [el]).forEach(o => this.toBack(o))),
+          item('Duplicate', 'fpb-copy', () => { if (multi) this.duplicateSelection(); else { this.select(el.id); this.duplicateSelected(); } }),
+          item('Delete', 'fpb-trash', () => { this.pushUndo(); const ids = new Set(multi ? this._sel : [el.id]); this.elements = this.elements.filter(x => !ids.has(x.id)); this._sel = []; this.setDirty(true); this.renderAll(); }, true),
+        ];
+      } else {
+        items = [
+          item('Canvas & scale…', 'fpb-ruler', () => this.openScale()),
+          !this.bgUrl && sub('Canvas colour', 'fpb-palette2', ['#ffffff', '#f4f1ea', '#eef2f6', '#dfe9d8', '#1f2937', '#14321f'], (c) => { this.bg = c; this.applyBg(); this.setDirty(true); }),
+          item('Add objects', 'fpb-shapes', () => this.setTool('object')),
+          !this.bgUrl && item('Rotate canvas 90°', 'fpb-rotate', () => this.rotateCanvas()),
+          item('Fit to screen', 'fpb-grid-ic', () => this.fit()),
+        ];
+      }
+      items = items.filter(Boolean);
+      const menu = document.createElement('div');
+      menu.className = 'fpb-ctx';
+      menu.innerHTML = items.map((it, i) => it.swatches
+        ? `<div class="fpb-ctx-row" data-i="${i}"><span class="fpb-ctx-lbl"><svg><use href="#${it.icon}"/></svg>${esc(it.label)}</span><span class="fpb-ctx-sw">${it.swatches.map(c => `<button type="button" data-c="${c}" style="background:${c}"></button>`).join('')}</span></div>`
+        : `<button type="button" class="fpb-ctx-item${it.danger ? ' danger' : ''}" data-i="${i}"><svg><use href="#${it.icon}"/></svg>${esc(it.label)}</button>`).join('');
+      document.body.appendChild(menu);
+      this._ctx = menu;
+      menu.style.left = clamp(e.clientX, 4, window.innerWidth - menu.offsetWidth - 4) + 'px';
+      menu.style.top = clamp(e.clientY, 4, window.innerHeight - menu.offsetHeight - 4) + 'px';
+      menu.querySelectorAll('.fpb-ctx-item').forEach(b => b.addEventListener('click', () => { const it = items[+b.dataset.i]; this.closeContextMenu(); it.fn(); }));
+      menu.querySelectorAll('.fpb-ctx-sw button').forEach(b => b.addEventListener('click', () => { const row = b.closest('[data-i]'); const it = items[+row.dataset.i]; it.fn(b.dataset.c); this.closeContextMenu(); }));
+      this._ctxOff = (ev) => { if (!menu.contains(ev.target)) this.closeContextMenu(); };
+      setTimeout(() => { if (this._ctxOff) window.addEventListener('pointerdown', this._ctxOff, true); }, 0);
+    }
+
+    // Scale dialog: site dimensions for a blank canvas, calibration for an image.
+    openScale() {
+      const isImg = !!this.bgUrl;
+      const wrap = document.createElement('div');
+      wrap.className = 'fpb-modal';
+      const swatches = ['#ffffff', '#f4f1ea', '#eef2f6', '#1f2937', '#14321f', '#0c1f33'];
+      const colorBlock = `<div class="fpb-field"><span>Canvas colour</span><div class="fpb-color-row">
+          ${swatches.map(c => `<button type="button" class="fpb-color-dot${(this.bg || '').toLowerCase() === c ? ' active' : ''}" data-x="bgdot" data-c="${c}" style="background:${c}"></button>`).join('')}
+          <input type="color" data-x="bg" value="${esc(/^#[0-9a-f]{6}$/i.test(this.bg || '') ? this.bg : DEFAULT_BG)}" title="Custom colour"/>
+        </div></div>`;
+      wrap.innerHTML = `<div class="fpb-modal-card">
+        <h3>Canvas &amp; scale</h3>
+        ${isImg
+          ? `<p>At the current scale this image is about <strong>${Math.round(this.world.w / this.ppf)} × ${Math.round(this.world.h / this.ppf)} ft</strong>${this.calibrated ? '' : ' — <strong>not calibrated yet.</strong>'}</p>
+             <p class="fpb-helper">Calibrate against a distance you know — a building edge, road width, or a marked dimension on the plan.</p>
+             ${colorBlock}
+             <div class="fpb-modal-actions"><button type="button" data-x="cal" class="fpb-btn primary"><svg><use href="#fpb-ruler"/></svg>Draw calibration line</button><button type="button" data-x="cancel" class="fpb-btn">Done</button></div>`
+          : `<div class="fpb-field-row"><label class="fpb-field"><span>Site width (ft)</span><input data-x="w" type="number" min="10" max="5000" value="${Math.round(this.siteFt.w)}"></label><label class="fpb-field"><span>Site depth (ft)</span><input data-x="h" type="number" min="10" max="5000" value="${Math.round(this.siteFt.h)}"></label></div>
+             <p class="fpb-helper">Placed items keep their real footprint when you change the site size.</p>
+             ${colorBlock}
+             <div class="fpb-modal-actions"><button type="button" data-x="rotate" class="fpb-btn"><svg><use href="#fpb-rotate"/></svg>Rotate 90°</button><button type="button" data-x="apply" class="fpb-btn primary">Apply</button><button type="button" data-x="cancel" class="fpb-btn">Cancel</button></div>`}
+      </div>`;
+      this.container.appendChild(wrap);
+      const close = () => wrap.remove();
+      const q = (s) => wrap.querySelector(`[data-x="${s}"]`);
+      const setBg = (c) => { this.bg = c; this.applyBg(); this.setDirty(true); wrap.querySelectorAll('[data-x="bgdot"]').forEach(d => d.classList.toggle('active', d.dataset.c.toLowerCase() === c.toLowerCase())); if (q('bg')) q('bg').value = /^#[0-9a-f]{6}$/i.test(c) ? c : DEFAULT_BG; };
+      wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+      wrap.querySelectorAll('[data-x="bgdot"]').forEach(d => d.addEventListener('click', () => setBg(d.dataset.c)));
+      if (q('bg')) q('bg').addEventListener('input', () => setBg(q('bg').value));
+      if (q('cancel')) q('cancel').onclick = close;
+      if (q('apply')) q('apply').onclick = () => { this.setSiteFt(q('w').value, q('h').value); close(); };
+      if (q('rotate')) q('rotate').onclick = () => { this.rotateCanvas(); close(); };
+      if (q('cal')) q('cal').onclick = () => { close(); this.startCalibration(); };
+    }
+
+    startCalibration() {
+      this.setTool('select');
+      this.hint('Drag a line along a distance you know, then enter its real length in feet.');
+      this.panzoom.setOptions({ disablePan: true });
+      const cal = this.$.callipers;
+      let start = null;
+      const down = (e) => { if (e.target.closest('.fpb-zoom')) return; e.preventDefault(); start = this.worldPoint(e); };
+      const move = (e) => { if (!start) return; this.drawCallipers(start, this.worldPoint(e)); };
+      const up = (e) => {
+        if (!start) return;
+        const cur = this.worldPoint(e);
+        const distPx = Math.hypot(cur.x - start.x, cur.y - start.y);
+        cleanup();
+        if (distPx < 6) { cal.hidden = true; this.hint(''); return; }
+        const ans = window.prompt('How long is that line, in feet?', '20');
+        cal.hidden = true; this.hint('');
+        const ft = parseFloat(ans);
+        if (ft > 0) {
+          // Keep every placed shape at its real footprint across the rescale.
+          const fts = this.elements.map(el => el.w != null ? { id: el.id, wf: this.elWidthFt(el), hf: this.elHeightFt(el) } : null);
+          this.ppf = distPx / ft;
+          this.calibrated = true;
+          fts.forEach(fE => { if (!fE) return; const el = this.byId(fE.id); if (el) { el.w = this.ftToFracW(fE.wf); el.h = this.ftToFracH(fE.hf); } });
+          this.updateGridVisibility();
+          this.renderAll();
+          this.setDirty(true);
+          this.status(`Scale set — 1 ft = ${this.fmtFt(this.ppf)} px.`, 'success');
+        }
+      };
+      const cleanup = () => {
+        this.$.viewport.removeEventListener('pointerdown', down);
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        this.panzoom.setOptions({ disablePan: this.tool !== 'select' });
+      };
+      this.$.viewport.addEventListener('pointerdown', down);
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    }
+
+    drawCallipers(a, b) {
+      const cal = this.$.callipers;
+      cal.hidden = false;
+      cal.style.left = a.x + 'px';
+      cal.style.top = a.y + 'px';
+      cal.style.width = Math.hypot(b.x - a.x, b.y - a.y) + 'px';
+      cal.style.transform = `rotate(${Math.atan2(b.y - a.y, b.x - a.x)}rad)`;
+    }
+
+    // Recompute the foot grid backing image from the current scale.
+    updateGrid() {
+      if (!this.$.grid) return;
+      const minor = this.ppf, major = this.ppf * GRID_MAJOR_FT;
+      this.$.grid.style.backgroundImage =
+        'linear-gradient(to right, rgba(14,80,140,0.18) 1px, transparent 1px),' +
+        'linear-gradient(to bottom, rgba(14,80,140,0.18) 1px, transparent 1px),' +
+        'linear-gradient(to right, rgba(14,80,140,0.07) 1px, transparent 1px),' +
+        'linear-gradient(to bottom, rgba(14,80,140,0.07) 1px, transparent 1px)';
+      this.$.grid.style.backgroundSize =
+        `${major}px ${major}px, ${major}px ${major}px, ${minor}px ${minor}px, ${minor}px ${minor}px`;
+    }
+
     sizeCanvas() {
       this.$.canvas.style.width = this.world.w + 'px';
       this.$.canvas.style.height = this.world.h + 'px';
+      this.applyBg();
       this.renderElements();
+    }
+    applyBg() { if (this.$.canvas) this.$.canvas.style.background = this.bg || DEFAULT_BG; }
+
+    // Reorient the whole layout 90° clockwise (blank canvas only — an image
+    // carries its own orientation). Rotates every element and swaps the site.
+    rotateCanvas() {
+      if (this.bgUrl) { this.status('Canvas rotation isn’t available with a background image.', 'error'); return; }
+      this.pushUndo();
+      const fts = this.elements.map(el => el.w != null ? { id: el.id, wf: this.elWidthFt(el), hf: this.elHeightFt(el) } : null);
+      this.siteFt = { w: this.siteFt.h, h: this.siteFt.w };
+      this.world = { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
+      this.elements.forEach((el, i) => {
+        const nx = 1 - el.y, ny = el.x;        // 90° CW about the centre
+        el.x = nx; el.y = ny;
+        if (fts[i]) { el.w = this.ftToFracW(fts[i].wf); el.h = this.ftToFracH(fts[i].hf); }
+        if (el.rot != null) el.rot = (((el.rot + 90) % 360) + 360) % 360;
+      });
+      this.sizeCanvas();
+      this.updateGridVisibility();
+      this.fit();
+      this.setDirty(true);
+      this.renderAll();
     }
 
     initPanzoom(start) {
@@ -450,6 +771,21 @@
     }
     scale() { return this.panzoom ? this.panzoom.getScale() : 1; }
 
+    // ── Feet ⇄ canvas conversions (ppf = px per foot) ───────
+    snapWorld(px) { return Math.round(px / this.ppf) * this.ppf; }   // snap world px to 1 ft
+    ftToFracW(ft) { return (ft * this.ppf) / this.world.w; }
+    ftToFracH(ft) { return (ft * this.ppf) / this.world.h; }
+    elWidthFt(el) { return el.w * this.world.w / this.ppf; }
+    elHeightFt(el) { return el.h * this.world.h / this.ppf; }
+    fmtFt(ft) { const r = Math.round(ft * 10) / 10; return (Number.isInteger(r) ? r : r.toFixed(1)); }
+    // White or dark label text depending on the fill's luminance.
+    textOn(hex) {
+      const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+      if (!m) return '#fff';
+      const n = parseInt(m[1], 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+      return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#1a1a1a' : '#fff';
+    }
+
     // ── Canvas interaction ──────────────────────────────────
     wireCanvas() {
       this.initPanzoom();
@@ -476,18 +812,31 @@
       }
 
       canvas.addEventListener('pointerdown', (e) => {
-        if (this.spacePan) return;                       // let panzoom pan
+        if (this.spacePan || e.button === 2) return;     // let panzoom pan / right-click → context menu
+        const rotH = e.target.closest('.fpb-rot-h');
+        if (rotH) { this.startRotate(e); return; }
         const handle = e.target.closest('.fpb-h');
         if (handle) { this.startResize(e, handle.dataset.h); return; }
         const elDiv = e.target.closest('.fpb-el');
         if (elDiv) {
           e.stopPropagation();
-          this.select(elDiv.dataset.id);
-          this.startMove(e);
+          const id = elDiv.dataset.id;
+          if (e.shiftKey) { this.toggleSelect(id); return; }   // shift-click builds a multi-selection
+          if (!this.isSelected(id)) this.select(id);           // plain click selects just this one
+          this.startMove(e, id);
           return;
         }
         if (this.tool === 'select') return;              // empty space: panzoom pans; click deselects (below)
+        if (this.tool === 'measure') { this.startMeasure(e); return; }
         this.startDraw(e);
+      });
+
+      // Right-click anywhere → context menu (item menu or canvas menu).
+      canvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const elDiv = e.target.closest('.fpb-el');
+        if (elDiv) { if (!this.isSelected(elDiv.dataset.id)) this.select(elDiv.dataset.id); this.openContextMenu(e, elDiv.dataset.id); }
+        else this.openContextMenu(e, null);
       });
 
       // Click on empty space in select mode → deselect (but not after a pan-drag).
@@ -497,9 +846,9 @@
         if (!downAt) return;
         const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 4;
         downAt = null;
-        if (moved || this.tool !== 'select') return;
+        if (moved || this.tool !== 'select' || e.button === 2) return;
         if (e.target.closest('.fpb-el') || e.target.closest('.fpb-zoom')) return;
-        if (this.selectedId) { this.selectedId = null; this.renderAll(); }
+        if (this._sel.length) { this._sel = []; this.renderAll(); }
       });
     }
 
@@ -512,14 +861,16 @@
 
     showPopover(id) {
       const el = this.byId(id);
-      // Tables and bare text labels carry no extra info worth a popover.
-      if (!el || el.type === 'table' || el.type === 'text') { this.hidePopover(); return; }
+      // Bare objects and text labels carry no extra info worth a popover.
+      if (!el || el.type === 'text' || (el.type === 'shape' && !el.label)) { this.hidePopover(); return; }
       const cat = CAT_BY_ID[el.icon];
+      const obj = el.type === 'shape' ? OBJ_BY_KIND[el.kind] : null;
       const vendor = this.vendorName(el.vendor_id);
-      const title = el.label || vendor || (el.type === 'zone' ? 'Zone' : (cat ? cat.label : 'Location'));
+      const title = el.label || vendor || (el.type === 'zone' ? 'Zone' : obj ? obj.label : (cat ? cat.label : 'Location'));
       const rows = [];
       if (el.type === 'booth' && el.number != null && el.number !== '') rows.push(`Booth ${esc(el.number)}`);
-      if (el.type !== 'zone' && cat) rows.push(esc(cat.label));
+      if (obj) rows.push(esc(obj.label));
+      if (el.type !== 'zone' && el.type !== 'shape' && cat) rows.push(esc(cat.label));
       if (el.size) rows.push(esc(String(el.size).replace('x', ' × ')) + ' ft');
       this.$.pop.innerHTML = `
         <div class="pop-title"><span class="pop-dot" style="background:${esc(el.color || (cat && cat.color) || '#0a7aff')}"></span>${esc(title)}</div>
@@ -549,13 +900,24 @@
       this.renderElements();
     }
 
-    // Move (drag) the selected element.
-    startMove(e) {
-      const el = this.byId(this.selectedId);
+    // Move (drag) the grabbed element — and any multi-selection / connected run with it.
+    startMove(e, grabbedId) {
+      const el = this.byId(grabbedId || this.selectedId);
       if (!el) return;
       e.preventDefault();
       this.panzoom.setOptions({ disablePan: true });
       const start = { cx: e.clientX, cy: e.clientY, x: el.x, y: el.y };
+      // Followers: every other selected element, plus members of a connected run,
+      // plus — when dragging a zone — everything sitting inside that zone.
+      const followerSet = new Set(this._sel.filter(id => id !== el.id));
+      if (el.type === 'shape' && el.groupId) {
+        this.elements.forEach(o => { if (o.type === 'shape' && o.groupId === el.groupId && o !== el) followerSet.add(o.id); });
+      }
+      if (el.type === 'zone') {
+        this.elements.forEach(o => { if (o !== el && o.type !== 'zone' && this.zoneContains(el, o)) followerSet.add(o.id); });
+      }
+      const single = followerSet.size === 0;
+      const group = [...followerSet].map(id => this.byId(id)).filter(Boolean).map(o => ({ o, dx: o.x - el.x, dy: o.y - el.y }));
       let moved = false, pushed = false;
       const onMove = (ev) => {
         const s = this.scale();
@@ -565,25 +927,66 @@
         if (!pushed) { this.pushUndo(); pushed = true; }
         moved = true;
         let nx = start.x + dx, ny = start.y + dy;
-        if (el.type !== 'pin' && el.type !== 'text') {
+        // Only single, axis-aligned shapes use edge magnets; groups just grid-snap.
+        if (single && el.type !== 'pin' && el.type !== 'text') {
           const snapped = this.snapShape(el, nx, ny);
           nx = snapped.x; ny = snapped.y;
         } else {
           this.clearGuides();
           if (this.snap && el.type !== 'pin') {
-            nx = Math.round(nx * this.world.w / (GRID / 2)) * (GRID / 2) / this.world.w;
-            ny = Math.round(ny * this.world.h / (GRID / 2)) * (GRID / 2) / this.world.h;
+            nx = this.snapWorld(nx * this.world.w) / this.world.w;
+            ny = this.snapWorld(ny * this.world.h) / this.world.h;
           }
         }
         el.x = clamp(nx, 0, 1); el.y = clamp(ny, 0, 1);
         this.positionElementDiv(el);
+        group.forEach(({ o, dx: ox, dy: oy }) => { o.x = clamp(el.x + ox, 0, 1); o.y = clamp(el.y + oy, 0, 1); this.positionElementDiv(o); });
       };
       const onUp = () => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
         this.clearGuides();
         this.panzoom.setOptions({ disablePan: this.tool !== 'select' });
-        if (moved) { this.setDirty(true); this.renderAll(); }
+        if (moved) { if (single && this.isConnect(el)) this.connectShape(el); this.setDirty(true); this.renderAll(); }
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    }
+
+    // Is element o's centre inside zone z (accounting for the zone's rotation)?
+    zoneContains(z, o) {
+      const W = this.world.w, H = this.world.h;
+      const dx = (o.x - z.x) * W, dy = (o.y - z.y) * H;
+      const th = -(z.rot || 0) * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
+      const lx = dx * cos - dy * sin, ly = dx * sin + dy * cos;   // into zone's local frame
+      return Math.abs(lx) <= z.w * W / 2 && Math.abs(ly) <= z.h * H / 2;
+    }
+
+    // Rotate the selected element by dragging the rotation handle.
+    isRotatable(el) { return el && (el.type === 'booth' || el.type === 'zone' || el.type === 'shape'); }
+    isConnect(el) { return el && el.type === 'shape' && OBJ_BY_KIND[el.kind] && OBJ_BY_KIND[el.kind].connect; }
+    startRotate(e) {
+      const el = this.byId(this.selectedId);
+      if (!this.isRotatable(el)) return;
+      e.preventDefault(); e.stopPropagation();
+      this.panzoom.setOptions({ disablePan: true });
+      this.pushUndo();
+      const div = this.$.els.querySelector(`.fpb-el[data-id="${el.id}"]`);
+      const r = div.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const onMove = (ev) => {
+        let deg = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI + 90;
+        if (!ev.shiftKey) deg = Math.round(deg / ROT_SNAP) * ROT_SNAP;   // snap unless Shift
+        el.rot = ((Math.round(deg) % 360) + 360) % 360;
+        this.positionElementDiv(el);
+        this.showDimText(`${el.rot}°`, ev);
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        this.panzoom.setOptions({ disablePan: this.tool !== 'select' });
+        this.hideDim();
+        this.setDirty(true); this.renderAll();
       };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
@@ -613,13 +1016,26 @@
       tryY(cy - hpx / 2, hpx / 2); tryY(cy, 0); tryY(cy + hpx / 2, -hpx / 2);
 
       if (bestX) { cx = bestX.to + bestX.off; this.$.guideV.style.left = (bestX.to / W * 100) + '%'; this.$.guideV.hidden = false; }
-      else { cx = Math.round((cx - wpx / 2) / GRID) * GRID + wpx / 2; }
+      else { cx = this.snapWorld(cx - wpx / 2) + wpx / 2; }
       if (bestY) { cy = bestY.to + bestY.off; this.$.guideH.style.top = (bestY.to / H * 100) + '%'; this.$.guideH.hidden = false; }
-      else { cy = Math.round((cy - hpx / 2) / GRID) * GRID + hpx / 2; }
+      else { cy = this.snapWorld(cy - hpx / 2) + hpx / 2; }
 
       return { x: cx / W, y: cy / H };
     }
     clearGuides() { this.$.guideV.hidden = true; this.$.guideH.hidden = true; }
+
+    // Floating "W × H ft" readout that follows the pointer during draw/resize.
+    showDim(el, ev) { this.showDimText(`${this.fmtFt(this.elWidthFt(el))} × ${this.fmtFt(this.elHeightFt(el))} ft`, ev); }
+    showDimText(text, ev) {
+      const d = this.$.dim;
+      if (!d) return;
+      const vp = this.$.viewport.getBoundingClientRect();
+      d.textContent = text;
+      d.hidden = false;
+      d.style.left = clamp(ev.clientX - vp.left + 14, 4, vp.width - 90) + 'px';
+      d.style.top = clamp(ev.clientY - vp.top - 30, 4, vp.height - 24) + 'px';
+    }
+    hideDim() { if (this.$.dim) this.$.dim.hidden = true; }
 
     // Resize via handles.
     startResize(e, dir) {
@@ -629,37 +1045,49 @@
       this.panzoom.setOptions({ disablePan: true });
       this.pushUndo();
       const W = this.world.w, H = this.world.h;
-      const start = {
-        cx: e.clientX, cy: e.clientY,
-        l: (el.x - el.w / 2) * W, t: (el.y - el.h / 2) * H,
-        r: (el.x + el.w / 2) * W, b: (el.y + el.h / 2) * H,
-      };
+      const minPx = MIN_FT * this.ppf;
+      // Resize in the element's own (possibly rotated) frame: the edge/corner
+      // opposite the handle stays anchored in world space.
+      const th = (el.rot || 0) * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
+      const ux = { x: cos, y: sin }, uy = { x: -sin, y: cos };
+      const sx = dir.includes('e') ? 1 : dir.includes('w') ? -1 : 0;
+      const sy = dir.includes('s') ? 1 : dir.includes('n') ? -1 : 0;
+      const start = { cx: e.clientX, cy: e.clientY, x0: el.x * W, y0: el.y * H, w0: el.w * W, h0: el.h * H };
+      // Resizing a zone reflows its contents — each item keeps its position as a
+      // fraction of the zone, so they spread out / draw in with the zone.
+      const reflow = (el.type === 'zone' && !el.rot)
+        ? this.elements.filter(o => o !== el && o.type !== 'zone' && this.zoneContains(el, o))
+            .map(o => ({ o, fx: (o.x - (el.x - el.w / 2)) / el.w, fy: (o.y - (el.y - el.h / 2)) / el.h }))
+        : [];
       const onMove = (ev) => {
         const s = this.scale();
-        const dx = (ev.clientX - start.cx) / s;
-        const dy = (ev.clientY - start.cy) / s;
-        let { l, t, r, b } = start;
-        if (dir.includes('w')) l = start.l + dx;
-        if (dir.includes('e')) r = start.r + dx;
-        if (dir.includes('n')) t = start.t + dy;
-        if (dir.includes('s')) b = start.b + dy;
-        if (this.snap) {
-          if (dir.includes('w')) l = Math.round(l / GRID) * GRID;
-          if (dir.includes('e')) r = Math.round(r / GRID) * GRID;
-          if (dir.includes('n')) t = Math.round(t / GRID) * GRID;
-          if (dir.includes('s')) b = Math.round(b / GRID) * GRID;
-        }
-        if (r - l < MIN_SIZE) { if (dir.includes('w')) l = r - MIN_SIZE; else r = l + MIN_SIZE; }
-        if (b - t < MIN_SIZE) { if (dir.includes('n')) t = b - MIN_SIZE; else b = t + MIN_SIZE; }
-        el.x = (l + r) / 2 / W; el.y = (t + b) / 2 / H;
-        el.w = (r - l) / W; el.h = (b - t) / H;
+        const dx = (ev.clientX - start.cx) / s, dy = (ev.clientY - start.cy) / s;
+        const C0 = { x: start.x0, y: start.y0 }, w0 = start.w0, h0 = start.h0;
+        // Fixed anchor and the moving handle's new world position.
+        const A = { x: C0.x - sx * w0 / 2 * ux.x - sy * h0 / 2 * uy.x, y: C0.y - sx * w0 / 2 * ux.y - sy * h0 / 2 * uy.y };
+        const P = { x: C0.x + sx * w0 / 2 * ux.x + sy * h0 / 2 * uy.x + dx, y: C0.y + sx * w0 / 2 * ux.y + sy * h0 / 2 * uy.y + dy };
+        const V = { x: P.x - A.x, y: P.y - A.y };
+        let nw = sx !== 0 ? sx * (V.x * ux.x + V.y * ux.y) : w0;
+        let nh = sy !== 0 ? sy * (V.x * uy.x + V.y * uy.y) : h0;
+        if (this.snap) { if (sx !== 0) nw = this.snapWorld(nw); if (sy !== 0) nh = this.snapWorld(nh); }
+        nw = Math.max(nw, minPx); nh = Math.max(nh, minPx);
+        const C = { x: A.x + sx * nw / 2 * ux.x + sy * nh / 2 * uy.x, y: A.y + sx * nw / 2 * ux.y + sy * nh / 2 * uy.y };
+        el.x = C.x / W; el.y = C.y / H; el.w = nw / W; el.h = nh / H;
         this.positionElementDiv(el);
+        reflow.forEach(({ o, fx, fy }) => { o.x = clamp((el.x - el.w / 2) + fx * el.w, 0, 1); o.y = clamp((el.y - el.h / 2) + fy * el.h, 0, 1); this.positionElementDiv(o); });
+        this.showDim(el, ev);
       };
       const onUp = () => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
         this.panzoom.setOptions({ disablePan: this.tool !== 'select' });
-        if (el.type === 'booth') this.lastBoothSize = { w: el.w * W, h: el.h * H };
+        this.hideDim();
+        // A drag-resized booth / sized object writes its footprint back to the size field.
+        if (el.type === 'booth' || el.type === 'shape') {
+          if (el.type === 'booth') this.lastBoothFt = { w: this.elWidthFt(el), h: this.elHeightFt(el) };
+          el.size = `${Math.round(this.elWidthFt(el))}x${Math.round(this.elHeightFt(el))}`;
+        }
+        if (this.isConnect(el)) this.connectShape(el);
         this.setDirty(true);
         this.renderAll();
       };
@@ -674,8 +1102,9 @@
       const start = this.worldPoint(e);
       let dragging = false;
       const rubber = this.$.rubber;
+      const minPx = MIN_FT * this.ppf;
       const snapPt = (p) => this.snap
-        ? { x: Math.round(p.x / GRID) * GRID, y: Math.round(p.y / GRID) * GRID }
+        ? { x: this.snapWorld(p.x), y: this.snapWorld(p.y) }
         : p;
 
       const onMove = (ev) => {
@@ -690,11 +1119,13 @@
         rubber.style.top = (t / this.world.h * 100) + '%';
         rubber.style.width = (Math.abs(b.x - a.x) / this.world.w * 100) + '%';
         rubber.style.height = (Math.abs(b.y - a.y) / this.world.h * 100) + '%';
+        this.showDimText(`${this.fmtFt(Math.abs(b.x - a.x) / this.ppf)} × ${this.fmtFt(Math.abs(b.y - a.y) / this.ppf)} ft`, ev);
       };
       const onUp = (ev) => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
         rubber.hidden = true;
+        this.hideDim();
         const end = this.worldPoint(ev);
         if (tool === 'pin') { this.addPin(end); return; }
         if (tool === 'text') { this.addText(start); return; }
@@ -702,12 +1133,16 @@
         if (dragging) {
           const a = snapPt(start), b = snapPt(end);
           rect = { l: Math.min(a.x, b.x), t: Math.min(a.y, b.y), w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) };
-          if (rect.w < MIN_SIZE || rect.h < MIN_SIZE) rect = null;
+          if (rect.w < minPx || rect.h < minPx) rect = null;
         }
         if (!rect) {
-          const def = tool === 'booth' ? this.lastBoothSize
-            : tool === 'zone' ? { w: 220, h: 140 }
-            : { w: 38, h: 38 };
+          // Click-stamp default footprints, in feet → world px.
+          const o = OBJ_BY_KIND[this.objKind] || OBJ_BY_KIND[DEFAULT_OBJ];
+          const defFt = tool === 'booth' ? this.lastBoothFt
+            : tool === 'object' ? { w: o.ftW, h: o.ftH }
+            : tool === 'zone' ? { w: 30, h: 20 }
+            : { w: 4, h: 4 };
+          const def = { w: defFt.w * this.ppf, h: defFt.h * this.ppf };
           const p = snapPt({ x: start.x - def.w / 2, y: start.y - def.h / 2 });
           rect = { l: p.x, t: p.y, w: def.w, h: def.h };
         }
@@ -731,25 +1166,82 @@
       this.pushUndo();
       const W = this.world.w, H = this.world.h;
       const base = {
-        id: uid(), type: tool,
+        id: uid(), type: tool, rot: 0,
         x: clamp((rect.l + rect.w / 2) / W, 0, 1),
         y: clamp((rect.t + rect.h / 2) / H, 0, 1),
         w: rect.w / W, h: rect.h / H,
       };
+      const wFt = rect.w / this.ppf, hFt = rect.h / this.ppf;
       let el;
       if (tool === 'booth') {
         const cat = CAT_BY_ID[this.boothCategory] || CAT_BY_ID[DEFAULT_CAT];
-        el = Object.assign(base, { number: this.nextBoothNumber(), label: '', icon: cat.id, color: cat.color, vendor_id: null, size: '', description: '' });
-        this.lastBoothSize = { w: rect.w, h: rect.h };
+        el = Object.assign(base, { number: this.nextBoothNumber(), label: '', icon: cat.id, color: cat.color, vendor_id: null, size: `${Math.round(wFt)}x${Math.round(hFt)}`, description: '' });
+        this.lastBoothFt = { w: wFt, h: hFt };
       } else if (tool === 'zone') {
         el = Object.assign(base, { label: 'Zone', color: ZONE_COLORS[0], description: '' });
-      } else {
-        el = Object.assign(base, { shape: 'round', color: TABLE_COLOR });
+      } else {   // object
+        const o = OBJ_BY_KIND[this.objKind] || OBJ_BY_KIND[DEFAULT_OBJ];
+        el = Object.assign(base, { type: 'shape', kind: o.kind, shape: o.shape, label: '', color: o.color, size: `${Math.round(wFt)}x${Math.round(hFt)}` });
+        if (o.connect) el.groupId = null;
       }
       this.elements.push(el);
+      if (this.isConnect(el)) this.connectShape(el);   // auto-join bars / barrier runs
       this.setDirty(true);
       this.select(el.id);
       // Stay in the tool so rows can be stamped quickly.
+    }
+
+    // Resize a booth/counter to the feet stored in el.size, keeping its centre.
+    applySizeFt(el) {
+      if (!el || !el.size || el.w == null) return;
+      const parts = String(el.size).split('x');
+      const wf = parseFloat(parts[0]), hf = parseFloat(parts[1]);
+      if (!(wf > 0) || !(hf > 0)) return;
+      el.w = clamp(this.ftToFracW(wf), 0, 1);
+      el.h = clamp(this.ftToFracH(hf), 0, 1);
+      if (el.type === 'booth') this.lastBoothFt = { w: wf, h: hf };
+    }
+
+    // ── Connectable objects → groups (bars, barrier runs) ───
+    // When a connectable object's edge lands flush (within ~1 ft) of another of
+    // the same kind, merge them into one group so the run drags as a unit.
+    connectShape(el) {
+      const W = this.world.w, H = this.world.h, tol = this.ppf * 1.2;
+      if (el.rot) return;   // only axis-aligned pieces auto-connect
+      const ax = { l: (el.x - el.w / 2) * W, r: (el.x + el.w / 2) * W, t: (el.y - el.h / 2) * H, b: (el.y + el.h / 2) * H };
+      for (const o of this.elements) {
+        if (o === el || o.type !== 'shape' || o.kind !== el.kind || o.rot) continue;
+        const bx = { l: (o.x - o.w / 2) * W, r: (o.x + o.w / 2) * W, t: (o.y - o.h / 2) * H, b: (o.y + o.h / 2) * H };
+        const xOverlap = Math.min(ax.r, bx.r) - Math.max(ax.l, bx.l) > -tol;
+        const yOverlap = Math.min(ax.b, bx.b) - Math.max(ax.t, bx.t) > -tol;
+        const touch = (Math.abs(ax.r - bx.l) < tol || Math.abs(ax.l - bx.r) < tol) && yOverlap
+                   || (Math.abs(ax.b - bx.t) < tol || Math.abs(ax.t - bx.b) < tol) && xOverlap;
+        if (touch) {
+          const gid = o.groupId || el.groupId || ('grp_' + uid());
+          const label = o.label || el.label || '';
+          this.elements.forEach(c => { if (c.type === 'shape' && c.kind === el.kind && (c === el || c === o || (c.groupId && (c.groupId === o.groupId || c.groupId === el.groupId)))) { c.groupId = gid; if (label) c.label = label; } });
+          el.groupId = gid;
+        }
+      }
+    }
+
+    // ── Measure tool — drag to read a distance in feet (places nothing) ──
+    startMeasure(e) {
+      e.preventDefault(); e.stopPropagation();
+      const cal = this.$.callipers;
+      const start = this.worldPoint(e);
+      const onMove = (ev) => {
+        const cur = this.worldPoint(ev);
+        this.drawCallipers(start, cur);
+        this.showDimText(`${this.fmtFt(Math.hypot(cur.x - start.x, cur.y - start.y) / this.ppf)} ft`, ev);
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        setTimeout(() => { cal.hidden = true; this.hideDim(); }, 1400);   // linger briefly
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
     }
 
     addPin(p) {
@@ -789,23 +1281,26 @@
         copy.x = clamp(el.x + el.w, 0, 1);            // adjacent to the right → instant rows
         copy.number = this.nextBoothNumber();
         copy.vendor_id = null; copy.label = '';
-      } else if (el.type === 'zone' || el.type === 'table') {
+      } else if (this.isConnect(el)) {
+        copy.x = clamp(el.x + el.w, 0, 1);            // flush to the right → chains the run
+      } else if (el.type === 'zone' || el.type === 'shape') {
         copy.x = clamp(el.x + (el.w || 0.02) + 12 / this.world.w, 0, 1);
       } else {
         copy.x = clamp(el.x + 20 / this.world.w, 0, 1);
         copy.y = clamp(el.y + 20 / this.world.h, 0, 1);
       }
       this.elements.push(copy);
+      if (this.isConnect(copy)) this.connectShape(copy);
       this.setDirty(true);
       this.select(copy.id);
     }
 
     deleteSelected() {
-      const el = this.byId(this.selectedId);
-      if (!el) return;
+      if (!this._sel.length) return;
       this.pushUndo();
-      this.elements = this.elements.filter(x => x.id !== el.id);
-      this.selectedId = null;
+      const ids = new Set(this._sel);
+      this.elements = this.elements.filter(x => !ids.has(x.id));
+      this._sel = [];
       this.setDirty(true);
       this.renderAll();
     }
@@ -820,25 +1315,28 @@
         if (meta && e.key.toLowerCase() === 'd') { e.preventDefault(); this.duplicateSelected(); return; }
         if (e.key === ' ') { e.preventDefault(); if (!this.spacePan) { this.spacePan = true; this.$.viewport.classList.add('space-pan'); this.panzoom.setOptions({ disablePan: false }); } return; }
         if (e.key === 'Escape') {
+          this.closeContextMenu();
           if (this.tool !== 'select') this.setTool('select');
-          else if (this.selectedId) { this.selectedId = null; this.renderAll(); }
+          else if (this._sel.length) { this._sel = []; this.renderAll(); }
           return;
         }
-        if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedId) { e.preventDefault(); this.deleteSelected(); return; }
-        const toolKeys = { v: 'select', b: 'booth', z: 'zone', o: 'table', t: 'text', p: 'pin' };
+        if (meta && e.key.toLowerCase() === 'a') { e.preventDefault(); this._sel = this.elements.map(x => x.id); this.renderAll(); return; }
+        if ((e.key === 'Delete' || e.key === 'Backspace') && this._sel.length) { e.preventDefault(); this.deleteSelected(); return; }
+        const toolKeys = { v: 'select', b: 'booth', o: 'object', z: 'zone', t: 'text', p: 'pin', m: 'measure' };
         if (!meta && toolKeys[e.key.toLowerCase()]) { this.setTool(toolKeys[e.key.toLowerCase()]); return; }
-        if (e.key.startsWith('Arrow') && this.selectedId) {
+        if (e.key.startsWith('Arrow') && this._sel.length) {
           e.preventDefault();
-          const el = this.byId(this.selectedId);
-          const step = (e.shiftKey ? GRID : 2);
+          const step = (e.shiftKey ? this.ppf : 2);   // Shift = 1 ft nudge
           this.pushUndo(true);
-          if (e.key === 'ArrowLeft') el.x -= step / this.world.w;
-          if (e.key === 'ArrowRight') el.x += step / this.world.w;
-          if (e.key === 'ArrowUp') el.y -= step / this.world.h;
-          if (e.key === 'ArrowDown') el.y += step / this.world.h;
-          el.x = clamp(el.x, 0, 1); el.y = clamp(el.y, 0, 1);
+          this.selectedEls().forEach(el => {
+            if (e.key === 'ArrowLeft') el.x -= step / this.world.w;
+            if (e.key === 'ArrowRight') el.x += step / this.world.w;
+            if (e.key === 'ArrowUp') el.y -= step / this.world.h;
+            if (e.key === 'ArrowDown') el.y += step / this.world.h;
+            el.x = clamp(el.x, 0, 1); el.y = clamp(el.y, 0, 1);
+            this.positionElementDiv(el);
+          });
           this.setDirty(true);
-          this.positionElementDiv(el);
         }
       };
       this._keyup = (e) => {
@@ -887,8 +1385,21 @@
     // ── Rendering ───────────────────────────────────────────
     byId(id) { return this.elements.find(x => x.id === id) || null; }
 
+    // Selection: `selectedId` is the sole selection (for editing); `_sel`
+    // holds the full multi-selection used for highlight and group drag.
+    get selectedId() { return this._sel.length === 1 ? this._sel[0] : null; }
+    set selectedId(v) { this._sel = (v == null) ? [] : [v]; }
+    get selectedIds() { return this._sel; }
+    isSelected(id) { return this._sel.indexOf(id) >= 0; }
+    toggleSelect(id) {
+      const i = this._sel.indexOf(id);
+      if (i >= 0) this._sel.splice(i, 1); else this._sel.push(id);
+      this.renderAll();
+    }
+    selectedEls() { return this._sel.map(id => this.byId(id)).filter(Boolean); }
+
     select(id) {
-      this.selectedId = id;
+      this._sel = id == null ? [] : [id];
       this.renderAll();
     }
 
@@ -908,38 +1419,67 @@
       } else {
         div.style.left = ((el.x - el.w / 2) * 100) + '%';
         div.style.top = ((el.y - el.h / 2) * 100) + '%';
+        if (el.rot) div.style.transform = `rotate(${el.rot}deg)`;
+        else div.style.removeProperty('transform');
       }
     }
 
     renderElements() {
       const W = this.world.w, H = this.world.h;
-      const handles = (el, corners) => (this.readOnly || el.id !== this.selectedId) ? '' :
+      const selEl = this.byId(this.selectedId);
+      const single = this._sel.length === 1;
+      // Box rotation + counter-rotation that keeps labels upright.
+      const tf = (el) => el.rot ? `transform:rotate(${el.rot}deg);` : '';
+      const up = (el) => el.rot ? `transform:rotate(${-el.rot}deg);` : '';
+      const handles = (el, corners) => (this.readOnly || !single || el.id !== this.selectedId) ? '' :
         (corners ? ['nw', 'ne', 'se', 'sw'] : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'])
-          .map(h => `<i class="fpb-h" data-h="${h}"></i>`).join('');
+          .map(h => `<i class="fpb-h" data-h="${h}"></i>`).join('')
+        + (this.isRotatable(el) ? '<i class="fpb-rot-h" title="Rotate"></i>' : '');
 
       this.$.els.innerHTML = this.elements.map(el => {
-        const sel = el.id === this.selectedId ? ' selected' : '';
+        const sel = this.isSelected(el.id) ? ' selected' : '';
         if (el.type === 'booth') {
           const wpx = el.w * W, hpx = el.h * H;
-          const numSize = clamp(Math.min(wpx, hpx) * 0.42, 9, 26);
-          const lblSize = clamp(wpx * 0.16, 9, 12);
-          return `<div class="fpb-el fpb-booth${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)}">
-            <span class="num" style="font-size:${numSize}px">${esc(el.number != null && el.number !== '' ? el.number : '')}</span>
-            ${el.label ? `<span class="fpb-el-label" style="font-size:${lblSize}px">${esc(el.label)}</span>` : ''}
+          const name = el.label || this.vendorName(el.vendor_id) || '';   // fall back to linked vendor
+          const num = el.number != null && el.number !== '' ? el.number : '';
+          const mult = LBL_SIZES[el.labelSize] || 1;
+          const inBox = name && (el.labelPos || 'in') === 'in';
+          // Number shrinks when a name shares the box; both sit inside, upright.
+          const numSize = clamp(Math.min(wpx, hpx) * (inBox ? 0.3 : 0.46), 10, inBox ? 22 : 30);
+          const nameSize = clamp(wpx * 0.14 * mult, 7, 44);
+          const ink = this.textOn(el.color);
+          return `<div class="fpb-el fpb-booth${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};${tf(el)}">
+            <div class="fpb-booth-in" style="color:${ink};${up(el)}">
+              ${num !== '' ? `<span class="num" style="font-size:${numSize}px">${esc(num)}</span>` : ''}
+              ${inBox ? `<span class="bname" style="font-size:${nameSize}px">${esc(name)}</span>` : ''}
+            </div>
+            ${name && !inBox ? `<span class="fpb-el-label" style="font-size:${clamp(wpx * 0.2 * mult, 11, 30)}px;${el.rot ? `transform:translateX(-50%) rotate(${-el.rot}deg);` : ''}">${esc(name)}</span>` : ''}
             ${handles(el)}</div>`;
         }
         if (el.type === 'zone') {
-          const hpx = el.h * H;
-          const fs = clamp(hpx * 0.2, 11, 30);
-          return `<div class="fpb-el fpb-zone${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)}">
-            <span class="zlabel" style="font-size:${fs}px">${esc(el.label || '')}</span>
+          const wpx = el.w * W;
+          const fs = clamp(wpx * 0.06, 12, 22);
+          return `<div class="fpb-el fpb-zone${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};${tf(el)}">
+            ${el.label ? `<span class="zlabel" style="font-size:${fs}px">${esc(el.label)}</span>` : ''}
             ${handles(el)}</div>`;
         }
-        if (el.type === 'table') {
-          return `<div class="fpb-el fpb-table ${el.shape === 'rect' ? '' : 'round'}${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)}">${handles(el, true)}</div>`;
+        if (el.type === 'shape') {
+          const o = OBJ_BY_KIND[el.kind] || OBJ_BY_KIND[DEFAULT_OBJ];
+          const wpx = el.w * W, hpx = el.h * H;
+          const round = o.shape === 'round' ? ' round' : '';
+          const fs = clamp(Math.min(wpx, hpx) * 0.32, 9, 20);
+          const grp = el.groupId && selEl && selEl.groupId === el.groupId ? ' ingroup' : '';
+          const deco = o.deco ? ` fpb-deco-${o.deco}` : '';
+          const ink = this.textOn(el.color);
+          const icSize = clamp(Math.min(wpx, hpx) * 0.5, 12, 40);
+          const showIc = o.ic && !el.label && Math.min(wpx, hpx) > 22;
+          return `<div class="fpb-el fpb-shape${round}${sel}${grp}${deco}" data-id="${el.id}" data-kind="${esc(el.kind)}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};--ink:${ink};${tf(el)}">
+            ${showIc ? `<svg class="sicon" style="width:${icSize}px;height:${icSize}px;${up(el)}"><use href="#${o.icon}"/></svg>` : ''}
+            ${el.label ? `<span class="slabel" style="font-size:${fs}px;color:${ink};${up(el)}">${esc(el.label)}</span>` : ''}
+            ${handles(el, o.shape === 'round')}</div>`;
         }
         if (el.type === 'text') {
-          const fs = Math.max(9, (el.fontSize || 0.016) * W);
+          const fs = Math.max(11, (el.fontSize || 0.016) * W);
           return `<div class="fpb-el fpb-text${sel}${el.label ? '' : ' empty'}" data-id="${el.id}" style="left:${el.x * 100}%;top:${el.y * 100}%;font-size:${fs}px;--c:${esc(el.color || '#111')}">${esc(el.label || 'Text')}</div>`;
         }
         const cat = CAT_BY_ID[el.icon] || CAT_BY_ID[DEFAULT_CAT];
@@ -955,6 +1495,21 @@
       if (!side) return;
       const el = this.byId(this.selectedId);
       if (el) { side.innerHTML = this.editFormHtml(el); this.wireEditForm(el); return; }
+      if (this._sel.length > 1) { this.renderMultiPanel(side); return; }
+      if (this.tool === 'object') {
+        const groups = OBJ_CATS.map(cat => `
+          <div class="fpb-obj-cat">${esc(cat)}</div>
+          <div class="fpb-obj-grid">${OBJECTS.filter(o => o.cat === cat).map(o => `
+            <button type="button" class="fpb-obj-btn${o.kind === this.objKind ? ' active' : ''}" data-obj="${o.kind}" title="${esc(o.label)} · ${o.ftW}×${o.ftH} ft">
+              <span class="obj-ic ${o.shape === 'round' ? 'round' : ''}" style="--c:${o.color}"><svg><use href="#${o.icon}"/></svg></span>
+              <span class="obj-name">${esc(o.label)}</span><span class="obj-dim">${o.ftW}×${o.ftH}</span>
+            </button>`).join('')}</div>`).join('');
+        side.innerHTML = `<h3>Objects</h3>
+          <div class="fpb-helper">Pick an object, then click or drag on the map to place it. Bars and barriers snap together into runs.</div>
+          ${groups}`;
+        side.querySelectorAll('[data-obj]').forEach(b => b.addEventListener('click', () => { this.objKind = b.dataset.obj; this.renderSide(); }));
+        return;
+      }
       if (this.tool === 'pin' || this.tool === 'booth') {
         const isPin = this.tool === 'pin';
         const current = isPin ? this.pinCategory : this.boothCategory;
@@ -979,6 +1534,80 @@
       }));
     }
 
+    // Bulk panel for a multi-selection (shift-click): recolour, rotate, align, etc.
+    renderMultiPanel(side) {
+      const palette = ['#1a9e57', '#0891b2', '#262626', '#6d28d9', '#d4a017', '#b45309', '#475569', '#b08850', '#64748b', '#2f7d4f'];
+      side.innerHTML = `<h3>${this._sel.length} items selected</h3>
+        <div class="fpb-helper">Shift-click to add or remove. Drag any one to move them together.</div>
+        <div class="fpb-field"><label>Colour all</label><div class="fpb-color-row">
+          ${palette.map(c => `<button type="button" class="fpb-color-dot" data-mc="${c}" style="background:${c}"></button>`).join('')}
+          <input type="color" data-mc-pick value="#1a9e57" title="Custom colour"/>
+        </div></div>
+        <div class="fpb-field"><label>Align</label><div class="fpb-align-row">
+          <button type="button" class="fpb-btn" data-al="left">Left</button>
+          <button type="button" class="fpb-btn" data-al="hcenter">Center</button>
+          <button type="button" class="fpb-btn" data-al="right">Right</button>
+          <button type="button" class="fpb-btn" data-al="top">Top</button>
+          <button type="button" class="fpb-btn" data-al="vcenter">Middle</button>
+          <button type="button" class="fpb-btn" data-al="bottom">Bottom</button>
+        </div></div>
+        <div class="fpb-field"><label>Distribute</label><div class="fpb-align-row">
+          <button type="button" class="fpb-btn" data-dist="h">Horizontally</button>
+          <button type="button" class="fpb-btn" data-dist="v">Vertically</button>
+        </div></div>
+        <div class="fpb-actions">
+          <button type="button" class="fpb-btn" data-m="rot">Rotate 90°</button>
+          <button type="button" class="fpb-btn" data-m="dup"><svg><use href="#fpb-copy"/></svg>Duplicate</button>
+          <button type="button" class="fpb-btn danger" data-m="del"><svg><use href="#fpb-trash"/></svg>Delete</button>
+        </div>`;
+      const recolour = (c) => { this.pushUndo(); this.selectedEls().forEach(el => { if (el.type !== 'text' && el.type !== 'pin') el.color = c; }); this.setDirty(true); this.renderElements(); };
+      side.querySelectorAll('[data-mc]').forEach(b => b.addEventListener('click', () => recolour(b.dataset.mc)));
+      const pick = side.querySelector('[data-mc-pick]'); if (pick) pick.addEventListener('input', () => recolour(pick.value));
+      side.querySelectorAll('[data-al]').forEach(b => b.addEventListener('click', () => this.alignSelection(b.dataset.al)));
+      side.querySelectorAll('[data-dist]').forEach(b => b.addEventListener('click', () => this.distributeSelection(b.dataset.dist)));
+      side.querySelector('[data-m="rot"]').addEventListener('click', () => { this.pushUndo(); this.selectedEls().forEach(el => { if (el.rot != null) el.rot = (((el.rot + 90) % 360) + 360) % 360; }); this.setDirty(true); this.renderElements(); });
+      side.querySelector('[data-m="dup"]').addEventListener('click', () => this.duplicateSelection());
+      side.querySelector('[data-m="del"]').addEventListener('click', () => { this.pushUndo(); const ids = new Set(this._sel); this.elements = this.elements.filter(e => !ids.has(e.id)); this._sel = []; this.setDirty(true); this.renderAll(); });
+    }
+
+    alignSelection(how) {
+      const els = this.selectedEls(); if (els.length < 2) return;
+      this.pushUndo();
+      const halfW = el => (el.w || 0) / 2, halfH = el => (el.h || 0) / 2;
+      const lefts = els.map(e => e.x - halfW(e)), rights = els.map(e => e.x + halfW(e));
+      const tops = els.map(e => e.y - halfH(e)), bots = els.map(e => e.y + halfH(e));
+      const minL = Math.min(...lefts), maxR = Math.max(...rights), minT = Math.min(...tops), maxB = Math.max(...bots);
+      const cx = (minL + maxR) / 2, cy = (minT + maxB) / 2;
+      els.forEach(e => {
+        if (how === 'left') e.x = minL + halfW(e);
+        else if (how === 'right') e.x = maxR - halfW(e);
+        else if (how === 'hcenter') e.x = cx;
+        else if (how === 'top') e.y = minT + halfH(e);
+        else if (how === 'bottom') e.y = maxB - halfH(e);
+        else if (how === 'vcenter') e.y = cy;
+      });
+      this.setDirty(true); this.renderElements();
+    }
+
+    distributeSelection(axis) {
+      const els = this.selectedEls(); if (els.length < 3) return;
+      this.pushUndo();
+      const k = axis === 'h' ? 'x' : 'y';
+      els.sort((a, b) => a[k] - b[k]);
+      const first = els[0][k], last = els[els.length - 1][k], step = (last - first) / (els.length - 1);
+      els.forEach((e, i) => { e[k] = first + step * i; });
+      this.setDirty(true); this.renderElements();
+    }
+
+    duplicateSelection() {
+      const els = this.selectedEls(); if (!els.length) return;
+      this.pushUndo();
+      const copies = els.map(el => { const c = JSON.parse(JSON.stringify(el)); c.id = uid(); c.x = clamp(c.x + 14 / this.world.w, 0, 1); c.y = clamp(c.y + 14 / this.world.h, 0, 1); if (c.type === 'booth') { c.number = this.nextBoothNumber(); c.vendor_id = null; } return c; });
+      this.elements.push(...copies);
+      this._sel = copies.map(c => c.id);
+      this.setDirty(true); this.renderAll();
+    }
+
     // Checklist of vendors that don't have an element on the map yet.
     unplacedVendorsHtml() {
       if (!this.vendors.length) return '';
@@ -1001,19 +1630,19 @@
       this.pushUndo();
       const vp = this.$.viewport.getBoundingClientRect();
       const pt = this.worldPoint({ clientX: vp.left + vp.width / 2, clientY: vp.top + vp.height / 2 });
-      const w = this.lastBoothSize.w, h = this.lastBoothSize.h;
-      const cx = this.snap ? Math.round((pt.x - w / 2) / GRID) * GRID + w / 2 : pt.x;
-      const cy = this.snap ? Math.round((pt.y - h / 2) / GRID) * GRID + h / 2 : pt.y;
+      const w = this.lastBoothFt.w * this.ppf, h = this.lastBoothFt.h * this.ppf;
+      const cx = this.snap ? this.snapWorld(pt.x - w / 2) + w / 2 : pt.x;
+      const cy = this.snap ? this.snapWorld(pt.y - h / 2) + h / 2 : pt.y;
       const cat = CAT_BY_ID[this.boothCategory] || CAT_BY_ID[DEFAULT_CAT];
       const el = {
-        id: uid(), type: 'booth',
+        id: uid(), type: 'booth', rot: 0,
         x: clamp(cx / this.world.w, 0, 1), y: clamp(cy / this.world.h, 0, 1),
         w: w / this.world.w, h: h / this.world.h,
         number: this.nextBoothNumber(),
         label: v.vendor_name || v.name || '',
         icon: cat.id, color: cat.color,
         vendor_id: v.event_vendor_id || v.vendor_id || null,
-        size: '', description: '',
+        size: `${Math.round(this.lastBoothFt.w)}x${Math.round(this.lastBoothFt.h)}`, description: '',
       };
       this.elements.push(el);
       this.setDirty(true);
@@ -1026,10 +1655,10 @@
       }
       const groups = [
         ['Booths', this.elements.filter(e => e.type === 'booth').sort((a, b) => num(a.number) - num(b.number))],
+        ['Objects', this.elements.filter(e => e.type === 'shape')],
         ['Zones', this.elements.filter(e => e.type === 'zone')],
         ['Pins', this.elements.filter(e => e.type === 'pin')],
         ['Text', this.elements.filter(e => e.type === 'text')],
-        ['Tables', this.elements.filter(e => e.type === 'table')],
       ];
       const vendorName = (id) => {
         const v = this.vendors.find(v => String(v.event_vendor_id || v.vendor_id) === String(id));
@@ -1046,9 +1675,13 @@
           if (el.type === 'booth') {
             name = `${el.number != null && el.number !== '' ? '#' + esc(el.number) + ' ' : ''}${esc(el.label || (vendorName(el.vendor_id) || (cat ? cat.label : 'Booth')))}`;
             meta = [cat ? cat.label : '', el.size ? el.size.replace('x', '×') + ' ft' : ''].filter(Boolean).join(' · ');
+          } else if (el.type === 'shape') {
+            const o = OBJ_BY_KIND[el.kind];
+            name = esc(el.label || (o ? o.label : 'Object'));
+            meta = [el.size ? el.size.replace('x', '×') + ' ft' : '', el.groupId ? 'in a run' : ''].filter(Boolean).join(' · ');
+            if (o && o.shape === 'round') dotCls += ' round';
           } else if (el.type === 'zone') { name = esc(el.label || 'Zone'); }
           else if (el.type === 'text') { name = esc(el.label || '(empty text)'); dotCls += ' round'; color = '#ddd'; }
-          else if (el.type === 'table') { name = 'Table'; dotCls += ' round'; }
           else { name = esc(el.label || (cat ? cat.label : 'Pin')); meta = cat ? cat.label : ''; dotCls += ' round'; }
           return `<li class="item${active}" data-id="${el.id}">
             <span class="${dotCls}" style="background:${esc(color)}"></span>
@@ -1067,13 +1700,28 @@
         const assignedTo = this.elements.find(o => o.id !== el.id && o.vendor_id && String(o.vendor_id) === String(id));
         return `<option value="${esc(id)}"${String(el.vendor_id) === String(id) ? ' selected' : ''}>${esc(v.vendor_name || v.name || 'Vendor')}${assignedTo ? ' · placed' : ''}</option>`;
       }).join('');
-      const sizeVal = el.size || '';
-      const isPreset = PRESET_FT.includes(sizeVal);
-      const sizeOptions = `<option value="">— Not set —</option>` + PRESET_FT.map(s => `<option value="${s}"${sizeVal === s ? ' selected' : ''}>${s.replace('x', ' × ')}</option>`).join('') + `<option value="custom"${sizeVal && !isPreset ? ' selected' : ''}>Custom…</option>`;
-      const customParts = (!isPreset && sizeVal) ? sizeVal.split('x') : ['', ''];
-      const sizeFields = f('Booth / tent size (ft)', `<select data-f="sizeSel">${sizeOptions}</select>`) +
-        `<div class="fpb-field" data-f="sizeCustomWrap" ${(!isPreset && sizeVal) ? '' : 'hidden'}><label>Custom size (ft)</label>
-          <div class="fpb-field-row"><input data-f="sizeW" type="number" min="1" max="500" placeholder="W" value="${esc(customParts[0])}"/><input data-f="sizeD" type="number" min="1" max="500" placeholder="D" value="${esc(customParts[1])}"/></div></div>`;
+      // Live "W × D ft" footprint control — drives the box geometry directly.
+      const sizeControl = (labelTxt, presets) => {
+        const sv = el.size || '';
+        const parts = sv.includes('x') ? sv.split('x') : ['', ''];
+        const chips = presets.map(s => `<button type="button" class="fpb-size-chip${sv === s ? ' active' : ''}" data-size="${s}">${s.replace('x', '×')}</button>`).join('');
+        return `<div class="fpb-field"><label>${labelTxt} (ft)</label>
+          <div class="fpb-field-row fpb-size-row"><input data-f="sizeW" type="number" min="1" max="999" placeholder="W" value="${esc(parts[0])}"/><span class="fpb-x">×</span><input data-f="sizeD" type="number" min="1" max="999" placeholder="D" value="${esc(parts[1])}"/></div>
+          <div class="fpb-size-chips">${chips}</div></div>`;
+      };
+      const sizeFields = sizeControl('Booth size', PRESET_FT);
+      // Rotation control — numeric degrees + quick steps.
+      const rotControl = () => `<div class="fpb-field"><label>Rotation</label>
+        <div class="fpb-field-row fpb-rot-row">
+          <button type="button" class="fpb-btn icon-only" data-f="rotCCW" title="Rotate -15°"><svg style="transform:scaleX(-1)"><use href="#fpb-rotate"/></svg></button>
+          <input data-f="rot" type="number" min="0" max="359" value="${Math.round(el.rot || 0)}"/><span class="fpb-x">°</span>
+          <button type="button" class="fpb-btn icon-only" data-f="rotCW" title="Rotate +15°"><svg><use href="#fpb-rotate"/></svg></button>
+          <button type="button" class="fpb-btn" data-f="rot90" title="Turn 90°">90°</button>
+        </div></div>`;
+      const colorRow = (colors, pickDefault) => `<div class="fpb-field"><label>Colour</label><div class="fpb-color-row">
+          ${colors.map(c => `<button type="button" class="fpb-color-dot${(el.color || '').toLowerCase() === c.toLowerCase() ? ' active' : ''}" data-zc="${c}" style="background:${c}"></button>`).join('')}
+          <input type="color" data-f="colorPick" value="${esc(/^#[0-9a-f]{6}$/i.test(el.color || '') ? el.color : pickDefault)}" title="Custom colour"/>
+        </div></div>`;
       const actions = (extra) => `<div class="fpb-actions">
           <button type="button" class="fpb-btn" data-f="done">Done</button>
           ${extra || ''}
@@ -1089,27 +1737,41 @@
           </div>
           ${f('Label / vendor name', `<input data-f="label" type="text" maxlength="80" placeholder="e.g. Lucky Crab Seafood" value="${esc(el.label || '')}"/>`)}
           ${this.vendors.length ? f('Vendor', `<select data-f="vendor">${vendorOptions}</select>`) : ''}
+          <div class="fpb-field-row">
+            ${f('Name shows', `<select data-f="labelPos"><option value="in"${(el.labelPos || 'in') === 'in' ? ' selected' : ''}>Inside booth</option><option value="below"${el.labelPos === 'below' ? ' selected' : ''}>Below booth</option></select>`)}
+            ${f('Name size', `<select data-f="labelSize">${[['s', 'Small'], ['m', 'Medium'], ['l', 'Large'], ['xl', 'X-Large']].map(([v, l]) => `<option value="${v}"${(el.labelSize || 'm') === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`)}
+          </div>
           ${sizeFields}
+          ${rotControl()}
           ${f('Notes (optional)', `<textarea data-f="desc" rows="2" maxlength="240">${esc(el.description || '')}</textarea>`)}
           ${actions()}`;
       }
       if (el.type === 'zone') {
         return `<h3>Zone</h3>
-          ${f('Label', `<input data-f="label" type="text" maxlength="60" placeholder="e.g. Stage / Bar / Emporium" value="${esc(el.label || '')}"/>`)}
-          <div class="fpb-field"><label>Colour</label><div class="fpb-color-row">
-            ${ZONE_COLORS.map(c => `<button type="button" class="fpb-color-dot${el.color === c ? ' active' : ''}" data-zc="${c}" style="background:${c}"></button>`).join('')}
-            <input type="color" data-f="colorPick" value="${esc(/^#[0-9a-f]{6}$/i.test(el.color || '') ? el.color : '#b03a2e')}" title="Custom colour"/>
-          </div></div>
+          ${f('Label', `<input data-f="label" type="text" maxlength="60" placeholder="e.g. Stage area / VIP / Emporium" value="${esc(el.label || '')}"/>`)}
+          ${colorRow(ZONE_COLORS, '#b03a2e')}
+          ${rotControl()}
           ${f('Notes (optional)', `<textarea data-f="desc" rows="2" maxlength="240">${esc(el.description || '')}</textarea>`)}
           ${actions()}`;
       }
-      if (el.type === 'table') {
-        return `<h3>Table</h3>
-          ${f('Shape', `<select data-f="shape"><option value="round"${el.shape !== 'rect' ? ' selected' : ''}>Round</option><option value="rect"${el.shape === 'rect' ? ' selected' : ''}>Rectangular</option></select>`)}
-          <div class="fpb-field"><label>Colour</label><div class="fpb-color-row">
-            ${['#b08850', '#64748b', '#8d6e63', '#94a3b8'].map(c => `<button type="button" class="fpb-color-dot${el.color === c ? ' active' : ''}" data-zc="${c}" style="background:${c}"></button>`).join('')}
-          </div></div>
-          ${actions()}`;
+      if (el.type === 'shape') {
+        const o = OBJ_BY_KIND[el.kind] || OBJ_BY_KIND[DEFAULT_OBJ];
+        const presets = o.connect
+          ? [`${o.ftW}x${o.ftH}`, `12x${o.ftH}`, `16x${o.ftH}`, `20x${o.ftH}`]
+          : [`${o.ftW}x${o.ftH}`, '6x6', '8x8', '10x10'];
+        const palette = ['#b08850', '#0891b2', '#262626', '#6d28d9', '#d4a017', '#1a9e57', '#475569', '#64748b'];
+        const groupCount = el.groupId ? this.elements.filter(s => s.type === 'shape' && s.groupId === el.groupId).length : 0;
+        const kindOptions = OBJECTS.map(k => `<option value="${k.kind}"${k.kind === el.kind ? ' selected' : ''}>${esc(k.label)}</option>`).join('');
+        return `<h3>${esc(o.label)}</h3>
+          ${f('Type', `<select data-f="kind">${kindOptions}</select>`)}
+          ${f('Label (optional)', `<input data-f="label" type="text" maxlength="60" placeholder="${o.connect ? 'e.g. Main Bar' : 'e.g. Stage'}" value="${esc(el.label || '')}"/>`)}
+          ${sizeControl(o.connect ? 'Length × depth' : 'Size', presets)}
+          ${rotControl()}
+          ${colorRow(palette, o.color)}
+          ${o.connect ? (groupCount > 1
+            ? `<div class="fpb-helper">Joined into a run of ${groupCount} — they move together. Naming any one names them all.</div>`
+            : `<div class="fpb-helper">Place another ${esc(o.label.toLowerCase())} flush against an end to build an L- or U-shape.</div>`) : ''}
+          ${actions(groupCount > 1 ? `<button type="button" class="fpb-btn" data-f="ungroup" title="Detach from the run">Ungroup</button>` : '')}`;
       }
       if (el.type === 'text') {
         const cur = TEXT_SIZES.reduce((best, s) => Math.abs(s.v - (el.fontSize || 0.016)) < Math.abs(best.v - (el.fontSize || 0.016)) ? s : best, TEXT_SIZES[1]);
@@ -1143,18 +1805,18 @@
           el.icon = cat.id; el.color = cat.color;
         }
         if (q('vendor')) el.vendor_id = q('vendor').value || null;
+        if (q('labelPos')) el.labelPos = q('labelPos').value;
+        if (q('labelSize')) el.labelSize = q('labelSize').value;
         if (q('booth')) el.booth = q('booth').value.trim();
         if (q('desc')) el.description = q('desc').value.trim();
-        if (q('shape')) el.shape = q('shape').value;
         if (q('tsize')) el.fontSize = Number(q('tsize').value) || 0.016;
+        if (q('rot')) { const r = parseInt(q('rot').value, 10); if (Number.isFinite(r)) el.rot = ((r % 360) + 360) % 360; }
         if (q('colorPick') && el.type !== 'zone') el.color = q('colorPick').value;
-        if (q('sizeSel')) {
-          const v = q('sizeSel').value;
-          q('sizeCustomWrap').hidden = v !== 'custom';
-          if (v === 'custom') {
-            const w = parseInt(q('sizeW').value, 10), d = parseInt(q('sizeD').value, 10);
-            el.size = (w > 0 && d > 0) ? `${w}x${d}` : '';
-          } else el.size = v || '';
+        if (q('sizeW') || q('sizeD')) {
+          const w = parseFloat(q('sizeW').value), d = parseFloat(q('sizeD').value);
+          el.size = (w > 0 && d > 0) ? `${w}x${d}` : '';
+          this.applySizeFt(el);   // the entered size resizes the box on the map
+          side.querySelectorAll('.fpb-size-chip').forEach(c => c.classList.toggle('active', c.dataset.size === el.size));
         }
         this.setDirty(true);
         this.renderElements();
@@ -1183,6 +1845,39 @@
         side.querySelectorAll('.fpb-color-dot').forEach(d => d.classList.toggle('active', d === b));
         this.setDirty(true); this.renderElements();
       }));
+      // Size preset chips fill W/D and apply.
+      side.querySelectorAll('.fpb-size-chip').forEach(b => b.addEventListener('click', () => {
+        const [w, d] = b.dataset.size.split('x');
+        if (q('sizeW')) q('sizeW').value = w;
+        if (q('sizeD')) q('sizeD').value = d;
+        apply();
+      }));
+      // Rotation quick-steps.
+      const bumpRot = (delta) => {
+        this.pushUndo(true);
+        el.rot = ((Math.round((el.rot || 0) + delta) % 360) + 360) % 360;
+        if (q('rot')) q('rot').value = el.rot;
+        this.setDirty(true); this.renderElements();
+      };
+      if (q('rotCW')) q('rotCW').addEventListener('click', () => bumpRot(ROT_SNAP));
+      if (q('rotCCW')) q('rotCCW').addEventListener('click', () => bumpRot(-ROT_SNAP));
+      if (q('rot90')) q('rot90').addEventListener('click', () => bumpRot(90));
+      // Changing an object's type swaps its kind, profile shape and (if untouched) colour.
+      if (q('kind')) q('kind').addEventListener('change', () => {
+        this.pushUndo();
+        const prev = OBJ_BY_KIND[el.kind], next = OBJ_BY_KIND[q('kind').value];
+        if (next) {
+          if ((el.color || '').toLowerCase() === (prev && prev.color || '').toLowerCase()) el.color = next.color;
+          el.kind = next.kind; el.shape = next.shape;
+          if (!next.connect) el.groupId = null;
+        }
+        this.setDirty(true); this.renderAll();
+      });
+      if (q('ungroup')) q('ungroup').addEventListener('click', () => {
+        this.pushUndo();
+        el.groupId = null;
+        this.setDirty(true); this.renderAll();
+      });
       q('done').addEventListener('click', () => { this.selectedId = null; this.renderAll(); });
       q('dup').addEventListener('click', () => this.duplicateSelected());
       q('del').addEventListener('click', () => this.deleteSelected());
@@ -1238,22 +1933,37 @@
     }
 
     // ── Serialize / save ────────────────────────────────────
+    scaleMeta() {
+      return {
+        id: 'meta', type: 'meta',
+        ppf: this.ppf, worldW: this.world.w, worldH: this.world.h,
+        siteFtW: this.siteFt.w, siteFtH: this.siteFt.h, calibrated: !!this.calibrated,
+        bg: this.bg || DEFAULT_BG,
+      };
+    }
     serialize() {
-      return this.elements.map(el => {
+      const els = this.elements.map(el => {
         const base = { id: el.id, type: el.type, x: el.x, y: el.y };
         if (el.type === 'pin') return Object.assign(base, {
           label: el.label || '', icon: el.icon || DEFAULT_CAT, color: el.color || CAT_BY_ID[DEFAULT_CAT].color,
           vendor_id: el.vendor_id || null, booth: el.booth || '', size: el.size || '', description: el.description || '',
         });
         if (el.type === 'booth') return Object.assign(base, {
-          w: el.w, h: el.h, number: el.number != null ? el.number : '',
+          w: el.w, h: el.h, rot: el.rot || 0, number: el.number != null ? el.number : '',
           label: el.label || '', icon: el.icon || DEFAULT_CAT, color: el.color || CAT_BY_ID[DEFAULT_CAT].color,
           vendor_id: el.vendor_id || null, size: el.size || '', description: el.description || '',
+          labelPos: el.labelPos || 'in', labelSize: el.labelSize || 'm',
         });
-        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, label: el.label || '', color: el.color || ZONE_COLORS[0], description: el.description || '' });
-        if (el.type === 'table') return Object.assign(base, { w: el.w, h: el.h, shape: el.shape || 'round', color: el.color || TABLE_COLOR });
+        if (el.type === 'shape') return Object.assign(base, {
+          w: el.w, h: el.h, rot: el.rot || 0, kind: el.kind, shape: el.shape,
+          label: el.label || '', color: el.color, size: el.size || '',
+          groupId: el.groupId || null,
+        });
+        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', color: el.color || ZONE_COLORS[0], description: el.description || '' });
         return Object.assign(base, { label: el.label || '', color: el.color || '#111111', fontSize: el.fontSize || 0.016 });
       });
+      // Persist scale as the first entry so the layout round-trips to-scale.
+      return [this.scaleMeta()].concat(els);
     }
 
     async save() {
@@ -1282,7 +1992,7 @@
       const cv = document.createElement('canvas');
       cv.width = W; cv.height = H;
       const ctx = cv.getContext('2d');
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = this.bg || '#ffffff';
       ctx.fillRect(0, 0, W, H);
 
       if (this.bgUrl) {
@@ -1294,48 +2004,70 @@
         } catch (e) { /* draw without background */ }
       }
 
-      const order = { zone: 0, table: 1, booth: 2, text: 3, pin: 4 };
+      const order = { zone: 0, shape: 1, booth: 2, text: 3, pin: 4 };
       const els = [...this.elements].sort((a, b) => (order[a.type] || 0) - (order[b.type] || 0));
       els.forEach(el => {
         const cx = el.x * W, cy = el.y * H;
-        if (el.type === 'zone' || el.type === 'booth' || el.type === 'table') {
-          const w = el.w * W, h = el.h * H, l = cx - w / 2, t = cy - h / 2;
+        if (el.type === 'zone' || el.type === 'booth' || el.type === 'shape') {
+          const w = el.w * W, h = el.h * H;
+          const round = el.type === 'shape' && el.shape === 'round';
           ctx.save();
+          ctx.translate(cx, cy);
+          if (el.rot) ctx.rotate(el.rot * Math.PI / 180);   // draw in the element's own frame
           ctx.fillStyle = el.color || '#1a7f4e';
-          if (el.type === 'zone') ctx.globalAlpha = 0.85;
-          ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-          if (el.type === 'table' && el.shape !== 'rect') {
-            ctx.beginPath(); ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2); ctx.fill();
+          if (el.type === 'zone') ctx.globalAlpha = 0.22;
+          ctx.strokeStyle = el.type === 'zone' ? (el.color || '#b03a2e') : 'rgba(0,0,0,0.3)';
+          ctx.lineWidth = el.type === 'zone' ? 2 : 1.5;
+          if (round) {
+            ctx.beginPath(); ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1; ctx.stroke();
           } else {
-            ctx.fillRect(l, t, w, h);
-            ctx.globalAlpha = 1; ctx.strokeRect(l, t, w, h);
+            ctx.fillRect(-w / 2, -h / 2, w, h);
+            ctx.globalAlpha = 1; ctx.strokeRect(-w / 2, -h / 2, w, h);
           }
           ctx.fillStyle = '#fff';
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          if (el.type === 'booth' && el.number != null && el.number !== '') {
-            ctx.font = `800 ${clamp(Math.min(w, h) * 0.42, 9, 26)}px Poppins, sans-serif`;
-            ctx.fillText(String(el.number), cx, cy);
+          if (el.type === 'booth') {
+            const bname = el.label || this.vendorName(el.vendor_id) || '';
+            const num = el.number != null && el.number !== '' ? String(el.number) : '';
+            const mult = LBL_SIZES[el.labelSize] || 1, inBox = bname && (el.labelPos || 'in') === 'in';
+            ctx.fillStyle = this.textOn(el.color);
+            if (num) {
+              ctx.font = `800 ${clamp(Math.min(w, h) * (inBox ? 0.3 : 0.46), 10, inBox ? 22 : 30)}px Poppins, sans-serif`;
+              ctx.fillText(num, 0, inBox ? -h * 0.13 : 0);
+            }
+            if (inBox) {
+              ctx.font = `600 ${clamp(w * 0.14 * mult, 8, 44)}px Poppins, sans-serif`;
+              ctx.fillText(bname, 0, num ? h * 0.16 : 0, w - 6);
+            } else if (bname) {   // label below the booth
+              const fs = clamp(w * 0.2 * mult, 11, 30);
+              ctx.font = `600 ${fs}px Poppins, sans-serif`;
+              const tw = ctx.measureText(bname).width + 10;
+              ctx.fillStyle = 'rgba(255,255,255,0.95)';
+              ctx.fillRect(-tw / 2, h / 2 + 3, tw, fs + 6);
+              ctx.fillStyle = '#111';
+              ctx.fillText(bname, 0, h / 2 + 3 + (fs + 6) / 2);
+            }
           }
           if (el.type === 'zone' && el.label) {
-            ctx.font = `800 ${clamp(h * 0.2, 11, 30)}px Poppins, sans-serif`;
-            ctx.fillText(el.label.toUpperCase(), cx, cy, w - 8);
+            const fs = clamp(w * 0.06, 12, 22), txt = el.label.toUpperCase();
+            ctx.font = `700 ${fs}px Poppins, sans-serif`;
+            const tw = Math.min(ctx.measureText(txt).width, w - 16), cy2 = -h / 2 + fs * 0.9 + 6;
+            ctx.fillStyle = el.color || '#b03a2e';
+            ctx.fillRect(-tw / 2 - 9, cy2 - fs / 2 - 3, tw + 18, fs + 6);   // title chip
+            ctx.fillStyle = '#fff';
+            ctx.fillText(txt, 0, cy2, w - 18);
           }
-          if (el.type === 'booth' && el.label) {
-            const fs = clamp(w * 0.16, 9, 12);
-            ctx.font = `600 ${fs}px Poppins, sans-serif`;
-            const tw = ctx.measureText(el.label).width + 10;
-            ctx.fillStyle = 'rgba(255,255,255,0.95)';
-            ctx.fillRect(cx - tw / 2, t + h + 3, tw, fs + 6);
-            ctx.fillStyle = '#111';
-            ctx.fillText(el.label, cx, t + h + 3 + (fs + 6) / 2);
+          if (el.type === 'shape' && el.label) {
+            ctx.font = `700 ${clamp(Math.min(w, h) * 0.34, 11, 22)}px Poppins, sans-serif`;
+            ctx.fillText(el.label, 0, 0, w - 6);
           }
           ctx.restore();
         } else if (el.type === 'text') {
           ctx.save();
           ctx.fillStyle = el.color || '#111';
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.font = `700 ${Math.max(9, (el.fontSize || 0.016) * W)}px Poppins, sans-serif`;
+          ctx.font = `700 ${Math.max(11, (el.fontSize || 0.016) * W)}px Poppins, sans-serif`;
           ctx.fillText(el.label || '', cx, cy);
           ctx.restore();
         } else {
@@ -1344,17 +2076,19 @@
           ctx.fillStyle = el.color || '#0a7aff'; ctx.fill();
           ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
           if (el.label) {
-            ctx.font = '600 11px Poppins, sans-serif';
+            ctx.font = '600 12px Poppins, sans-serif';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             const tw = ctx.measureText(el.label).width + 10;
             ctx.fillStyle = 'rgba(255,255,255,0.95)';
-            ctx.fillRect(cx - tw / 2, cy + 17, tw, 17);
+            ctx.fillRect(cx - tw / 2, cy + 17, tw, 18);
             ctx.fillStyle = '#111';
-            ctx.fillText(el.label, cx, cy + 25);
+            ctx.fillText(el.label, cx, cy + 26);
           }
           ctx.restore();
         }
       });
+
+      this.drawScaleBar(ctx, W, H);
 
       try {
         const a = document.createElement('a');
@@ -1364,6 +2098,26 @@
       } catch (e) {
         this.status('Export blocked: the background image does not allow cross-origin export.', 'error');
       }
+    }
+
+    // A to-scale ruler in the corner so a printed/exported plan reads in feet.
+    drawScaleBar(ctx, W, H) {
+      const targetPx = W / 7;
+      let ft = targetPx / this.ppf;
+      const pow = Math.pow(10, Math.floor(Math.log10(ft)));
+      ft = [1, 2, 5, 10].reduce((b, m) => Math.abs(m * pow - ft) < Math.abs(b - ft) ? m * pow : b, pow);
+      const barPx = ft * this.ppf;
+      const pad = Math.max(16, W * 0.012), x = pad, y = H - pad, hgt = Math.max(7, W * 0.006);
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(x - 6, y - hgt - 22, barPx + 12, hgt + 30);
+      ctx.fillStyle = '#111'; ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5;
+      ctx.fillRect(x, y - hgt, barPx / 2, hgt);          // checker bar
+      ctx.strokeRect(x, y - hgt, barPx, hgt);
+      ctx.font = `700 ${Math.max(11, W * 0.011)}px Poppins, sans-serif`;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText(`${this.fmtFt(ft)} ft`, x, y - hgt - 4);
+      ctx.restore();
     }
 
     // ── Public API ──────────────────────────────────────────
@@ -1378,6 +2132,7 @@
           document.removeEventListener('keydown', this._keydown);
           document.removeEventListener('keyup', this._keyup);
           window.removeEventListener('beforeunload', this._beforeUnload);
+          this.closeContextMenu();
           if (this.panzoom) { try { this.panzoom.destroy(); } catch (e) {} }
           this.container.innerHTML = '';
         },
