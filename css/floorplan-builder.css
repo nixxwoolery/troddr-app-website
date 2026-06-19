@@ -151,7 +151,7 @@
 }
 
 /* ── Elements ── */
-.fpb-el { position: absolute; }
+.fpb-el { position: absolute; touch-action: none; }   /* drag items on touch without scrolling the page */
 /* Stacking: zones under tables under booths under text under pins. */
 .fpb-zone { z-index: 1; }
 .fpb-table { z-index: 2; }
@@ -319,6 +319,18 @@
   border: 1.5px solid var(--fpb-primary);
   border-radius: 3px;
   z-index: 55;
+  touch-action: none;
+}
+/* Invisible expanded hit area so handles are easy to grab — esp. on touch. */
+.fpb-h::after { content: ''; position: absolute; inset: -9px; }
+.fpb-rot-h::before { content: ''; position: absolute; inset: -10px; border-radius: 50%; }
+@media (pointer: coarse) {
+  .fpb-h { width: 14px; height: 14px; }
+  .fpb-h[data-h="nw"] { left: -7px; top: -7px; } .fpb-h[data-h="ne"] { right: -7px; top: -7px; }
+  .fpb-h[data-h="se"] { right: -7px; bottom: -7px; } .fpb-h[data-h="sw"] { left: -7px; bottom: -7px; }
+  .fpb-h[data-h="n"] { left: calc(50% - 7px); top: -7px; } .fpb-h[data-h="s"] { left: calc(50% - 7px); bottom: -7px; }
+  .fpb-h[data-h="e"] { right: -7px; top: calc(50% - 7px); } .fpb-h[data-h="w"] { left: -7px; top: calc(50% - 7px); }
+  .fpb-rot-h { width: 18px; height: 18px; left: calc(50% - 9px); }
 }
 .fpb-h[data-h="nw"] { left: -5px;  top: -5px;  cursor: nwse-resize; }
 .fpb-h[data-h="n"]  { left: calc(50% - 5px); top: -5px; cursor: ns-resize; }

@@ -7,14 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/partner-shared.css">
-<link rel="stylesheet" href="/css/floorplan-builder.css">
+<link rel="stylesheet" href="/css/floorplan-builder.css?v=5">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
 <script src="/js/partner-sidebar.js"></script>
 <script src="/js/partner-errors.js"></script>
-<script src="/js/floorplan-builder.js" defer></script>
+<!-- Pan/zoom for the floor-plan canvas. Must load before floorplan-builder.js?v=5. -->
+<script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js" defer></script>
+<script src="/js/floorplan-builder.js?v=5" defer></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -4858,7 +4860,7 @@
 
   // ── Map / Floor Plan ───────────────────────────────────
   // The floor plan itself is built in the dedicated editor page
-  // (/partner/event-floorplan, powered by js/floorplan-builder.js).
+  // (/partner/event-floorplan, powered by js/floorplan-builder.js?v=5).
   // This section only shows a status card that links to it.
   function renderMap(event) {
     if (!event) return;

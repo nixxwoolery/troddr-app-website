@@ -420,6 +420,69 @@
   }
   .conditional-section.show { display: block; }
 
+  /* ── Menu editor ── */
+  .menu-editor { display: flex; flex-direction: column; gap: 16px; }
+  .menu-block {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .menu-block-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; margin-bottom: 10px;
+  }
+  .menu-block-title { font-size: 13px; font-weight: 700; color: var(--grey-dark); }
+  .menu-add-btn {
+    flex: none;
+    border: 1px solid var(--brand-primary);
+    background: #fff; color: var(--brand-primary);
+    border-radius: 8px; padding: 6px 12px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    white-space: nowrap;
+  }
+  .menu-add-btn:hover { background: var(--bg-soft); }
+  .menu-rows { display: flex; flex-direction: column; gap: 8px; }
+  .menu-empty { font-size: 12px; color: var(--grey-mid); padding: 2px 0; }
+  /* A single editable row: name/label, price, description, remove */
+  .menu-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) 110px minmax(0, 1.8fr) 32px;
+    gap: 8px; align-items: start;
+  }
+  .menu-row input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 9px;
+    font: inherit; font-size: 13px; background: #fff; outline: none;
+  }
+  .menu-row input:focus { border-color: var(--brand-primary); }
+  .menu-row .menu-del {
+    border: none; background: transparent; cursor: pointer;
+    color: var(--grey-mid); font-size: 18px; line-height: 1;
+    padding: 6px 0; border-radius: 6px;
+  }
+  .menu-row .menu-del:hover { color: #c0392b; background: var(--bg-soft); }
+  .menu-section-card {
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px;
+    margin-bottom: 10px; background: var(--bg-soft);
+  }
+  .menu-section-head {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 10px;
+  }
+  .menu-section-head input {
+    flex: 1; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 9px; font: inherit; font-size: 13px; font-weight: 700;
+    background: #fff; outline: none;
+  }
+  .menu-section-head input:focus { border-color: var(--brand-primary); }
+  .menu-section-actions { display: flex; align-items: center; gap: 6px; }
+  @media (max-width: 640px) {
+    .menu-row { grid-template-columns: 1fr 90px 28px; }
+    .menu-row .menu-desc { grid-column: 1 / -1; }
+  }
+
   /* Price-type radio group */
   .price-options {
     display: grid;
@@ -1096,6 +1159,49 @@
             <label for="sp-tags">Tags (optional, comma-separated)</label>
             <input id="sp-tags" type="text" maxlength="200" placeholder="lunch, family-friendly, vegan" />
           </div>
+
+          <!-- Menu -->
+          <div class="form-toggle-row">
+            <input id="sp-menu-enabled" type="checkbox" />
+            <label for="sp-menu-enabled">
+              This special has a menu
+              <div class="sub">Add dishes and drinks with prices, plus per-person pricing tiers. Shown on the special's page in the app.</div>
+            </label>
+          </div>
+          <div class="conditional-section" id="sp-menu-section">
+            <div class="menu-editor">
+
+              <!-- Pricing tiers -->
+              <div class="menu-block">
+                <div class="menu-block-head">
+                  <div>
+                    <div class="menu-block-title">Pricing tiers</div>
+                    <div class="sub">Per-person options, e.g. “Classic — $8,500 per person”.</div>
+                  </div>
+                  <button type="button" class="menu-add-btn" id="menu-add-tier">+ Tier</button>
+                </div>
+                <div class="menu-rows" id="menu-tiers"></div>
+              </div>
+
+              <!-- Sections -->
+              <div class="menu-block">
+                <div class="menu-block-head">
+                  <div>
+                    <div class="menu-block-title">Menu sections</div>
+                    <div class="sub">Group items under a heading, e.g. “Brunch Specialities”, “Signature Cocktails”.</div>
+                  </div>
+                  <button type="button" class="menu-add-btn" id="menu-add-section">+ Section</button>
+                </div>
+                <div id="menu-sections"></div>
+              </div>
+
+              <!-- Disclaimer -->
+              <div class="form-field full">
+                <label for="sp-menu-disclaimer">Menu disclaimer (optional)</label>
+                <textarea id="sp-menu-disclaimer" maxlength="600" placeholder="e.g. Prices do not include G.C.T &amp; service charge. Tips appreciated."></textarea>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="form-error" id="submit-error"></div>
         <div class="form-actions">
@@ -1330,6 +1436,120 @@
     wireEditButtons();
   }
 
+  // ── Menu editor (specials.menu_items) ──────────────────
+  // Builds the {pricing, sections, disclaimer} jsonb shape the app
+  // renders. Saved via the dedicated set_special_menu_by_token RPC
+  // after the special itself is saved.
+  function buildMenuRow(opts) {
+    const row = document.createElement('div');
+    row.className = 'menu-row';
+    row.innerHTML = `
+      <input class="menu-name" type="text" maxlength="120" placeholder="${opts.namePlaceholder}" value="${escapeHtml(opts.nameVal || '')}">
+      <input class="menu-price" type="number" min="0" step="1" placeholder="Price" value="${opts.priceVal != null && opts.priceVal !== '' ? escapeHtml(String(opts.priceVal)) : ''}">
+      <input class="menu-desc" type="text" maxlength="200" placeholder="${opts.descPlaceholder}" value="${escapeHtml(opts.descVal || '')}">
+      <button type="button" class="menu-del" title="Remove">&times;</button>`;
+    row.querySelector('.menu-del').addEventListener('click', () => row.remove());
+    return row;
+  }
+
+  function menuAddTier(data) {
+    data = data || {};
+    $('menu-tiers').appendChild(buildMenuRow({
+      nameVal: data.label, priceVal: data.price, descVal: data.description,
+      namePlaceholder: 'Tier (e.g. Classic)', descPlaceholder: 'What it includes',
+    }));
+  }
+
+  function menuAddItem(listEl, data) {
+    data = data || {};
+    listEl.appendChild(buildMenuRow({
+      nameVal: data.name, priceVal: data.price, descVal: data.description,
+      namePlaceholder: 'Item name', descPlaceholder: 'Description',
+    }));
+  }
+
+  function menuAddSection(data) {
+    data = data || {};
+    const card = document.createElement('div');
+    card.className = 'menu-section-card';
+    card.innerHTML = `
+      <div class="menu-section-head">
+        <input class="menu-section-title" type="text" maxlength="80" placeholder="Section title (e.g. Brunch Specialities)" value="${escapeHtml(data.title || '')}">
+        <div class="menu-section-actions">
+          <button type="button" class="menu-add-btn menu-add-item">+ Item</button>
+          <button type="button" class="menu-del menu-remove-section" title="Remove section">&times;</button>
+        </div>
+      </div>
+      <div class="menu-rows menu-items-list"></div>`;
+    const list = card.querySelector('.menu-items-list');
+    card.querySelector('.menu-add-item').addEventListener('click', () => menuAddItem(list));
+    card.querySelector('.menu-remove-section').addEventListener('click', () => card.remove());
+    $('menu-sections').appendChild(card);
+    const items = Array.isArray(data.items) ? data.items : [];
+    if (items.length) items.forEach(it => menuAddItem(list, it));
+    else menuAddItem(list);
+  }
+
+  function collectMenu() {
+    const num = (v) => { const n = Number(v); return (v !== '' && v != null && !isNaN(n)) ? n : null; };
+    const pricing = [];
+    $('menu-tiers').querySelectorAll('.menu-row').forEach(r => {
+      const label = r.querySelector('.menu-name').value.trim();
+      const price = num(r.querySelector('.menu-price').value);
+      const description = r.querySelector('.menu-desc').value.trim();
+      if (label || price != null || description) pricing.push({ label, price, description });
+    });
+    const sections = [];
+    $('menu-sections').querySelectorAll('.menu-section-card').forEach(card => {
+      const title = card.querySelector('.menu-section-title').value.trim();
+      const items = [];
+      card.querySelectorAll('.menu-items-list .menu-row').forEach(r => {
+        const name = r.querySelector('.menu-name').value.trim();
+        const price = num(r.querySelector('.menu-price').value);
+        const description = r.querySelector('.menu-desc').value.trim();
+        if (name || price != null || description) items.push({ name, price, description });
+      });
+      if (title || items.length) sections.push({ title, items });
+    });
+    const disclaimer = $('sp-menu-disclaimer').value.trim();
+    if (!pricing.length && !sections.length && !disclaimer) return null;
+    const menu = {};
+    if (pricing.length) menu.pricing = pricing;
+    if (sections.length) menu.sections = sections;
+    if (disclaimer) menu.disclaimer = disclaimer;
+    return menu;
+  }
+
+  function clearMenuEditor() {
+    $('menu-tiers').innerHTML = '';
+    $('menu-sections').innerHTML = '';
+    $('sp-menu-disclaimer').value = '';
+  }
+
+  function prefillMenu(menu) {
+    clearMenuEditor();
+    if (typeof menu === 'string') { try { menu = JSON.parse(menu); } catch (e) { menu = null; } }
+    if (!menu || typeof menu !== 'object') return false;
+    (menu.pricing  || []).forEach(t => menuAddTier(t));
+    (menu.sections || []).forEach(s => menuAddSection(s));
+    if (menu.disclaimer) $('sp-menu-disclaimer').value = menu.disclaimer;
+    return !!((menu.pricing && menu.pricing.length) || (menu.sections && menu.sections.length) || menu.disclaimer);
+  }
+
+  // Menu isn't in the specials list payload : fetch it on demand for edit.
+  async function loadSpecialMenu(specialId) {
+    try {
+      const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+      const { data, error } = await db.rpc('get_special_menu_by_token', { p_token: token, p_special_id: specialId });
+      const res = Array.isArray(data) ? data[0] : data;
+      if (error || !res || res.ok === false) return;
+      if (prefillMenu(res.menu_items)) {
+        $('sp-menu-enabled').checked = true;
+        $('sp-menu-section').classList.add('show');
+      }
+    } catch (e) { /* non-fatal */ }
+  }
+
   // ── Edit mode (populate form from existing special) ──
   let editingSpecialId = null;
 
@@ -1408,6 +1628,12 @@
     // Tags
     $('sp-tags').value = (sp.event_tags || []).join(', ');
 
+    // Menu : reset, then load on demand (not included in the list payload).
+    $('sp-menu-enabled').checked = false;
+    $('sp-menu-section').classList.remove('show');
+    clearMenuEditor();
+    loadSpecialMenu(sp.id);
+
     // Scroll the form into view
     document.getElementById('upload').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -1447,9 +1673,10 @@
       $('sp-type').value = '';
       $('sp-currency').value = 'JMD';
       // Reset toggles
-      ['sp-times-enabled','sp-recurring-enabled','sp-reservations-enabled','sp-advanced-enabled'].forEach(id => {
+      ['sp-times-enabled','sp-recurring-enabled','sp-reservations-enabled','sp-advanced-enabled','sp-menu-enabled'].forEach(id => {
         const el = $(id); if (el) { el.checked = false; el.dispatchEvent(new Event('change')); }
       });
+      clearMenuEditor();
       // Reset price type to default (% off)
       document.querySelectorAll('input[name=sp-pricing]').forEach(r => r.checked = (r.value === 'discount_pct'));
       document.querySelectorAll('.price-option').forEach(o => o.classList.toggle('selected', o.dataset.pricing === 'discount_pct'));
@@ -1473,6 +1700,17 @@
     bindToggle('sp-recurring-enabled',     'sp-recurring-section');
     bindToggle('sp-reservations-enabled',  'sp-reservations-section');
     bindToggle('sp-advanced-enabled',      'sp-advanced-section');
+    bindToggle('sp-menu-enabled',          'sp-menu-section');
+
+    // Menu editor wiring
+    $('menu-add-tier').addEventListener('click', () => menuAddTier());
+    $('menu-add-section').addEventListener('click', () => menuAddSection());
+    $('sp-menu-enabled').addEventListener('change', (e) => {
+      // First time it's switched on with nothing in it, seed a starter section.
+      if (e.target.checked && !$('menu-tiers').children.length && !$('menu-sections').children.length) {
+        menuAddSection();
+      }
+    });
 
     // ── Price-type radio handling ──
     function updatePriceLabel(type) {
@@ -1704,6 +1942,28 @@
           showError(fe(error || (data && data.error) || data,
             "We couldn't submit that just now. Please try again, or send us a message."));
         } else {
+          // The special saved. Persist the menu via its own RPC (jsonb column).
+          const savedId = (data && data.id) || editId;
+          const menu = $('sp-menu-enabled').checked ? collectMenu() : null;
+          if (savedId && (menu || isEdit)) {
+            let menuOk = false;
+            try {
+              const mr = await db.rpc('set_special_menu_by_token', {
+                p_token: token, p_special_id: savedId,
+                p_menu_items: menu, p_clear: !menu,
+              });
+              const mres = Array.isArray(mr.data) ? mr.data[0] : mr.data;
+              menuOk = !mr.error && mres && mres.ok !== false;
+            } catch (e) { menuOk = false; }
+            if (!menuOk) {
+              // Special is saved; switch to edit mode so a retry updates (no duplicate).
+              if (!isEdit) { editingSpecialId = savedId; window.editingSpecialId = savedId; }
+              showError('Your special saved, but the menu didn’t. Press Save again to retry the menu.');
+              submitBtn.disabled = false;
+              submitBtn.textContent = original;
+              return;
+            }
+          }
           formGrid.style.display = 'none';
           successBox.classList.add('show');
           submitBtn.style.display = 'none';

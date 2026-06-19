@@ -551,6 +551,24 @@
     toFront(el) { this.pushUndo(); this.elements = this.elements.filter(x => x !== el); this.elements.push(el); this.setDirty(true); this.renderElements(); }
     toBack(el) { this.pushUndo(); this.elements = this.elements.filter(x => x !== el); this.elements.unshift(el); this.setDirty(true); this.renderElements(); }
 
+    // Touch long-press → open the context menu (mirrors right-click).
+    armLongPress(e) {
+      const elDiv = e.target.closest('.fpb-el');
+      const id = elDiv ? elDiv.dataset.id : null;
+      const sx = e.clientX, sy = e.clientY;
+      clearTimeout(this._lpTimer);
+      const cleanup = () => { clearTimeout(this._lpTimer); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', cleanup); };
+      const move = (ev) => { if (Math.hypot(ev.clientX - sx, ev.clientY - sy) > 10) cleanup(); };  // a drag cancels it
+      this._lpTimer = setTimeout(() => {
+        this._lpFired = true;
+        if (id && !this.isSelected(id)) this.select(id);
+        if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e2) {} }
+        this.openContextMenu({ clientX: sx, clientY: sy }, id);
+      }, 480);
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', cleanup);
+    }
+
     // ── Right-click context menu ────────────────────────────
     closeContextMenu() {
       document.querySelectorAll('.fpb-ctx').forEach(m => m.remove());   // clear any (stray) menus
@@ -813,6 +831,9 @@
 
       canvas.addEventListener('pointerdown', (e) => {
         if (this.spacePan || e.button === 2) return;     // let panzoom pan / right-click → context menu
+        this._lpFired = false;
+        // Touch: in select mode a long-press opens the context menu (no right-click).
+        if (e.pointerType === 'touch' && this.tool === 'select' && !e.target.closest('.fpb-h, .fpb-rot-h')) this.armLongPress(e);
         const rotH = e.target.closest('.fpb-rot-h');
         if (rotH) { this.startRotate(e); return; }
         const handle = e.target.closest('.fpb-h');
@@ -920,6 +941,7 @@
       const group = [...followerSet].map(id => this.byId(id)).filter(Boolean).map(o => ({ o, dx: o.x - el.x, dy: o.y - el.y }));
       let moved = false, pushed = false;
       const onMove = (ev) => {
+        if (this._lpFired) return;            // a touch long-press opened the menu — don't drag
         const s = this.scale();
         const dx = (ev.clientX - start.cx) / s / this.world.w;
         const dy = (ev.clientY - start.cy) / s / this.world.h;
