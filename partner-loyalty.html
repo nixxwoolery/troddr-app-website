@@ -419,6 +419,88 @@
     align-items: stretch;
     margin-top: 2px;
   }
+
+  /* ── Link across locations ── */
+  .link-locations {
+    grid-column: 1 / -1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    background: var(--grey-bg, #fafafa);
+  }
+  .link-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .link-head-text { min-width: 0; }
+  .link-head-text .link-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--black);
+  }
+  .link-head-text .settings-hint { margin-top: 3px; }
+  /* Toggle switch */
+  .link-switch {
+    position: relative;
+    flex: none;
+    width: 42px;
+    height: 24px;
+    display: inline-block;
+  }
+  .link-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .link-switch .track {
+    position: absolute;
+    inset: 0;
+    background: #cfd4d9;
+    border-radius: 100px;
+    transition: background 0.18s;
+    cursor: pointer;
+  }
+  .link-switch .track::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.18s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  }
+  .link-switch input:checked + .track { background: var(--brand-primary); }
+  .link-switch input:checked + .track::before { transform: translateX(18px); }
+  .link-switch input:disabled + .track { opacity: 0.5; cursor: default; }
+  .link-body { margin-top: 14px; }
+  .link-body[hidden] { display: none; }
+  .link-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+  }
+  .link-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    font-size: 13px;
+  }
+  .link-item input[type="checkbox"] { accent-color: var(--brand-primary); width: 16px; height: 16px; flex: none; cursor: pointer; }
+  .link-item.is-disabled { opacity: 0.62; }
+  .link-item.is-disabled input { cursor: default; }
+  .link-item .li-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .link-item .li-name { font-weight: 600; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .link-item .li-note { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--grey-mid); }
+  .link-item .li-note.conflict { color: #c0392b; }
+  .link-empty { font-size: 12px; color: var(--grey-mid); padding: 4px 2px; }
+  .link-status { font-size: 12px; margin-top: 8px; min-height: 14px; }
+  .link-status.ok { color: #1a7f4e; }
+  .link-status.error { color: #c0392b; }
   .loyalty-card-preview {
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
@@ -1418,6 +1500,23 @@
             <label for="program-design-notes">Card design request</label>
             <textarea id="program-design-notes" maxlength="500" placeholder="Optional: describe a custom card style for TRODDR to review.">${escapeHtml(program.card_design_notes || '')}</textarea>
           </div>
+          <div class="link-locations" id="link-locations">
+            <div class="link-head">
+              <div class="link-head-text">
+                <div class="link-title">Link across locations</div>
+                <div class="settings-hint">Let guests collect and redeem stamps on one shared card across your other locations. Off keeps this card to this location only.</div>
+              </div>
+              <label class="link-switch" title="Link across locations">
+                <input type="checkbox" id="link-toggle" disabled>
+                <span class="track"></span>
+              </label>
+            </div>
+            <div class="link-body" id="link-body" hidden>
+              <div class="settings-hint" style="margin-bottom:8px;">Choose which of your locations share this card. Turning this off again removes the extra locations.</div>
+              <div class="link-list" id="link-list"></div>
+              <div class="link-status" id="link-status"></div>
+            </div>
+          </div>
           <div class="settings-preview">
             <div class="loyalty-card-preview ${escapeAttr(theme)}" id="card-preview">
               <div class="preview-top">
@@ -1445,6 +1544,119 @@
       const el = $(id);
       if (el) el.addEventListener('input', updateProgramPreview);
     });
+    initLinkLocations();
+  }
+
+  // ── Link across locations ───────────────────────────────
+  // Reads/writes go through the service-role `loyalty-locations` edge
+  // function (these tables are RLS-protected; the anon key is read-only).
+  async function loyaltyLocationsCall(action, extra) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/loyalty-locations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+      },
+      body: JSON.stringify({ partner_token: partnerToken, action, ...(extra || {}) }),
+    });
+    let payload = null;
+    try { payload = await res.json(); } catch (e) { /* non-JSON */ }
+    if (!res.ok || !payload || payload.ok === false) {
+      throw new Error((payload && payload.error) || `Request failed (${res.status})`);
+    }
+    return payload;
+  }
+
+  function setLinkStatus(message, kind) {
+    const el = $('link-status');
+    if (!el) return;
+    el.textContent = message || '';
+    el.className = 'link-status' + (kind ? ` ${kind}` : '');
+  }
+
+  function renderLinkState(state) {
+    const toggle = $('link-toggle');
+    const body = $('link-body');
+    const list = $('link-list');
+    if (!toggle || !body || !list) return;
+
+    toggle.checked = !!state.link_locations;
+    toggle.disabled = false;
+    body.hidden = !state.link_locations;
+
+    const others = (state.candidates || []).filter(c => !c.primary);
+    if (!others.length) {
+      list.innerHTML = `<div class="link-empty">No other locations found for this brand. Locations sharing a brand group appear here automatically.</div>`;
+      return;
+    }
+
+    list.innerHTML = (state.candidates || []).map(c => {
+      const disabled = c.primary || !!c.conflict;
+      const checked = c.linked || c.primary;
+      const note = c.primary ? 'Primary location' : (c.conflict || '');
+      const noteClass = c.conflict ? 'li-note conflict' : 'li-note';
+      return `
+        <label class="link-item ${disabled ? 'is-disabled' : ''}">
+          <input type="checkbox" data-place="${escapeAttr(c.place_id)}"
+            ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+          <span class="li-text">
+            <span class="li-name">${escapeHtml(c.name || 'Unnamed location')}</span>
+            ${note ? `<span class="${noteClass}">${escapeHtml(note)}</span>` : ''}
+          </span>
+        </label>`;
+    }).join('');
+
+    list.querySelectorAll('input[type="checkbox"]:not([disabled])').forEach(cb => {
+      cb.addEventListener('change', onLinkPlaceToggle);
+    });
+  }
+
+  async function initLinkLocations() {
+    const toggle = $('link-toggle');
+    if (!toggle) return;
+    toggle.addEventListener('change', onLinkToggle);
+    try {
+      const state = await loyaltyLocationsCall('get');
+      renderLinkState(state);
+    } catch (err) {
+      // Non-fatal: leave the toggle disabled and explain.
+      const body = $('link-body');
+      if (body) { body.hidden = false; }
+      setLinkStatus(err.message || 'Could not load linked locations.', 'error');
+    }
+  }
+
+  async function onLinkToggle(evt) {
+    const enabled = evt.target.checked;
+    evt.target.disabled = true;
+    setLinkStatus(enabled ? 'Enabling…' : 'Disabling…', '');
+    try {
+      const state = await loyaltyLocationsCall('set_link', { enabled });
+      renderLinkState(state);
+      setLinkStatus(enabled ? 'Locations can now share this card.' : 'This card is back to a single location.', 'ok');
+    } catch (err) {
+      evt.target.checked = !enabled;
+      evt.target.disabled = false;
+      setLinkStatus(err.message || 'Could not update.', 'error');
+    }
+  }
+
+  async function onLinkPlaceToggle(evt) {
+    const cb = evt.target;
+    const placeId = cb.getAttribute('data-place');
+    const adding = cb.checked;
+    cb.disabled = true;
+    setLinkStatus('Saving…', '');
+    try {
+      const state = await loyaltyLocationsCall(adding ? 'add_place' : 'remove_place', { place_id: placeId });
+      renderLinkState(state);
+      setLinkStatus(adding ? 'Location linked.' : 'Location unlinked.', 'ok');
+    } catch (err) {
+      cb.checked = !adding;
+      cb.disabled = false;
+      setLinkStatus(err.message || 'Could not update location.', 'error');
+    }
   }
 
   function updateProgramPreview() {

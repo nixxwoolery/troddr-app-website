@@ -2079,6 +2079,104 @@
   .locked-meter-label { color: var(--grey-mid); font-weight: 600; }
   .locked-meter-count { color: var(--grey-light); font-weight: 700; }
 
+  /* ── ANALYTICS PAYWALL ── */
+  /* Blur a whole section's content (keeping its heading crisp) and float an
+     unlock card on top. Applied to Vendor Insights + Audience when the
+     event_insights add-on hasn't been purchased. */
+  .analytics-locked { position: relative; }
+  .analytics-locked > *:not(.section-head):not(.paywall-overlay) {
+    filter: blur(6px);
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.6;
+  }
+  .paywall-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 5;
+  }
+  .paywall-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+    padding: 22px 24px;
+    max-width: 380px;
+    text-align: center;
+  }
+  .paywall-card .pw-lock {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--brand-primary);
+    color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .paywall-card .pw-lock svg { width: 18px; height: 18px; }
+  .paywall-card .pw-title { font-size: 15px; font-weight: 800; margin-bottom: 6px; }
+  .paywall-card .pw-desc {
+    font-size: 12.5px; color: var(--grey-mid);
+    line-height: 1.5; margin-bottom: 16px;
+  }
+  .paywall-cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--brand-primary); color: #fff;
+    padding: 10px 18px; border-radius: 10px;
+    font-size: 13px; font-weight: 700; text-decoration: none;
+    border: none; cursor: pointer;
+  }
+  .paywall-cta:hover { opacity: 0.9; }
+
+  /* Locked stat cards: free counts stay crisp, paid metrics blur their value. */
+  .stat.locked { position: relative; }
+  .stat.locked .stat-value span { filter: blur(8px); }
+  .stat.locked .stat-lock {
+    position: absolute; top: 12px; right: 12px;
+    color: var(--grey-light);
+  }
+  .stat.locked .stat-lock svg { width: 13px; height: 13px; }
+
+  /* Full-width paywall pitch (replaces the Unlocks roadmap when locked). */
+  .paywall-pitch {
+    background: linear-gradient(135deg, #ffffff, #f6f7f4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px 26px;
+    display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+  }
+  .paywall-pitch .pp-body { flex: 1; min-width: 260px; }
+  .paywall-pitch .pp-eyebrow {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--brand-primary);
+    margin-bottom: 8px;
+  }
+  .paywall-pitch .pp-title { font-size: 19px; font-weight: 800; margin-bottom: 6px; }
+  .paywall-pitch .pp-desc {
+    font-size: 13px; color: var(--grey-mid);
+    line-height: 1.6; margin-bottom: 16px; max-width: 540px;
+  }
+  .paywall-pitch ul.pp-list {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 20px;
+  }
+  .paywall-pitch ul.pp-list li {
+    font-size: 12.5px; color: var(--grey-dark);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .paywall-pitch ul.pp-list li svg {
+    width: 14px; height: 14px; color: var(--brand-primary); flex: none;
+  }
+  .paywall-pitch .pp-action { flex: none; text-align: center; }
+  @media (max-width: 560px) {
+    .paywall-pitch ul.pp-list { grid-template-columns: 1fr; }
+    .paywall-pitch .pp-action { width: 100%; }
+    .paywall-pitch .pp-action .paywall-cta { width: 100%; justify-content: center; }
+  }
+
   /* ── STATES ── */
   .state {
     text-align: center; padding: 40px 24px;
@@ -3090,27 +3188,37 @@
   }
 
   // ── Engagement stats with empty-state guidance ──────────
-  function renderStats(stats, eventSlug) {
+  function renderStats(stats, eventSlug, unlocked) {
     // Prefer the explicit view_count counter; fall back to unique viewers.
     const views = stats.view_count || stats.unique_viewers || 0;
 
+    // Free tier = headline interest counts (Views / Saved / Interested / Going).
+    // Paid (event_insights) tier = conversion rates, weekly trends, and the
+    // post-event metrics (Attended / Shares / Bookmarks). When the add-on
+    // isn't purchased we keep the free counts crisp but blur the paid metrics.
     const cards = [
       { label: 'Views',
         value: views,
+        free: true,
         sub: stats.unique_viewers
           ? `${stats.unique_viewers} unique ${stats.unique_viewers === 1 ? 'viewer' : 'viewers'}`
           : 'across the app' },
       { label: 'Saved',
         value: stats.saved_count,
+        free: true,
         sub: 'bookmarked in the app',
         delta: stats.saves_7d },
       { label: 'Interested',
         value: stats.interested_count,
+        free: true,
         sub: stats.view_to_interest_rate != null ? `${stats.view_to_interest_rate}% of views` : 'event follows',
+        rateSub: true,
         delta: stats.interests_7d },
       { label: 'Going',
         value: stats.going_count,
+        free: true,
         sub: stats.interest_to_going_rate != null ? `${stats.interest_to_going_rate}% of interested` : 'RSVP / commitment',
+        rateSub: true,
         delta: stats.going_7d },
       { label: 'Attended',
         value: stats.checkin_count,
@@ -3126,17 +3234,29 @@
     ];
 
     $('stats-grid').innerHTML = cards.map(c => {
-      const deltaHtml = c.delta > 0
+      const isLocked = !unlocked && !c.free;
+      // On free cards, the conversion-rate sub-line and the weekly delta are
+      // themselves "depth" — strip them down to a neutral label when locked.
+      const showDelta = (unlocked || c.free) && c.delta > 0;
+      const sub = isLocked
+        ? 'Premium insight'
+        : (!unlocked && c.rateSub
+            ? (c.label === 'Interested' ? 'event follows' : 'RSVP / commitment')
+            : c.sub);
+      const deltaHtml = showDelta
         ? `<div class="stat-delta">
              <svg><use href="#ic-trend-up"/></svg>
              +${c.delta} this week
            </div>`
         : '';
+      const lockBadge = isLocked
+        ? `<div class="stat-lock"><svg><use href="#ic-lock"/></svg></div>` : '';
       return `
-        <div class="stat ${c.value ? '' : 'empty'}">
+        <div class="stat ${isLocked ? 'locked' : (c.value ? '' : 'empty')}">
+          ${lockBadge}
           <div class="stat-label">${c.label}</div>
-          <div class="stat-value"><span>${c.value || 0}</span></div>
-          ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+          <div class="stat-value"><span>${isLocked ? '00' : (c.value || 0)}</span></div>
+          ${sub ? `<div class="stat-sub">${sub}</div>` : ''}
           ${deltaHtml}
         </div>`;
     }).join('');
@@ -4948,8 +5068,88 @@
       </li>`).join('')}</ul>`;
   }
 
-  // ── Unlocks (partner-friendly roadmap cards) ────────────
-  function renderLocked(data) {
+  // ── Analytics paywall ────────────────────────────────────
+  // Unlock state is driven by get_event_billing_by_token → insights_status.
+  // 'purchased' (bought as an add-on) or 'included' (bundled in a paid
+  // package) unlock the full suite; anything else shows the free snapshot.
+  function isAnalyticsUnlocked(status) {
+    return status === 'purchased' || status === 'included';
+  }
+
+  // Blur a section's body (heading stays crisp) and float an unlock card on top.
+  function gateSection(sectionId, ctaTitle, ctaDesc, billingUrl) {
+    const sec = $(sectionId);
+    if (!sec || sec.querySelector('.paywall-overlay')) return;
+    sec.classList.add('analytics-locked');
+    const overlay = document.createElement('div');
+    overlay.className = 'paywall-overlay';
+    overlay.innerHTML = `
+      <div class="paywall-card">
+        <div class="pw-lock"><svg><use href="#ic-lock"/></svg></div>
+        <div class="pw-title">${escapeHtml(ctaTitle)}</div>
+        <div class="pw-desc">${escapeHtml(ctaDesc)}</div>
+        <a class="paywall-cta" href="${escapeHtml(billingUrl)}">Unlock analytics →</a>
+      </div>`;
+    sec.appendChild(overlay);
+  }
+
+  function applyAnalyticsGate(unlocked, billingUrl) {
+    window.__analyticsUnlocked = unlocked;
+    if (unlocked) return;
+    gateSection('vendors', 'Unlock Vendor Insights',
+      'See which vendors drive the most views and interest, peak engagement times, and a full per-vendor performance table.',
+      billingUrl);
+    // Audience only reveals itself when there's data; gate it when visible.
+    const aud = $('audience');
+    if (aud && aud.style.display !== 'none') {
+      gateSection('audience', 'Unlock Audience Location',
+        'See where your engaged guests are coming from, based on real interactions.',
+        billingUrl);
+    }
+  }
+
+  // ── Unlocks section (paywall pitch when locked, roadmap when unlocked) ──
+  function renderLocked(data, unlocked, billingUrl) {
+    const sec      = $('unlocks');
+    const titleEl  = sec && sec.querySelector('.section-title');
+    const subEl    = sec && sec.querySelector('.section-sub');
+
+    if (!unlocked) {
+      if (titleEl) titleEl.textContent = 'Unlock Full Event Analytics';
+      if (subEl)   subEl.textContent = "You're seeing the free snapshot. Unlock Event Insights for the full analytics suite on this event.";
+
+      const features = [
+        'Vendor performance & rankings',
+        'Conversion funnel (view → going → attended)',
+        'Audience location breakdown',
+        'Weekly trends & momentum',
+        'Traffic sources',
+        'Views over time',
+        'Arrival timeline',
+        'Post-event scorecard',
+        'Loyalty impact',
+      ];
+      $('locked-grid').innerHTML = `
+        <div class="paywall-pitch">
+          <div class="pp-body">
+            <div class="pp-eyebrow">Premium · Event Insights</div>
+            <div class="pp-title">See the full story behind your numbers</div>
+            <div class="pp-desc">You can already see total views, saves, interest, and RSVPs for free. Unlock Event Insights to get the analytics that actually help you plan: who's engaging, which vendors are winning, where your audience is, and how interest is trending day to day.</div>
+            <ul class="pp-list">
+              ${features.map(f => `<li><svg><use href="#ic-check"/></svg>${escapeHtml(f)}</li>`).join('')}
+            </ul>
+          </div>
+          <div class="pp-action">
+            <a class="paywall-cta" href="${escapeHtml(billingUrl)}">Unlock analytics →</a>
+          </div>
+        </div>`;
+      return;
+    }
+
+    // Unlocked: roadmap of analytics that fill in as the event runs and wraps.
+    if (titleEl) titleEl.textContent = 'Unlocks';
+    if (subEl)   subEl.textContent = 'More analytics open up as the event approaches, runs, and wraps.';
+
     const locked = [
       { title: 'Traffic Sources',       desc: 'See where guests discovered your event: Home Feed, Search, Nearby, Map, or shared links.' },
       { title: 'Views Over Time',       desc: 'Daily, weekly, and monthly trends so you can see what marketing is working.' },
@@ -5608,15 +5808,18 @@
     let eventRes;
     let capsRes;
     let extrasRes;
+    let billingRes;
     try {
       const results = await Promise.allSettled([
         db.rpc('get_partner_event_by_token',         { p_token: token }),
         db.rpc('get_partner_capabilities_by_token',  { p_token: token }),
         db.rpc('get_partner_event_extras_by_token',  { p_token: token }),
+        db.rpc('get_event_billing_by_token',         { p_token: token }),
       ]);
-      eventRes  = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
-      capsRes   = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
-      extrasRes = results[2].status === 'fulfilled' ? results[2].value : { error: results[2].reason };
+      eventRes   = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
+      capsRes    = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
+      extrasRes  = results[2].status === 'fulfilled' ? results[2].value : { error: results[2].reason };
+      billingRes = results[3].status === 'fulfilled' ? results[3].value : { error: results[3].reason };
     } catch (err) {
       showLoadError(err, "We couldn't reach the dashboard service. Refresh the page, or open the latest dashboard link from TRODDR.");
       return;
@@ -5626,6 +5829,13 @@
     const caps = capsRes && capsRes.data;
     // Extras RPC is optional : if it's not deployed yet, fall through gracefully.
     const extras = (extrasRes && extrasRes.data) || {};
+
+    // Analytics paywall state. Defaults to locked when billing is unavailable
+    // or the event isn't attached to a company account yet.
+    const billing = (billingRes && billingRes.data) || null;
+    const insightsStatus = (billing && billing.insights_status) || 'not_purchased';
+    const analyticsUnlocked = isAnalyticsUnlocked(insightsStatus);
+    const billingUrl = (billing && billing.company_billing_url) || '/company/billing';
 
     const intentional = window.PartnerAuth?.consumeIntent('/partner/event');
     const entities = (caps && caps.partner && caps.partner.entities) || [];
@@ -5676,7 +5886,7 @@
     safe('renderHero',        () => renderHero(data.event, data.stats));
     safe('renderEventStatus', () => renderEventStatus(data.event, data.stats));
     safe('renderPreview',     () => renderPreview(data.event, data.tabs));
-    safe('renderStats',       () => renderStats(data.stats, data.event.slug));
+    safe('renderStats',       () => renderStats(data.stats, data.event.slug, analyticsUnlocked));
     safe('renderAudience',    () => renderAudience(data));
     // Stash the loaded event data so renderers (e.g. floor-plan vendor dropdown,
     // engagement chart) can reach it without re-plumbing parameters.
@@ -5688,7 +5898,8 @@
     safe('renderSponsors',    () => renderSponsors(data));
     safe('buildActions',      () => buildActions(data));
     safe('renderEditForm',    () => renderEditForm(data.event));
-    safe('renderLocked',      () => renderLocked(data));
+    safe('renderLocked',      () => renderLocked(data, analyticsUnlocked, billingUrl));
+    safe('applyAnalyticsGate', () => applyAnalyticsGate(analyticsUnlocked, billingUrl));
     safe('renderActionEventLink', () => renderActionEventLink(data.event));
 
     // New view-only sections.
