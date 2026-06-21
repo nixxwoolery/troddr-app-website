@@ -219,16 +219,6 @@
     font-weight: 500;
     text-align: left;
   }
-  /* Item insights (Taste Notes leaderboards) */
-  .item-block { margin-bottom: 18px; }
-  .item-block-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--grey-mid); margin-bottom: 6px; }
-  .item-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #eee; }
-  .item-name { font-weight: 600; }
-  .item-cat { font-weight: 400; color: var(--grey-mid); font-size: 12px; }
-  .item-metric { font-weight: 700; white-space: nowrap; }
-  .item-sub { font-weight: 400; color: var(--grey-mid); font-size: 12px; }
-  .item-comment { padding: 8px 0; border-top: 1px solid #eee; font-style: italic; }
-  .item-coming { color: var(--grey-mid); font-size: 12px; padding: 4px 0; }
   .pill {
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
@@ -511,6 +501,24 @@
     color: var(--grey-mid);
     text-transform: capitalize;
   }
+  .fb-items {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .fb-items-label {
+    margin-bottom: 7px;
+    color: var(--grey-mid);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .fb-item { padding: 7px 0; }
+  .fb-item + .fb-item { border-top: 1px solid var(--border-soft); }
+  .fb-item-name { color: var(--black); font-size: 13px; font-weight: 700; }
+  .fb-item-note { margin-top: 3px; color: var(--grey-dark); font-size: 13px; font-style: italic; line-height: 1.45; }
+  .fb-item-meta { margin-top: 4px; color: var(--grey-mid); font-size: 11px; }
   .fb-rating-pill strong {
     color: var(--brand-primary);
     margin-left: 3px;
@@ -714,16 +722,6 @@
         </div>
       </div>
       <div class="ratings-card" id="ratings-card"></div>
-    </section>
-
-    <section class="section" id="items" style="display:none">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">Item Insights</h2>
-          <div class="section-sub">What guests love, from their Taste Notes. Anonymous and aggregated.</div>
-        </div>
-      </div>
-      <div id="items-body"></div>
     </section>
 
     <section class="section" id="distribution">
@@ -1140,51 +1138,6 @@
     $('ratings').style.display = '';
   }
 
-  // ── Item insights (Taste Notes leaderboards; anonymous aggregates) ──
-  function renderItemInsights(d) {
-    if (!d || d.ok === false) return;
-    const wrap = $('items-body');
-    if (!wrap) return;
-    const blocks = [];
-    const list = (title, arr, metric) => {
-      if (!arr || !arr.length) return;
-      blocks.push(`<div class="item-block"><div class="item-block-title">${title}</div>` +
-        arr.map((it) => {
-          const tags = [
-            it.category ? `<span class="item-cat">${escapeHtml(it.category)}</span>` : '',
-            it.place_name ? `<span class="item-cat">@ ${escapeHtml(it.place_name)}</span>` : '',
-          ].join(' ');
-          return `<div class="item-row"><span class="item-name">${escapeHtml(it.name || 'Item')} ${tags}</span>` +
-                 `<span class="item-metric">${metric(it)}</span></div>`;
-        }).join('') +
-        `</div>`);
-    };
-    list('Most Loved', d.most_loved, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
-    list('House Favourites', d.house_favourites, (it) => `${Math.round((it.reorder_rate || 0) * 100)}% reorder <span class="item-sub">${it.reviews}</span>`);
-    list('Hidden Gems', d.hidden_gems, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
-    list('Lowest Rated', d.lowest_rated, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
-
-    if (d.comments && d.comments.length) {
-      blocks.push(`<div class="item-block"><div class="item-block-title">Customer Comments</div>` +
-        d.comments.map((c) => {
-          const meta = [
-            c.name ? escapeHtml(c.name) : '',
-            c.place_name ? `@ ${escapeHtml(c.place_name)}` : '',
-            c.would_order_again === true ? 'would order again' : (c.would_order_again === false ? 'wouldn’t reorder' : ''),
-          ].filter(Boolean).join(' · ');
-          return `<div class="item-comment">“${escapeHtml(c.notes || '')}” <span class="item-sub">${meta}</span></div>`;
-        }).join('') +
-        `</div>`);
-    }
-
-    // Reveal only when there's real data. Flag the unavailable metrics quietly.
-    if (!blocks.length) return;
-    const un = d.unavailable || {};
-    const coming = Object.keys(un).map((k) => `<div class="item-coming">${titleCase(k)}: coming soon</div>`).join('');
-    wrap.innerHTML = blocks.join('') + (coming ? `<div class="item-block">${coming}</div>` : '');
-    $('items').style.display = '';
-  }
-
   // ── Discovery card (PostHog via Edge Function; moved from listing) ──
   async function loadDiscovery(token) {
     if (!token) return;
@@ -1231,6 +1184,25 @@
     $('discovery-card').appendChild(card);
   }
 
+  function renderFeedbackItems(fb) {
+    const items = fb.items || [];
+    if (!items.length) return '';
+    return `<div class="fb-items">
+      <div class="fb-items-label">What they had</div>
+      ${items.map((item) => {
+        const reorder = item.would_order_again === true
+          ? 'Would order again'
+          : item.would_order_again === false ? 'Wouldn’t order again' : '';
+        const meta = [item.category ? titleCase(item.category) : '', reorder].filter(Boolean).join(' · ');
+        return `<div class="fb-item">
+          <div class="fb-item-name">${escapeHtml(item.name || 'Item')}</div>
+          ${item.notes ? `<div class="fb-item-note">“${escapeHtml(item.notes)}”</div>` : ''}
+          ${meta ? `<div class="fb-item-meta">${escapeHtml(meta)}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
   // ── Recent Feedback (latest 20; moved from listing) ──
   function renderRecent() {
     const feed = (allFeedback || []).slice(0, 20);
@@ -1261,6 +1233,7 @@
           ${pills ? `<div class="fb-ratings">${pills}</div>` : ''}
           ${tags ? `<div class="fb-tags">${tags}</div>` : ''}
           ${wr}
+          ${renderFeedbackItems(fb)}
         </div>`;
     }).join('');
   }
@@ -1304,6 +1277,7 @@
           ${pills ? `<div class="fb-ratings">${pills}</div>` : ''}
           ${tags ? `<div class="fb-tags">${tags}</div>` : ''}
           ${wr}
+          ${renderFeedbackItems(fb)}
         </div>`;
     }).join('');
   }
@@ -1373,17 +1347,15 @@
     // Discovery + Ratings were consolidated onto this page, so we also pull
     // the listing RPC (stats / avg_ratings). allSettled keeps the page alive
     // if that secondary fetch fails.
-    const [feedbackRes, capsRes, listingRes, itemRes] = await Promise.allSettled([
+    const [feedbackRes, capsRes, listingRes] = await Promise.allSettled([
       db.rpc('get_partner_feedback_by_token',      { p_token: token }),
       db.rpc('get_partner_capabilities_by_token',  { p_token: token }),
       db.rpc('get_partner_listing_by_token',       { p_token: token }),
-      db.rpc('get_partner_item_insights_by_token', { p_token: token, p_min_reviews: 5 }),
     ]).then(rs => rs.map(r => r.status === 'fulfilled' ? r.value : { error: r.reason }));
 
     const data = feedbackRes.data;
     const caps = capsRes.data;
     const listing = listingRes && listingRes.data;
-    const items = itemRes && itemRes.data;
 
     const intentional = window.PartnerAuth?.consumeIntent('/partner/feedback');
     const entities = (caps && caps.partner && caps.partner.entities) || [];
@@ -1424,7 +1396,6 @@
     safe('renderDiscoveryStats', () => renderDiscoveryStats(listing));
     safe('renderSummary',      () => renderSummary(data));
     safe('renderRatingsBreakdown', () => renderRatingsBreakdown(listing));
-    safe('renderItemInsights', () => renderItemInsights(items));
     safe('renderDistribution', () => renderDistribution(data));
     safe('renderTags',         () => renderTags(data));
     safe('renderRecent',       () => renderRecent());

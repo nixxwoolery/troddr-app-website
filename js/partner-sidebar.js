@@ -77,7 +77,6 @@
     { group: 'Insights & Feedback', icon: 'ic-chart', page: '/partner/feedback', cap: 'feedback', children: [
       { label: 'Discovery',             section: 'metrics' },
       { label: 'Summary',               section: 'summary' },
-      { label: 'Item Insights',         section: 'items' },
       { label: 'Distribution',          section: 'distribution' },
       { label: 'What users are saying', section: 'tags' },
       { label: 'Recent Feedback',       section: 'recent' },
@@ -112,7 +111,6 @@
     // It leads the group nav as the account-wide overview.
     { group: 'Group Insights', icon: 'ic-grid', page: '/partner/group', minPlaces: 2, children: [
       { label: 'Group Insights', section: 'group-insights' },
-      { label: 'Item Insights',  section: 'group-items' },
     ] },
     { group: 'Listing', icon: 'ic-doc', page: '/partner/listing', cap: 'listing', children: [
       { label: 'Contact Info',    section: 'contact', page: '/partner/listing' },

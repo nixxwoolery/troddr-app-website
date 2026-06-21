@@ -161,6 +161,40 @@ begin
               'taste',       rating_taste,
               'ambiance',    rating_ambiance,
               'speed',       rating_speed
+            ),
+            'items', (
+              select coalesce(
+                jsonb_agg(
+                  jsonb_build_object(
+                    'name',              item_notes.canonical_name,
+                    'category',          item_notes.category,
+                    'notes',             item_notes.notes,
+                    'sentiment',         item_notes.sentiment,
+                    'would_order_again', item_notes.would_order_again,
+                    'visit_date',        item_notes.visit_date
+                  ) order by item_notes.created_at
+                ),
+                '[]'::jsonb
+              )
+              from (
+                select mi.canonical_name, mi.category, l.notes, l.sentiment,
+                       l.would_order_again, l.visit_date, l.created_at
+                  from public.user_item_logs l
+                  join public.menu_items mi on mi.id = l.menu_item_id
+                 where l.place_id = v_place_id
+                   and l.user_id = recent.user_id
+                   and l.is_public = true
+                   and (
+                     l.visit_date = recent.created_at::date
+                     or (
+                       l.visit_date is null
+                       and l.created_at between recent.created_at - interval '24 hours'
+                                            and recent.created_at + interval '24 hours'
+                     )
+                   )
+                 order by l.created_at
+                 limit 20
+              ) item_notes
             )
           )
           order by created_at desc

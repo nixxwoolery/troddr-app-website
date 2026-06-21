@@ -374,25 +374,6 @@
       <div class="gi-tags" id="gi-tags"></div>
     </section>
 
-    <style>
-      .item-block { margin-bottom: 18px; }
-      .item-block-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--grey-mid); margin-bottom: 6px; }
-      .item-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #eee; }
-      .item-name { font-weight: 600; }
-      .item-cat { font-weight: 400; color: var(--grey-mid); font-size: 12px; }
-      .item-metric { font-weight: 700; white-space: nowrap; }
-      .item-sub { font-weight: 400; color: var(--grey-mid); font-size: 12px; }
-      .item-comment { padding: 8px 0; border-top: 1px solid #eee; font-style: italic; }
-      .item-coming { color: var(--grey-mid); font-size: 12px; padding: 4px 0; }
-    </style>
-    <section class="section" id="group-items" style="display:none">
-      <div class="section-head">
-        <h2 class="section-title">Item Insights</h2>
-        <div class="section-sub">What guests love across your locations, from their Taste Notes. Anonymous and aggregated.</div>
-      </div>
-      <div id="group-items-body"></div>
-    </section>
-
     <section class="section" id="places-section" style="display:none">
       <div class="section-head">
         <h2 class="section-title">Places</h2>
@@ -542,57 +523,6 @@
       // Leave the section in its default "—" state; the page still works.
       $('gi-board-empty').classList.remove('hidden');
     }
-    // Item insights are independent; a failure here must not break the page.
-    try {
-      const { data: items } = await db.rpc('get_partner_group_item_insights_by_token', { p_token: token, p_min_reviews: 5 });
-      if (items && items.ok) renderGroupItemInsights(items);
-    } catch (e) {
-      console.error('[partner-group] item insights load failed:', e);
-    }
-  }
-
-  // Item leaderboards rolled up across the group (each row shows its location).
-  function renderGroupItemInsights(d) {
-    const wrap = $('group-items-body');
-    if (!wrap) return;
-    const blocks = [];
-    const list = (title, arr, metric) => {
-      if (!arr || !arr.length) return;
-      blocks.push(`<div class="item-block"><div class="item-block-title">${title}</div>` +
-        arr.map((it) => {
-          const tags = [
-            it.category ? `<span class="item-cat">${escapeHtml(it.category)}</span>` : '',
-            it.place_name ? `<span class="item-cat">@ ${escapeHtml(it.place_name)}</span>` : '',
-          ].join(' ');
-          return `<div class="item-row"><span class="item-name">${escapeHtml(it.name || 'Item')} ${tags}</span>` +
-                 `<span class="item-metric">${metric(it)}</span></div>`;
-        }).join('') +
-        `</div>`);
-    };
-    list('Most Loved', d.most_loved, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
-    list('House Favourites', d.house_favourites, (it) => `${Math.round((it.reorder_rate || 0) * 100)}% reorder <span class="item-sub">${it.reviews}</span>`);
-    list('Hidden Gems', d.hidden_gems, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
-    list('Lowest Rated', d.lowest_rated, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
-
-    if (d.comments && d.comments.length) {
-      blocks.push(`<div class="item-block"><div class="item-block-title">Customer Comments</div>` +
-        d.comments.map((c) => {
-          const meta = [
-            c.name ? escapeHtml(c.name) : '',
-            c.place_name ? `@ ${escapeHtml(c.place_name)}` : '',
-            c.would_order_again === true ? 'would order again' : (c.would_order_again === false ? 'wouldn’t reorder' : ''),
-          ].filter(Boolean).join(' · ');
-          return `<div class="item-comment">“${escapeHtml(c.notes || '')}” <span class="item-sub">${meta}</span></div>`;
-        }).join('') +
-        `</div>`);
-    }
-
-    if (!blocks.length) return;
-    const un = d.unavailable || {};
-    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-    const coming = Object.keys(un).map((k) => `<div class="item-coming">${cap(k)}: coming soon</div>`).join('');
-    wrap.innerHTML = blocks.join('') + (coming ? `<div class="item-block">${coming}</div>` : '');
-    $('group-items').style.display = '';
   }
 
   function mountSidebar(capabilities, partner) {
