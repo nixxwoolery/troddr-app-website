@@ -792,6 +792,13 @@
     if (d < 30)  return `${d} days ago`;
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
+  function fmtDate(value) {
+    if (!value) return '';
+    const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
+    return Number.isNaN(date.getTime())
+      ? String(value)
+      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
   function maskedLabel(userId) {
     if (!userId) return 'Member';
     const tail = String(userId).replace(/-/g, '').slice(-4);
@@ -858,6 +865,7 @@
 
   // ── State ────────────────────────────────────────────────
   let allFeedback   = [];
+  let placeTasteNotes = [];
   let activeRating  = 'all';   // all | 4plus | 3 | 2less
   let activeReturn  = 'all';   // all | yes | no
   let activeTime    = 'all';   // all | 7 | 30 | 90
@@ -1188,7 +1196,7 @@
     const items = fb.items || [];
     if (!items.length) return '';
     return `<div class="fb-items">
-      <div class="fb-items-label">What they had</div>
+      <div class="fb-items-label">Taste Notes · What they had</div>
       ${items.map((item) => {
         const reorder = item.would_order_again === true
           ? 'Would order again'
@@ -1203,10 +1211,42 @@
     </div>`;
   }
 
+  // Compatibility for environments where the combined feedback RPC has not
+  // been deployed yet. These are still place-specific, public Taste Notes;
+  // they live in the feedback feed instead of on the group dashboard.
+  function renderStandaloneTasteNotes(limit) {
+    if ((allFeedback || []).some((fb) => (fb.items || []).length)) return '';
+    return (placeTasteNotes || []).slice(0, limit).map((item) => {
+      const reorder = item.would_order_again === true
+        ? 'Would order again'
+        : item.would_order_again === false ? 'Wouldn’t order again' : '';
+      const date = item.visit_date ? fmtDate(item.visit_date) : '';
+      return `<div class="fb-card">
+        <div class="fb-head">
+          <div class="fb-id">Anonymous guest <span class="fb-context">Taste Note</span></div>
+          ${date ? `<div class="fb-time">${escapeHtml(date)}</div>` : ''}
+        </div>
+        <div class="fb-items" style="margin-top:0;padding-top:0;border-top:0">
+          <div class="fb-items-label">Taste Notes · What they had</div>
+          <div class="fb-item">
+            <div class="fb-item-name">${escapeHtml(item.name || 'Item')}</div>
+            ${item.notes ? `<div class="fb-item-note">“${escapeHtml(item.notes)}”</div>` : ''}
+            ${reorder ? `<div class="fb-item-meta">${reorder}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   // ── Recent Feedback (latest 20; moved from listing) ──
   function renderRecent() {
     const feed = (allFeedback || []).slice(0, 20);
     if (!feed.length) {
+      const tasteNotes = renderStandaloneTasteNotes(20);
+      if (tasteNotes) {
+        $('recent-feed').innerHTML = tasteNotes;
+        return;
+      }
       $('recent-feed').innerHTML = `
         <div class="empty-state-card">
           <div class="empty-state-icon"><svg width="24" height="24"><use href="#ic-chat"/></svg></div>
@@ -1215,7 +1255,7 @@
         </div>`;
       return;
     }
-    $('recent-feed').innerHTML = feed.map(fb => {
+    const feedbackCards = feed.map(fb => {
       const ratings = fb.ratings || {};
       const pills = Object.entries(ratings).filter(([, v]) => v != null)
         .map(([k, v]) => `<span class="fb-rating-pill ${v <= 2 ? 'low' : ''}"><span class="name">${titleCase(k)}</span> <strong>${v}</strong></span>`).join('');
@@ -1236,11 +1276,17 @@
           ${renderFeedbackItems(fb)}
         </div>`;
     }).join('');
+    $('recent-feed').innerHTML = feedbackCards + renderStandaloneTasteNotes(20);
   }
 
   function renderFeed() {
     const filtered = allFeedback.filter(matchesFilters);
     if (!filtered.length) {
+      const tasteNotes = renderStandaloneTasteNotes(30);
+      if (tasteNotes && allFeedback.length === 0) {
+        $('feedback-feed').innerHTML = tasteNotes;
+        return;
+      }
       const isEmpty = allFeedback.length === 0;
       $('feedback-feed').innerHTML = `
         <div class="empty-state-card">
@@ -1253,7 +1299,7 @@
       return;
     }
 
-    $('feedback-feed').innerHTML = filtered.map(fb => {
+    const feedbackCards = filtered.map(fb => {
       const ratings = fb.ratings || {};
       const pills = Object.entries(ratings)
         .filter(([, v]) => v != null)
@@ -1280,6 +1326,7 @@
           ${renderFeedbackItems(fb)}
         </div>`;
     }).join('');
+    $('feedback-feed').innerHTML = feedbackCards + renderStandaloneTasteNotes(30);
   }
 
   // ── Entity picker (multi-domain partners) ────────────────
@@ -1347,15 +1394,17 @@
     // Discovery + Ratings were consolidated onto this page, so we also pull
     // the listing RPC (stats / avg_ratings). allSettled keeps the page alive
     // if that secondary fetch fails.
-    const [feedbackRes, capsRes, listingRes] = await Promise.allSettled([
+    const [feedbackRes, capsRes, listingRes, itemRes] = await Promise.allSettled([
       db.rpc('get_partner_feedback_by_token',      { p_token: token }),
       db.rpc('get_partner_capabilities_by_token',  { p_token: token }),
       db.rpc('get_partner_listing_by_token',       { p_token: token }),
+      db.rpc('get_partner_item_insights_by_token', { p_token: token, p_min_reviews: 5 }),
     ]).then(rs => rs.map(r => r.status === 'fulfilled' ? r.value : { error: r.reason }));
 
     const data = feedbackRes.data;
     const caps = capsRes.data;
     const listing = listingRes && listingRes.data;
+    const itemData = itemRes && itemRes.data;
 
     const intentional = window.PartnerAuth?.consumeIntent('/partner/feedback');
     const entities = (caps && caps.partner && caps.partner.entities) || [];
@@ -1376,6 +1425,7 @@
     }
 
     allFeedback = data.feedback || [];
+    placeTasteNotes = (itemData && itemData.comments) || [];
     window._tagData = data;
 
     // Reveal the dashboard view + mount the sidebar FIRST. This way the user

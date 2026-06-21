@@ -184,13 +184,20 @@ begin
                  where l.place_id = v_place_id
                    and l.user_id = recent.user_id
                    and l.is_public = true
-                   and (
-                     l.visit_date = recent.created_at::date
-                     or (
-                       l.visit_date is null
-                       and l.created_at between recent.created_at - interval '24 hours'
-                                            and recent.created_at + interval '24 hours'
-                     )
+                   -- A guest may submit place feedback after the day they
+                   -- logged their items. Use that guest's nearest Taste Note
+                   -- visit at this place instead of requiring an exact date.
+                   and coalesce(l.visit_date, l.created_at::date) = (
+                     select coalesce(nearest.visit_date, nearest.created_at::date)
+                       from public.user_item_logs nearest
+                      where nearest.place_id = v_place_id
+                        and nearest.user_id = recent.user_id
+                        and nearest.is_public = true
+                      order by abs(
+                        coalesce(nearest.visit_date, nearest.created_at::date)
+                        - recent.created_at::date
+                      ), nearest.created_at desc
+                      limit 1
                    )
                  order by l.created_at
                  limit 20
