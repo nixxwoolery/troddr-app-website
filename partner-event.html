@@ -2875,6 +2875,19 @@
             <input id="tl-phone" type="tel" maxlength="40" /></div>
           <div class="ve-field"><label for="tl-hours">Opening hours</label>
             <input id="tl-hours" type="text" maxlength="200" placeholder="e.g. Mon-Fri 9am-5pm" /></div>
+          <div class="ve-field"><label for="tl-maps-url">Google Maps link (optional)</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input id="tl-maps-url" type="url" maxlength="1000" placeholder="Paste a Google Maps URL" style="flex:1;" />
+              <button type="button" class="ve-btn" id="tl-maps-extract">Extract</button>
+            </div>
+            <div class="ve-modal-sub">Pulls latitude / longitude from the pasted link.</div></div>
+          <div class="ve-field"><label for="tl-lat">Latitude</label>
+            <input id="tl-lat" type="number" step="any" /></div>
+          <div class="ve-field"><label for="tl-lng">Longitude</label>
+            <input id="tl-lng" type="number" step="any" /></div>
+          <div class="ve-field"><label for="tl-slug">Linked listing (slug)</label>
+            <input id="tl-slug" type="text" maxlength="200" placeholder="e.g. cannonball-cafe-barbican" />
+            <div class="ve-modal-sub" id="tl-slug-status">Optional. Links this location to a TRODDR listing.</div></div>
           <div class="ve-status" id="tl-status"></div>
           <div class="ve-actions">
             <button type="button" class="ve-btn" id="tl-cancel">Cancel</button>
@@ -3984,7 +3997,8 @@
                   t.address ? escapeHtml(t.address) : '',
                   t.town ? escapeHtml(t.town) : '',
                   t.parish ? escapeHtml(t.parish) : '',
-                  t.contact_phone ? escapeHtml(t.contact_phone) : ''
+                  t.contact_phone ? escapeHtml(t.contact_phone) : '',
+                  t.place_slug ? ('<a href="/listings/' + escapeHtml(t.place_slug) + '" target="_blank" rel="noopener">View listing</a>') : ''
                 ].filter(Boolean).join(' · ') || 'No address yet'}
           </div>
         </div>
@@ -4022,6 +4036,17 @@
     document.getElementById('tl-parish').value   = t ? (t.parish || '')        : '';
     document.getElementById('tl-phone').value    = t ? (t.contact_phone || '') : '';
     document.getElementById('tl-hours').value    = t ? (t.opening_hours || '') : '';
+    document.getElementById('tl-lat').value      = t && t.latitude != null ? t.latitude : '';
+    document.getElementById('tl-lng').value      = t && t.longitude != null ? t.longitude : '';
+    document.getElementById('tl-slug').value     = t ? (t.place_slug || '') : '';
+    document.getElementById('tl-maps-url').value = '';
+    const _slugStatus = document.getElementById('tl-slug-status');
+    if (_slugStatus) {
+      _slugStatus.textContent = t && t.place_name
+        ? '✓ ' + t.place_name
+        : 'Optional. Links this location to a TRODDR listing.';
+      _slugStatus.style.color = '';
+    }
     document.getElementById('tl-delete').style.display = t && !t._isNew ? '' : 'none';
     _setStatus('tl-status', '');
     _modalOpen('tl-modal-backdrop');
@@ -4042,6 +4067,10 @@
       p_parish:          document.getElementById('tl-parish').value.trim() || null,
       p_contact_phone:   document.getElementById('tl-phone').value.trim() || null,
       p_opening_hours:   document.getElementById('tl-hours').value.trim() || null,
+      p_latitude:        (() => { const n = parseFloat(document.getElementById('tl-lat').value); return Number.isFinite(n) ? n : null; })(),
+      p_longitude:       (() => { const n = parseFloat(document.getElementById('tl-lng').value); return Number.isFinite(n) ? n : null; })(),
+      // Empty string clears the link; a value is validated server-side.
+      p_place_slug:      document.getElementById('tl-slug').value.trim(),
     };
     const btn = document.getElementById('tl-save');
     btn.disabled = true; btn.textContent = 'Saving...';
@@ -4071,6 +4100,45 @@
       _modalClose('tl-modal-backdrop'); location.reload();
     } catch (err) {
       _setStatus('tl-status', (err && err.message) || 'Network error.', 'error');
+    }
+  }
+
+  // Parse lat/lng from a pasted Google Maps URL (prefers the precise place
+  // marker `!3d<lat>!4d<lng>`, falls back to the viewport `@lat,lng`).
+  function extractTicketLocCoords() {
+    const url = document.getElementById('tl-maps-url').value || '';
+    let m = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if (!m) m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (!m) { _setStatus('tl-status', 'Could not find coordinates in that link.', 'error'); return; }
+    document.getElementById('tl-lat').value = m[1];
+    document.getElementById('tl-lng').value = m[2];
+    _setStatus('tl-status', 'Coordinates extracted.', 'success');
+  }
+
+  // Live-validate the linked-listing slug against the places table.
+  async function validateTicketLocSlug() {
+    const el = document.getElementById('tl-slug');
+    const status = document.getElementById('tl-slug-status');
+    if (!el || !status) return;
+    const slug = el.value.trim();
+    if (!slug) {
+      status.textContent = 'Optional. Links this location to a TRODDR listing.';
+      status.style.color = '';
+      return;
+    }
+    try {
+      const { data, error } = await db.rpc('validate_place_slug', { p_slug: slug });
+      if (error) throw error;
+      if (data && data.exists) {
+        status.textContent = '✓ ' + (data.name || slug);
+        status.style.color = '#1C3D2E';
+      } else {
+        status.textContent = 'No listing found with that slug.';
+        status.style.color = '#b00020';
+      }
+    } catch (err) {
+      status.textContent = 'Could not validate slug.';
+      status.style.color = '#b00020';
     }
   }
 
@@ -4473,6 +4541,8 @@
     document.getElementById('tl-cancel')?.addEventListener('click', () => _modalClose('tl-modal-backdrop'));
     document.getElementById('tl-delete')?.addEventListener('click', deleteTicketLoc);
     document.getElementById('tl-modal')?.addEventListener('submit', saveTicketLoc);
+    document.getElementById('tl-maps-extract')?.addEventListener('click', extractTicketLocCoords);
+    document.getElementById('tl-slug')?.addEventListener('change', validateTicketLocSlug);
     document.getElementById('tl-modal-backdrop')?.addEventListener('click', (e) => {
       if (e.target.id === 'tl-modal-backdrop') _modalClose('tl-modal-backdrop');
     });
@@ -4971,6 +5041,7 @@
                 ${loc.parish ? ' · ' + escapeHtml(loc.parish) : ''}
                 ${loc.contact_phone ? '<br>Phone: ' + escapeHtml(loc.contact_phone) : ''}
                 ${loc.opening_hours ? '<br>Hours: ' + escapeHtml(loc.opening_hours) : ''}
+                ${loc.place_slug ? '<br><a href="/listings/' + escapeHtml(loc.place_slug) + '" target="_blank" rel="noopener">View listing' + (loc.place_name ? ': ' + escapeHtml(loc.place_name) : '') + '</a>' : ''}
               </div>
             </li>`).join('')}
         </ul></div>`

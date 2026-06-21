@@ -42,7 +42,11 @@ begin
           'is_online',     tl.is_online,
           'provider_type', tl.provider_type,
           'ticket_url',    tl.ticket_url,
-          'logo_url',      tl.logo_url
+          'logo_url',      tl.logo_url,
+          'latitude',      tl.latitude,
+          'longitude',     tl.longitude,
+          'place_slug',    tl.place_slug,
+          'place_name',    (select name from public.places where slug = tl.place_slug)
         )
         order by tl.display_order, tl.created_at
       )

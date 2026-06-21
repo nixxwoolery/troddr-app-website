@@ -4,6 +4,11 @@
 -- dashboard's Edits chapter. All token-gated to the event.
 -- ============================================================
 
+-- ── Schema (defensive; columns may already exist) ───────────
+alter table public.ticket_locations add column if not exists latitude   double precision;
+alter table public.ticket_locations add column if not exists longitude  double precision;
+alter table public.ticket_locations add column if not exists place_slug text;
+
 -- ── Helper : resolve token → event_id ───────────────────────
 create or replace function public._partner_event_id_from_token(p_token text)
 returns uuid
@@ -125,6 +130,11 @@ grant execute on function public.delete_event_sponsor(text, uuid) to anon, authe
 -- TICKET LOCATIONS
 -- ============================================================
 
+-- Drop the previous 11-arg signature so the extended one below does not become
+-- a second overload (which would make PostgREST calls ambiguous).
+drop function if exists public.upsert_ticket_location(
+  text, uuid, text, boolean, text, text, text, text, text, text, text);
+
 create or replace function public.upsert_ticket_location(
   p_token         text,
   p_id            uuid default null,
@@ -136,7 +146,10 @@ create or replace function public.upsert_ticket_location(
   p_town          text default null,
   p_parish        text default null,
   p_contact_phone text default null,
-  p_opening_hours text default null
+  p_opening_hours text default null,
+  p_latitude      double precision default null,
+  p_longitude     double precision default null,
+  p_place_slug    text default null
 )
 returns jsonb
 language plpgsql
@@ -146,6 +159,7 @@ as $$
 declare
   v_event_id uuid;
   v_id       uuid;
+  v_slug     text := nullif(btrim(p_place_slug), '');
 begin
   v_event_id := _partner_event_id_from_token(p_token);
   if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
@@ -153,13 +167,18 @@ begin
     return jsonb_build_object('ok', false, 'error', 'name_required');
   end if;
 
+  -- When a slug is supplied it must point at a real listing.
+  if v_slug is not null and not exists (select 1 from public.places where slug = v_slug) then
+    return jsonb_build_object('ok', false, 'error', 'unknown_place_slug');
+  end if;
+
   if p_id is null then
     insert into public.ticket_locations (
       event_id, name, address, parish, town, contact_phone, opening_hours,
-      is_online, ticket_url, provider_type, is_active
+      is_online, ticket_url, provider_type, latitude, longitude, place_slug, is_active
     ) values (
       v_event_id, p_name, p_address, p_parish, p_town, p_contact_phone, p_opening_hours,
-      coalesce(p_is_online, false), p_ticket_url, p_provider_type, true
+      coalesce(p_is_online, false), p_ticket_url, p_provider_type, p_latitude, p_longitude, v_slug, true
     ) returning id into v_id;
   else
     update public.ticket_locations
@@ -172,6 +191,10 @@ begin
            is_online      = coalesce(p_is_online,     is_online),
            ticket_url     = coalesce(p_ticket_url,    ticket_url),
            provider_type  = coalesce(p_provider_type, provider_type),
+           latitude       = coalesce(p_latitude,      latitude),
+           longitude      = coalesce(p_longitude,     longitude),
+           -- null param leaves it; empty string clears the link.
+           place_slug     = case when p_place_slug is null then place_slug else v_slug end,
            updated_at     = now()
      where id = p_id and event_id = v_event_id
      returning id into v_id;
@@ -183,8 +206,25 @@ exception when others then
   return jsonb_build_object('ok', false, 'error', SQLERRM);
 end;
 $$;
-grant execute on function public.upsert_ticket_location(text, uuid, text, boolean, text, text, text, text, text, text, text)
+grant execute on function public.upsert_ticket_location(
+  text, uuid, text, boolean, text, text, text, text, text, text, text,
+  double precision, double precision, text)
   to anon, authenticated;
+
+-- Live place-slug validation for the editor's place picker.
+create or replace function public.validate_place_slug(p_slug text)
+returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select jsonb_build_object('exists', true, 'slug', slug, 'name', name)
+       from public.places where slug = nullif(btrim(p_slug), '') limit 1),
+    jsonb_build_object('exists', false, 'slug', nullif(btrim(p_slug), ''), 'name', null)
+  );
+$$;
+grant execute on function public.validate_place_slug(text) to anon, authenticated;
 
 
 create or replace function public.delete_ticket_location(p_token text, p_id uuid)
