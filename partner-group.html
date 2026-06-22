@@ -336,17 +336,34 @@
 
   <main class="main">
 
-    <section class="section" id="group-insights">
+    <!-- Group health (hero KPIs) -->
+    <section class="section" id="group-health">
       <div class="section-head">
-        <h2 class="section-title">Group Insights</h2>
+        <h2 class="section-title">Group Overview</h2>
         <div class="section-sub">Guest feedback rolled up across every location in your group.</div>
       </div>
-
       <div class="gi-stats" id="gi-stats">
         <div class="gi-stat"><div class="lbl">Locations</div><div class="val" id="gi-locations">—</div><div class="sub">in this group</div></div>
         <div class="gi-stat"><div class="lbl">Total Reviews</div><div class="val" id="gi-total">—</div><div class="sub" id="gi-total-sub">all time</div></div>
         <div class="gi-stat"><div class="lbl">Avg Rating</div><div class="val brand" id="gi-rating">—</div><div class="sub">across the group</div></div>
         <div class="gi-stat"><div class="lbl">Would Visit Again</div><div class="val" id="gi-return">—</div><div class="sub">of guests who answered</div></div>
+      </div>
+    </section>
+
+    <!-- Locations (quick access / drill-in) -->
+    <section class="section" id="places-section" style="display:none">
+      <div class="section-head">
+        <h2 class="section-title">Locations</h2>
+        <div class="section-sub">Restaurants, bars, hotels, and other venues in this group.</div>
+      </div>
+      <div class="entity-grid" id="places-grid"></div>
+    </section>
+
+    <!-- Performance by location -->
+    <section class="section" id="group-insights">
+      <div class="section-head">
+        <h2 class="section-title">Performance by location</h2>
+        <div class="section-sub">How each location is performing on guest feedback.</div>
       </div>
 
       <div class="gi-card" id="gi-board-card">
@@ -366,20 +383,6 @@
           No guest feedback yet. Reviews across your locations will appear here as guests leave them.
         </div>
       </div>
-
-      <div class="section-head" id="gi-tags-head" style="margin-top:24px; display:none;">
-        <h2 class="section-title">What guests are saying</h2>
-        <div class="section-sub">Most common tags across the group.</div>
-      </div>
-      <div class="gi-tags" id="gi-tags"></div>
-    </section>
-
-    <section class="section" id="places-section" style="display:none">
-      <div class="section-head">
-        <h2 class="section-title">Places</h2>
-        <div class="section-sub">Restaurants, bars, hotels, and other locations in this group.</div>
-      </div>
-      <div class="entity-grid" id="places-grid"></div>
     </section>
 
     <section class="section" id="events-section" style="display:none">
@@ -500,16 +503,6 @@
             <td class="num hide-sm">${fmtPct(l.would_return_rate)}</td>
           </tr>`;
       }).join('');
-    }
-
-    const tags = gi.top_tags || [];
-    if (tags.length) {
-      $('gi-tags-head').style.display = '';
-      $('gi-tags').innerHTML = tags.slice(0, 16).map((t) =>
-        `<span class="gi-tag">${escapeHtml(t.tag)}<b>${t.count}</b></span>`).join('');
-    } else {
-      $('gi-tags-head').style.display = 'none';
-      $('gi-tags').innerHTML = '';
     }
   }
 

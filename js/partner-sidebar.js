@@ -12,8 +12,7 @@
  *      Specials & Promotions, Account, Event)
  *
  *   • NAV_GROUP — shown on the group landing (/partner/group)
- *     (Listing, Community Insights, Group Insights,
- *      Specials & Promos, Billing)
+ *     (Group Insights, Listing, Specials & Promos, Billing)
  *
  * Sections are capability-driven: a section with a `cap` is only
  * rendered when capabilities[cap] is truthy. The section whose
@@ -77,9 +76,9 @@
     { group: 'Insights & Feedback', icon: 'ic-chart', page: '/partner/feedback', cap: 'feedback', children: [
       { label: 'Discovery',             section: 'metrics' },
       { label: 'Summary',               section: 'summary' },
-      { label: 'Item Insights',         section: 'items' },
       { label: 'Distribution',          section: 'distribution' },
       { label: 'What users are saying', section: 'tags' },
+      { label: 'Item Insights',         section: 'items' },
       { label: 'Recent Feedback',       section: 'recent' },
       { label: 'All Feedback',          section: 'feed' },
     ] },
@@ -107,22 +106,18 @@
   ];
 
   const NAV_GROUP = [
-    // Group Insights is a true multi-location feature — only shown when the
-    // account owns 2+ places (a restaurant chain / hotel group, etc.).
-    // It leads the group nav as the account-wide overview.
-    { group: 'Group Insights', icon: 'ic-grid', page: '/partner/group', minPlaces: 2 },
+    // Group Insights is the account-wide overview (multi-location). Clicking it
+    // in the group context shows GROUP analytics (/partner/group), not an
+    // individual location's feedback — per-location feedback is reached by
+    // selecting a location from the Locations grid / entity picker.
+    { group: 'Group Insights', icon: 'ic-grid', page: '/partner/group', minPlaces: 2, children: [
+      { label: 'Overview',    section: 'group-health',   page: '/partner/group' },
+      { label: 'Locations',   section: 'places-section', page: '/partner/group' },
+      { label: 'Performance', section: 'group-insights', page: '/partner/group' },
+    ] },
     { group: 'Listing', icon: 'ic-doc', page: '/partner/listing', cap: 'listing', children: [
       { label: 'Contact Info',    section: 'contact', page: '/partner/listing' },
       { label: 'Operating Hours', section: 'hours',   page: '/partner/listing' },
-    ] },
-    { group: 'Community Insights', icon: 'ic-users', page: '/partner/feedback', cap: 'feedback', children: [
-      { label: 'Summary',                section: 'summary',      page: '/partner/feedback' },
-      { label: 'Discovery',              section: 'metrics',      page: '/partner/feedback' },
-      { label: 'Ratings Breakdown',      section: 'ratings',      page: '/partner/feedback' },
-      { label: 'Recent Feedback',        section: 'recent',       page: '/partner/feedback' },
-      { label: 'Distribution',           section: 'distribution', page: '/partner/feedback' },
-      { label: 'What guests are saying', section: 'tags',         page: '/partner/feedback' },
-      { label: 'All Feedback',           section: 'feed',         page: '/partner/feedback' },
     ] },
     { group: 'Specials & Promos', icon: 'ic-tag', page: '/partner/specials', cap: 'specials', children: [
       { label: 'Overview', section: 'summary', page: '/partner/specials' },
