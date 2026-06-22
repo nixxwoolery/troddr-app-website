@@ -219,6 +219,16 @@
     font-weight: 500;
     text-align: left;
   }
+  /* Item insights (Taste Notes leaderboards) */
+  .item-block { margin-bottom: 18px; }
+  .item-block-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--grey-mid); margin-bottom: 6px; }
+  .item-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #eee; }
+  .item-name { font-weight: 600; }
+  .item-cat { font-weight: 400; color: var(--grey-mid); font-size: 12px; }
+  .item-metric { font-weight: 700; white-space: nowrap; }
+  .item-sub { font-weight: 400; color: var(--grey-mid); font-size: 12px; }
+  .item-comment { padding: 8px 0; border-top: 1px solid #eee; font-style: italic; }
+  .item-coming { color: var(--grey-mid); font-size: 12px; padding: 4px 0; }
   .pill {
     font-size: 10px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
@@ -501,24 +511,6 @@
     color: var(--grey-mid);
     text-transform: capitalize;
   }
-  .fb-items {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-soft);
-  }
-  .fb-items-label {
-    margin-bottom: 7px;
-    color: var(--grey-mid);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-  }
-  .fb-item { padding: 7px 0; }
-  .fb-item + .fb-item { border-top: 1px solid var(--border-soft); }
-  .fb-item-name { color: var(--black); font-size: 13px; font-weight: 700; }
-  .fb-item-note { margin-top: 3px; color: var(--grey-dark); font-size: 13px; font-style: italic; line-height: 1.45; }
-  .fb-item-meta { margin-top: 4px; color: var(--grey-mid); font-size: 11px; }
   .fb-rating-pill strong {
     color: var(--brand-primary);
     margin-left: 3px;
@@ -724,6 +716,16 @@
       <div class="ratings-card" id="ratings-card"></div>
     </section>
 
+    <section class="section" id="items" style="display:none">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Item Insights</h2>
+          <div class="section-sub">What guests love, from their Taste Notes. Anonymous and aggregated.</div>
+        </div>
+      </div>
+      <div id="items-body"></div>
+    </section>
+
     <section class="section" id="distribution">
       <div class="section-head">
         <div>
@@ -792,13 +794,6 @@
     if (d < 30)  return `${d} days ago`;
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
-  function fmtDate(value) {
-    if (!value) return '';
-    const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
-    return Number.isNaN(date.getTime())
-      ? String(value)
-      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
   function maskedLabel(userId) {
     if (!userId) return 'Member';
     const tail = String(userId).replace(/-/g, '').slice(-4);
@@ -865,7 +860,6 @@
 
   // ── State ────────────────────────────────────────────────
   let allFeedback   = [];
-  let placeTasteNotes = [];
   let activeRating  = 'all';   // all | 4plus | 3 | 2less
   let activeReturn  = 'all';   // all | yes | no
   let activeTime    = 'all';   // all | 7 | 30 | 90
@@ -1146,6 +1140,51 @@
     $('ratings').style.display = '';
   }
 
+  // ── Item insights (Taste Notes leaderboards; anonymous aggregates) ──
+  function renderItemInsights(d) {
+    if (!d || d.ok === false) return;
+    const wrap = $('items-body');
+    if (!wrap) return;
+    const blocks = [];
+    const list = (title, arr, metric) => {
+      if (!arr || !arr.length) return;
+      blocks.push(`<div class="item-block"><div class="item-block-title">${title}</div>` +
+        arr.map((it) => {
+          const tags = [
+            it.category ? `<span class="item-cat">${escapeHtml(it.category)}</span>` : '',
+            it.place_name ? `<span class="item-cat">@ ${escapeHtml(it.place_name)}</span>` : '',
+          ].join(' ');
+          return `<div class="item-row"><span class="item-name">${escapeHtml(it.name || 'Item')} ${tags}</span>` +
+                 `<span class="item-metric">${metric(it)}</span></div>`;
+        }).join('') +
+        `</div>`);
+    };
+    list('Most Loved', d.most_loved, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
+    list('House Favourites', d.house_favourites, (it) => `${Math.round((it.reorder_rate || 0) * 100)}% reorder <span class="item-sub">${it.reviews}</span>`);
+    list('Hidden Gems', d.hidden_gems, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
+    list('Lowest Rated', d.lowest_rated, (it) => `${it.elo_rating} <span class="item-sub">${it.total_reviews} logs</span>`);
+
+    if (d.comments && d.comments.length) {
+      blocks.push(`<div class="item-block"><div class="item-block-title">Customer Comments</div>` +
+        d.comments.map((c) => {
+          const meta = [
+            c.name ? escapeHtml(c.name) : '',
+            c.place_name ? `@ ${escapeHtml(c.place_name)}` : '',
+            c.would_order_again === true ? 'would order again' : (c.would_order_again === false ? 'wouldn’t reorder' : ''),
+          ].filter(Boolean).join(' · ');
+          return `<div class="item-comment">“${escapeHtml(c.notes || '')}” <span class="item-sub">${meta}</span></div>`;
+        }).join('') +
+        `</div>`);
+    }
+
+    // Reveal only when there's real data. Flag the unavailable metrics quietly.
+    if (!blocks.length) return;
+    const un = d.unavailable || {};
+    const coming = Object.keys(un).map((k) => `<div class="item-coming">${titleCase(k)}: coming soon</div>`).join('');
+    wrap.innerHTML = blocks.join('') + (coming ? `<div class="item-block">${coming}</div>` : '');
+    $('items').style.display = '';
+  }
+
   // ── Discovery card (PostHog via Edge Function; moved from listing) ──
   async function loadDiscovery(token) {
     if (!token) return;
@@ -1192,61 +1231,10 @@
     $('discovery-card').appendChild(card);
   }
 
-  function renderFeedbackItems(fb) {
-    const items = fb.items || [];
-    if (!items.length) return '';
-    return `<div class="fb-items">
-      <div class="fb-items-label">Taste Notes · What they had</div>
-      ${items.map((item) => {
-        const reorder = item.would_order_again === true
-          ? 'Would order again'
-          : item.would_order_again === false ? 'Wouldn’t order again' : '';
-        const meta = [item.category ? titleCase(item.category) : '', reorder].filter(Boolean).join(' · ');
-        return `<div class="fb-item">
-          <div class="fb-item-name">${escapeHtml(item.name || 'Item')}</div>
-          ${item.notes ? `<div class="fb-item-note">“${escapeHtml(item.notes)}”</div>` : ''}
-          ${meta ? `<div class="fb-item-meta">${escapeHtml(meta)}</div>` : ''}
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
-
-  // Compatibility for environments where the combined feedback RPC has not
-  // been deployed yet. These are still place-specific, public Taste Notes;
-  // they live in the feedback feed instead of on the group dashboard.
-  function renderStandaloneTasteNotes(limit) {
-    if ((allFeedback || []).some((fb) => (fb.items || []).length)) return '';
-    return (placeTasteNotes || []).slice(0, limit).map((item) => {
-      const reorder = item.would_order_again === true
-        ? 'Would order again'
-        : item.would_order_again === false ? 'Wouldn’t order again' : '';
-      const date = item.visit_date ? fmtDate(item.visit_date) : '';
-      return `<div class="fb-card">
-        <div class="fb-head">
-          <div class="fb-id">Anonymous guest <span class="fb-context">Taste Note</span></div>
-          ${date ? `<div class="fb-time">${escapeHtml(date)}</div>` : ''}
-        </div>
-        <div class="fb-items" style="margin-top:0;padding-top:0;border-top:0">
-          <div class="fb-items-label">Taste Notes · What they had</div>
-          <div class="fb-item">
-            <div class="fb-item-name">${escapeHtml(item.name || 'Item')}</div>
-            ${item.notes ? `<div class="fb-item-note">“${escapeHtml(item.notes)}”</div>` : ''}
-            ${reorder ? `<div class="fb-item-meta">${reorder}</div>` : ''}
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
   // ── Recent Feedback (latest 20; moved from listing) ──
   function renderRecent() {
     const feed = (allFeedback || []).slice(0, 20);
     if (!feed.length) {
-      const tasteNotes = renderStandaloneTasteNotes(20);
-      if (tasteNotes) {
-        $('recent-feed').innerHTML = tasteNotes;
-        return;
-      }
       $('recent-feed').innerHTML = `
         <div class="empty-state-card">
           <div class="empty-state-icon"><svg width="24" height="24"><use href="#ic-chat"/></svg></div>
@@ -1255,7 +1243,7 @@
         </div>`;
       return;
     }
-    const feedbackCards = feed.map(fb => {
+    $('recent-feed').innerHTML = feed.map(fb => {
       const ratings = fb.ratings || {};
       const pills = Object.entries(ratings).filter(([, v]) => v != null)
         .map(([k, v]) => `<span class="fb-rating-pill ${v <= 2 ? 'low' : ''}"><span class="name">${titleCase(k)}</span> <strong>${v}</strong></span>`).join('');
@@ -1273,20 +1261,13 @@
           ${pills ? `<div class="fb-ratings">${pills}</div>` : ''}
           ${tags ? `<div class="fb-tags">${tags}</div>` : ''}
           ${wr}
-          ${renderFeedbackItems(fb)}
         </div>`;
     }).join('');
-    $('recent-feed').innerHTML = feedbackCards + renderStandaloneTasteNotes(20);
   }
 
   function renderFeed() {
     const filtered = allFeedback.filter(matchesFilters);
     if (!filtered.length) {
-      const tasteNotes = renderStandaloneTasteNotes(30);
-      if (tasteNotes && allFeedback.length === 0) {
-        $('feedback-feed').innerHTML = tasteNotes;
-        return;
-      }
       const isEmpty = allFeedback.length === 0;
       $('feedback-feed').innerHTML = `
         <div class="empty-state-card">
@@ -1299,7 +1280,7 @@
       return;
     }
 
-    const feedbackCards = filtered.map(fb => {
+    $('feedback-feed').innerHTML = filtered.map(fb => {
       const ratings = fb.ratings || {};
       const pills = Object.entries(ratings)
         .filter(([, v]) => v != null)
@@ -1323,10 +1304,8 @@
           ${pills ? `<div class="fb-ratings">${pills}</div>` : ''}
           ${tags ? `<div class="fb-tags">${tags}</div>` : ''}
           ${wr}
-          ${renderFeedbackItems(fb)}
         </div>`;
     }).join('');
-    $('feedback-feed').innerHTML = feedbackCards + renderStandaloneTasteNotes(30);
   }
 
   // ── Entity picker (multi-domain partners) ────────────────
@@ -1404,7 +1383,7 @@
     const data = feedbackRes.data;
     const caps = capsRes.data;
     const listing = listingRes && listingRes.data;
-    const itemData = itemRes && itemRes.data;
+    const items = itemRes && itemRes.data;
 
     const intentional = window.PartnerAuth?.consumeIntent('/partner/feedback');
     const entities = (caps && caps.partner && caps.partner.entities) || [];
@@ -1425,7 +1404,6 @@
     }
 
     allFeedback = data.feedback || [];
-    placeTasteNotes = (itemData && itemData.comments) || [];
     window._tagData = data;
 
     // Reveal the dashboard view + mount the sidebar FIRST. This way the user
@@ -1446,6 +1424,7 @@
     safe('renderDiscoveryStats', () => renderDiscoveryStats(listing));
     safe('renderSummary',      () => renderSummary(data));
     safe('renderRatingsBreakdown', () => renderRatingsBreakdown(listing));
+    safe('renderItemInsights', () => renderItemInsights(items));
     safe('renderDistribution', () => renderDistribution(data));
     safe('renderTags',         () => renderTags(data));
     safe('renderRecent',       () => renderRecent());
