@@ -74,8 +74,8 @@
       { label: 'Check-in & Loyalty',  section: 'checkin' },
     ] },
     { group: 'Insights & Feedback', icon: 'ic-chart', page: '/partner/feedback', cap: 'feedback', children: [
-      { label: 'Discovery',             section: 'metrics' },
       { label: 'Summary',               section: 'summary' },
+      { label: 'Discovery',             section: 'metrics' },
       { label: 'Distribution',          section: 'distribution' },
       { label: 'What users are saying', section: 'tags' },
       { label: 'Item Insights',         section: 'items' },
