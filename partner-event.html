@@ -5598,15 +5598,31 @@
       const chk = (id) => document.getElementById(id).checked;
       const val = (id) => document.getElementById(id).value;
 
+      let startDate = val('ed-start-date') || null;
+      let endDate = val('ed-end-date') || null;
+      const startTime = val('ed-start-time') || null;
+      const endTime = val('ed-end-time') || null;
+
+      if (startDate && endDate && endDate < startDate) {
+        showStatus('The end date needs to be on or after the start date.', 'error');
+        return;
+      }
+
+      if (startDate && (!endDate || endDate === startDate) && startTime && endTime && endTime <= startTime) {
+        const nextDay = new Date(`${startDate}T00:00:00`);
+        nextDay.setDate(nextDay.getDate() + 1);
+        endDate = nextDay.toISOString().slice(0, 10);
+      }
+
       const payload = {
         p_token:              token,
         p_title:              str(val('ed-title')),
         p_description:        str(val('ed-desc')),
         p_short_description:  str(val('ed-short')),
-        p_start_date:         val('ed-start-date') || null,
-        p_end_date:           val('ed-end-date') || null,
-        p_start_time:         val('ed-start-time') || null,
-        p_end_time:           val('ed-end-time') || null,
+        p_start_date:         startDate,
+        p_end_date:           endDate,
+        p_start_time:         startTime,
+        p_end_time:           endTime,
         p_is_all_day:         chk('ed-allday'),
         p_timezone:           str(val('ed-timezone')),
         p_venue_name:         str(val('ed-venue')),

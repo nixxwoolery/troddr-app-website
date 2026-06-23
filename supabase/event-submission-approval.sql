@@ -54,6 +54,7 @@ as $$
     when 'family'            then 'family'
     when 'wellness'          then 'wellness'
     when 'community'         then 'community'
+    when 'carnival'          then 'carnival'
     else null
   end;
 $$;

@@ -42,6 +42,10 @@
       msg:  "The end date needs to be on or after the start date.",
     },
     {
+      test: (s) => /overnight events/.test(s) || /end date to the following day/.test(s),
+      msg:  "For overnight events, set the end date to the following day.",
+    },
+    {
       test: (s) => /pick a valid special type/.test(s) || /pick a special type/.test(s),
       msg:  "Please choose a type for this special.",
     },

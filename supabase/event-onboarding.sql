@@ -3,6 +3,80 @@
 -- event row from the dashboard.
 -- ============================================================
 
+create or replace function public._normalize_event_type(p_raw text)
+returns text
+language sql
+immutable
+as $$
+  select case lower(regexp_replace(coalesce(trim(p_raw), ''), '[\s&-]+', ' ', 'g'))
+    when ''                  then null
+    when 'music'             then 'music'
+    when 'concert'           then 'music'
+    when 'live music'        then 'music'
+    when 'food'              then 'food and drink'
+    when 'food and drink'    then 'food and drink'
+    when 'drink'             then 'food and drink'
+    when 'drinks'            then 'food and drink'
+    when 'culinary'          then 'food and drink'
+    when 'art'               then 'art'
+    when 'art and culture'   then 'art'
+    when 'culture'           then 'art'
+    when 'sports'            then 'sports'
+    when 'sport'             then 'sports'
+    when 'comedy'            then 'comedy'
+    when 'festival'          then 'festival'
+    when 'conference'        then 'conference'
+    when 'networking'        then 'networking'
+    when 'workshop'          then 'workshop'
+    when 'party'             then 'party'
+    when 'nightlife'         then 'nightlife'
+    when 'family'            then 'family'
+    when 'wellness'          then 'wellness'
+    when 'community'         then 'community'
+    when 'carnival'          then 'carnival'
+    else null
+  end;
+$$;
+
+do $$
+declare
+  v_constraint record;
+begin
+  for v_constraint in
+    select conname
+      from pg_constraint
+     where conrelid = 'public.events'::regclass
+       and contype = 'c'
+       and pg_get_constraintdef(oid) ilike '%start_time%'
+       and pg_get_constraintdef(oid) ilike '%end_time%'
+  loop
+    execute format('alter table public.events drop constraint %I', v_constraint.conname);
+  end loop;
+
+  if not exists (
+    select 1
+      from pg_constraint
+     where conrelid = 'public.events'::regclass
+       and conname = 'events_valid_event_chronology'
+  ) then
+    alter table public.events
+      add constraint events_valid_event_chronology check (
+        start_date is null
+        or end_date is null
+        or end_date > start_date
+        or (
+          end_date = start_date
+          and (
+            start_time is null
+            or end_time is null
+            or end_time >= start_time
+          )
+        )
+      );
+  end if;
+end;
+$$;
+
 create or replace function public.update_partner_event(
   p_token              text,
   p_title              text default null,
@@ -49,20 +123,42 @@ as $$
 declare
   v_event events%rowtype;
   v_updated_count int;
+  v_start_date date;
+  v_end_date date;
+  v_start_time time;
+  v_end_time time;
 begin
   select * into v_event from public.events where partner_access_token = p_token;
   if v_event.id is null then
     return jsonb_build_object('ok', false, 'error', 'Invalid or revoked token');
   end if;
 
+  v_start_date := coalesce(p_start_date, v_event.start_date);
+  v_end_date := coalesce(p_end_date, v_event.end_date);
+  v_start_time := coalesce(p_start_time, v_event.start_time);
+  v_end_time := coalesce(p_end_time, v_event.end_time);
+
+  if v_start_date is not null and v_end_date is not null and v_end_date < v_start_date then
+    return jsonb_build_object('ok', false, 'error', 'End date must be on or after start date');
+  end if;
+
+  if v_start_date is not null
+     and v_end_date is not null
+     and v_end_date = v_start_date
+     and v_start_time is not null
+     and v_end_time is not null
+     and v_end_time < v_start_time then
+    return jsonb_build_object('ok', false, 'error', 'For overnight events, set the end date to the following day');
+  end if;
+
   update public.events set
     title              = coalesce(nullif(trim(p_title), ''), title),
     description        = case when p_description is not null then nullif(trim(p_description), '') else description end,
     short_description  = case when p_short_description is not null then nullif(trim(p_short_description), '') else short_description end,
-    start_date         = coalesce(p_start_date, start_date),
-    end_date           = coalesce(p_end_date, end_date),
-    start_time         = case when p_start_time is not null then p_start_time else start_time end,
-    end_time           = case when p_end_time is not null then p_end_time else end_time end,
+    start_date         = v_start_date,
+    end_date           = v_end_date,
+    start_time         = v_start_time,
+    end_time           = v_end_time,
     is_all_day         = coalesce(p_is_all_day, is_all_day),
     timezone           = coalesce(nullif(trim(p_timezone), ''), timezone),
     venue_name         = case when p_venue_name is not null then nullif(trim(p_venue_name), '') else venue_name end,
@@ -90,7 +186,7 @@ begin
     website_url        = case when p_website_url is not null then nullif(trim(p_website_url), '') else website_url end,
     instagram_url      = case when p_instagram_url is not null then nullif(trim(p_instagram_url), '') else instagram_url end,
     featured_image_url = case when p_featured_image_url is not null then nullif(trim(p_featured_image_url), '') else featured_image_url end,
-    event_type         = case when p_event_type is not null then nullif(trim(p_event_type), '') else event_type end,
+    event_type         = case when p_event_type is not null then coalesce(public._normalize_event_type(p_event_type), event_type) else event_type end,
     updated_at         = now()
   where id = v_event.id;
 
