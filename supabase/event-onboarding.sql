@@ -77,6 +77,14 @@ begin
 end;
 $$;
 
+drop function if exists public.update_partner_event(
+  text, text, text, text, date, date, time, time, boolean, text,
+  text, text, text, text, text,
+  boolean, numeric, numeric, text, boolean, boolean, text, integer,
+  integer, text, boolean, boolean,
+  text, text, text, text, text, text, text, text, text
+);
+
 create or replace function public.update_partner_event(
   p_token              text,
   p_title              text default null,
@@ -109,11 +117,16 @@ create or replace function public.update_partner_event(
   p_contact_email      text default null,
   p_contact_phone      text default null,
   p_support_email      text default null,
+  p_support_phone      text default null,
   p_support_url        text default null,
   p_website_url        text default null,
   p_instagram_url      text default null,
   p_featured_image_url text default null,
-  p_event_type         text default null
+  p_event_type         text default null,
+  p_info_sections      jsonb default null,
+  p_faq                jsonb default null,
+  p_parking_image_url  text default null,
+  p_parking_image_urls jsonb default null
 )
 returns jsonb
 language plpgsql
@@ -182,11 +195,16 @@ begin
     contact_email      = case when p_contact_email is not null then nullif(trim(p_contact_email), '') else contact_email end,
     contact_phone      = case when p_contact_phone is not null then nullif(trim(p_contact_phone), '') else contact_phone end,
     support_email      = case when p_support_email is not null then nullif(trim(p_support_email), '') else support_email end,
+    support_phone      = case when p_support_phone is not null then nullif(trim(p_support_phone), '') else support_phone end,
     support_url        = case when p_support_url is not null then nullif(trim(p_support_url), '') else support_url end,
     website_url        = case when p_website_url is not null then nullif(trim(p_website_url), '') else website_url end,
     instagram_url      = case when p_instagram_url is not null then nullif(trim(p_instagram_url), '') else instagram_url end,
     featured_image_url = case when p_featured_image_url is not null then nullif(trim(p_featured_image_url), '') else featured_image_url end,
     event_type         = case when p_event_type is not null then coalesce(public._normalize_event_type(p_event_type), event_type) else event_type end,
+    info_sections      = case when p_info_sections is not null then p_info_sections else info_sections end,
+    faq                = case when p_faq is not null then p_faq else faq end,
+    parking_image_url  = case when p_parking_image_url is not null then nullif(trim(p_parking_image_url), '') else parking_image_url end,
+    parking_image_urls = case when p_parking_image_urls is not null then p_parking_image_urls else parking_image_urls end,
     updated_at         = now()
   where id = v_event.id;
 
@@ -205,5 +223,6 @@ grant execute on function public.update_partner_event(
   text, text, text, text, text,
   boolean, numeric, numeric, text, boolean, boolean, text, integer,
   integer, text, boolean, boolean,
-  text, text, text, text, text, text, text, text, text
+  text, text, text, text, text, text, text, text, text, text,
+  jsonb, jsonb, text, jsonb
 ) to anon;
