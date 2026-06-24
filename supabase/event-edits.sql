@@ -61,7 +61,7 @@ begin
 
   if p_event_sponsor_id is null then
     -- Create a sponsor row + event_sponsor link
-    v_slug := lower(regexp_replace(p_sponsor_name || '-' || substr(encode(gen_random_bytes(3), 'hex'), 1, 6), '[^a-z0-9-]+', '-', 'g'));
+    v_slug := lower(regexp_replace(p_sponsor_name || '-' || substr(encode(extensions.gen_random_bytes(3), 'hex'), 1, 6), '[^a-z0-9-]+', '-', 'g'));
     insert into public.sponsors (name, slug, logo_url, website, description, instagram, is_active)
          values (p_sponsor_name, v_slug, p_logo_url, p_website, p_custom_tagline, p_instagram, true)
       returning id into v_sponsor_id;
