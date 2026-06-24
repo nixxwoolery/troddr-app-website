@@ -3919,6 +3919,14 @@
     status.textContent = text || '';
     status.className = 'image-status' + (kind ? ' ' + kind : '');
   }
+  function sponsorTierForEditor(s) {
+    if (!s) return '';
+    const label = String(s.display_tier_label || s.tier_label || '').toLowerCase();
+    if (label.includes('gold')) return 'gold';
+    if (label.includes('silver')) return 'silver';
+    if (label.includes('bronze')) return 'bronze';
+    return s.tier || '';
+  }
 
   // ── Sponsors editor ────────────────────────────────────
   let _editingSponsor = null;
@@ -3959,7 +3967,7 @@
     document.getElementById('sp-modal-title').textContent = s ? 'Edit sponsor' : 'Add sponsor';
     document.getElementById('sp-modal-sub').textContent = s ? (s.sponsor_name || s.name || '') : 'New sponsor for this event.';
     document.getElementById('sp-name').value      = s ? (s.sponsor_name || s.name || '') : '';
-    document.getElementById('sp-tier').value      = s ? (s.tier || '') : '';
+    document.getElementById('sp-tier').value      = sponsorTierForEditor(s);
     document.getElementById('sp-tier-label').value= s ? (s.display_tier_label || '') : '';
     document.getElementById('sp-tagline').value   = s ? (s.custom_tagline || s.description || '') : '';
     document.getElementById('sp-logo').value      = s ? (s.logo_url || '') : '';
