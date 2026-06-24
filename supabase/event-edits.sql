@@ -63,9 +63,9 @@ begin
   v_tier := case lower(coalesce(nullif(btrim(p_tier), ''), 'partner'))
     when 'title' then 'presenting'
     when 'platinum' then 'presenting'
-    when 'gold' then 'major'
-    when 'silver' then 'supporting'
-    when 'bronze' then 'supporting'
+    when 'gold' then 'gold'
+    when 'silver' then 'silver'
+    when 'bronze' then 'bronze'
     when 'presenting' then 'presenting'
     when 'major' then 'major'
     when 'supporting' then 'supporting'

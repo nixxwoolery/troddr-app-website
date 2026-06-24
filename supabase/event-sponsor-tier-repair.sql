@@ -1,18 +1,15 @@
 -- ============================================================
 -- Event sponsor tier repair
 -- ============================================================
--- The mobile app renders only these tier keys:
--- presenting, major, supporting, community, partner.
--- Older dashboard options wrote title/platinum/gold/silver/bronze, which
--- SponsorsTab fetches successfully but filters out before rendering.
+-- The mobile app renders these tier keys:
+-- presenting, major, gold, silver, bronze, supporting, community, partner.
+-- Older dashboard options wrote title/platinum, which SponsorsTab fetches
+-- successfully but filters out before rendering.
 
 update public.event_sponsors
    set tier = case lower(tier)
      when 'title' then 'presenting'
      when 'platinum' then 'presenting'
-     when 'gold' then 'major'
-     when 'silver' then 'supporting'
-     when 'bronze' then 'supporting'
      else 'partner'
    end,
        display_tier_label = coalesce(
@@ -27,4 +24,4 @@ update public.event_sponsors
          end
        ),
        updated_at = now()
- where lower(tier) not in ('presenting', 'major', 'supporting', 'community', 'partner');
+ where lower(tier) not in ('presenting', 'major', 'gold', 'silver', 'bronze', 'supporting', 'community', 'partner');
