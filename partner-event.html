@@ -639,6 +639,16 @@
   }
   .image-status.error { color: var(--red); }
   .image-status.success { color: var(--green); }
+  .sponsor-logo-upload {
+    grid-template-columns: 84px 1fr;
+    margin-top: 6px;
+  }
+  .sponsor-logo-preview {
+    width: 84px;
+    height: 56px;
+    background-size: contain;
+    background-color: #fff;
+  }
   .main {
     min-width: 0;
     padding-bottom: 80px;
@@ -2823,11 +2833,8 @@
             <select id="sp-tier">
               <option value="">— Select —</option>
               <option value="presenting">Presenting</option>
-              <option value="title">Title</option>
-              <option value="platinum">Platinum</option>
-              <option value="gold">Gold</option>
-              <option value="silver">Silver</option>
-              <option value="bronze">Bronze</option>
+              <option value="major">Major</option>
+              <option value="supporting">Supporting</option>
               <option value="partner">Partner</option>
               <option value="community">Community</option>
             </select></div>
@@ -2835,8 +2842,21 @@
             <input id="sp-tier-label" type="text" maxlength="60" placeholder="e.g. Refreshment Partner" /></div>
           <div class="ve-field"><label for="sp-tagline">Tagline / description</label>
             <textarea id="sp-tagline" rows="2" maxlength="240"></textarea></div>
-          <div class="ve-field"><label for="sp-logo">Logo URL</label>
-            <input id="sp-logo" type="url" maxlength="500" placeholder="https://..." /></div>
+          <div class="ve-field"><label for="sp-logo">Logo</label>
+            <div class="image-upload sponsor-logo-upload">
+              <div class="image-preview sponsor-logo-preview" id="sp-logo-preview">No logo</div>
+              <div class="image-upload-body">
+                <div class="image-upload-actions">
+                  <label class="image-pick-btn">
+                    Upload logo
+                    <input id="sp-logo-file" type="file" accept="image/*" />
+                  </label>
+                  <button type="button" class="image-pick-btn" id="sp-logo-clear">Clear</button>
+                </div>
+                <input id="sp-logo" class="image-url-input" type="url" maxlength="500" placeholder="Upload a logo or paste a direct image URL" />
+                <div class="image-status" id="sp-logo-status"></div>
+              </div>
+            </div></div>
           <div class="ve-field"><label for="sp-website">Website</label>
             <input id="sp-website" type="url" maxlength="300" placeholder="https://..." /></div>
           <div class="ve-field"><label for="sp-instagram">Instagram</label>
@@ -3862,6 +3882,40 @@
     el.textContent = text || '';
   }
   function titleCaseSafe(s) { return s ? String(s).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : ''; }
+  function safeStorageName(s) {
+    return String(s || 'logo').trim().replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^_+|_+$/g, '') || 'logo';
+  }
+  function isLikelyRenderableImageUrl(url) {
+    if (!url) return true;
+    try {
+      const u = new URL(url);
+      if (!/^https?:$/.test(u.protocol)) return false;
+      if (/drive\.google\.com$/i.test(u.hostname)) return false;
+      if (/\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(u.pathname + u.search)) return true;
+      return /supabase\.co$/i.test(u.hostname) || /\/storage\/v1\/object\/public\//i.test(u.pathname);
+    } catch (_) {
+      return false;
+    }
+  }
+  function setSponsorLogoPreview(url) {
+    const preview = document.getElementById('sp-logo-preview');
+    if (!preview) return;
+    if (url) {
+      preview.style.backgroundImage = `url('${url}')`;
+      preview.style.color = 'transparent';
+      preview.textContent = '';
+    } else {
+      preview.style.backgroundImage = '';
+      preview.style.color = '';
+      preview.textContent = 'No logo';
+    }
+  }
+  function setSponsorLogoStatus(text, kind) {
+    const status = document.getElementById('sp-logo-status');
+    if (!status) return;
+    status.textContent = text || '';
+    status.className = 'image-status' + (kind ? ' ' + kind : '');
+  }
 
   // ── Sponsors editor ────────────────────────────────────
   let _editingSponsor = null;
@@ -3906,6 +3960,10 @@
     document.getElementById('sp-tier-label').value= s ? (s.display_tier_label || '') : '';
     document.getElementById('sp-tagline').value   = s ? (s.custom_tagline || s.description || '') : '';
     document.getElementById('sp-logo').value      = s ? (s.logo_url || '') : '';
+    setSponsorLogoPreview(s ? (s.logo_url || '') : '');
+    setSponsorLogoStatus('');
+    const logoFile = document.getElementById('sp-logo-file');
+    if (logoFile) logoFile.value = '';
     document.getElementById('sp-website').value   = s ? (s.website || '') : '';
     document.getElementById('sp-instagram').value = s ? (s.instagram || '') : '';
     document.getElementById('sp-featured').checked = !!(s && s.is_featured);
@@ -3914,6 +3972,57 @@
     _modalOpen('sp-modal-backdrop');
     setTimeout(() => document.getElementById('sp-name').focus(), 30);
   }
+  document.getElementById('sp-logo')?.addEventListener('input', (e) => {
+    const url = e.target.value.trim();
+    const isRenderable = isLikelyRenderableImageUrl(url);
+    setSponsorLogoPreview(url);
+    setSponsorLogoStatus(isRenderable ? '' : 'Use a direct image URL or upload a logo file.', isRenderable ? '' : 'error');
+  });
+  document.getElementById('sp-logo-clear')?.addEventListener('click', () => {
+    document.getElementById('sp-logo').value = '';
+    const logoFile = document.getElementById('sp-logo-file');
+    if (logoFile) logoFile.value = '';
+    setSponsorLogoPreview('');
+    setSponsorLogoStatus('');
+  });
+  document.getElementById('sp-logo-file')?.addEventListener('change', async (e) => {
+    const fileInput = e.target;
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setSponsorLogoStatus('Please choose an image file.', 'error');
+      fileInput.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setSponsorLogoStatus('Logo too large (5MB max).', 'error');
+      fileInput.value = '';
+      return;
+    }
+
+    const eventSlug = safeStorageName(window.__eventData?.event?.slug || 'event');
+    const sponsorName = safeStorageName(document.getElementById('sp-name')?.value || 'sponsor');
+    const fileName = safeStorageName(file.name);
+    const path = `sponsor-logos/${eventSlug}/${sponsorName}-${Date.now()}-${fileName}`;
+    setSponsorLogoStatus('Uploading logo...');
+    try {
+      const { data, error } = await db.storage
+        .from('partner-intake-assets')
+        .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+      if (error) throw error;
+      const pub = db.storage.from('partner-intake-assets').getPublicUrl(data.path);
+      const url = pub && pub.data && pub.data.publicUrl;
+      if (!url) throw new Error('No public URL returned');
+      document.getElementById('sp-logo').value = url;
+      setSponsorLogoPreview(url);
+      setSponsorLogoStatus('Uploaded. Click Save to apply this logo.', 'success');
+    } catch (err) {
+      console.error('sponsor logo upload failed', err);
+      setSponsorLogoStatus((window.friendlyError || (() => ''))(err, "Logo upload didn't go through. Try a smaller file."), 'error');
+    } finally {
+      fileInput.value = '';
+    }
+  });
   async function saveSponsor(e) {
     e.preventDefault();
     if (!_editingSponsor) return;
@@ -3929,6 +4038,10 @@
       p_instagram:           document.getElementById('sp-instagram').value.trim() || null,
       p_is_featured:         document.getElementById('sp-featured').checked,
     };
+    if (!isLikelyRenderableImageUrl(payload.p_logo_url)) {
+      _setStatus('sp-status', 'Use a direct image URL for the logo, like a Supabase Storage, PNG, JPG, WebP, GIF, or SVG file. Google Drive sharing links will not display in the app.', 'error');
+      return;
+    }
     const saveBtn = document.getElementById('sp-save');
     saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
     try {

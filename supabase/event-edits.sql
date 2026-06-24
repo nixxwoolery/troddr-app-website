@@ -50,6 +50,7 @@ declare
   v_sponsor_id uuid;
   v_es_id      uuid;
   v_slug       text;
+  v_tier       text;
 begin
   v_event_id := _partner_event_id_from_token(p_token);
   if v_event_id is null then
@@ -58,16 +59,44 @@ begin
   if p_sponsor_name is null or btrim(p_sponsor_name) = '' then
     return jsonb_build_object('ok', false, 'error', 'sponsor_name_required');
   end if;
+  v_tier := case lower(coalesce(nullif(btrim(p_tier), ''), 'partner'))
+    when 'title' then 'presenting'
+    when 'platinum' then 'presenting'
+    when 'gold' then 'major'
+    when 'silver' then 'supporting'
+    when 'bronze' then 'supporting'
+    when 'presenting' then 'presenting'
+    when 'major' then 'major'
+    when 'supporting' then 'supporting'
+    when 'community' then 'community'
+    else 'partner'
+  end;
 
   if p_event_sponsor_id is null then
     -- Create a sponsor row + event_sponsor link
-    v_slug := lower(regexp_replace(p_sponsor_name || '-' || substr(encode(extensions.gen_random_bytes(3), 'hex'), 1, 6), '[^a-z0-9-]+', '-', 'g'));
+    v_slug := regexp_replace(lower(btrim(p_sponsor_name)) || '-' || substr(encode(extensions.gen_random_bytes(3), 'hex'), 1, 6), '[^a-z0-9-]+', '-', 'g');
     insert into public.sponsors (name, slug, logo_url, website, description, instagram, is_active)
-         values (p_sponsor_name, v_slug, p_logo_url, p_website, p_custom_tagline, p_instagram, true)
+         values (
+           btrim(p_sponsor_name),
+           v_slug,
+           nullif(btrim(p_logo_url), ''),
+           nullif(btrim(p_website), ''),
+           nullif(btrim(p_custom_tagline), ''),
+           nullif(btrim(p_instagram), ''),
+           true
+         )
       returning id into v_sponsor_id;
 
     insert into public.event_sponsors (event_id, sponsor_id, tier, display_tier_label, custom_tagline, is_featured, is_active)
-         values (v_event_id, v_sponsor_id, coalesce(p_tier, 'partner'), p_display_tier_label, p_custom_tagline, coalesce(p_is_featured, false), true)
+         values (
+           v_event_id,
+           v_sponsor_id,
+           v_tier,
+           nullif(btrim(p_display_tier_label), ''),
+           nullif(btrim(p_custom_tagline), ''),
+           coalesce(p_is_featured, false),
+           true
+         )
       returning id into v_es_id;
   else
     -- Update : confirm ownership, then update both tables
@@ -79,19 +108,21 @@ begin
     end if;
 
     update public.event_sponsors
-       set tier               = coalesce(p_tier,               tier),
-           display_tier_label = coalesce(p_display_tier_label, display_tier_label),
-           custom_tagline     = coalesce(p_custom_tagline,     custom_tagline),
+       set tier               = v_tier,
+           display_tier_label = nullif(btrim(p_display_tier_label), ''),
+           custom_tagline     = nullif(btrim(p_custom_tagline), ''),
            is_featured        = coalesce(p_is_featured,        is_featured),
+           is_active          = true,
            updated_at         = now()
      where id = v_es_id;
 
     update public.sponsors
-       set name        = coalesce(p_sponsor_name, name),
-           logo_url    = coalesce(p_logo_url,     logo_url),
-           website     = coalesce(p_website,      website),
-           instagram   = coalesce(p_instagram,    instagram),
-           description = coalesce(p_custom_tagline, description),
+       set name        = btrim(p_sponsor_name),
+           logo_url    = nullif(btrim(p_logo_url), ''),
+           website     = nullif(btrim(p_website), ''),
+           instagram   = nullif(btrim(p_instagram), ''),
+           description = nullif(btrim(p_custom_tagline), ''),
+           is_active   = true,
            updated_at  = now()
      where id = v_sponsor_id;
   end if;

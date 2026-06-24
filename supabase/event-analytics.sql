@@ -564,15 +564,22 @@ begin
       select coalesce(
         jsonb_agg(
           jsonb_build_object(
-            'id',           s.id,
-            'name',         s.name,
-            'logo_url',     s.logo_url,
-            'website',      s.website,
-            'brand_color',  s.brand_color,
-            'tier',         es.tier,
-            'tier_label',   es.display_tier_label,
-            'is_featured',  es.is_featured,
-            'tagline',      es.custom_tagline,
+            'id',                 s.id,
+            'sponsor_id',         s.id,
+            'event_sponsor_id',   es.id,
+            'name',               s.name,
+            'sponsor_name',       s.name,
+            'logo_url',           s.logo_url,
+            'website',            s.website,
+            'instagram',          s.instagram,
+            'brand_color',        s.brand_color,
+            'tier',               es.tier,
+            'tier_label',         es.display_tier_label,
+            'display_tier_label', es.display_tier_label,
+            'is_featured',        es.is_featured,
+            'tagline',            es.custom_tagline,
+            'custom_tagline',     es.custom_tagline,
+            'description',        s.description,
             'activations', (
               select coalesce(
                 jsonb_agg(jsonb_build_object(
@@ -604,7 +611,9 @@ begin
         '[]'::jsonb)
       from public.event_sponsors es
       join public.sponsors s on s.id = es.sponsor_id
-      where es.event_id = v_event.id and coalesce(es.is_active, true) = true
+      where es.event_id = v_event.id
+        and coalesce(es.is_active, true) = true
+        and coalesce(s.is_active, true) = true
     )
   );
 end;
