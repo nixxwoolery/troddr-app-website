@@ -51,6 +51,7 @@ declare
   v_es_id      uuid;
   v_slug       text;
   v_tier       text;
+  v_tier_label text;
 begin
   v_event_id := _partner_event_id_from_token(p_token);
   if v_event_id is null then
@@ -71,6 +72,17 @@ begin
     when 'community' then 'community'
     else 'partner'
   end;
+  v_tier_label := coalesce(
+    nullif(btrim(p_display_tier_label), ''),
+    case lower(coalesce(nullif(btrim(p_tier), ''), 'partner'))
+      when 'title' then 'Title Sponsor'
+      when 'platinum' then 'Platinum Sponsor'
+      when 'gold' then 'Gold Sponsor'
+      when 'silver' then 'Silver Sponsor'
+      when 'bronze' then 'Bronze Sponsor'
+      else null
+    end
+  );
 
   if p_event_sponsor_id is null then
     -- Create a sponsor row + event_sponsor link
@@ -92,7 +104,7 @@ begin
            v_event_id,
            v_sponsor_id,
            v_tier,
-           nullif(btrim(p_display_tier_label), ''),
+           v_tier_label,
            nullif(btrim(p_custom_tagline), ''),
            coalesce(p_is_featured, false),
            true
@@ -109,7 +121,7 @@ begin
 
     update public.event_sponsors
        set tier               = v_tier,
-           display_tier_label = nullif(btrim(p_display_tier_label), ''),
+           display_tier_label = v_tier_label,
            custom_tagline     = nullif(btrim(p_custom_tagline), ''),
            is_featured        = coalesce(p_is_featured,        is_featured),
            is_active          = true,
