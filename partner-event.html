@@ -2810,6 +2810,9 @@
               <option value="merch">Merch</option><option value="info">Info</option>
               <option value="experience">Experience</option><option value="other">Other</option>
             </select></div>
+          <div class="ve-field"><label for="ve-filter-tags">Filter labels</label>
+            <input id="ve-filter-tags" type="text" maxlength="240" placeholder="seafood, dessert, bar" />
+          </div>
           <div class="ve-field"><label for="ve-desc">Description</label>
             <textarea id="ve-desc" rows="3" maxlength="500"></textarea></div>
           <div class="ve-field checkbox"><input id="ve-featured" type="checkbox" />
@@ -3479,6 +3482,25 @@
   let _editingVendor = null;
   let _vendorDirectory = null;
 
+  function parseFilterTags(value) {
+    const seen = new Set();
+    return String(value || '')
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean)
+      .filter(t => {
+        const key = t.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
+  function filterTagsText(v) {
+    const tags = v && (v.filter_tags || v.filters || v.vendor_filter_tags);
+    return Array.isArray(tags) ? tags.join(', ') : (tags || '');
+  }
+
   async function loadVendorDirectory() {
     if (_vendorDirectory) return _vendorDirectory;
     try {
@@ -3498,6 +3520,7 @@
     $('ve-booth').value    = v.booth_number || '';
     $('ve-zone').value     = v.zone || '';
     $('ve-type').value     = v.vendor_type || '';
+    $('ve-filter-tags').value = filterTagsText(v);
     $('ve-desc').value     = v.vendor_description || v.description || '';
     $('ve-featured').checked = !!(v.vendor_is_featured || v.is_featured);
     $('ve-status').className = 've-status';
@@ -3536,9 +3559,10 @@
       if (opt && opt.value) {
         $('ve-name').value = opt.textContent.replace(/ · already added$/, '').trim();
         $('ve-type').value = opt.dataset.type || '';
+        $('ve-filter-tags').value = '';
         $('ve-desc').value = opt.dataset.desc || '';
       } else {
-        $('ve-name').value = ''; $('ve-type').value = ''; $('ve-desc').value = '';
+        $('ve-name').value = ''; $('ve-type').value = ''; $('ve-filter-tags').value = ''; $('ve-desc').value = '';
       }
     });
     if (cancel) cancel.addEventListener('click', closeVendorEditor);
@@ -3561,6 +3585,7 @@
       p_zone:                $('ve-zone').value.trim() || null,
       p_vendor_type:         $('ve-type').value || null,
       p_vendor_description:  $('ve-desc').value.trim() || null,
+      p_filter_tags:         parseFilterTags($('ve-filter-tags').value),
       p_is_featured:         $('ve-featured').checked,
       // Directory pick (create path only) — links the existing vendor
       // instead of creating a duplicate.
@@ -3613,6 +3638,8 @@
       const favourites = Number(v.favourite_count || 0);
       const wantToTry = Number(v.want_to_try_count || 0);
       const menuClicks = Number(v.menu_clicks || v.click_count || 0);
+      const filterTags = parseFilterTags(filterTagsText(v));
+      const filterTagsHtml = filterTags.map(t => `<span class="vl-menu-item-tag">${escapeHtml(t)}</span>`).join('');
       const menuHtml = items.length ? items.map(it => {
         const tags = [];
         if (it.is_special)  tags.push('<span class="vl-menu-item-tag special">Special</span>');
@@ -3638,6 +3665,7 @@
               <div>
                 <span class="vl-vendor-name">${escapeHtml(v.vendor_name || v.name || 'Unnamed vendor')}</span>
                 ${v.vendor_is_featured || v.is_featured ? '<span class="vl-featured-pill">Featured</span>' : ''}
+                ${filterTagsHtml ? `<div class="vl-menu-item-tags">${filterTagsHtml}</div>` : ''}
               </div>
             </div>
           </td>
@@ -3722,6 +3750,7 @@
             ${v.booth_number ? 'Booth ' + escapeHtml(v.booth_number) + ' · ' : ''}
             ${v.zone ? escapeHtml(v.zone) + ' · ' : ''}
             ${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}
+            ${filterTagsText(v) ? ' · ' + escapeHtml(filterTagsText(v)) : ''}
             ${(v.menu_items && v.menu_items.length) ? ' · ' + v.menu_items.length + ' menu item' + (v.menu_items.length === 1 ? '' : 's') : ''}
           </div>
         </div>
@@ -3838,6 +3867,7 @@
                 ${linkedBadge}
                 ${v.booth_number ? `<span class="booth">Booth ${escapeHtml(v.booth_number)}</span>` : ''}
                 ${v.vendor_type ? `<span>${escapeHtml(v.vendor_type)}</span>` : ''}
+                ${filterTagsText(v) ? `<span>${escapeHtml(filterTagsText(v))}</span>` : ''}
                 ${placeLink}
               </div>
             </div>

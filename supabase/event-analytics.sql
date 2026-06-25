@@ -325,10 +325,13 @@ begin
       with vendor_base as (
         select distinct on (vendor_id)
           vendor_id, vendor_name, vendor_description, vendor_type,
+          coalesce((select ev.filter_tags
+                      from public.event_vendors ev
+                     where ev.id = evm_base.event_vendor_id), '{}'::text[]) as filter_tags,
           logo_url, cover_image_url, instagram, website,
           place_id, place_slug, place_name, place_image, place_category,
           event_vendor_id, booth_number, vendor_is_featured
-        from public.event_vendors_with_menu
+        from public.event_vendors_with_menu evm_base
         where event_id = v_event.id
       )
       select coalesce(
@@ -338,6 +341,8 @@ begin
             'name',            vb.vendor_name,
             'description',     vb.vendor_description,
             'vendor_type',     vb.vendor_type,
+            'filter_tags',     vb.filter_tags,
+            'filters',         vb.filter_tags,
             'logo_url',        vb.logo_url,
             'cover_image_url', vb.cover_image_url,
             'instagram',       vb.instagram,
