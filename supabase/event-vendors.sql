@@ -5,6 +5,8 @@
 
 alter table public.event_vendors
   add column if not exists filter_tags text[] not null default '{}';
+alter table public.event_vendors
+  add column if not exists display_name text;
 
 drop function if exists public.update_event_vendor(
   text, uuid, text, text, text, text, boolean);
@@ -27,6 +29,7 @@ as $$
 declare
   v_event_id  uuid;
   v_vendor_id uuid;
+  v_target_vendor_id uuid;
 begin
   -- 1. Resolve token → event
   select id into v_event_id
@@ -46,9 +49,33 @@ begin
     return jsonb_build_object('ok', false, 'error', 'vendor_not_found_for_event');
   end if;
 
+  if p_vendor_name is not null then
+    select id into v_target_vendor_id
+      from public.vendors
+     where lower(btrim(name)) = lower(btrim(p_vendor_name))
+       and id <> v_vendor_id
+     limit 1;
+  end if;
+
+  if v_target_vendor_id is not null then
+    if exists (
+      select 1
+        from public.event_vendors
+       where event_id = v_event_id
+         and vendor_id = v_target_vendor_id
+         and id <> p_event_vendor_id
+    ) then
+      v_target_vendor_id := null;
+    else
+      v_vendor_id := v_target_vendor_id;
+    end if;
+  end if;
+
   -- 3. Update event-level metadata (booth, featured)
   update public.event_vendors
-     set booth_number  = coalesce(p_booth_number,  booth_number),
+     set vendor_id     = coalesce(v_target_vendor_id, vendor_id),
+         display_name  = coalesce(nullif(btrim(p_vendor_name), ''), display_name),
+         booth_number  = coalesce(p_booth_number,  booth_number),
          is_featured   = coalesce(p_is_featured,   is_featured),
          filter_tags   = coalesce(p_filter_tags,   filter_tags),
          updated_at    = now()
@@ -56,10 +83,17 @@ begin
 
   -- 4. Update vendor-level fields (name, type, description) on the vendors row.
   --    Only update the columns the partner actually changed.
-  if p_vendor_name is not null or p_vendor_type is not null or p_vendor_description is not null then
+  if v_target_vendor_id is not null then
+    if p_vendor_type is not null or p_vendor_description is not null then
+      update public.vendors
+         set vendor_type = coalesce(p_vendor_type,        vendor_type),
+             description = coalesce(p_vendor_description, description),
+             updated_at  = now()
+       where id = v_vendor_id;
+    end if;
+  elsif p_vendor_type is not null or p_vendor_description is not null then
     update public.vendors
-       set name        = coalesce(p_vendor_name,        name),
-           vendor_type = coalesce(p_vendor_type,        vendor_type),
+       set vendor_type = coalesce(p_vendor_type,        vendor_type),
            description = coalesce(p_vendor_description, description),
            updated_at  = now()
      where id = v_vendor_id;
@@ -163,6 +197,7 @@ declare
   v_event_id        uuid;
   v_vendor_id       uuid;
   v_event_vendor_id uuid;
+  v_target_vendor_id uuid;
 begin
   -- 1. Resolve token → event
   select id into v_event_id
@@ -183,18 +218,49 @@ begin
       return jsonb_build_object('ok', false, 'error', 'vendor_not_found_for_event');
     end if;
 
+    if p_vendor_name is not null then
+      select id into v_target_vendor_id
+        from public.vendors
+       where lower(btrim(name)) = lower(btrim(p_vendor_name))
+         and id <> v_vendor_id
+       limit 1;
+    end if;
+
+  if v_target_vendor_id is not null then
+    if exists (
+      select 1
+        from public.event_vendors
+       where event_id = v_event_id
+         and vendor_id = v_target_vendor_id
+         and id <> p_event_vendor_id
+    ) then
+        v_target_vendor_id := null;
+      else
+        v_vendor_id := v_target_vendor_id;
+      end if;
+    end if;
+
     update public.event_vendors
-       set booth_number = coalesce(p_booth_number, booth_number),
+       set vendor_id    = coalesce(v_target_vendor_id, vendor_id),
+           display_name = coalesce(nullif(btrim(p_vendor_name), ''), display_name),
+           booth_number = coalesce(p_booth_number, booth_number),
            is_featured  = coalesce(p_is_featured,  is_featured),
            zone         = coalesce(p_zone,         zone),
            filter_tags  = coalesce(p_filter_tags,  filter_tags),
            updated_at   = now()
      where id = p_event_vendor_id;
 
-    if p_vendor_name is not null or p_vendor_type is not null or p_vendor_description is not null then
+    if v_target_vendor_id is not null then
+      if p_vendor_type is not null or p_vendor_description is not null then
+        update public.vendors
+           set vendor_type = coalesce(p_vendor_type,        vendor_type),
+               description = coalesce(p_vendor_description, description),
+               updated_at  = now()
+         where id = v_vendor_id;
+      end if;
+    elsif p_vendor_type is not null or p_vendor_description is not null then
       update public.vendors
-         set name        = coalesce(p_vendor_name,        name),
-             vendor_type = coalesce(p_vendor_type,        vendor_type),
+         set vendor_type = coalesce(p_vendor_type,        vendor_type),
              description = coalesce(p_vendor_description, description),
              updated_at  = now()
        where id = v_vendor_id;
@@ -242,6 +308,7 @@ begin
        set booth_number = coalesce(p_booth_number, booth_number),
            is_featured  = coalesce(p_is_featured,  is_featured),
            zone         = coalesce(p_zone,         zone),
+           display_name = coalesce(nullif(btrim(p_vendor_name), ''), display_name),
            filter_tags  = coalesce(p_filter_tags,  filter_tags),
            updated_at   = now()
      where id = v_event_vendor_id;
@@ -249,8 +316,8 @@ begin
   end if;
 
   -- 5. Link vendor to event.
-  insert into public.event_vendors (event_id, vendor_id, booth_number, is_featured, zone, filter_tags)
-  values (v_event_id, v_vendor_id, p_booth_number, coalesce(p_is_featured, false), p_zone, coalesce(p_filter_tags, '{}'))
+  insert into public.event_vendors (event_id, vendor_id, display_name, booth_number, is_featured, zone, filter_tags)
+  values (v_event_id, v_vendor_id, nullif(btrim(p_vendor_name), ''), p_booth_number, coalesce(p_is_featured, false), p_zone, coalesce(p_filter_tags, '{}'))
   returning id into v_event_vendor_id;
 
   return jsonb_build_object('ok', true, 'event_vendor_id', v_event_vendor_id);

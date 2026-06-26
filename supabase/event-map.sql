@@ -248,8 +248,8 @@ begin
       select coalesce(jsonb_agg(jsonb_build_object(
         'event_vendor_id', ev.id,
         'vendor_id',       v.id,
-        'vendor_name',     v.name
-      ) order by v.name), '[]'::jsonb)
+        'vendor_name',     coalesce(nullif(btrim(ev.display_name), ''), v.name)
+      ) order by coalesce(nullif(btrim(ev.display_name), ''), v.name)), '[]'::jsonb)
       from public.event_vendors ev
       join public.vendors v on v.id = ev.vendor_id
       where ev.event_id = v_evt.id
@@ -325,8 +325,8 @@ begin
       select coalesce(jsonb_agg(jsonb_build_object(
         'event_vendor_id', ev.id,
         'vendor_id',       v.id,
-        'vendor_name',     v.name
-      ) order by v.name), '[]'::jsonb)
+        'vendor_name',     coalesce(nullif(btrim(ev.display_name), ''), v.name)
+      ) order by coalesce(nullif(btrim(ev.display_name), ''), v.name)), '[]'::jsonb)
       from public.event_vendors ev
       join public.vendors v on v.id = ev.vendor_id
       where ev.event_id = v_evt.id

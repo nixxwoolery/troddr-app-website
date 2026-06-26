@@ -324,7 +324,11 @@ begin
     'vendors', (
       with vendor_base as (
         select distinct on (vendor_id)
-          vendor_id, vendor_name, vendor_description, vendor_type,
+          vendor_id,
+          coalesce((select nullif(btrim(ev.display_name), '')
+                      from public.event_vendors ev
+                     where ev.id = evm_base.event_vendor_id), vendor_name) as vendor_name,
+          vendor_description, vendor_type,
           coalesce((select ev.filter_tags
                       from public.event_vendors ev
                      where ev.id = evm_base.event_vendor_id), '{}'::text[]) as filter_tags,
