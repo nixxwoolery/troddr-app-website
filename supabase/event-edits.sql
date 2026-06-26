@@ -376,6 +376,26 @@ begin
 end;
 $$;
 
+insert into public.event_schedule_tracks (event_id, name, short_name)
+select distinct i.event_id, 'Main Stage', 'Main'
+from public.event_schedule_items i
+where i.track_id is null
+  and not exists (
+    select 1 from public.event_schedule_tracks t
+    where t.event_id = i.event_id
+  );
+
+update public.event_schedule_items i
+set track_id = t.id
+from (
+  select distinct on (event_id) id, event_id
+  from public.event_schedule_tracks
+  where coalesce(is_active, true)
+  order by event_id, display_order, created_at
+) t
+where i.track_id is null
+  and i.event_id = t.event_id;
+
 create or replace function public.upsert_schedule_day(
   p_token        text,
   p_id           uuid default null,
@@ -466,6 +486,7 @@ declare
   v_event_id uuid;
   v_id uuid;
   v_day_date date;
+  v_track_id uuid;
 begin
   v_event_id := _partner_event_id_from_token(p_token);
   if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
@@ -477,14 +498,25 @@ begin
   if v_day_date is null then
     return jsonb_build_object('ok', false, 'error', 'day_not_on_event');
   end if;
+  select id into v_track_id
+    from public.event_schedule_tracks
+   where event_id = v_event_id
+     and coalesce(is_active, true)
+   order by display_order, created_at
+   limit 1;
+  if v_track_id is null then
+    insert into public.event_schedule_tracks (event_id, name, short_name, venue_section)
+    values (v_event_id, 'Main Stage', 'Main', nullif(btrim(p_venue_override), ''))
+    returning id into v_track_id;
+  end if;
 
   if p_id is null then
     insert into public.event_schedule_items (
-      event_id, day_id, title, subtitle, start_time, end_time, venue_override,
+      event_id, day_id, track_id, title, subtitle, start_time, end_time, venue_override,
       category, image_url, is_featured, is_must_see, is_published
     )
     values (
-      v_event_id, p_day_id, btrim(p_title), nullif(btrim(p_subtitle), ''),
+      v_event_id, p_day_id, v_track_id, btrim(p_title), nullif(btrim(p_subtitle), ''),
       coalesce(p_start_time, v_day_date::timestamptz),
       coalesce(p_end_time, coalesce(p_start_time, v_day_date::timestamptz) + interval '1 hour'),
       nullif(btrim(p_venue_override), ''),
@@ -552,6 +584,7 @@ declare
   v_item jsonb;
   v_day_id uuid;
   v_day_date date;
+  v_track_id uuid;
   v_inserted int := 0;
   v_skipped int := 0;
 begin
@@ -591,13 +624,26 @@ begin
       continue;
     end if;
 
+    select id into v_track_id
+      from public.event_schedule_tracks
+     where event_id = v_event_id
+       and coalesce(is_active, true)
+     order by display_order, created_at
+     limit 1;
+    if v_track_id is null then
+      insert into public.event_schedule_tracks (event_id, name, short_name, venue_section)
+      values (v_event_id, coalesce(nullif(btrim(v_item->>'stage'), ''), 'Main Stage'), 'Main', nullif(btrim(v_item->>'stage'), ''))
+      returning id into v_track_id;
+    end if;
+
     insert into public.event_schedule_items (
-      event_id, day_id, title, subtitle, start_time, end_time, venue_override,
+      event_id, day_id, track_id, title, subtitle, start_time, end_time, venue_override,
       category, image_url, is_featured, is_must_see, is_published
     )
     values (
       v_event_id,
       v_day_id,
+      v_track_id,
       btrim(v_item->>'title'),
       nullif(btrim(v_item->>'subtitle'), ''),
       coalesce(nullif(v_item->>'start_time', '')::timestamptz, v_day_date::timestamptz),
