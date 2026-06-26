@@ -303,3 +303,5 @@ end;
 $$;
 
 grant execute on function public.get_partner_event_extras_by_token(text) to anon, authenticated;
+
+notify pgrst, 'reload schema';

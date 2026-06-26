@@ -598,6 +598,8 @@ end;
 $$;
 grant execute on function public.bulk_import_schedule_items(text, jsonb) to anon, authenticated;
 
+notify pgrst, 'reload schema';
+
 
 -- ============================================================
 -- EXTEND partner-event-extras RPC TO INCLUDE schedule_days

@@ -1176,13 +1176,16 @@
     align-items: center; justify-content: center;
     z-index: 1000;
     padding: 20px;
+    overflow: auto;
   }
   .ve-modal-backdrop.open { display: flex; }
   .ve-modal {
     background: #fff;
     border-radius: 16px;
     width: 100%; max-width: 460px;
-    padding: 24px 26px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 24px 26px 0;
     box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   }
   .ve-modal h3 {
@@ -1215,9 +1218,12 @@
   .ve-field.checkbox input { width: auto; }
   .ve-field.checkbox label { letter-spacing: 0; text-transform: none; font-weight: 500; font-size: 13px; color: var(--grey-dark); }
   .ve-actions {
+    position: sticky;
+    bottom: 0;
     display: flex; justify-content: flex-end; gap: 8px;
     margin-top: 18px;
-    padding-top: 16px;
+    padding: 16px 0 20px;
+    background: #fff;
     border-top: 1px solid var(--border-soft);
   }
   .ve-btn {
@@ -2729,8 +2735,8 @@
       <section class="section" id="edit-schedule">
         <div class="section-head">
           <div>
-            <h2 class="section-title">Manage Schedule</h2>
-            <div class="section-sub">Days, set times, and must-see moments.</div>
+            <h2 class="section-title">Manage Lineup</h2>
+            <div class="section-sub">Event days, artists, set times, stages, and must-see moments.</div>
           </div>
         </div>
         <div class="edit-list-card">
@@ -6343,7 +6349,7 @@
         { section: 'edit-sponsors',       icon: 'ic-bolt', label: 'Manage Sponsors' },
         { section: 'edit-vendors',        icon: 'ic-shop', label: 'Manage Vendors' },
         { section: 'edit-tickets',        icon: 'ic-ticket', label: 'Manage Tickets' },
-        { section: 'edit-schedule',       icon: 'ic-calendar', label: 'Manage Schedule' },
+        { section: 'edit-schedule',       icon: 'ic-calendar', label: 'Manage Lineup' },
         // Temporarily hidden while these sections are productized.
         // { section: 'edit-transportation', icon: 'ic-bus',  label: 'Manage Transportation' },
         // { section: 'edit-passes',         icon: 'ic-pass', label: 'Manage Passes' },
