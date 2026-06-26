@@ -1,5 +1,20 @@
 -- Let event partners manage artist/set-time schedule items from the dashboard.
 
+do $$
+begin
+  if exists (
+    select 1
+      from information_schema.columns
+     where table_schema = 'public'
+       and table_name = 'event_schedule_items'
+       and column_name = 'track_id'
+       and is_nullable = 'NO'
+  ) then
+    alter table public.event_schedule_items alter column track_id drop not null;
+  end if;
+end;
+$$;
+
 create or replace function public.upsert_schedule_item(
   p_token          text,
   p_id             uuid default null,

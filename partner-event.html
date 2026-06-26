@@ -4498,6 +4498,16 @@
   function boolFromCell(value) {
     return /^(1|true|yes|y)$/i.test(String(value || '').trim());
   }
+  function scheduleEditorError(err, fallback) {
+    const raw = String((err && (err.message || err.code || err.error)) || err || '');
+    if (/not find the function|schema cache|PGRST202/i.test(raw)) {
+      return 'The lineup editor update has not finished deploying yet. Please refresh in a minute, or ask TRODDR to run the latest Supabase migration.';
+    }
+    if (/violates not-null constraint|null value in column/i.test(raw)) {
+      return 'The lineup could not save because the database schema still has an older required field. Please run the latest Supabase migration and try again.';
+    }
+    return raw || fallback || 'Could not save.';
+  }
   function parseCsvLine(line) {
     const out = [];
     let cell = '';
@@ -4738,7 +4748,7 @@
     try {
       const { data, error } = await db.rpc('upsert_schedule_item', payload);
       if (error || !data || !data.ok) {
-        _setStatus('si-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not save.', 'error'); return;
+        _setStatus('si-status', scheduleEditorError(error || (data && data.error), 'Could not save.'), 'error'); return;
       }
       _setStatus('si-status', 'Saved. Refreshing...', 'success');
       setTimeout(() => location.reload(), 600);
@@ -4803,7 +4813,7 @@
         p_items: rows,
       });
       if (error || !data || !data.ok) {
-        _setStatus('si-import-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not import.', 'error'); return;
+        _setStatus('si-import-status', scheduleEditorError(error || (data && data.error), 'Could not import.'), 'error'); return;
       }
       _setStatus('si-import-status', `Imported ${data.inserted || 0} artist${data.inserted === 1 ? '' : 's'}${data.skipped ? `; skipped ${data.skipped}` : ''}. Refreshing...`, 'success');
       setTimeout(() => location.reload(), 900);
