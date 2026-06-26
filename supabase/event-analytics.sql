@@ -244,6 +244,7 @@ begin
           'start_time',  start_time,
           'end_time',    end_time,
           'venue_override', venue_override,
+          'image_url',   image_url,
           'is_must_see', is_must_see
         )
         from public.event_schedule_items

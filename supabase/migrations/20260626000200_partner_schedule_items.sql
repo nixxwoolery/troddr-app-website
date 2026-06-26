@@ -38,12 +38,16 @@ as $$
 declare
   v_event_id uuid;
   v_id uuid;
+  v_day_date date;
 begin
   v_event_id := _partner_event_id_from_token(p_token);
   if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
   if coalesce(btrim(p_title), '') = '' then return jsonb_build_object('ok', false, 'error', 'title_required'); end if;
   if p_day_id is null then return jsonb_build_object('ok', false, 'error', 'day_required'); end if;
-  if not exists (select 1 from public.event_schedule_days where id = p_day_id and event_id = v_event_id) then
+  select date into v_day_date
+    from public.event_schedule_days
+   where id = p_day_id and event_id = v_event_id;
+  if v_day_date is null then
     return jsonb_build_object('ok', false, 'error', 'day_not_on_event');
   end if;
 
@@ -54,7 +58,9 @@ begin
     )
     values (
       v_event_id, p_day_id, btrim(p_title), nullif(btrim(p_subtitle), ''),
-      p_start_time, p_end_time, nullif(btrim(p_venue_override), ''),
+      coalesce(p_start_time, v_day_date::timestamptz),
+      coalesce(p_end_time, coalesce(p_start_time, v_day_date::timestamptz) + interval '1 hour'),
+      nullif(btrim(p_venue_override), ''),
       nullif(btrim(p_category), ''), nullif(btrim(p_image_url), ''),
       coalesce(p_is_featured, false), coalesce(p_is_must_see, false),
       coalesce(p_is_published, true)
@@ -167,8 +173,8 @@ begin
       v_day_id,
       btrim(v_item->>'title'),
       nullif(btrim(v_item->>'subtitle'), ''),
-      nullif(v_item->>'start_time', '')::timestamptz,
-      nullif(v_item->>'end_time', '')::timestamptz,
+      coalesce(nullif(v_item->>'start_time', '')::timestamptz, v_day_date::timestamptz),
+      coalesce(nullif(v_item->>'end_time', '')::timestamptz, coalesce(nullif(v_item->>'start_time', '')::timestamptz, v_day_date::timestamptz) + interval '1 hour'),
       nullif(btrim(coalesce(v_item->>'venue_override', v_item->>'stage')), ''),
       nullif(btrim(coalesce(v_item->>'category', 'artist')), ''),
       nullif(btrim(v_item->>'image_url'), ''),

@@ -989,7 +989,7 @@
   }
   .saved-item-row {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto auto 1fr auto;
     align-items: center;
     gap: 14px;
     padding: 8px 4px;
@@ -1547,12 +1547,36 @@
   .schedule-editor-day-head .actions { display: flex; gap: 6px; flex-shrink: 0; }
   .schedule-item-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--border); background: #fff; }
   .schedule-item-row:last-child { border-bottom: none; }
+  .schedule-item-thumb,
+  .schedule-next-thumb,
+  .saved-item-thumb {
+    flex: none;
+    width: 42px; height: 42px;
+    border-radius: 8px;
+    background: var(--bg-soft) center/cover no-repeat;
+    border: 1px solid var(--border);
+  }
+  .schedule-next-thumb { width: 50px; height: 50px; }
+  .saved-item-thumb { width: 38px; height: 38px; }
   .schedule-item-time { width: 72px; flex: none; font-size: 12px; font-weight: 800; color: var(--brand-primary); }
   .schedule-item-row .body { flex: 1; min-width: 0; }
   .schedule-item-row .name { font-weight: 700; color: var(--black); font-size: 14px; }
   .schedule-item-row .meta { font-size: 12px; color: var(--grey-mid); margin-top: 2px; }
   .schedule-item-row .actions { display: flex; gap: 6px; flex-shrink: 0; }
   .schedule-item-empty { padding: 14px; font-size: 12px; color: var(--grey-mid); background: #fff; }
+  .lineup-preview {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+    display: grid;
+    gap: 8px;
+  }
+  .lineup-preview-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 2px;
+  }
   .import-help { font-size: 12px; color: var(--grey-mid); line-height: 1.45; margin: -4px 0 14px; }
   .import-preview { max-height: 180px; overflow: auto; font-size: 12px; color: var(--grey-dark); background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: none; }
 
@@ -4590,6 +4614,7 @@
         ].filter(Boolean);
         return `
           <div class="schedule-item-row" data-item-id="${escapeHtml(i.id || '')}">
+            <div class="schedule-item-thumb" ${i.image_url ? `style="background-image:url('${escapeHtml(i.image_url)}')"` : ''}></div>
             <div class="schedule-item-time">${escapeHtml(scheduleItemTime(i.start_time) || 'TBD')}</div>
             <div class="body">
               <div class="name">${escapeHtml(i.title || 'Untitled')}</div>
@@ -5191,8 +5216,9 @@
   }
 
   // ── Schedule overview ────────────────────────────────────
-  function renderSchedule(data) {
+  function renderSchedule(data, extras) {
     const sch = data.schedule || {};
+    const scheduleItems = (extras && Array.isArray(extras.schedule_items)) ? extras.schedule_items : [];
     if (!sch.days_count) return;
     $('schedule').style.display = '';
     const nsch = $('nav-schedule'); if (nsch) nsch.style.display = '';
@@ -5244,6 +5270,7 @@
       nextUp = `
         <div class="schedule-next">
           <span class="schedule-next-tag">Next up</span>
+          ${ni.image_url ? `<div class="schedule-next-thumb" style="background-image:url('${escapeHtml(ni.image_url)}')"></div>` : ''}
           <div class="schedule-next-body">
             <div class="schedule-next-title">${escapeHtml(ni.title || '')}</div>
             <div class="schedule-next-meta">
@@ -5252,6 +5279,26 @@
           </div>
         </div>`;
     }
+
+    const lineupPreview = scheduleItems.length ? `
+      <div class="lineup-preview">
+        <div class="lineup-preview-label">Lineup images</div>
+        ${scheduleItems.slice(0, 8).map((it) => {
+          const t = it.start_time
+            ? new Date(it.start_time).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+            : '';
+          const subParts = [t, it.venue_override, it.subtitle, it.category].filter(Boolean).map(escapeHtml);
+          return `
+            <div class="schedule-item-row">
+              <div class="schedule-item-thumb" ${it.image_url ? `style="background-image:url('${escapeHtml(it.image_url)}')"` : ''}></div>
+              <div class="schedule-item-time">${escapeHtml(scheduleItemTime(it.start_time) || 'TBD')}</div>
+              <div class="body">
+                <div class="name">${escapeHtml(it.title || 'Untitled')}</div>
+                ${subParts.length ? `<div class="meta">${subParts.join(' · ')}</div>` : ''}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>` : '';
 
     // Top-saved schedule items (lineup engagement)
     let topSaved = '';
@@ -5267,6 +5314,7 @@
         return `
           <div class="saved-item-row">
             <div class="saved-rank ${rankClass}">${i + 1}</div>
+            <div class="saved-item-thumb" ${it.image_url ? `style="background-image:url('${escapeHtml(it.image_url)}')"` : ''}></div>
             <div class="saved-item-info">
               <div class="saved-item-title">
                 ${escapeHtml(it.title || 'Untitled')}
@@ -5295,7 +5343,7 @@
         </div>`;
     }
 
-    $('schedule-card').innerHTML = summary + days + nextUp + topSaved;
+    $('schedule-card').innerHTML = summary + days + nextUp + lineupPreview + topSaved;
   }
 
   // ── Event updates feed ──────────────────────────────────
@@ -6595,7 +6643,7 @@
     // engagement chart) can reach it without re-plumbing parameters.
     window.__eventData = data;
 
-    safe('renderSchedule',    () => renderSchedule(data));
+    safe('renderSchedule',    () => renderSchedule(data, extras));
     safe('renderUpdates',     () => renderUpdates(data));
     safe('renderVendors',     () => renderVendors(data));
     safe('renderSponsors',    () => renderSponsors(data));
