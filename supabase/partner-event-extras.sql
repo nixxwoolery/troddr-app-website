@@ -70,6 +70,49 @@ begin
       where r.event_id = v_event_id
     ), '[]'::jsonb),
 
+    'schedule_days', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'id',             d.id,
+          'date',           d.date,
+          'date_display',   d.date_display,
+          'label',          d.label,
+          'description',    d.description,
+          'gates_open',     d.gates_open,
+          'gates_close',    d.gates_close,
+          'is_cancelled',   d.is_cancelled,
+          'day_number',     d.day_number,
+          'items_count',    (select count(*) from public.event_schedule_items i where i.day_id = d.id),
+          'must_see_count', (select count(*) from public.event_schedule_items i where i.day_id = d.id and i.is_must_see = true)
+        )
+        order by d.date
+      )
+      from public.event_schedule_days d
+      where d.event_id = v_event_id
+    ), '[]'::jsonb),
+
+    'schedule_items', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'id',             i.id,
+          'day_id',         i.day_id,
+          'title',          i.title,
+          'subtitle',       i.subtitle,
+          'start_time',     i.start_time,
+          'end_time',       i.end_time,
+          'venue_override', i.venue_override,
+          'category',       i.category,
+          'image_url',      i.image_url,
+          'is_featured',    i.is_featured,
+          'is_must_see',    i.is_must_see,
+          'is_published',   i.is_published
+        )
+        order by i.start_time nulls last, i.title
+      )
+      from public.event_schedule_items i
+      where i.event_id = v_event_id
+    ), '[]'::jsonb),
+
     'bands', case
       when lower(coalesce(v_event_type, '')) = 'carnival' then
         coalesce((
@@ -99,4 +142,4 @@ $$;
 grant execute on function public.get_partner_event_extras_by_token(text) to anon, authenticated;
 
 comment on function public.get_partner_event_extras_by_token(text) is
-  'Supplementary data for the partner-event dashboard: ticket_locations, transport_routes, and (for carnivals) mas_bands. Kept separate from get_partner_event_by_token so the main RPC stays untouched.';
+  'Supplementary data for the partner-event dashboard: ticket_locations, transport_routes, schedule_days, schedule_items, and (for carnivals) mas_bands. Kept separate from get_partner_event_by_token so the main RPC stays untouched.';

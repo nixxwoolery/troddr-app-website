@@ -6,8 +6,8 @@
 --   1. Add the two new columns to public.events (idempotent)
 --   2. Create the event_map_invites table
 --   3. Create the four RPCs at the bottom
---   4. In Supabase Storage : create a public bucket called
---      `event-floorplans` with the policies at the very bottom.
+--   4. Create the public `event-floorplans` Storage bucket and policies
+--      at the bottom (idempotent).
 -- ============================================================
 
 -- ── 1. New columns on events ────────────────────────────────
@@ -338,31 +338,32 @@ $$;
 grant execute on function public.get_event_floor_plan_public(text) to anon, authenticated;
 
 -- ============================================================
--- STORAGE BUCKET (run in Supabase Dashboard or via the storage UI):
---
---   bucket name : event-floorplans
---   public      : yes
---
--- Policies on storage.objects (bucket_id = 'event-floorplans'):
---
---   -- Anyone can read the uploaded floor plans (they're shown in the app)
---   create policy "event-floorplans public read"
---     on storage.objects for select
---     using (bucket_id = 'event-floorplans');
---
---   -- Anyone with the partner anon key can upload to their own subfolder.
---   -- The RLS that *actually* protects this is on events itself (only the
---   -- event's partner_access_token can call update_event_floor_plan), so the
---   -- URL is only ever pinned to events.floor_plan_url by an authenticated
---   -- partner action.
---   create policy "event-floorplans authenticated insert"
---     on storage.objects for insert
---     to anon, authenticated
---     with check (bucket_id = 'event-floorplans');
---
---   create policy "event-floorplans authenticated update"
---     on storage.objects for update
---     to anon, authenticated
---     using (bucket_id = 'event-floorplans')
---     with check (bucket_id = 'event-floorplans');
+-- STORAGE BUCKET
 -- ============================================================
+
+insert into storage.buckets (id, name, public)
+values ('event-floorplans', 'event-floorplans', true)
+on conflict (id) do update set public = true;
+
+-- Anyone can read the uploaded floor plans (they're shown in the app).
+drop policy if exists "event-floorplans public read" on storage.objects;
+create policy "event-floorplans public read"
+on storage.objects for select
+using (bucket_id = 'event-floorplans');
+
+-- Anyone with the partner anon key can upload to this bucket. The RLS that
+-- actually protects publishing is on events itself: only the event's
+-- partner_access_token can call update_event_floor_plan, so uploaded URLs are
+-- only pinned to events.floor_plan_url by a valid partner action.
+drop policy if exists "event-floorplans authenticated insert" on storage.objects;
+create policy "event-floorplans authenticated insert"
+on storage.objects for insert
+to anon, authenticated
+with check (bucket_id = 'event-floorplans');
+
+drop policy if exists "event-floorplans authenticated update" on storage.objects;
+create policy "event-floorplans authenticated update"
+on storage.objects for update
+to anon, authenticated
+using (bucket_id = 'event-floorplans')
+with check (bucket_id = 'event-floorplans');
