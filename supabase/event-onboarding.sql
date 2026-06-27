@@ -121,6 +121,7 @@ create or replace function public.update_partner_event(
   p_support_phone      text default null,
   p_support_url        text default null,
   p_website_url        text default null,
+  p_media_url          text default null,
   p_instagram_url      text default null,
   p_featured_image_url text default null,
   p_event_type         text default null,
@@ -203,6 +204,7 @@ begin
     support_phone      = case when p_support_phone is not null then nullif(trim(p_support_phone), '') else support_phone end,
     support_url        = case when p_support_url is not null then nullif(trim(p_support_url), '') else support_url end,
     website_url        = case when p_website_url is not null then nullif(trim(p_website_url), '') else website_url end,
+    media_url          = case when p_media_url is not null then nullif(trim(p_media_url), '') else media_url end,
     instagram_url      = case when p_instagram_url is not null then nullif(trim(p_instagram_url), '') else instagram_url end,
     featured_image_url = case when p_featured_image_url is not null then nullif(trim(p_featured_image_url), '') else featured_image_url end,
     event_type         = case when p_event_type is not null then coalesce(public._normalize_event_type(p_event_type), event_type) else event_type end,
@@ -232,6 +234,6 @@ grant execute on function public.update_partner_event(
   text, text, text, text, text,
   boolean, numeric, numeric, text, boolean, boolean, text, integer,
   integer, text, boolean, boolean,
-  text, text, text, text, text, text, text, text, text, text,
+  text, text, text, text, text, text, text, text, text, text, text,
   jsonb, text, text, text, jsonb, jsonb, text, jsonb
 ) to anon;

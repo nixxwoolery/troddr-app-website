@@ -9,6 +9,7 @@
 
   const PARTNER_TOKEN_KEY = 'troddr_partner_access_token';
   const ADMIN_TOKEN_KEY = 'troddr_admin_token';
+  const loggedAccessKeys = new Set();
 
   function storage() {
     try { return window.localStorage; } catch (e) { return null; }
@@ -67,11 +68,37 @@
     try { if (sessionStorageSafe()) sessionStorageSafe().removeItem(key); } catch (e) {}
   }
 
+  function trackDashboardAccess(token) {
+    if (!token || typeof fetch !== 'function') return;
+    const key = token.slice(0, 12) + '|' + window.location.pathname;
+    if (loggedAccessKeys.has(key)) return;
+    loggedAccessKeys.add(key);
+    const env = window.__ENV__ || {};
+    const url = env.SUPABASE_URL;
+    const anon = env.SUPABASE_ANON;
+    if (!url || !anon) return;
+    fetch(url.replace(/\/$/, '') + '/rest/v1/rpc/track_partner_dashboard_access', {
+      method: 'POST',
+      headers: {
+        apikey: anon,
+        Authorization: 'Bearer ' + anon,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        p_token: token,
+        p_path: window.location.pathname,
+        p_user_agent: navigator.userAgent || null,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  }
+
   function getToken(options) {
     const opts = options || {};
     const token = params().get('token') || params().get('access_token') || readStored(PARTNER_TOKEN_KEY);
     if (token) {
       writeStored(PARTNER_TOKEN_KEY, token);
+      trackDashboardAccess(token);
       if (opts.cleanUrl === true) cleanTokenFromUrl(['token', 'access_token']);
       return token;
     }

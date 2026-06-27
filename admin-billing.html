@@ -134,6 +134,7 @@
     <button class="tab" data-tab="setup">Setup Requests<span class="count hidden" id="count-setup"></span></button>
     <button class="tab" data-tab="notifications">Notifications<span class="count hidden" id="count-notifications"></span></button>
     <button class="tab" data-tab="settings">Payment &amp; Settings</button>
+    <button class="tab" data-tab="usage">Dashboard Usage</button>
     <button class="tab" data-tab="audit">Audit Log</button>
   </div>
 
@@ -485,6 +486,15 @@
     </div>
   </section>
 
+  <!-- ============ DASHBOARD USAGE TAB ============ -->
+  <section id="tab-usage" class="hidden">
+    <div class="card">
+      <h2>Dashboard usage</h2>
+      <p class="muted" style="margin-bottom: 12px;">Recent partner dashboard opens by access token prefix and signed-in email when available.</p>
+      <div id="usage-list"></div>
+    </div>
+  </section>
+
   <!-- ============ AUDIT TAB ============ -->
   <section id="tab-audit" class="hidden">
     <div class="card">
@@ -561,7 +571,7 @@
   $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
 
   /* ── Tabs ─────────────────────────────────────────────── */
-  const TAB_KEYS = ['review', 'companies', 'invoice', 'requests', 'setup', 'notifications', 'settings', 'audit'];
+  const TAB_KEYS = ['review', 'companies', 'invoice', 'requests', 'setup', 'notifications', 'settings', 'usage', 'audit'];
   function switchTab(key) {
     document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === key));
     TAB_KEYS.forEach((k) => $('tab-' + k).classList.toggle('hidden', k !== key));
@@ -570,12 +580,14 @@
 
   /* ── Load overview + catalog ──────────────────────────── */
   async function loadAll() {
-    const [ov, cat] = await Promise.all([
+    const [ov, cat, usage] = await Promise.all([
       rpc('admin_billing_overview', { p_admin_token: adminToken }),
       catalog ? Promise.resolve(catalog) : rpc('admin_get_billing_catalog', { p_admin_token: adminToken }),
+      rpc('admin_dashboard_usage', { p_admin_token: adminToken, p_limit: 200 }),
     ]);
     if (!ov) throw new Error('bad token');
     overview = ov;
+    overview.dashboard_usage = usage || [];
     catalog = cat;
     renderOverview();
     renderCatalogSelects();
@@ -832,6 +844,7 @@
     renderSettings();
 
     // Audit
+    $('usage-list').innerHTML = renderUsageRows(overview.dashboard_usage || []);
     $('audit-list').innerHTML = renderAuditRows(overview.audit || []);
   }
 
@@ -878,6 +891,19 @@
           <td><b>${esc(a.action)}</b></td>
           <td>${esc(a.company || '')}</td>
           <td class="muted" style="max-width:340px; word-break:break-word;">${esc(JSON.stringify(a.details))}</td>
+        </tr>`).join('')}</tbody></table>`;
+  }
+
+  function renderUsageRows(rows) {
+    if (!rows.length) return '<div class="empty">No dashboard usage logged yet.</div>';
+    return `<table class="tbl"><thead><tr><th>When</th><th>Dashboard</th><th>Access</th><th>Email</th><th>Path</th></tr></thead>
+      <tbody>${rows.map((r) => `
+        <tr>
+          <td style="white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
+          <td><b>${esc(r.entity_name || '')}</b><div class="muted">${esc(r.entity_type || '')}${r.entity_slug ? ' · ' + esc(r.entity_slug) : ''}</div></td>
+          <td>${r.token_prefix ? '<code>' + esc(r.token_prefix) + '…</code>' : '<span class="muted">—</span>'}</td>
+          <td>${esc(r.actor_email || '—')}</td>
+          <td class="muted" style="max-width:260px; word-break:break-word;">${esc(r.path || '')}</td>
         </tr>`).join('')}</tbody></table>`;
   }
 
