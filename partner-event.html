@@ -5705,14 +5705,18 @@
       ...(e.parking_image_url ? [e.parking_image_url] : []),
       ...(Array.isArray(e.parking_image_urls) ? e.parking_image_urls : []),
     ];
+    const kbyg = Array.isArray(e.know_before_you_go) ? e.know_before_you_go : [];
     const rows = [
       infoRow('Organizer',     escapeHtml(e.organizer_name || '—')),
       infoRow('Event type',    escapeHtml(e.event_type || '—')),
       infoRow('Description',   e.description ? escapeHtml(e.description).replace(/\n/g, '<br>') : '—'),
-      parkingSection ? infoRow('Parking', escapeHtml(parkingSection.body || '').replace(/\n/g, '<br>')) : '',
+      kbyg.length ? infoRow('Know Before You Go', kbyg.map((item) => escapeHtml(item.text || '')).filter(Boolean).join('<br>')) : '',
+      e.parking_info || parkingSection ? infoRow('Parking', escapeHtml(e.parking_info || parkingSection.body || '').replace(/\n/g, '<br>')) : '',
       parkingImages.length ? infoRow('Parking images', parkingImages.map((url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(compactUrl(url))}</a>`).join('<br>')) : '',
       infoRow('Dress code',    escapeHtml(e.dress_code || '—')),
       infoRow('Minimum age',   e.min_age != null ? `${e.min_age}+` : '—'),
+      e.accessibility_info ? infoRow('Accessibility', escapeHtml(e.accessibility_info).replace(/\n/g, '<br>')) : '',
+      e.weather_contingency ? infoRow('Weather contingency', escapeHtml(e.weather_contingency).replace(/\n/g, '<br>')) : '',
       infoRow('Food',          e.food_available ? 'Available' : 'Not specified'),
       infoRow('Alcohol',       e.alcohol_served ? 'Served' : 'Not specified'),
       customSections.length ? infoRow('Additional sections', customSections.map((s) => `<strong>${escapeHtml(s.title || 'Info')}</strong>${s.body ? '<br>' + escapeHtml(s.body).replace(/\n/g, '<br>') : ''}`).join('<br><br>')) : '',
@@ -6043,6 +6047,9 @@
     const customInfoSections = infoSections.filter((s) => s !== parkingSection);
     const jsonPretty = (v) => JSON.stringify(v || [], null, 2);
     const urlsText = (v) => Array.isArray(v) ? v.join('\n') : '';
+    const kbygText = (Array.isArray(e.know_before_you_go) ? e.know_before_you_go : [])
+      .map((item) => `${item.icon || 'information-circle-outline'} | ${item.text || ''}`)
+      .join('\n');
 
     $('edit-card').innerHTML = `
       <div class="edit-tabs" role="tablist">
@@ -6220,7 +6227,7 @@
       <div class="edit-grid">
         <div class="edit-field full">
           <label for="ed-parking-info">Parking info</label>
-          <textarea id="ed-parking-info" maxlength="3000" placeholder="General parking, shuttle, entrance, or traffic notes">${escapeHtml((parkingSection && parkingSection.body) || '')}</textarea>
+          <textarea id="ed-parking-info" maxlength="3000" placeholder="General parking, shuttle, entrance, or traffic notes">${escapeHtml(e.parking_info || (parkingSection && parkingSection.body) || '')}</textarea>
         </div>
         <div class="edit-field full">
           <label for="ed-parking-image">Parking image URL</label>
@@ -6231,8 +6238,20 @@
           <textarea id="ed-parking-images" maxlength="3000" placeholder="One image URL per line">${escapeHtml(urlsText(e.parking_image_urls))}</textarea>
         </div>
         <div class="edit-field full">
-          <label for="ed-info-sections">Additional info sections (JSON)</label>
-          <textarea id="ed-info-sections" maxlength="10000" placeholder='[{"title":"Bag Policy","body":"Small bags only."}]'>${escapeHtml(jsonPretty(customInfoSections))}</textarea>
+          <label for="ed-kbyg">Know Before You Go</label>
+          <textarea id="ed-kbyg" maxlength="5000" placeholder="information-circle-outline | Bring ID&#10;cash-outline | Some vendors may be cash-only">${escapeHtml(kbygText)}</textarea>
+        </div>
+        <div class="edit-field full">
+          <label for="ed-accessibility">Accessibility info</label>
+          <textarea id="ed-accessibility" maxlength="3000" placeholder="Accessible entrance, seating, restrooms, assistance, or mobility notes">${escapeHtml(e.accessibility_info || '')}</textarea>
+        </div>
+        <div class="edit-field full">
+          <label for="ed-weather">Weather contingency</label>
+          <textarea id="ed-weather" maxlength="3000" placeholder="Rain plan, postponement policy, covered areas, or weather-dependent notes">${escapeHtml(e.weather_contingency || '')}</textarea>
+        </div>
+        <div class="edit-field full">
+          <label for="ed-info-sections">Custom promoter sections (JSON)</label>
+          <textarea id="ed-info-sections" maxlength="10000" placeholder='[{"title":"Bag Policy","body":"Small bags only.","items":[{"icon":"bag-outline","text":"No large bags"}],"images":["https://..."]}]'>${escapeHtml(jsonPretty(customInfoSections))}</textarea>
         </div>
         <div class="edit-field full">
           <label for="ed-faq">FAQ (JSON)</label>
@@ -6401,6 +6420,21 @@
         .split(/\r?\n/)
         .map((u) => u.trim())
         .filter(Boolean);
+      const lineItems = (id) => val(id)
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const parts = line.split('|');
+          if (parts.length > 1) {
+            return {
+              icon: parts.shift().trim() || 'information-circle-outline',
+              text: parts.join('|').trim(),
+            };
+          }
+          return { icon: 'information-circle-outline', text: line };
+        })
+        .filter((item) => item.text);
 
       let startDate = val('ed-start-date') || null;
       let endDate = val('ed-end-date') || null;
@@ -6430,13 +6464,6 @@
 
       const parkingInfo = str(val('ed-parking-info'));
       const infoSections = [...customInfoSections];
-      if (parkingInfo) {
-        infoSections.unshift({
-          title: 'Parking',
-          icon: 'car-outline',
-          body: parkingInfo,
-        });
-      }
 
       const payload = {
         p_token:              token,
@@ -6476,6 +6503,10 @@
         p_instagram_url:      str(val('ed-instagram')),
         p_featured_image_url: str(val('ed-image')),
         p_event_type:         str(val('ed-type')),
+        p_know_before_you_go: lineItems('ed-kbyg'),
+        p_parking_info:       parkingInfo,
+        p_accessibility_info: str(val('ed-accessibility')),
+        p_weather_contingency:str(val('ed-weather')),
         p_info_sections:      infoSections,
         p_faq:                faqItems,
         p_parking_image_url:  str(val('ed-parking-image')),

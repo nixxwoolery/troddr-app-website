@@ -1,81 +1,10 @@
--- ============================================================
--- Event Onboarding RPC: lets an event partner update their
--- event row from the dashboard.
--- ============================================================
+-- Add first-class fields for the app's Info tab and let partner dashboards edit them.
 
-create or replace function public._normalize_event_type(p_raw text)
-returns text
-language sql
-immutable
-as $$
-  select case lower(regexp_replace(coalesce(trim(p_raw), ''), '[\s&-]+', ' ', 'g'))
-    when ''                  then null
-    when 'music'             then 'music'
-    when 'concert'           then 'music'
-    when 'live music'        then 'music'
-    when 'food'              then 'food and drink'
-    when 'food and drink'    then 'food and drink'
-    when 'drink'             then 'food and drink'
-    when 'drinks'            then 'food and drink'
-    when 'culinary'          then 'food and drink'
-    when 'art'               then 'art'
-    when 'art and culture'   then 'art'
-    when 'culture'           then 'art'
-    when 'sports'            then 'sports'
-    when 'sport'             then 'sports'
-    when 'comedy'            then 'comedy'
-    when 'festival'          then 'festival'
-    when 'conference'        then 'conference'
-    when 'networking'        then 'networking'
-    when 'workshop'          then 'workshop'
-    when 'party'             then 'party'
-    when 'nightlife'         then 'nightlife'
-    when 'family'            then 'family'
-    when 'wellness'          then 'wellness'
-    when 'community'         then 'community'
-    when 'carnival'          then 'carnival'
-    else null
-  end;
-$$;
-
-do $$
-declare
-  v_constraint record;
-begin
-  for v_constraint in
-    select conname
-      from pg_constraint
-     where conrelid = 'public.events'::regclass
-       and contype = 'c'
-       and pg_get_constraintdef(oid) ilike '%start_time%'
-       and pg_get_constraintdef(oid) ilike '%end_time%'
-  loop
-    execute format('alter table public.events drop constraint %I', v_constraint.conname);
-  end loop;
-
-  if not exists (
-    select 1
-      from pg_constraint
-     where conrelid = 'public.events'::regclass
-       and conname = 'events_valid_event_chronology'
-  ) then
-    alter table public.events
-      add constraint events_valid_event_chronology check (
-        start_date is null
-        or end_date is null
-        or end_date > start_date
-        or (
-          end_date = start_date
-          and (
-            start_time is null
-            or end_time is null
-            or end_time >= start_time
-          )
-        )
-      );
-  end if;
-end;
-$$;
+alter table public.events
+  add column if not exists know_before_you_go jsonb,
+  add column if not exists parking_info text,
+  add column if not exists accessibility_info text,
+  add column if not exists weather_contingency text;
 
 drop function if exists public.update_partner_event(
   text, text, text, text, date, date, time, time, boolean, text,
@@ -87,49 +16,49 @@ drop function if exists public.update_partner_event(
 );
 
 create or replace function public.update_partner_event(
-  p_token              text,
-  p_title              text default null,
-  p_description        text default null,
-  p_short_description  text default null,
-  p_start_date         date default null,
-  p_end_date           date default null,
-  p_start_time         time default null,
-  p_end_time           time default null,
-  p_is_all_day         boolean default null,
-  p_timezone           text default null,
-  p_venue_name         text default null,
-  p_venue_address      text default null,
-  p_parish             text default null,
-  p_town               text default null,
-  p_country            text default null,
-  p_is_free            boolean default null,
-  p_ticket_price_min   numeric default null,
-  p_ticket_price_max   numeric default null,
-  p_currency           text default null,
+  p_token        text,
+  p_title        text default null,
+  p_description  text default null,
+  p_short_description text default null,
+  p_start_date   date default null,
+  p_end_date     date default null,
+  p_start_time   time default null,
+  p_end_time     time default null,
+  p_is_all_day   boolean default null,
+  p_timezone     text default null,
+  p_venue_name   text default null,
+  p_venue_address text default null,
+  p_parish       text default null,
+  p_town         text default null,
+  p_country      text default null,
+  p_is_free      boolean default null,
+  p_ticket_price_min numeric default null,
+  p_ticket_price_max numeric default null,
+  p_currency     text default null,
   p_has_online_tickets boolean default null,
-  p_is_sold_out        boolean default null,
-  p_ticket_url         text default null,
-  p_capacity           integer default null,
-  p_min_age            integer default null,
-  p_dress_code         text default null,
-  p_food_available     boolean default null,
-  p_alcohol_served     boolean default null,
-  p_organizer_name     text default null,
-  p_contact_email      text default null,
-  p_contact_phone      text default null,
-  p_support_email      text default null,
-  p_support_phone      text default null,
-  p_support_url        text default null,
-  p_website_url        text default null,
-  p_instagram_url      text default null,
+  p_is_sold_out  boolean default null,
+  p_ticket_url   text default null,
+  p_capacity     integer default null,
+  p_min_age      integer default null,
+  p_dress_code   text default null,
+  p_food_available boolean default null,
+  p_alcohol_served boolean default null,
+  p_organizer_name text default null,
+  p_contact_email  text default null,
+  p_contact_phone  text default null,
+  p_support_email  text default null,
+  p_support_phone  text default null,
+  p_support_url    text default null,
+  p_website_url    text default null,
+  p_instagram_url  text default null,
   p_featured_image_url text default null,
-  p_event_type         text default null,
+  p_event_type     text default null,
   p_know_before_you_go jsonb default null,
-  p_parking_info       text default null,
+  p_parking_info   text default null,
   p_accessibility_info text default null,
   p_weather_contingency text default null,
-  p_info_sections      jsonb default null,
-  p_faq                jsonb default null,
+  p_info_sections  jsonb default null,
+  p_faq            jsonb default null,
   p_parking_image_url  text default null,
   p_parking_image_urls jsonb default null
 )
@@ -228,10 +157,10 @@ end;
 $$;
 
 grant execute on function public.update_partner_event(
-  text, text, text, text, date, date, time, time, boolean, text,
-  text, text, text, text, text,
-  boolean, numeric, numeric, text, boolean, boolean, text, integer,
-  integer, text, boolean, boolean,
-  text, text, text, text, text, text, text, text, text, text,
-  jsonb, text, text, text, jsonb, jsonb, text, jsonb
-) to anon;
+  text, text, text, text, date, date, time, time, boolean, text, text, text,
+  text, text, text, boolean, numeric, numeric, text, boolean, boolean, text,
+  integer, integer, text, boolean, boolean, text, text, text, text, text, text,
+  text, text, text, text, jsonb, text, text, text, jsonb, jsonb, text, jsonb
+) to anon, authenticated;
+
+notify pgrst, 'reload schema';
