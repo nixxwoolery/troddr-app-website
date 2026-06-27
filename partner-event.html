@@ -3066,6 +3066,8 @@
           <div class="ve-modal-sub">Artist, performance, or set time shown in the event schedule.</div>
           <div class="ve-field"><label for="si-day">Day</label>
             <select id="si-day" required></select></div>
+          <div class="ve-field"><label for="si-order">Lineup order</label>
+            <input id="si-order" type="number" min="1" step="1" placeholder="1" /></div>
           <div class="ve-field"><label for="si-title">Artist / title</label>
             <input id="si-title" type="text" maxlength="200" required placeholder="e.g. Shenseea" /></div>
           <div class="ve-field"><label for="si-subtitle">Subtitle</label>
@@ -3112,7 +3114,7 @@
           <div class="ve-field"><label for="si-import-file">CSV file</label>
             <input id="si-import-file" type="file" accept=".csv,text/csv" /></div>
           <div class="ve-field"><label for="si-import-text">CSV</label>
-            <textarea id="si-import-text" rows="9" placeholder="2026-07-19, Shenseea, 22:30, 23:15, Main Stage, Dancehall set, artist, https://..., yes, yes"></textarea></div>
+            <textarea id="si-import-text" rows="9" placeholder="display_order,date,artist,start_time,end_time,stage,subtitle,category,image_url,featured,must_see&#10;1,2026-07-19,Shenseea,22:30,23:15,Main Stage,Dancehall set,artist,https://...,yes,yes"></textarea></div>
           <div class="import-preview" id="si-import-preview"></div>
           <div class="ve-status" id="si-import-status"></div>
           <div class="ve-actions">
@@ -4560,6 +4562,31 @@
     const dt = new Date(`${day.date}T${timeValue}:00`);
     return Number.isNaN(dt.getTime()) ? null : dt.toISOString();
   }
+  function scheduleItemOrderValue(item) {
+    const value = Number(item && item.display_order);
+    return Number.isFinite(value) && value > 0 ? value : Number.MAX_SAFE_INTEGER;
+  }
+  function sortScheduleItemsForLineup(items) {
+    return [...(items || [])].sort((a, b) => {
+      const orderDiff = scheduleItemOrderValue(a) - scheduleItemOrderValue(b);
+      if (orderDiff !== 0) return orderDiff;
+      const timeA = a && a.start_time ? new Date(a.start_time).getTime() : Number.MAX_SAFE_INTEGER;
+      const timeB = b && b.start_time ? new Date(b.start_time).getTime() : Number.MAX_SAFE_INTEGER;
+      if (timeA !== timeB) return timeA - timeB;
+      return String((a && a.title) || '').localeCompare(String((b && b.title) || ''));
+    });
+  }
+  function nextScheduleOrderForDay(dayId) {
+    const existing = _scheduleItems
+      .filter(i => i.day_id === dayId)
+      .map(scheduleItemOrderValue)
+      .filter(v => Number.isFinite(v) && v !== Number.MAX_SAFE_INTEGER);
+    return existing.length ? Math.max(...existing) + 1 : 1;
+  }
+  function scheduleItemOrderLabel(item) {
+    const order = scheduleItemOrderValue(item);
+    return order === Number.MAX_SAFE_INTEGER ? 'TBD' : `#${order}`;
+  }
   function boolFromCell(value) {
     return /^(1|true|yes|y)$/i.test(String(value || '').trim());
   }
@@ -4703,14 +4730,24 @@
     const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     if (!lines.length) return [];
     const first = parseCsvLine(lines[0]).map(c => c.toLowerCase());
-    const hasHeader = first.some(c => ['date', 'artist', 'title', 'start_time', 'stage'].includes(c));
+    const hasHeader = first.some(c => ['date', 'artist', 'title', 'start_time', 'stage', 'display_order', 'order'].includes(c));
     const rows = hasHeader ? lines.slice(1) : lines;
     const idx = (name, fallback) => hasHeader ? first.indexOf(name) : fallback;
+    const idxAny = (names, fallback) => {
+      if (!hasHeader) return fallback;
+      for (const name of names) {
+        const i = first.indexOf(name);
+        if (i >= 0) return i;
+      }
+      return -1;
+    };
     const titleIdx = hasHeader ? Math.max(first.indexOf('artist'), first.indexOf('title')) : 1;
     return rows.map((line) => {
       const c = parseCsvLine(line);
       const date = c[idx('date', 0)] || '';
       const title = c[titleIdx < 0 ? 1 : titleIdx] || '';
+      const orderRaw = c[idxAny(['display_order', 'order', 'lineup_order'], -1)] || '';
+      const displayOrder = Number.parseInt(String(orderRaw).trim(), 10);
       const start = c[idx('start_time', 2)] || c[idx('start', 2)] || '';
       const end = c[idx('end_time', 3)] || c[idx('end', 3)] || '';
       const stage = c[idx('stage', 4)] || c[idx('venue_override', 4)] || '';
@@ -4732,6 +4769,7 @@
         stage,
         category,
         image_url: imageUrl,
+        display_order: Number.isFinite(displayOrder) && displayOrder > 0 ? displayOrder : null,
         is_featured: boolFromCell(featured),
         is_must_see: boolFromCell(mustSee),
         is_published: true,
@@ -4755,7 +4793,7 @@
       return;
     }
     wrap.innerHTML = _scheduleDays.map(d => {
-      const dayItems = _scheduleItems.filter(i => i.day_id === d.id);
+      const dayItems = sortScheduleItemsForLineup(_scheduleItems.filter(i => i.day_id === d.id));
       const itemHtml = dayItems.length ? dayItems.map(i => {
         const badges = [
           i.venue_override,
@@ -4768,7 +4806,7 @@
         return `
           <div class="schedule-item-row" data-item-id="${escapeHtml(i.id || '')}">
             <div class="schedule-item-thumb" ${i.image_url ? `style="background-image:url('${escapeHtml(i.image_url)}')"` : ''}></div>
-            <div class="schedule-item-time">${escapeHtml(scheduleItemTime(i.start_time) || 'TBD')}</div>
+            <div class="schedule-item-time">${escapeHtml(scheduleItemTime(i.start_time) || scheduleItemOrderLabel(i))}</div>
             <div class="body">
               <div class="name">${escapeHtml(i.title || 'Untitled')}</div>
               <div class="meta">${badges.map(escapeHtml).join(' · ')}</div>
@@ -4887,6 +4925,7 @@
     _editingScheduleItem = item ? { ...item } : { _isNew: true, day_id: defaultDayId || (_scheduleDays[0] && _scheduleDays[0].id) };
     document.getElementById('si-modal-title').textContent = item ? 'Edit artist' : 'Add artist';
     populateScheduleDaySelect(_editingScheduleItem.day_id);
+    document.getElementById('si-order').value      = item ? (item.display_order || '') : nextScheduleOrderForDay(_editingScheduleItem.day_id);
     document.getElementById('si-title').value      = item ? (item.title || '') : '';
     document.getElementById('si-subtitle').value   = item ? (item.subtitle || '') : '';
     document.getElementById('si-start').value      = item ? timeInputFromIso(item.start_time) : '';
@@ -4922,6 +4961,7 @@
       p_day_id:         dayId,
       p_title:          document.getElementById('si-title').value.trim() || null,
       p_subtitle:       document.getElementById('si-subtitle').value.trim() || null,
+      p_display_order:  Number.parseInt(document.getElementById('si-order').value, 10) || null,
       p_start_time:     isoForDayTime(dayId, document.getElementById('si-start').value),
       p_end_time:       isoForDayTime(dayId, document.getElementById('si-end').value),
       p_venue_override: document.getElementById('si-stage').value.trim() || null,
@@ -5447,10 +5487,11 @@
         </div>`;
     }
 
-    const lineupPreview = scheduleItems.length ? `
+    const orderedScheduleItems = sortScheduleItemsForLineup(scheduleItems);
+    const lineupPreview = orderedScheduleItems.length ? `
       <div class="lineup-preview">
         <div class="lineup-preview-label">Lineup images</div>
-        ${scheduleItems.slice(0, 8).map((it) => {
+        ${orderedScheduleItems.slice(0, 8).map((it) => {
           const t = it.start_time
             ? new Date(it.start_time).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
             : '';
@@ -5458,7 +5499,7 @@
           return `
             <div class="schedule-item-row">
               <div class="schedule-item-thumb" ${it.image_url ? `style="background-image:url('${escapeHtml(it.image_url)}')"` : ''}></div>
-              <div class="schedule-item-time">${escapeHtml(scheduleItemTime(it.start_time) || 'TBD')}</div>
+              <div class="schedule-item-time">${escapeHtml(scheduleItemTime(it.start_time) || scheduleItemOrderLabel(it))}</div>
               <div class="body">
                 <div class="name">${escapeHtml(it.title || 'Untitled')}</div>
                 ${subParts.length ? `<div class="meta">${subParts.join(' · ')}</div>` : ''}

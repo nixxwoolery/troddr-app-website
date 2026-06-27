@@ -396,6 +396,28 @@ from (
 where i.track_id is null
   and i.event_id = t.event_id;
 
+alter table public.event_schedule_items
+  add column if not exists display_order integer;
+
+alter table public.event_schedule_items
+  alter column start_time drop not null,
+  alter column end_time drop not null;
+
+with ordered as (
+  select
+    id,
+    row_number() over (
+      partition by event_id, day_id
+      order by start_time nulls last, title, created_at
+    ) as rn
+  from public.event_schedule_items
+  where display_order is null
+)
+update public.event_schedule_items i
+set display_order = ordered.rn
+from ordered
+where i.id = ordered.id;
+
 create or replace function public.upsert_schedule_day(
   p_token        text,
   p_id           uuid default null,
@@ -475,7 +497,8 @@ create or replace function public.upsert_schedule_item(
   p_image_url      text default null,
   p_is_featured    boolean default false,
   p_is_must_see    boolean default false,
-  p_is_published   boolean default true
+  p_is_published   boolean default true,
+  p_display_order  integer default null
 )
 returns jsonb
 language plpgsql
@@ -487,6 +510,7 @@ declare
   v_id uuid;
   v_day_date date;
   v_track_id uuid;
+  v_display_order integer;
 begin
   v_event_id := _partner_event_id_from_token(p_token);
   if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
@@ -509,20 +533,27 @@ begin
     values (v_event_id, 'Main Stage', 'Main', nullif(btrim(p_venue_override), ''))
     returning id into v_track_id;
   end if;
+  select coalesce(
+    p_display_order,
+    (select coalesce(max(display_order), 0) + 1
+       from public.event_schedule_items
+      where event_id = v_event_id
+        and day_id = p_day_id)
+  ) into v_display_order;
 
   if p_id is null then
     insert into public.event_schedule_items (
       event_id, day_id, track_id, title, subtitle, start_time, end_time, venue_override,
-      category, image_url, is_featured, is_must_see, is_published
+      category, image_url, is_featured, is_must_see, is_published, display_order
     )
     values (
       v_event_id, p_day_id, v_track_id, btrim(p_title), nullif(btrim(p_subtitle), ''),
-      coalesce(p_start_time, v_day_date::timestamptz),
-      coalesce(p_end_time, coalesce(p_start_time, v_day_date::timestamptz) + interval '1 hour'),
+      p_start_time,
+      p_end_time,
       nullif(btrim(p_venue_override), ''),
       nullif(btrim(p_category), ''), nullif(btrim(p_image_url), ''),
       coalesce(p_is_featured, false), coalesce(p_is_must_see, false),
-      coalesce(p_is_published, true)
+      coalesce(p_is_published, true), v_display_order
     )
     returning id into v_id;
   else
@@ -530,14 +561,15 @@ begin
        set day_id         = coalesce(p_day_id, day_id),
            title          = coalesce(nullif(btrim(p_title), ''), title),
            subtitle       = case when p_subtitle is not null then nullif(btrim(p_subtitle), '') else subtitle end,
-           start_time     = case when p_start_time is not null then p_start_time else start_time end,
-           end_time       = case when p_end_time is not null then p_end_time else end_time end,
+           start_time     = p_start_time,
+           end_time       = p_end_time,
            venue_override = case when p_venue_override is not null then nullif(btrim(p_venue_override), '') else venue_override end,
            category       = case when p_category is not null then nullif(btrim(p_category), '') else category end,
            image_url      = case when p_image_url is not null then nullif(btrim(p_image_url), '') else image_url end,
            is_featured    = coalesce(p_is_featured, is_featured),
            is_must_see    = coalesce(p_is_must_see, is_must_see),
-           is_published   = coalesce(p_is_published, is_published)
+           is_published   = coalesce(p_is_published, is_published),
+           display_order  = coalesce(p_display_order, display_order)
      where id = p_id and event_id = v_event_id
      returning id into v_id;
     if v_id is null then return jsonb_build_object('ok', false, 'error', 'item_not_on_event'); end if;
@@ -549,7 +581,7 @@ exception when others then
 end;
 $$;
 grant execute on function public.upsert_schedule_item(
-  text, uuid, uuid, text, text, timestamptz, timestamptz, text, text, text, boolean, boolean, boolean
+  text, uuid, uuid, text, text, timestamptz, timestamptz, text, text, text, boolean, boolean, boolean, integer
 ) to anon, authenticated;
 
 
@@ -585,6 +617,7 @@ declare
   v_day_id uuid;
   v_day_date date;
   v_track_id uuid;
+  v_display_order int;
   v_inserted int := 0;
   v_skipped int := 0;
 begin
@@ -635,10 +668,18 @@ begin
       values (v_event_id, coalesce(nullif(btrim(v_item->>'stage'), ''), 'Main Stage'), 'Main', nullif(btrim(v_item->>'stage'), ''))
       returning id into v_track_id;
     end if;
+    v_display_order := coalesce(
+      case when nullif(v_item->>'display_order', '') ~ '^[0-9]+$' then (v_item->>'display_order')::int end,
+      case when nullif(v_item->>'order', '') ~ '^[0-9]+$' then (v_item->>'order')::int end,
+      (select coalesce(max(display_order), 0) + 1
+         from public.event_schedule_items
+        where event_id = v_event_id
+          and day_id = v_day_id)
+    );
 
     insert into public.event_schedule_items (
       event_id, day_id, track_id, title, subtitle, start_time, end_time, venue_override,
-      category, image_url, is_featured, is_must_see, is_published
+      category, image_url, is_featured, is_must_see, is_published, display_order
     )
     values (
       v_event_id,
@@ -646,14 +687,15 @@ begin
       v_track_id,
       btrim(v_item->>'title'),
       nullif(btrim(v_item->>'subtitle'), ''),
-      coalesce(nullif(v_item->>'start_time', '')::timestamptz, v_day_date::timestamptz),
-      coalesce(nullif(v_item->>'end_time', '')::timestamptz, coalesce(nullif(v_item->>'start_time', '')::timestamptz, v_day_date::timestamptz) + interval '1 hour'),
+      nullif(v_item->>'start_time', '')::timestamptz,
+      nullif(v_item->>'end_time', '')::timestamptz,
       nullif(btrim(coalesce(v_item->>'venue_override', v_item->>'stage')), ''),
       nullif(btrim(coalesce(v_item->>'category', 'artist')), ''),
       nullif(btrim(v_item->>'image_url'), ''),
       coalesce((v_item->>'is_featured')::boolean, false),
       coalesce((v_item->>'is_must_see')::boolean, false),
-      coalesce((v_item->>'is_published')::boolean, true)
+      coalesce((v_item->>'is_published')::boolean, true),
+      v_display_order
     );
     v_inserted := v_inserted + 1;
   end loop;

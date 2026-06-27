@@ -105,9 +105,10 @@ begin
           'image_url',      i.image_url,
           'is_featured',    i.is_featured,
           'is_must_see',    i.is_must_see,
-          'is_published',   i.is_published
+          'is_published',   i.is_published,
+          'display_order',  i.display_order
         )
-        order by i.start_time nulls last, i.title
+        order by i.display_order nulls last, i.start_time nulls last, i.title
       )
       from public.event_schedule_items i
       where i.event_id = v_event_id
