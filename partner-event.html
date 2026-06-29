@@ -640,6 +640,44 @@
   }
   .image-status.error { color: var(--red); }
   .image-status.success { color: var(--green); }
+  .upload-progress {
+    display: none;
+    gap: 6px;
+  }
+  .upload-progress.show {
+    display: grid;
+  }
+  .upload-progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .upload-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--brand-accent);
+    transition: width 0.2s ease;
+  }
+  .upload-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--grey-mid);
+  }
+  .upload-progress.success .upload-progress-fill { background: var(--green); }
+  .upload-progress.error .upload-progress-fill { background: var(--red); }
+  .upload-progress strong {
+    color: var(--grey-dark);
+    font-weight: 700;
+  }
+  .image-pick-btn.is-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
   .sponsor-logo-upload {
     grid-template-columns: 84px 1fr;
     margin-top: 6px;
@@ -6427,6 +6465,15 @@
             </div>
             <input id="ed-media-url" class="image-url-input" type="url" value="${escapeHtml(e.media_url || '')}" placeholder="YouTube link or uploaded video URL" />
             <div class="image-status" id="ed-media-status">YouTube links show in the app media player. Uploaded videos are stored in partner-intake-assets.</div>
+            <div class="upload-progress" id="ed-media-progress" aria-live="polite">
+              <div class="upload-progress-track">
+                <div class="upload-progress-fill" id="ed-media-progress-fill"></div>
+              </div>
+              <div class="upload-progress-meta">
+                <span id="ed-media-progress-label">Waiting for video</span>
+                <strong id="ed-media-progress-percent">0%</strong>
+              </div>
+            </div>
           </div>
         </div>
         <div class="edit-field">
@@ -6535,6 +6582,40 @@
     const mediaFile = $('ed-media-file');
     const mediaUrlIn = $('ed-media-url');
     const mediaStatus = $('ed-media-status');
+    const mediaProgress = $('ed-media-progress');
+    const mediaProgressFill = $('ed-media-progress-fill');
+    const mediaProgressLabel = $('ed-media-progress-label');
+    const mediaProgressPercent = $('ed-media-progress-percent');
+    const mediaClearBtn = $('ed-media-clear');
+    const mediaPickBtn = mediaFile?.closest('.image-pick-btn');
+    let mediaUploading = false;
+
+    const fileSizeLabel = (bytes) => {
+      const mb = Number(bytes || 0) / (1024 * 1024);
+      return mb >= 10 ? `${Math.round(mb)}MB` : `${mb.toFixed(1)}MB`;
+    };
+    const setMediaProgress = (pct, label, kind) => {
+      const value = Math.max(0, Math.min(100, Number(pct) || 0));
+      if (mediaProgress) {
+        mediaProgress.className = `upload-progress show${kind ? ' ' + kind : ''}`;
+      }
+      if (mediaProgressFill) mediaProgressFill.style.width = `${value}%`;
+      if (mediaProgressLabel) mediaProgressLabel.textContent = label || '';
+      if (mediaProgressPercent) mediaProgressPercent.textContent = `${Math.round(value)}%`;
+    };
+    const clearMediaProgress = () => {
+      if (mediaProgress) mediaProgress.className = 'upload-progress';
+      if (mediaProgressFill) mediaProgressFill.style.width = '0%';
+      if (mediaProgressLabel) mediaProgressLabel.textContent = 'Waiting for video';
+      if (mediaProgressPercent) mediaProgressPercent.textContent = '0%';
+    };
+    const setMediaBusy = (busy) => {
+      mediaUploading = !!busy;
+      if (mediaFile) mediaFile.disabled = mediaUploading;
+      if (mediaClearBtn) mediaClearBtn.disabled = mediaUploading;
+      if (mediaPickBtn) mediaPickBtn.classList.toggle('is-disabled', mediaUploading);
+    };
+
     $('ed-media-clear')?.addEventListener('click', () => {
       if (mediaUrlIn) mediaUrlIn.value = '';
       if (mediaFile) mediaFile.value = '';
@@ -6542,6 +6623,7 @@
         mediaStatus.textContent = '';
         mediaStatus.className = 'image-status';
       }
+      clearMediaProgress();
     });
     mediaFile?.addEventListener('change', async () => {
       const file = mediaFile.files && mediaFile.files[0];
@@ -6549,34 +6631,42 @@
       if (!file.type.startsWith('video/')) {
         mediaStatus.textContent = 'Please choose a video file.';
         mediaStatus.className = 'image-status error';
+        setMediaProgress(0, 'File was not accepted', 'error');
         mediaFile.value = '';
         return;
       }
       if (file.size > 100 * 1024 * 1024) {
         mediaStatus.textContent = 'Video too large (100MB max).';
         mediaStatus.className = 'image-status error';
+        setMediaProgress(0, `${file.name} is ${fileSizeLabel(file.size)}`, 'error');
         mediaFile.value = '';
         return;
       }
       const slug = safeStorageName((event && event.slug) || 'event');
       const safeName = safeStorageName(file.name || 'video');
       const path = `event-media/${slug}/${Date.now()}-${safeName}`;
-      mediaStatus.textContent = 'Uploading video...';
+      mediaStatus.textContent = `Uploading ${file.name} (${fileSizeLabel(file.size)})...`;
       mediaStatus.className = 'image-status';
+      setMediaBusy(true);
+      setMediaProgress(1, `Selected ${file.name}`, '');
       try {
         const url = await uploadStorageVideo(file, path, (pct) => {
           mediaStatus.textContent = `Uploading video... ${pct}%`;
+          setMediaProgress(pct, `Uploading ${file.name}`, '');
         });
         if (!url) throw new Error('No public URL returned');
-        mediaUrlIn.value = url;
-        mediaStatus.textContent = 'Uploaded. Click "Save changes" to apply.';
+        setMediaProgress(100, 'Upload complete. Video accepted.', 'success');
+        mediaStatus.textContent = 'Video accepted. Click "Save changes" to apply it to the event.';
         mediaStatus.className = 'image-status success';
+        mediaUrlIn.value = url;
       } catch (err) {
         console.error('media upload failed', err);
         mediaStatus.textContent = (window.friendlyError || (() => ''))(err,
           "Video upload didn't go through. Try a smaller file, or paste a YouTube link instead.");
         mediaStatus.className = 'image-status error';
+        setMediaProgress(0, 'Upload failed', 'error');
       } finally {
+        setMediaBusy(false);
         mediaFile.value = '';
       }
     });
@@ -6586,11 +6676,24 @@
     });
 
     const fe = window.friendlyError || ((err, fb) => fb || 'Something went wrong.');
+    const saveErrorMessage = (err, fallback) => {
+      if (window.friendlyErrorWithRaw) {
+        const out = window.friendlyErrorWithRaw(err, fallback);
+        return out.raw && out.friendly === fallback
+          ? `${out.friendly} Details: ${out.raw}`
+          : out.friendly;
+      }
+      return fe(err, fallback);
+    };
 
     $('edit-save').addEventListener('click', async () => {
       hideStatus();
       const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
       if (!token) { showStatus("We couldn't find your account from this link. Open the dashboard from your bookmarked URL.", 'error'); return; }
+      if (mediaUploading) {
+        showStatus('The video is still uploading. Wait for the accepted message, then save changes.', 'error');
+        return;
+      }
 
       const num = (v) => v === '' || v == null ? null : Number(v);
       const str = (v) => { const s = (v ?? '').toString().trim(); return s === '' ? null : s; };
@@ -6713,14 +6816,14 @@
       try {
         const { data, error } = await db.rpc('update_partner_event', payload);
         if (error || !data || !data.ok) {
-          showStatus(fe(error || (data && data.error) || data,
+          showStatus(saveErrorMessage(error || (data && data.error) || data,
             "We couldn't save those changes. Please try again, or send us a message."), 'error');
         } else {
           showStatus('Saved. Refreshing dashboard...', 'success');
           setTimeout(() => location.reload(), 1200);
         }
       } catch (err) {
-        showStatus(fe(err, "Couldn't reach our servers. Check your connection and try again."), 'error');
+        showStatus(saveErrorMessage(err, "Couldn't reach our servers. Check your connection and try again."), 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = original;
