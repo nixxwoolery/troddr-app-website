@@ -1,22 +1,17 @@
--- ============================================================
--- Storage policies for partner-intake-assets bucket.
--- Allows token-link and signed-in partner dashboards to upload and read.
--- ============================================================
+-- Keep partner dashboard uploads working for both public token links and
+-- authenticated sessions, and raise the bucket limit to match video uploads.
 
--- Make sure the bucket exists and is publicly readable
 insert into storage.buckets (id, name, public, file_size_limit)
 values ('partner-intake-assets', 'partner-intake-assets', true, 104857600)
 on conflict (id) do update
 set public = true,
     file_size_limit = 104857600;
 
--- Allow partner dashboard uploads from token links and signed-in sessions
 drop policy if exists "anon can upload to partner-intake-assets" on storage.objects;
 create policy "anon can upload to partner-intake-assets"
 on storage.objects for insert to anon, authenticated
 with check (bucket_id = 'partner-intake-assets');
 
--- Allow partner dashboard sessions to read (since bucket is public, but be explicit)
 drop policy if exists "anon can read partner-intake-assets" on storage.objects;
 create policy "anon can read partner-intake-assets"
 on storage.objects for select to anon, authenticated
