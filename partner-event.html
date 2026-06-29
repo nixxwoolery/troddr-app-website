@@ -6220,6 +6220,7 @@
     $('edit-card').innerHTML = `
       <div class="edit-tabs" role="tablist">
         <button type="button" class="edit-tab active" data-edit-pane="basics">Basics</button>
+        <button type="button" class="edit-tab" data-edit-pane="media">Media</button>
         <button type="button" class="edit-tab" data-edit-pane="when">When</button>
         <button type="button" class="edit-tab" data-edit-pane="where">Where</button>
         <button type="button" class="edit-tab" data-edit-pane="tickets">Tickets &amp; Capacity</button>
@@ -6266,6 +6267,35 @@
               </div>
               <input id="ed-image" class="image-url-input" type="url" value="${escapeHtml(e.featured_image_url || '')}" placeholder="https://... (or upload above)" />
               <div class="image-status" id="ed-image-status"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      </div>
+
+      <div class="edit-pane" data-edit-pane="media">
+      <div class="edit-grid">
+        <div class="edit-field full">
+          <label for="ed-media-url">Event media URL</label>
+          <div class="image-upload-body">
+            <div class="image-upload-actions">
+              <label class="image-pick-btn">
+                Upload video
+                <input id="ed-media-file" type="file" accept="video/*" />
+              </label>
+              <button type="button" class="image-pick-btn" id="ed-media-clear" style="border-color:var(--border); color:var(--grey-dark);">Clear</button>
+            </div>
+            <input id="ed-media-url" class="image-url-input" type="url" value="${escapeHtml(e.media_url || '')}" placeholder="YouTube link or uploaded video URL" />
+            <div class="image-status" id="ed-media-status">YouTube links show in the app media player. Uploaded videos are stored in partner-intake-assets.</div>
+            <div class="upload-progress" id="ed-media-progress" aria-live="polite">
+              <div class="upload-progress-track">
+                <div class="upload-progress-fill" id="ed-media-progress-fill"></div>
+              </div>
+              <div class="upload-progress-meta">
+                <span id="ed-media-progress-label">Waiting for video</span>
+                <strong id="ed-media-progress-percent">0%</strong>
+              </div>
             </div>
           </div>
         </div>
@@ -6452,29 +6482,6 @@
         <div class="edit-field">
           <label for="ed-website">Website</label>
           <input id="ed-website" type="url" value="${escapeHtml(e.website_url || '')}" />
-        </div>
-        <div class="edit-field full">
-          <label for="ed-media-url">Event media URL</label>
-          <div class="image-upload-body">
-            <div class="image-upload-actions">
-              <label class="image-pick-btn">
-                Upload video
-                <input id="ed-media-file" type="file" accept="video/*" />
-              </label>
-              <button type="button" class="image-pick-btn" id="ed-media-clear" style="border-color:var(--border); color:var(--grey-dark);">Clear</button>
-            </div>
-            <input id="ed-media-url" class="image-url-input" type="url" value="${escapeHtml(e.media_url || '')}" placeholder="YouTube link or uploaded video URL" />
-            <div class="image-status" id="ed-media-status">YouTube links show in the app media player. Uploaded videos are stored in partner-intake-assets.</div>
-            <div class="upload-progress" id="ed-media-progress" aria-live="polite">
-              <div class="upload-progress-track">
-                <div class="upload-progress-fill" id="ed-media-progress-fill"></div>
-              </div>
-              <div class="upload-progress-meta">
-                <span id="ed-media-progress-label">Waiting for video</span>
-                <strong id="ed-media-progress-percent">0%</strong>
-              </div>
-            </div>
-          </div>
         </div>
         <div class="edit-field">
           <label for="ed-instagram">Instagram URL</label>
