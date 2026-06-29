@@ -20,6 +20,7 @@
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_STORAGE_URL = (window.__ENV__ && window.__ENV__.SUPABASE_STORAGE_URL) || '';
   const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
 </script>
 
@@ -4067,6 +4068,91 @@
   function safeStorageName(s) {
     return String(s || 'logo').trim().replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^_+|_+$/g, '') || 'logo';
   }
+  function getSupabaseStorageBase() {
+    const explicit = String(SUPABASE_STORAGE_URL || '').replace(/\/$/, '');
+    if (explicit) return explicit;
+
+    try {
+      const u = new URL(SUPABASE_URL);
+      if (/\.supabase\.co$/i.test(u.hostname)) return u.origin;
+    } catch (_) {}
+
+    try {
+      const payload = JSON.parse(atob(String(SUPABASE_ANON || '').split('.')[1] || ''));
+      if (payload && payload.ref) return `https://${payload.ref}.supabase.co`;
+    } catch (_) {}
+
+    return '';
+  }
+  function uploadStorageVideo(file, path, onProgress) {
+    const storageBase = getSupabaseStorageBase();
+    if (!storageBase || typeof fetch !== 'function') {
+      return Promise.reject(new Error('Large video uploader is not available. Paste a video URL instead.'));
+    }
+
+    const encodeMeta = (value) => btoa(unescape(encodeURIComponent(String(value || ''))));
+    const metadata = [
+      ['bucketName', 'partner-intake-assets'],
+      ['objectName', path],
+      ['contentType', file.type || 'video/mp4'],
+      ['cacheControl', '31536000'],
+    ].map(([key, value]) => `${key} ${encodeMeta(value)}`).join(',');
+    const authHeaders = {
+      authorization: `Bearer ${SUPABASE_ANON}`,
+      apikey: SUPABASE_ANON,
+      'x-upsert': 'false',
+    };
+
+    return fetch(`${storageBase}/storage/v1/upload/resumable`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders,
+        'Tus-Resumable': '1.0.0',
+        'Upload-Length': String(file.size),
+        'Upload-Metadata': metadata,
+      },
+    }).then(async (createRes) => {
+      if (!createRes.ok) {
+        throw new Error((await createRes.text()) || `Could not start video upload (${createRes.status})`);
+      }
+
+      const locationHeader = createRes.headers.get('location');
+      if (!locationHeader) throw new Error('Upload session did not return a location.');
+
+      const uploadUrl = new URL(locationHeader, `${storageBase}/storage/v1/upload/resumable`).href;
+      const chunkSize = 6 * 1024 * 1024;
+      let offset = 0;
+
+      while (offset < file.size) {
+        const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size));
+        const patchRes = await fetch(uploadUrl, {
+          method: 'PATCH',
+          headers: {
+            ...authHeaders,
+            'Tus-Resumable': '1.0.0',
+            'Upload-Offset': String(offset),
+            'Content-Type': 'application/offset+octet-stream',
+          },
+          body: chunk,
+        });
+
+        if (!patchRes.ok) {
+          throw new Error((await patchRes.text()) || `Video upload failed (${patchRes.status})`);
+        }
+
+        const nextOffset = Number(patchRes.headers.get('Upload-Offset'));
+        offset = Number.isFinite(nextOffset) && nextOffset > offset
+          ? nextOffset
+          : offset + chunk.size;
+
+        if (typeof onProgress === 'function') {
+          onProgress(Math.min(100, Math.round((offset / file.size) * 100)));
+        }
+      }
+
+      return `${storageBase}/storage/v1/object/public/partner-intake-assets/${path}`;
+    });
+  }
   function isLikelyRenderableImageUrl(url) {
     if (!url) return true;
     try {
@@ -6478,12 +6564,9 @@
       mediaStatus.textContent = 'Uploading video...';
       mediaStatus.className = 'image-status';
       try {
-        const { data, error } = await db.storage
-          .from('partner-intake-assets')
-          .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
-        if (error) throw error;
-        const pub = db.storage.from('partner-intake-assets').getPublicUrl(data.path);
-        const url = pub && pub.data && pub.data.publicUrl;
+        const url = await uploadStorageVideo(file, path, (pct) => {
+          mediaStatus.textContent = `Uploading video... ${pct}%`;
+        });
         if (!url) throw new Error('No public URL returned');
         mediaUrlIn.value = url;
         mediaStatus.textContent = 'Uploaded. Click "Save changes" to apply.';
