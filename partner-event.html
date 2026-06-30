@@ -538,6 +538,73 @@
     border-color: var(--brand-primary);
   }
   .edit-field textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+  .repeat-editor {
+    display: grid;
+    gap: 10px;
+  }
+  .repeat-list {
+    display: grid;
+    gap: 10px;
+  }
+  .repeat-item {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-soft);
+  }
+  .repeat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .repeat-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .repeat-fields {
+    display: grid;
+    gap: 8px;
+  }
+  .repeat-fields textarea {
+    min-height: 72px;
+  }
+  .repeat-remove,
+  .repeat-add {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--grey-dark);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .repeat-add {
+    justify-self: start;
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+  }
+  .repeat-remove:hover,
+  .repeat-add:hover {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-text);
+  }
+  .repeat-empty {
+    font-size: 12px;
+    color: var(--grey-mid);
+    padding: 10px 12px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: #fff;
+  }
   .edit-field.checkbox {
     flex-direction: row; align-items: center; gap: 8px;
     padding: 6px 0;
@@ -6211,11 +6278,52 @@
       return title === 'parking' || title === 'parking & shuttles';
     }) || null;
     const customInfoSections = infoSections.filter((s) => s !== parkingSection);
-    const jsonPretty = (v) => JSON.stringify(v || [], null, 2);
     const urlsText = (v) => Array.isArray(v) ? v.join('\n') : '';
     const kbygText = (Array.isArray(e.know_before_you_go) ? e.know_before_you_go : [])
       .map((item) => `${item.icon || 'information-circle-outline'} | ${item.text || ''}`)
       .join('\n');
+    const infoSectionRowHtml = (section, index) => {
+      const item = section || {};
+      const idxAttr = Number.isInteger(index) ? ` data-info-index="${index}"` : '';
+      return `
+        <div class="repeat-item" data-info-section${idxAttr}>
+          <div class="repeat-head">
+            <div class="repeat-title">Promoter section</div>
+            <button type="button" class="repeat-remove" data-remove-info-section>Remove</button>
+          </div>
+          <div class="repeat-fields">
+            <div class="edit-field">
+              <label>Section title</label>
+              <input type="text" data-info-title maxlength="120" value="${escapeHtml(item.title || '')}" placeholder="Bag policy, Parking, VIP entry..." />
+            </div>
+            <div class="edit-field">
+              <label>Section details</label>
+              <textarea data-info-body maxlength="3000" placeholder="Write this section in plain language.">${escapeHtml(item.body || '')}</textarea>
+            </div>
+          </div>
+        </div>`;
+    };
+    const faqRowHtml = (item, index) => {
+      const faq = item || {};
+      const idxAttr = Number.isInteger(index) ? ` data-faq-index="${index}"` : '';
+      return `
+        <div class="repeat-item" data-faq-item${idxAttr}>
+          <div class="repeat-head">
+            <div class="repeat-title">FAQ item</div>
+            <button type="button" class="repeat-remove" data-remove-faq>Remove</button>
+          </div>
+          <div class="repeat-fields">
+            <div class="edit-field">
+              <label>Question</label>
+              <input type="text" data-faq-question maxlength="240" value="${escapeHtml(faq.question || '')}" placeholder="Is parking available?" />
+            </div>
+            <div class="edit-field">
+              <label>Answer</label>
+              <textarea data-faq-answer maxlength="2000" placeholder="Answer guests in a sentence or two.">${escapeHtml(faq.answer || '')}</textarea>
+            </div>
+          </div>
+        </div>`;
+    };
 
     $('edit-card').innerHTML = `
       <div class="edit-tabs" role="tablist">
@@ -6446,12 +6554,22 @@
           <textarea id="ed-weather" maxlength="3000" placeholder="Rain plan, postponement policy, covered areas, or weather-dependent notes">${escapeHtml(e.weather_contingency || '')}</textarea>
         </div>
         <div class="edit-field full">
-          <label for="ed-info-sections">Custom promoter sections (JSON)</label>
-          <textarea id="ed-info-sections" maxlength="10000" placeholder='[{"title":"Bag Policy","body":"Small bags only.","items":[{"icon":"bag-outline","text":"No large bags"}],"images":["https://..."]}]'>${escapeHtml(jsonPretty(customInfoSections))}</textarea>
+          <label>Promoter sections</label>
+          <div class="repeat-editor" id="ed-info-sections-editor">
+            <div class="repeat-list" id="ed-info-sections-list">
+              ${customInfoSections.length ? customInfoSections.map(infoSectionRowHtml).join('') : '<div class="repeat-empty" data-info-empty>No promoter sections added yet.</div>'}
+            </div>
+            <button type="button" class="repeat-add" id="ed-add-info-section">Add section</button>
+          </div>
         </div>
         <div class="edit-field full">
-          <label for="ed-faq">FAQ (JSON)</label>
-          <textarea id="ed-faq" maxlength="10000" placeholder='[{"question":"Is parking available?","answer":"Yes."}]'>${escapeHtml(jsonPretty(e.faq))}</textarea>
+          <label>FAQ</label>
+          <div class="repeat-editor" id="ed-faq-editor">
+            <div class="repeat-list" id="ed-faq-list">
+              ${Array.isArray(e.faq) && e.faq.length ? e.faq.map(faqRowHtml).join('') : '<div class="repeat-empty" data-faq-empty>No FAQ items added yet.</div>'}
+            </div>
+            <button type="button" class="repeat-add" id="ed-add-faq">Add FAQ</button>
+          </div>
         </div>
       </div>
 
@@ -6507,6 +6625,40 @@
           p.classList.toggle('active', p.dataset.editPane === target)
         );
       });
+    });
+
+    const infoList = $('ed-info-sections-list');
+    const faqList = $('ed-faq-list');
+    const removeEmptyState = (selector) => {
+      const el = $('edit-card').querySelector(selector);
+      if (el) el.remove();
+    };
+    const ensureEmptyState = (list, selector, attrName, text) => {
+      if (!list || list.querySelector('.repeat-item')) return;
+      if (!list.querySelector(selector)) {
+        list.innerHTML = `<div class="repeat-empty" ${attrName}>${text}</div>`;
+      }
+    };
+
+    $('ed-add-info-section')?.addEventListener('click', () => {
+      removeEmptyState('[data-info-empty]');
+      infoList?.insertAdjacentHTML('beforeend', infoSectionRowHtml(null));
+    });
+    infoList?.addEventListener('click', (evt) => {
+      const removeBtn = evt.target.closest?.('[data-remove-info-section]');
+      if (!removeBtn) return;
+      removeBtn.closest('[data-info-section]')?.remove();
+      ensureEmptyState(infoList, '[data-info-empty]', 'data-info-empty', 'No promoter sections added yet.');
+    });
+    $('ed-add-faq')?.addEventListener('click', () => {
+      removeEmptyState('[data-faq-empty]');
+      faqList?.insertAdjacentHTML('beforeend', faqRowHtml(null));
+    });
+    faqList?.addEventListener('click', (evt) => {
+      const removeBtn = evt.target.closest?.('[data-remove-faq]');
+      if (!removeBtn) return;
+      removeBtn.closest('[data-faq-item]')?.remove();
+      ensureEmptyState(faqList, '[data-faq-empty]', 'data-faq-empty', 'No FAQ items added yet.');
     });
 
     const statusBox = $('edit-status');
@@ -6706,17 +6858,28 @@
       const str = (v) => { const s = (v ?? '').toString().trim(); return s === '' ? null : s; };
       const chk = (id) => document.getElementById(id).checked;
       const val = (id) => document.getElementById(id).value;
-      const parseJsonArray = (id, label) => {
-        const raw = val(id).trim();
-        if (!raw) return [];
-        try {
-          const parsed = JSON.parse(raw);
-          if (!Array.isArray(parsed)) throw new Error(`${label} must be a JSON array.`);
-          return parsed;
-        } catch (err) {
-          throw new Error(`${label} must be valid JSON. ${err.message || ''}`.trim());
-        }
-      };
+      const collectInfoSections = () => Array.from(document.querySelectorAll('[data-info-section]'))
+        .map((row) => {
+          const index = Number(row.dataset.infoIndex);
+          const original = Number.isInteger(index) && customInfoSections[index]
+            ? Object.assign({}, customInfoSections[index])
+            : {};
+          const title = row.querySelector('[data-info-title]')?.value.trim() || '';
+          const body = row.querySelector('[data-info-body]')?.value.trim() || '';
+          return Object.assign(original, { title, body });
+        })
+        .filter((item) => item.title || item.body);
+      const collectFaqItems = () => Array.from(document.querySelectorAll('[data-faq-item]'))
+        .map((row) => {
+          const index = Number(row.dataset.faqIndex);
+          const originalFaq = Array.isArray(e.faq) && Number.isInteger(index) && e.faq[index]
+            ? Object.assign({}, e.faq[index])
+            : {};
+          const question = row.querySelector('[data-faq-question]')?.value.trim() || '';
+          const answer = row.querySelector('[data-faq-answer]')?.value.trim() || '';
+          return Object.assign(originalFaq, { question, answer });
+        })
+        .filter((item) => item.question || item.answer);
       const lineUrls = (id) => val(id)
         .split(/\r?\n/)
         .map((u) => u.trim())
@@ -6753,18 +6916,11 @@
         endDate = nextDay.toISOString().slice(0, 10);
       }
 
-      let customInfoSections;
-      let faqItems;
-      try {
-        customInfoSections = parseJsonArray('ed-info-sections', 'Additional info sections');
-        faqItems = parseJsonArray('ed-faq', 'FAQ');
-      } catch (err) {
-        showStatus(err.message, 'error');
-        return;
-      }
+      const editedInfoSections = collectInfoSections();
+      const faqItems = collectFaqItems();
 
       const parkingInfo = str(val('ed-parking-info'));
-      const infoSections = [...customInfoSections];
+      const infoSections = [...editedInfoSections];
 
       const payload = {
         p_token:              token,
