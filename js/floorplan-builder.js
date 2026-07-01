@@ -258,7 +258,9 @@
       this.bg = (meta && meta.bg) || DEFAULT_BG;     // canvas paper colour
       this.world = this.bgUrl
         ? Object.assign({}, WORLD_DEFAULT)                       // replaced on image load
-        : { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
+        : (meta && meta.worldW > 0 && meta.worldH > 0)
+          ? { w: num(meta.worldW, WORLD_DEFAULT.w), h: num(meta.worldH, WORLD_DEFAULT.h) }
+          : { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
       this.tool = 'select';
       this._sel = [];                            // selected element ids (multi-select)
       this.pinCategory = 'info';
@@ -360,6 +362,7 @@
     <button type="button" class="fpb-btn icon-only" data-ref="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled><svg><use href="#fpb-redo"/></svg></button>
     ${uploadBtn}
     ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="rotateMapBtn" title="Rotate the saved floor plan 90 degrees clockwise"><svg><use href="#fpb-rotate"/></svg>Rotate</button>' : ''}
+    ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="traceOnlyBtn" title="Hide the uploaded image from the saved guest map while keeping your traced layout"><svg><use href="#fpb-grid-ic"/></svg>Trace only</button>' : ''}
     <button type="button" class="fpb-btn" data-ref="exportBtn" title="Download the floor plan as a PNG image"><svg><use href="#fpb-download"/></svg>Export</button>
     ${extra}
     <button type="button" class="fpb-btn primary" data-ref="saveBtn"><svg><use href="#fpb-save"/></svg>${esc(o.saveLabel || 'Save')}</button>
@@ -422,6 +425,7 @@
       $.redoBtn.addEventListener('click', () => this.redo());
       $.exportBtn.addEventListener('click', () => this.exportPng());
       if ($.rotateMapBtn) $.rotateMapBtn.addEventListener('click', () => this.rotateMapClockwise());
+      if ($.traceOnlyBtn) $.traceOnlyBtn.addEventListener('click', () => this.useBackgroundAsTraceOnly());
       $.saveBtn.addEventListener('click', () => this.save());
       $.zoomIn.addEventListener('click', () => this.panzoom && this.panzoom.zoomIn());
       $.zoomOut.addEventListener('click', () => this.panzoom && this.panzoom.zoomOut());
@@ -604,6 +608,7 @@
           item('Canvas & scale…', 'fpb-ruler', () => this.openScale()),
           !this.bgUrl && sub('Canvas colour', 'fpb-palette2', ['#ffffff', '#f4f1ea', '#eef2f6', '#dfe9d8', '#1f2937', '#14321f'], (c) => { this.bg = c; this.applyBg(); this.setDirty(true); }),
           item('Add objects', 'fpb-shapes', () => this.setTool('object')),
+          this.bgUrl && item('Use image as trace only', 'fpb-grid-ic', () => this.useBackgroundAsTraceOnly()),
           item(this.bgUrl ? 'Rotate map 90°' : 'Rotate canvas 90°', 'fpb-rotate', () => this.rotateMapClockwise()),
           item('Fit to screen', 'fpb-grid-ic', () => this.fit()),
         ];
@@ -728,6 +733,28 @@
       this.renderElements();
     }
     applyBg() { if (this.$.canvas) this.$.canvas.style.background = this.bg || DEFAULT_BG; }
+
+    useBackgroundAsTraceOnly() {
+      if (!this.bgUrl) {
+        this.status('There is no background image to hide.', 'error');
+        return;
+      }
+      this.bgUrl = null;
+      if (this.$.bg) {
+        this.$.bg.hidden = true;
+        this.$.bg.removeAttribute('src');
+      }
+      if (this.$.opacityWrap) this.$.opacityWrap.hidden = true;
+      this.undoStack = [];
+      this.redoStack = [];
+      this.updateUndoButtons();
+      this.sizeCanvas();
+      this.updateGridVisibility();
+      this.fit();
+      this.setDirty(true);
+      this.renderAll();
+      this.status('Trace image hidden. Click Save so guests see the simplified map.', 'success');
+    }
 
     // Reorient the whole layout 90° clockwise (blank canvas only — an image
     // carries its own orientation). Rotates every element and swaps the site.
