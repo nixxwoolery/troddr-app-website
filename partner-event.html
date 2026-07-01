@@ -707,6 +707,78 @@
   }
   .image-status.error { color: var(--red); }
   .image-status.success { color: var(--green); }
+  .multi-image-upload {
+    display: grid;
+    gap: 10px;
+  }
+  .multi-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 10px;
+  }
+  .multi-image-card {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+  }
+  .multi-image-preview {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-soft) center / cover no-repeat;
+    overflow: hidden;
+  }
+  .multi-image-preview.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--grey-light);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .multi-image-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.94);
+    color: var(--grey-dark);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .multi-image-primary {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.68);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .multi-image-card input {
+    font-size: 11px;
+    padding: 7px 8px;
+  }
+  .multi-image-add-url {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .multi-image-hidden {
+    display: none;
+  }
+  @media (max-width: 520px) {
+    .multi-image-add-url { grid-template-columns: 1fr; }
+  }
   .upload-progress {
     display: none;
     gap: 6px;
@@ -6278,6 +6350,12 @@
       return title === 'parking' || title === 'parking & shuttles';
     }) || null;
     const customInfoSections = infoSections.filter((s) => s !== parkingSection);
+    const parkingImageUrls = [
+      ...(e.parking_image_url ? [e.parking_image_url] : []),
+      ...(Array.isArray(e.parking_image_urls) ? e.parking_image_urls : []),
+    ].map((url) => String(url || '').trim()).filter(Boolean)
+      .filter((url, index, arr) => arr.indexOf(url) === index)
+      .slice(0, 5);
     const urlsText = (v) => Array.isArray(v) ? v.join('\n') : '';
     const kbygText = (Array.isArray(e.know_before_you_go) ? e.know_before_you_go : [])
       .map((item) => `${item.icon || 'information-circle-outline'} | ${item.text || ''}`)
@@ -6534,12 +6612,24 @@
           <textarea id="ed-parking-info" maxlength="3000" placeholder="General parking, shuttle, entrance, or traffic notes">${escapeHtml(e.parking_info || (parkingSection && parkingSection.body) || '')}</textarea>
         </div>
         <div class="edit-field full">
-          <label for="ed-parking-image">Parking image URL</label>
-          <input id="ed-parking-image" type="url" value="${escapeHtml(e.parking_image_url || '')}" placeholder="https://..." />
-        </div>
-        <div class="edit-field full">
-          <label for="ed-parking-images">Additional parking image URLs</label>
-          <textarea id="ed-parking-images" maxlength="3000" placeholder="One image URL per line">${escapeHtml(urlsText(e.parking_image_urls))}</textarea>
+          <label>Parking images</label>
+          <div class="multi-image-upload" id="ed-parking-image-manager">
+            <div class="multi-image-grid" id="ed-parking-image-list"></div>
+            <div class="image-upload-actions">
+              <label class="image-pick-btn">
+                Upload images
+                <input id="ed-parking-image-file" type="file" accept="image/*" multiple />
+              </label>
+              <button type="button" class="image-pick-btn" id="ed-parking-images-clear" style="border-color:var(--border); color:var(--grey-dark);">Clear all</button>
+            </div>
+            <div class="multi-image-add-url">
+              <input id="ed-parking-image-url-add" class="image-url-input" type="url" placeholder="Paste a direct image URL" />
+              <button type="button" class="image-pick-btn" id="ed-parking-image-url-add-btn">Add URL</button>
+            </div>
+            <input id="ed-parking-image" class="multi-image-hidden" type="hidden" value="${escapeHtml(parkingImageUrls[0] || '')}" />
+            <textarea id="ed-parking-images" class="multi-image-hidden">${escapeHtml(urlsText(parkingImageUrls.slice(1)))}</textarea>
+            <div class="image-status" id="ed-parking-image-status">Upload up to 5 parking maps, lot photos, or shuttle pickup images.</div>
+          </div>
         </div>
         <div class="edit-field full">
           <label for="ed-kbyg">Know Before You Go</label>
@@ -6738,6 +6828,166 @@
       }
     });
 
+    // ── Parking image uploads ────────────────────────────────
+    const parkingImageMax = 5;
+    const parkingImageList = $('ed-parking-image-list');
+    const parkingPrimaryIn = $('ed-parking-image');
+    const parkingExtraIn = $('ed-parking-images');
+    const parkingFile = $('ed-parking-image-file');
+    const parkingUrlAdd = $('ed-parking-image-url-add');
+    const parkingUrlAddBtn = $('ed-parking-image-url-add-btn');
+    const parkingClearBtn = $('ed-parking-images-clear');
+    const parkingStatus = $('ed-parking-image-status');
+    let parkingImages = parkingImageUrls.slice(0, parkingImageMax);
+    let parkingUploading = false;
+
+    function setParkingStatus(text, kind) {
+      if (!parkingStatus) return;
+      parkingStatus.textContent = text || '';
+      parkingStatus.className = 'image-status' + (kind ? ' ' + kind : '');
+    }
+    function syncParkingImageFields() {
+      const clean = parkingImages
+        .map((url) => String(url || '').trim())
+        .filter(Boolean)
+        .filter((url, index, arr) => arr.indexOf(url) === index)
+        .slice(0, parkingImageMax);
+      parkingImages = clean;
+      if (parkingPrimaryIn) parkingPrimaryIn.value = clean[0] || '';
+      if (parkingExtraIn) parkingExtraIn.value = clean.slice(1).join('\n');
+    }
+    function renderParkingImages() {
+      if (!parkingImageList) return;
+      syncParkingImageFields();
+      if (!parkingImages.length) {
+        parkingImageList.innerHTML = '<div class="multi-image-preview empty">No images</div>';
+        if (!parkingUploading) setParkingStatus('Upload up to 5 parking maps, lot photos, or shuttle pickup images.');
+        return;
+      }
+      parkingImageList.innerHTML = parkingImages.map((url, index) => `
+        <div class="multi-image-card" data-parking-image-index="${index}">
+          <div class="multi-image-preview" style="background-image:url('${escapeHtml(url)}')">
+            ${index === 0 ? '<span class="multi-image-primary">Primary</span>' : ''}
+            <button type="button" class="multi-image-remove" data-remove-parking-image aria-label="Remove parking image">&times;</button>
+          </div>
+          <input class="image-url-input" type="url" data-parking-image-url value="${escapeHtml(url)}" />
+        </div>
+      `).join('');
+    }
+    function addParkingImageUrl(url, options) {
+      const nextUrl = String(url || '').trim();
+      if (!nextUrl) return false;
+      if (parkingImages.length >= parkingImageMax) {
+        setParkingStatus(`Parking images are capped at ${parkingImageMax}. Remove one before adding another.`, 'error');
+        return false;
+      }
+      if (parkingImages.includes(nextUrl)) {
+        setParkingStatus('That parking image is already added.', 'error');
+        return false;
+      }
+      parkingImages.push(nextUrl);
+      renderParkingImages();
+      if (!options || !options.silent) {
+        setParkingStatus(`Added ${parkingImages.length} of ${parkingImageMax} parking images.`, 'success');
+      }
+      return true;
+    }
+
+    renderParkingImages();
+
+    parkingImageList?.addEventListener('click', (evt) => {
+      const removeBtn = evt.target.closest?.('[data-remove-parking-image]');
+      if (!removeBtn) return;
+      const card = removeBtn.closest('[data-parking-image-index]');
+      const index = Number(card?.dataset.parkingImageIndex);
+      if (!Number.isInteger(index)) return;
+      parkingImages.splice(index, 1);
+      renderParkingImages();
+      setParkingStatus(parkingImages.length ? `${parkingImages.length} parking image${parkingImages.length === 1 ? '' : 's'} selected.` : 'No parking images selected.');
+    });
+    parkingImageList?.addEventListener('input', (evt) => {
+      const input = evt.target.closest?.('[data-parking-image-url]');
+      if (!input) return;
+      const card = input.closest('[data-parking-image-index]');
+      const index = Number(card?.dataset.parkingImageIndex);
+      if (!Number.isInteger(index)) return;
+      parkingImages[index] = input.value.trim();
+      syncParkingImageFields();
+      const url = input.value.trim();
+      if (url && !isLikelyRenderableImageUrl(url)) {
+        setParkingStatus('Use a direct image URL so the app can display it.', 'error');
+      } else {
+        setParkingStatus(`${parkingImages.filter(Boolean).length} parking image${parkingImages.filter(Boolean).length === 1 ? '' : 's'} selected.`);
+      }
+    });
+    parkingUrlAddBtn?.addEventListener('click', () => {
+      const url = parkingUrlAdd?.value.trim() || '';
+      if (!url) {
+        setParkingStatus('Paste a parking image URL first.', 'error');
+        return;
+      }
+      if (!isLikelyRenderableImageUrl(url)) {
+        setParkingStatus('Use a direct image URL so the app can display it.', 'error');
+        return;
+      }
+      if (addParkingImageUrl(url)) parkingUrlAdd.value = '';
+    });
+    parkingClearBtn?.addEventListener('click', () => {
+      parkingImages = [];
+      if (parkingFile) parkingFile.value = '';
+      if (parkingUrlAdd) parkingUrlAdd.value = '';
+      renderParkingImages();
+      setParkingStatus('Parking images cleared. Click "Save changes" to apply.', 'success');
+    });
+    parkingFile?.addEventListener('change', async () => {
+      const files = Array.from(parkingFile.files || []);
+      if (!files.length) return;
+      const openSlots = parkingImageMax - parkingImages.length;
+      if (openSlots <= 0) {
+        setParkingStatus(`Parking images are capped at ${parkingImageMax}. Remove one before uploading another.`, 'error');
+        parkingFile.value = '';
+        return;
+      }
+      const accepted = files.slice(0, openSlots);
+      const rejectedByCount = files.length - accepted.length;
+      const slug = safeStorageName((event && event.slug) || 'event');
+      parkingUploading = true;
+      parkingFile.disabled = true;
+      setParkingStatus(`Uploading ${accepted.length} parking image${accepted.length === 1 ? '' : 's'}...`);
+      try {
+        for (let i = 0; i < accepted.length; i += 1) {
+          const file = accepted[i];
+          if (!file.type.startsWith('image/')) {
+            throw new Error(`${file.name || 'Selected file'} is not an image.`);
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            throw new Error(`${file.name || 'Selected image'} is too large (10MB max).`);
+          }
+          const safeName = safeStorageName(file.name || 'parking-image');
+          const path = `parking-images/${slug}/${Date.now()}-${i}-${safeName}`;
+          setParkingStatus(`Uploading ${file.name || 'parking image'} (${i + 1} of ${accepted.length})...`);
+          const { data, error } = await db.storage
+            .from('partner-intake-assets')
+            .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+          if (error) throw error;
+          const pub = db.storage.from('partner-intake-assets').getPublicUrl(data.path);
+          const url = pub && pub.data && pub.data.publicUrl;
+          if (!url) throw new Error('No public URL returned');
+          addParkingImageUrl(url, { silent: true });
+        }
+        const suffix = rejectedByCount > 0 ? ` ${rejectedByCount} extra file${rejectedByCount === 1 ? '' : 's'} skipped because the limit is ${parkingImageMax}.` : '';
+        setParkingStatus(`Uploaded. Click "Save changes" to apply.${suffix}`, 'success');
+      } catch (err) {
+        console.error('parking image upload failed', err);
+        setParkingStatus((window.friendlyError || (() => ''))(err,
+          "Parking image upload didn't go through. Try a smaller image, or paste a URL instead."), 'error');
+      } finally {
+        parkingUploading = false;
+        parkingFile.disabled = false;
+        parkingFile.value = '';
+      }
+    });
+
     const mediaFile = $('ed-media-file');
     const mediaUrlIn = $('ed-media-url');
     const mediaStatus = $('ed-media-status');
@@ -6851,6 +7101,10 @@
       if (!token) { showStatus("We couldn't find your account from this link. Open the dashboard from your bookmarked URL.", 'error'); return; }
       if (mediaUploading) {
         showStatus('The video is still uploading. Wait for the accepted message, then save changes.', 'error');
+        return;
+      }
+      if (parkingUploading) {
+        showStatus('Parking images are still uploading. Wait for the uploaded message, then save changes.', 'error');
         return;
       }
 
@@ -6967,7 +7221,7 @@
         p_weather_contingency:str(val('ed-weather')),
         p_info_sections:      infoSections,
         p_faq:                faqItems,
-        p_parking_image_url:  str(val('ed-parking-image')),
+        p_parking_image_url:  val('ed-parking-image'),
         p_parking_image_urls: lineUrls('ed-parking-images'),
       };
 
