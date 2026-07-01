@@ -272,6 +272,7 @@
           var pathname = window.location.pathname || '';
           if (
             pathname.indexOf('/itinerary/') === 0 ||
+            pathname.indexOf('/invites/') === 0 ||
             pathname.indexOf('/events/') === 0 ||
             pathname.indexOf('/listings/') === 0 ||
             pathname.indexOf('/guides/') === 0 ||
@@ -313,7 +314,9 @@
           var dividerEl = document.getElementById('open-divider');
 
           if (redirectPath && statusEl) {
-            if (redirectPath.indexOf('/events/') === 0) {
+            if (redirectPath.indexOf('/invites/') === 0) {
+              statusEl.textContent = 'Opening your invite in TRODDR';
+            } else if (redirectPath.indexOf('/events/') === 0) {
               statusEl.textContent = 'Opening event in TRODDR';
             } else if (redirectPath.indexOf('/specials/') === 0) {
               statusEl.textContent = 'Opening experience in TRODDR';

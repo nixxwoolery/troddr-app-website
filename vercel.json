@@ -77,6 +77,17 @@
         "destination": "/events.html"
       },
       {
+        "source": "/invites/:id",
+        "has": [
+          {
+            "type": "header",
+            "key": "user-agent",
+            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
+          }
+        ],
+        "destination": "/api/og/invites/:id"
+      },
+      {
         "source": "/checkin/:tag",
         "destination": "/checkin.html"
       },
@@ -132,6 +143,18 @@
     {
       "source": "/trip/:id",
       "destination": "/app?redirect=/trip/:id",
+      "permanent": false
+    },
+    {
+      "source": "/invites/:id",
+      "missing": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
+        }
+      ],
+      "destination": "/app?redirect=/invites/:id",
       "permanent": false
     },
     {

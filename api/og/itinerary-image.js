@@ -120,7 +120,16 @@ async function loadInterFonts() {
   return interFontsPromise;
 }
 
-function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) {
+function buildCard({
+  destination,
+  dateRange,
+  stopsLabel,
+  names,
+  hero,
+  thumbs,
+  badge = 'Trip itinerary',
+  footer = 'View this trip on troddr',
+}) {
   return h(
     'div',
     {
@@ -192,7 +201,7 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
               'div',
               { style: { display: 'flex', alignItems: 'center' } },
               itineraryIcon(),
-              h('div', { style: { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 800, marginLeft: '14px' } }, 'Trip itinerary')
+              h('div', { style: { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 800, marginLeft: '14px' } }, badge)
             )
           ),
           h(
@@ -205,8 +214,9 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
               ...(dateRange
                 ? [calendarIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 800, marginLeft: '12px', marginRight: '50px' } }, dateRange)]
                 : []),
-              pinIcon(),
-              h('div', { style: { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 800, marginLeft: '12px' } }, stopsLabel)
+              ...(stopsLabel
+                ? [pinIcon(), h('div', { style: { display: 'flex', color: '#fff', fontSize: '42px', fontWeight: 800, marginLeft: '12px' } }, stopsLabel)]
+                : [])
             ),
             names
               ? h('div', {
@@ -243,7 +253,7 @@ function buildCard({ destination, dateRange, stopsLabel, names, hero, thumbs }) 
       h(
         'div',
         { style: { display: 'flex', width: `${CARD_W}px`, height: `${FOOTER_H}px`, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' } },
-        h('div', { style: { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 500 } }, 'View this trip on troddr')
+        h('div', { style: { display: 'flex', color: '#fff', fontSize: '40px', fontWeight: 500 } }, footer)
       )
     )
   );
@@ -292,4 +302,4 @@ export default async function handler(request) {
   return new ImageResponse(buildCard(fields), responseOptions);
 }
 
-export { buildCard, fieldsFrom, loadInterFonts };
+export { buildCard, fieldsFrom, loadInterFonts, shortRange };
