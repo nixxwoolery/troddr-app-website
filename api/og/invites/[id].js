@@ -1,9 +1,9 @@
 // api/og/invites/[id].js — Open Graph card for /invites/{token}
 //
 // Collaborator invite shares look like https://www.troddr.com/invites/{uuid},
-// where the uuid is the invite_token from trip_collaborators. Crawlers get a
-// rich card (trip name, destination, dates, inviter) so the invite unfurls like
-// an itinerary share; humans are bounced to /app to open/download the app.
+// where the uuid is the invite_token from trip_collaborators. Crawlers get the
+// same public-facing card treatment as an itinerary share; humans are bounced
+// to /app to open/download the app.
 //
 // The token is capability-gated: get_trip_invite_preview (SECURITY DEFINER)
 // only returns a trip for a real invite token, so we never leak a private trip.
@@ -15,7 +15,7 @@ import {
 
 export const config = { runtime: 'edge' };
 
-const INVITE_SHARE_IMAGE_VERSION = '20260630-v1';
+const INVITE_SHARE_IMAGE_VERSION = '20260701-share-match-v1';
 
 // get_trip_invite_preview returns a TABLE (one row) → PostgREST array.
 function firstRow(data) {
@@ -50,49 +50,44 @@ export default async function handler(request) {
   // No valid invite → generic, non-leaking card.
   if (!invite?.trip_id) {
     return renderOgPage({
-      title: 'You’re invited on TRODDR',
-      ogTitle: 'You’re invited to plan a trip on TRODDR',
-      description: 'Open the invite in TRODDR to plan the trip together.',
+      title: 'My TRODDR Itinerary',
+      ogTitle: 'My itinerary on TRODDR',
+      description: 'Plan and share your trip on TRODDR.',
       imageUrl: `${BASE_URL}/api/og/invite-image?token=${encodeURIComponent(token)}&v=${INVITE_SHARE_IMAGE_VERSION}`,
       canonicalUrl,
       type: 'website',
-      imageTitle: 'You’re invited',
-      imageSubtitle: 'Plan the trip together on TRODDR',
+      imageTitle: 'My itinerary',
+      imageSubtitle: 'Plan your trip on TRODDR',
       imageWidth: 1080,
       imageHeight: 1500,
     });
   }
 
-  const tripName = invite.trip_title || invite.trip_destination || 'a trip';
-  const destination = invite.trip_destination || tripName;
-  const inviter = invite.inviter_name;
+  const destination = invite.trip_destination || invite.trip_title || 'Jamaica';
   const dateRange = formatTripDateRange(invite.trip_start_date, invite.trip_end_date);
 
-  // iMessage shows only og:title, so stack the invite pitch into the title so it
-  // all lands in the card caption:
-  //   nixx invited you to plan "Shadae's Trip"
-  //   Ocho Rios · July 9 – 13
-  const line1 = inviter
-    ? `${inviter} invited you to plan “${tripName}”`
-    : `You’re invited to plan “${tripName}”`;
-  const line2 = [destination, dateRange].filter(Boolean).join(' · ');
-  const ogTitle = [line1, line2].filter(Boolean).join('\n');
+  // Match the normal itinerary-share caption exactly so collaboration invites
+  // render like share links in clients that only show og:title.
+  const ogTitle = [
+    `I'm going to ${destination}${dateRange ? `, ${dateRange}` : ''}`,
+    "Here's my itinerary",
+  ].join('\n');
 
   const description =
-    [destination, dateRange].filter(Boolean).join(' · ') ||
-    `Join ${inviter || 'the trip'} on TRODDR to plan together.`;
+    dateRange ||
+    `My trip to ${destination}, planned on TRODDR.`;
 
   const imageUrl = `${BASE_URL}/api/og/invite-image?token=${encodeURIComponent(token)}&v=${INVITE_SHARE_IMAGE_VERSION}`;
 
   return renderOgPage({
-    title: `Join ${tripName} on TRODDR`,
+    title: `My trip to ${destination}`,
     ogTitle,
     description,
     imageUrl,
     canonicalUrl,
     type: 'website',
-    imageTitle: line1,
-    imageSubtitle: line2 || 'Plan the trip together',
+    imageTitle: `I'm going to ${destination}`,
+    imageSubtitle: dateRange || 'My itinerary',
     imageWidth: 1080,
     imageHeight: 1500,
   });

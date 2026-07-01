@@ -2,7 +2,7 @@
 //
 // Generated portrait image used as the og:image for a collaborator invite
 // (/invites/{token}). It mirrors the shared-itinerary card so an invite unfurls
-// with the same premium look as a trip share — just re-badged as an invite.
+// with the same premium look and labels as a trip share.
 //
 //   /api/og/invite-image?token={inviteToken}
 //
@@ -19,8 +19,8 @@ import {
 
 export const config = { runtime: 'edge' };
 
-const BADGE = 'Trip invite';
-const FOOTER = 'Join this trip on troddr';
+const BADGE = 'Trip itinerary';
+const FOOTER = 'View this trip on troddr';
 
 // get_trip_invite_preview returns a TABLE (one row). PostgREST gives an array.
 function firstRow(data) {
