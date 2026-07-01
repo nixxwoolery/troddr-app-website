@@ -359,6 +359,7 @@
     <button type="button" class="fpb-btn icon-only" data-ref="undoBtn" title="Undo (Ctrl+Z)" disabled><svg><use href="#fpb-undo"/></svg></button>
     <button type="button" class="fpb-btn icon-only" data-ref="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled><svg><use href="#fpb-redo"/></svg></button>
     ${uploadBtn}
+    ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="rotateMapBtn" title="Rotate the saved floor plan 90 degrees clockwise"><svg><use href="#fpb-rotate"/></svg>Rotate</button>' : ''}
     <button type="button" class="fpb-btn" data-ref="exportBtn" title="Download the floor plan as a PNG image"><svg><use href="#fpb-download"/></svg>Export</button>
     ${extra}
     <button type="button" class="fpb-btn primary" data-ref="saveBtn"><svg><use href="#fpb-save"/></svg>${esc(o.saveLabel || 'Save')}</button>
@@ -420,6 +421,7 @@
       $.undoBtn.addEventListener('click', () => this.undo());
       $.redoBtn.addEventListener('click', () => this.redo());
       $.exportBtn.addEventListener('click', () => this.exportPng());
+      if ($.rotateMapBtn) $.rotateMapBtn.addEventListener('click', () => this.rotateMapClockwise());
       $.saveBtn.addEventListener('click', () => this.save());
       $.zoomIn.addEventListener('click', () => this.panzoom && this.panzoom.zoomIn());
       $.zoomOut.addEventListener('click', () => this.panzoom && this.panzoom.zoomOut());
@@ -602,7 +604,7 @@
           item('Canvas & scale…', 'fpb-ruler', () => this.openScale()),
           !this.bgUrl && sub('Canvas colour', 'fpb-palette2', ['#ffffff', '#f4f1ea', '#eef2f6', '#dfe9d8', '#1f2937', '#14321f'], (c) => { this.bg = c; this.applyBg(); this.setDirty(true); }),
           item('Add objects', 'fpb-shapes', () => this.setTool('object')),
-          !this.bgUrl && item('Rotate canvas 90°', 'fpb-rotate', () => this.rotateCanvas()),
+          item(this.bgUrl ? 'Rotate map 90°' : 'Rotate canvas 90°', 'fpb-rotate', () => this.rotateMapClockwise()),
           item('Fit to screen', 'fpb-grid-ic', () => this.fit()),
         ];
       }
@@ -746,6 +748,90 @@
       this.fit();
       this.setDirty(true);
       this.renderAll();
+    }
+
+    rotateElementsClockwise(oldW, oldH, newW, newH) {
+      const safeOldW = oldW || this.world.w || WORLD_DEFAULT.w;
+      const safeOldH = oldH || this.world.h || WORLD_DEFAULT.h;
+      const safeNewW = newW || safeOldH;
+      const safeNewH = newH || safeOldW;
+      this.elements.forEach((el) => {
+        const oldX = num(el.x);
+        const oldY = num(el.y);
+        el.x = clamp(1 - oldY, 0, 1);
+        el.y = clamp(oldX, 0, 1);
+        if (el.w != null && el.h != null) {
+          const oldPxW = num(el.w) * safeOldW;
+          const oldPxH = num(el.h) * safeOldH;
+          el.w = clamp(oldPxW / safeNewW, 0.001, 1);
+          el.h = clamp(oldPxH / safeNewH, 0.001, 1);
+        }
+        if (el.rot != null) el.rot = (((num(el.rot) + 90) % 360) + 360) % 360;
+      });
+    }
+
+    loadImageForCanvas(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Could not load the floor plan image for rotation.'));
+        img.src = url;
+      });
+    }
+
+    canvasToBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Could not create the rotated floor plan image.')), 'image/png');
+      });
+    }
+
+    async rotateBackgroundClockwise() {
+      if (!this.bgUrl || !this.opts.onUploadBackground) return false;
+      this.status('Rotating floor plan image…');
+      const oldW = this.world.w;
+      const oldH = this.world.h;
+      const img = await this.loadImageForCanvas(this.bgUrl);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalHeight || oldH || WORLD_DEFAULT.h;
+      canvas.height = img.naturalWidth || oldW || WORLD_DEFAULT.w;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width, 0);
+      ctx.rotate(Math.PI / 2);
+      ctx.drawImage(img, 0, 0);
+      const blob = await this.canvasToBlob(canvas);
+      if (blob.size > 8 * 1024 * 1024) {
+        throw new Error('Rotated image is over 8 MB. Upload a smaller map image first.');
+      }
+      const file = new File([blob], `floor-plan-rotated-${Date.now()}.png`, { type: 'image/png' });
+      const url = await this.opts.onUploadBackground(file);
+      if (!url) throw new Error('Rotated image upload failed.');
+      this.rotateElementsClockwise(oldW, oldH, canvas.width, canvas.height);
+      this.setBackground(url, { silent: true });
+      this.undoStack = [];
+      this.redoStack = [];
+      this.updateUndoButtons();
+      this.setDirty(true);
+      this.renderAll();
+      this.status('Map rotated. Click Save so the app uses the portrait version.', 'success');
+      return true;
+    }
+
+    async rotateMapClockwise() {
+      if (this.bgUrl) {
+        if (!this.opts.onUploadBackground) {
+          this.status('This view cannot save a rotated background image.', 'error');
+          return;
+        }
+        try {
+          await this.rotateBackgroundClockwise();
+        } catch (err) {
+          console.error('[fpb] rotate background', err);
+          this.status((err && err.message) || 'Rotation failed.', 'error');
+        }
+        return;
+      }
+      this.rotateCanvas();
     }
 
     initPanzoom(start) {
