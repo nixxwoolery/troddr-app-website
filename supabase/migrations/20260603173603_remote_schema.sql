@@ -7436,6 +7436,8 @@ begin
         jsonb_build_object(
           'id',          r.id,
           'name',        r.name,
+          'transport_type', r.transport_type,
+          'price',       r.price,
           'color',       r.color,
           'direction',   r.direction,
           'frequency',   r.frequency,
@@ -12143,7 +12145,7 @@ $$;
 ALTER FUNCTION "public"."upsert_ticket_location"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_is_online" boolean, "p_ticket_url" "text", "p_provider_type" "text", "p_address" "text", "p_town" "text", "p_parish" "text", "p_contact_phone" "text", "p_opening_hours" "text", "p_latitude" double precision, "p_longitude" double precision, "p_place_slug" "text") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid" DEFAULT NULL::"uuid", "p_name" "text" DEFAULT NULL::"text", "p_color" "text" DEFAULT '#0a7aff'::"text", "p_direction" "text" DEFAULT 'both'::"text", "p_frequency" "text" DEFAULT NULL::"text") RETURNS "jsonb"
+CREATE OR REPLACE FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid" DEFAULT NULL::"uuid", "p_name" "text" DEFAULT NULL::"text", "p_color" "text" DEFAULT '#0a7aff'::"text", "p_direction" "text" DEFAULT 'both'::"text", "p_frequency" "text" DEFAULT NULL::"text", "p_transport_type" "text" DEFAULT NULL::"text", "p_price" "text" DEFAULT NULL::"text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
@@ -12160,15 +12162,17 @@ begin
   end if;
 
   if p_id is null then
-    insert into public.event_transport_routes (event_id, name, color, direction, frequency)
-         values (v_event_id, p_name, coalesce(p_color, '#0a7aff'), p_direction, p_frequency)
+    insert into public.event_transport_routes (event_id, name, color, direction, frequency, transport_type, price)
+         values (v_event_id, p_name, coalesce(p_color, '#0a7aff'), p_direction, p_frequency, nullif(btrim(p_transport_type), ''), nullif(btrim(p_price), ''))
       returning id into v_id;
   else
     update public.event_transport_routes
        set name      = coalesce(p_name,      name),
            color     = coalesce(p_color,     color),
            direction = coalesce(p_direction, direction),
-           frequency = coalesce(p_frequency, frequency)
+           frequency = coalesce(p_frequency, frequency),
+           transport_type = nullif(btrim(p_transport_type), ''),
+           price = nullif(btrim(p_price), '')
      where id = p_id and event_id = v_event_id
      returning id into v_id;
     if v_id is null then return jsonb_build_object('ok', false, 'error', 'not_on_event'); end if;
@@ -12181,7 +12185,7 @@ end;
 $$;
 
 
-ALTER FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_color" "text", "p_direction" "text", "p_frequency" "text") OWNER TO "postgres";
+ALTER FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_color" "text", "p_direction" "text", "p_frequency" "text", "p_transport_type" "text", "p_price" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."validate_place_slug"("p_slug" "text") RETURNS "jsonb"
@@ -13348,6 +13352,8 @@ CREATE TABLE IF NOT EXISTS "public"."event_transport_routes" (
     "color" "text" NOT NULL,
     "direction" "text" DEFAULT 'both'::"text",
     "frequency" "text",
+    "transport_type" "text",
+    "price" "text",
     "display_order" integer DEFAULT 0,
     "created_at" timestamp with time zone DEFAULT "now"(),
     CONSTRAINT "event_transport_routes_direction_check" CHECK (("direction" = ANY (ARRAY['to_event'::"text", 'return'::"text", 'both'::"text"])))
@@ -22075,9 +22081,9 @@ GRANT ALL ON FUNCTION "public"."upsert_ticket_location"("p_token" "text", "p_id"
 
 
 
-GRANT ALL ON FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_color" "text", "p_direction" "text", "p_frequency" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_color" "text", "p_direction" "text", "p_frequency" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_color" "text", "p_direction" "text", "p_frequency" "text") TO "service_role";
+GRANT ALL ON FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_color" "text", "p_direction" "text", "p_frequency" "text", "p_transport_type" "text", "p_price" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_color" "text", "p_direction" "text", "p_frequency" "text", "p_transport_type" "text", "p_price" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."upsert_transport_route"("p_token" "text", "p_id" "uuid", "p_name" "text", "p_color" "text", "p_direction" "text", "p_frequency" "text", "p_transport_type" "text", "p_price" "text") TO "service_role";
 
 
 
@@ -23067,7 +23073,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
-
 
 
 

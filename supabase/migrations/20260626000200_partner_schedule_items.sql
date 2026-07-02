@@ -289,6 +289,8 @@ begin
         jsonb_build_object(
           'id',          r.id,
           'name',        r.name,
+          'transport_type', r.transport_type,
+          'price',       r.price,
           'color',       r.color,
           'direction',   r.direction,
           'frequency',   r.frequency,

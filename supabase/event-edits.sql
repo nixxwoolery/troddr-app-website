@@ -439,7 +439,9 @@ create or replace function public.upsert_transport_route(
   p_name      text default null,
   p_color     text default '#0a7aff',
   p_direction text default 'both',
-  p_frequency text default null
+  p_frequency text default null,
+  p_transport_type text default null,
+  p_price     text default null
 )
 returns jsonb
 language plpgsql
@@ -459,15 +461,17 @@ begin
   end if;
 
   if p_id is null then
-    insert into public.event_transport_routes (event_id, name, color, direction, frequency)
-         values (v_event_id, p_name, coalesce(p_color, '#0a7aff'), p_direction, p_frequency)
+    insert into public.event_transport_routes (event_id, name, color, direction, frequency, transport_type, price)
+         values (v_event_id, p_name, coalesce(p_color, '#0a7aff'), p_direction, p_frequency, nullif(btrim(p_transport_type), ''), nullif(btrim(p_price), ''))
       returning id into v_id;
   else
     update public.event_transport_routes
        set name      = coalesce(p_name,      name),
            color     = coalesce(p_color,     color),
            direction = coalesce(p_direction, direction),
-           frequency = coalesce(p_frequency, frequency)
+           frequency = coalesce(p_frequency, frequency),
+           transport_type = nullif(btrim(p_transport_type), ''),
+           price = nullif(btrim(p_price), '')
      where id = p_id and event_id = v_event_id
      returning id into v_id;
     if v_id is null then return jsonb_build_object('ok', false, 'error', 'not_on_event'); end if;
@@ -478,7 +482,7 @@ exception when others then
   return jsonb_build_object('ok', false, 'error', SQLERRM);
 end;
 $$;
-grant execute on function public.upsert_transport_route(text, uuid, text, text, text, text)
+grant execute on function public.upsert_transport_route(text, uuid, text, text, text, text, text, text)
   to anon, authenticated;
 
 

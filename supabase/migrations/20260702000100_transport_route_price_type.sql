@@ -1,13 +1,63 @@
--- ============================================================
--- partner-event-extras : RPC returning the additional data sets
--- needed by the new event dashboard sections (Tickets, Transportation,
--- Bands). Kept separate so we don't have to modify the existing
--- get_partner_event_by_token RPC.
---
--- The client (partner-event.html) calls this in addition to
--- get_partner_event_by_token and merges the result.
--- Each section degrades gracefully if this RPC is missing.
--- ============================================================
+-- Add price and type fields to event transportation routes.
+
+alter table public.event_transport_routes
+  add column if not exists transport_type text,
+  add column if not exists price text;
+
+drop function if exists public.upsert_transport_route(text, uuid, text, text, text, text);
+
+create or replace function public.upsert_transport_route(
+  p_token     text,
+  p_id        uuid default null,
+  p_name      text default null,
+  p_color     text default '#0a7aff',
+  p_direction text default 'both',
+  p_frequency text default null,
+  p_transport_type text default null,
+  p_price     text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event_id uuid; v_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then return jsonb_build_object('ok', false, 'error', 'invalid_token'); end if;
+  if p_name is null or btrim(p_name) = '' then
+    return jsonb_build_object('ok', false, 'error', 'name_required');
+  end if;
+  if p_direction not in ('both', 'to_event', 'return') then
+    return jsonb_build_object('ok', false, 'error', 'invalid_direction');
+  end if;
+
+  if p_id is null then
+    insert into public.event_transport_routes (event_id, name, color, direction, frequency, transport_type, price)
+         values (v_event_id, p_name, coalesce(p_color, '#0a7aff'), p_direction, p_frequency, nullif(btrim(p_transport_type), ''), nullif(btrim(p_price), ''))
+      returning id into v_id;
+  else
+    update public.event_transport_routes
+       set name      = coalesce(p_name,      name),
+           color     = coalesce(p_color,     color),
+           direction = coalesce(p_direction, direction),
+           frequency = coalesce(p_frequency, frequency),
+           transport_type = nullif(btrim(p_transport_type), ''),
+           price = nullif(btrim(p_price), '')
+     where id = p_id and event_id = v_event_id
+     returning id into v_id;
+    if v_id is null then return jsonb_build_object('ok', false, 'error', 'not_on_event'); end if;
+  end if;
+
+  return jsonb_build_object('ok', true, 'id', v_id);
+exception when others then
+  return jsonb_build_object('ok', false, 'error', SQLERRM);
+end;
+$$;
+
+grant execute on function public.upsert_transport_route(text, uuid, text, text, text, text, text, text)
+  to anon, authenticated;
 
 create or replace function public.get_partner_event_extras_by_token(p_token text)
 returns jsonb
@@ -57,14 +107,14 @@ begin
     'transport_routes', coalesce((
       select jsonb_agg(
         jsonb_build_object(
-          'id',          r.id,
-          'name',        r.name,
+          'id',             r.id,
+          'name',           r.name,
           'transport_type', r.transport_type,
-          'price',       r.price,
-          'color',       r.color,
-          'direction',   r.direction,
-          'frequency',   r.frequency,
-          'stops_count', (select count(*) from public.event_transport_stops s where s.route_id = r.id)
+          'price',          r.price,
+          'color',          r.color,
+          'direction',      r.direction,
+          'frequency',      r.frequency,
+          'stops_count',    (select count(*) from public.event_transport_stops s where s.route_id = r.id)
         )
         order by r.display_order, r.created_at
       )
@@ -143,6 +193,3 @@ end;
 $$;
 
 grant execute on function public.get_partner_event_extras_by_token(text) to anon, authenticated;
-
-comment on function public.get_partner_event_extras_by_token(text) is
-  'Supplementary data for the partner-event dashboard: ticket_locations, transport_routes, schedule_days, schedule_items, and (for carnivals) mas_bands. Kept separate from get_partner_event_by_token so the main RPC stays untouched.';

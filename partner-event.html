@@ -3400,6 +3400,18 @@
           <div class="ve-modal-sub">Bus or shuttle route for getting attendees to and from the event.</div>
           <div class="ve-field"><label for="tr-name">Route name</label>
             <input id="tr-name" type="text" maxlength="200" required /></div>
+          <div class="ve-field"><label for="tr-type">Type</label>
+            <input id="tr-type" type="text" maxlength="100" list="tr-type-options" placeholder="e.g. Shuttle, Bus, Taxi" />
+            <datalist id="tr-type-options">
+              <option value="Shuttle"></option>
+              <option value="Bus"></option>
+              <option value="Taxi"></option>
+              <option value="Ride share"></option>
+              <option value="Parking"></option>
+              <option value="Ferry"></option>
+            </datalist></div>
+          <div class="ve-field"><label for="tr-price">Price</label>
+            <input id="tr-price" type="text" maxlength="100" placeholder="e.g. Free, JMD 2,500 round trip" /></div>
           <div class="ve-field"><label for="tr-color">Route colour</label>
             <input id="tr-color" type="color" value="#0a7aff" /></div>
           <div class="ve-field"><label for="tr-direction">Direction</label>
@@ -5184,7 +5196,7 @@
               <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${escapeHtml(r.color || '#0a7aff')};margin-right:6px;vertical-align:middle;"></span>
               ${escapeHtml(r.name || 'Route')}
             </div>
-            <div class="meta">${dir}${r.frequency ? ' · ' + escapeHtml(r.frequency) : ''}${r.stops_count ? ' · ' + r.stops_count + ' stops' : ''}</div>
+            <div class="meta">${[r.transport_type, r.price, dir, r.frequency, r.stops_count ? r.stops_count + ' stops' : ''].filter(Boolean).map(escapeHtml).join(' · ')}</div>
           </div>
           <div class="actions"><button type="button" class="ve-btn" data-action="edit">Edit</button></div>
         </div>`;
@@ -5201,6 +5213,8 @@
     _editingTransportRoute = r ? { ...r } : { _isNew: true };
     document.getElementById('tr-modal-title').textContent = r ? 'Edit transport route' : 'Add transport route';
     document.getElementById('tr-name').value     = r ? (r.name || '') : '';
+    document.getElementById('tr-type').value     = r ? (r.transport_type || '') : '';
+    document.getElementById('tr-price').value    = r ? (r.price || '') : '';
     document.getElementById('tr-color').value    = r ? (r.color || '#0a7aff') : '#0a7aff';
     document.getElementById('tr-direction').value = r ? (r.direction || 'both') : 'both';
     document.getElementById('tr-frequency').value = r ? (r.frequency || '') : '';
@@ -5216,6 +5230,8 @@
       p_token:     _getToken(),
       p_id:        _editingTransportRoute.id || null,
       p_name:      document.getElementById('tr-name').value.trim() || null,
+      p_transport_type: document.getElementById('tr-type').value.trim() || null,
+      p_price:     document.getElementById('tr-price').value.trim() || null,
       p_color:     document.getElementById('tr-color').value,
       p_direction: document.getElementById('tr-direction').value,
       p_frequency: document.getElementById('tr-frequency').value.trim() || null,
@@ -6597,17 +6613,17 @@
       const dir = r.direction === 'to_event' ? 'To event' :
                   r.direction === 'return' ? 'Return' : 'Both directions';
       const stops = (r.stops || r.stops_count || 0);
+      const details = [r.transport_type, r.price, dir, r.frequency, stops ? `${stops} stop${stops === 1 ? '' : 's'}` : '']
+        .filter(Boolean)
+        .map(escapeHtml)
+        .join(' · ');
       return `
         <li class="info-list-item">
           <div class="name">
             <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${escapeHtml(r.color || '#0077CC')};margin-right:6px;vertical-align:middle;"></span>
             ${escapeHtml(r.name || 'Route')}
           </div>
-          <div class="meta">
-            ${dir}
-            ${r.frequency ? ' · ' + escapeHtml(r.frequency) : ''}
-            ${stops ? ` · ${stops} stop${stops === 1 ? '' : 's'}` : ''}
-          </div>
+          <div class="meta">${details}</div>
         </li>`;
     }).join('')}</ul>`;
   }
