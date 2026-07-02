@@ -602,6 +602,7 @@ begin
                   'end_time',       a.end_time,
                   'troddr_offer',   a.troddr_offer,
                   'checkin_method', a.checkin_method,
+                  'display_order',  a.display_order,
                   'has_qr',         (a.qr_code_token is not null),
                   'has_nfc',        (a.nfc_token is not null),
                   'redemptions', (

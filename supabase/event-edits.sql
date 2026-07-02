@@ -8,6 +8,7 @@
 alter table public.ticket_locations add column if not exists latitude   double precision;
 alter table public.ticket_locations add column if not exists longitude  double precision;
 alter table public.ticket_locations add column if not exists place_slug text;
+alter table public.event_sponsor_activations add column if not exists updated_at timestamp with time zone default now();
 
 -- ── Helper : resolve token → event_id ───────────────────────
 create or replace function public._partner_event_id_from_token(p_token text)
@@ -167,6 +168,147 @@ begin
 end;
 $$;
 grant execute on function public.delete_event_sponsor(text, uuid) to anon, authenticated;
+
+
+-- Upsert sponsor activation rows under an event sponsor. Used by the event
+-- dashboard sponsor editor; token-gated to the owning event.
+create or replace function public.upsert_event_sponsor_activation(
+  p_token            text,
+  p_event_sponsor_id uuid,
+  p_activation_id    uuid default null,
+  p_name             text default null,
+  p_description      text default null,
+  p_zone             text default null,
+  p_days_active      text[] default null,
+  p_start_time       time default null,
+  p_end_time         time default null,
+  p_troddr_offer     text default null,
+  p_checkin_method   text default 'self',
+  p_has_qr           boolean default true,
+  p_has_nfc          boolean default false,
+  p_display_order    integer default 0
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event_id     uuid;
+  v_sponsor_id   uuid;
+  v_activation_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then
+    return jsonb_build_object('ok', false, 'error', 'invalid_token');
+  end if;
+  if p_event_sponsor_id is null then
+    return jsonb_build_object('ok', false, 'error', 'event_sponsor_required');
+  end if;
+  if p_name is null or btrim(p_name) = '' then
+    return jsonb_build_object('ok', false, 'error', 'activation_name_required');
+  end if;
+
+  select sponsor_id into v_sponsor_id
+    from public.event_sponsors
+   where id = p_event_sponsor_id
+     and event_id = v_event_id
+     and coalesce(is_active, true) = true;
+  if v_sponsor_id is null then
+    return jsonb_build_object('ok', false, 'error', 'sponsor_not_on_event');
+  end if;
+
+  if p_activation_id is null then
+    insert into public.event_sponsor_activations (
+      event_id, sponsor_id, event_sponsor_id, name, description, zone,
+      days_active, start_time, end_time, troddr_offer, checkin_method,
+      qr_code_token, nfc_token, display_order, is_active
+    )
+    values (
+      v_event_id,
+      v_sponsor_id,
+      p_event_sponsor_id,
+      btrim(p_name),
+      nullif(btrim(p_description), ''),
+      nullif(btrim(p_zone), ''),
+      coalesce(p_days_active, '{}'::text[]),
+      p_start_time,
+      p_end_time,
+      nullif(btrim(p_troddr_offer), ''),
+      coalesce(nullif(btrim(p_checkin_method), ''), 'self'),
+      case when coalesce(p_has_qr, true) then (extensions.gen_random_uuid())::text else null end,
+      case when coalesce(p_has_nfc, false) then (extensions.gen_random_uuid())::text else null end,
+      coalesce(p_display_order, 0),
+      true
+    )
+    returning id into v_activation_id;
+  else
+    update public.event_sponsor_activations
+       set name           = btrim(p_name),
+           description    = nullif(btrim(p_description), ''),
+           zone           = nullif(btrim(p_zone), ''),
+           days_active    = coalesce(p_days_active, '{}'::text[]),
+           start_time     = p_start_time,
+           end_time       = p_end_time,
+           troddr_offer   = nullif(btrim(p_troddr_offer), ''),
+           checkin_method = coalesce(nullif(btrim(p_checkin_method), ''), 'self'),
+           qr_code_token  = case
+                              when coalesce(p_has_qr, true) then coalesce(qr_code_token, (extensions.gen_random_uuid())::text)
+                              else null
+                            end,
+           nfc_token      = case
+                              when coalesce(p_has_nfc, false) then coalesce(nfc_token, (extensions.gen_random_uuid())::text)
+                              else null
+                            end,
+           display_order  = coalesce(p_display_order, display_order, 0),
+           is_active      = true
+     where id = p_activation_id
+       and event_id = v_event_id
+       and event_sponsor_id = p_event_sponsor_id
+     returning id into v_activation_id;
+
+    if v_activation_id is null then
+      return jsonb_build_object('ok', false, 'error', 'activation_not_found');
+    end if;
+  end if;
+
+  return jsonb_build_object('ok', true, 'activation_id', v_activation_id);
+exception when others then
+  return jsonb_build_object('ok', false, 'error', SQLERRM);
+end;
+$$;
+
+grant execute on function public.upsert_event_sponsor_activation(
+  text, uuid, uuid, text, text, text, text[], time, time, text, text, boolean, boolean, integer)
+  to anon, authenticated;
+
+
+create or replace function public.delete_event_sponsor_activation(
+  p_token         text,
+  p_activation_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event_id uuid;
+begin
+  v_event_id := _partner_event_id_from_token(p_token);
+  if v_event_id is null then
+    return jsonb_build_object('ok', false, 'error', 'invalid_token');
+  end if;
+
+  delete from public.event_sponsor_activations
+   where id = p_activation_id
+     and event_id = v_event_id;
+
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
+grant execute on function public.delete_event_sponsor_activation(text, uuid) to anon, authenticated;
 
 
 -- ============================================================

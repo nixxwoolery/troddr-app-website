@@ -2338,6 +2338,58 @@
   .activation-method.qr   { background: var(--blue-light); color: var(--blue); }
   .activation-method.nfc  { background: #ede5fa;          color: #6b3aa0; }
   .activation-method.self { background: var(--bg-soft);   color: var(--grey-mid); }
+  .sp-activation-editor {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-soft);
+    padding: 10px;
+  }
+  .sp-activation-editor-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .sp-activation-editor-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .sp-activation-editor-list {
+    display: grid;
+    gap: 6px;
+  }
+  .sp-activation-editor-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: center;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    background: #fff;
+    padding: 8px 10px;
+  }
+  .sp-activation-editor-row .name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--black);
+  }
+  .sp-activation-editor-row .meta {
+    font-size: 11px;
+    color: var(--grey-mid);
+    margin-top: 2px;
+  }
+  .sp-activation-editor-empty {
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    color: var(--grey-mid);
+    font-size: 12px;
+    background: #fff;
+  }
 
   /* ── LINKED PLACE BADGE (vendor) ── */
   .link-status {
@@ -3231,11 +3283,63 @@
             <input id="sp-instagram" type="text" maxlength="100" placeholder="@handle" /></div>
           <div class="ve-field checkbox"><input id="sp-featured" type="checkbox" />
             <label for="sp-featured">Featured (pin to top)</label></div>
+          <div class="ve-field" id="sp-activations-wrap">
+            <div class="sp-activation-editor">
+              <div class="sp-activation-editor-head">
+                <div class="sp-activation-editor-title">Sponsor activations</div>
+                <button type="button" class="ve-btn" id="sp-add-activation">Add activation</button>
+              </div>
+              <div class="sp-activation-editor-list" id="sp-activations-list"></div>
+            </div>
+          </div>
           <div class="ve-status" id="sp-status"></div>
           <div class="ve-actions">
             <button type="button" class="ve-btn" id="sp-cancel">Cancel</button>
             <button type="button" class="ve-btn" id="sp-delete" style="display:none;">Delete</button>
             <button type="submit" class="ve-btn primary" id="sp-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Sponsor activation modal ── -->
+      <div class="ve-modal-backdrop" id="sa-modal-backdrop">
+        <form class="ve-modal" id="sa-modal" autocomplete="off">
+          <h3 id="sa-modal-title">Edit activation</h3>
+          <div class="ve-modal-sub" id="sa-modal-sub">Activation shown under this sponsor in the TRODDR app.</div>
+          <div class="ve-field"><label for="sa-name">Activation name</label>
+            <input id="sa-name" type="text" maxlength="160" required placeholder="e.g. Spin to win booth" /></div>
+          <div class="ve-field"><label for="sa-desc">Description</label>
+            <textarea id="sa-desc" rows="3" maxlength="500" placeholder="What guests should do or expect"></textarea></div>
+          <div class="ve-field"><label for="sa-zone">Zone / location</label>
+            <input id="sa-zone" type="text" maxlength="120" placeholder="e.g. Main gate, VIP deck, Booth B4" /></div>
+          <div class="ve-field"><label for="sa-days">Days active</label>
+            <input id="sa-days" type="text" maxlength="160" placeholder="Friday, Saturday or 2026-07-19" /></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="ve-field"><label for="sa-start">Start time</label>
+              <input id="sa-start" type="time" /></div>
+            <div class="ve-field"><label for="sa-end">End time</label>
+              <input id="sa-end" type="time" /></div>
+          </div>
+          <div class="ve-field"><label for="sa-offer">TRODDR offer</label>
+            <input id="sa-offer" type="text" maxlength="240" placeholder="e.g. Free sample after check-in" /></div>
+          <div class="ve-field"><label for="sa-method">Check-in method</label>
+            <select id="sa-method">
+              <option value="self">Self check-in</option>
+              <option value="qr">QR code</option>
+              <option value="nfc">NFC tap</option>
+              <option value="staff">Staff verified</option>
+            </select></div>
+          <div class="ve-field checkbox"><input id="sa-has-qr" type="checkbox" checked />
+            <label for="sa-has-qr">Generate / keep QR token</label></div>
+          <div class="ve-field checkbox"><input id="sa-has-nfc" type="checkbox" />
+            <label for="sa-has-nfc">Generate / keep NFC token</label></div>
+          <div class="ve-field"><label for="sa-order">Display order</label>
+            <input id="sa-order" type="number" min="0" step="1" value="0" /></div>
+          <div class="ve-status" id="sa-status"></div>
+          <div class="ve-actions">
+            <button type="button" class="ve-btn" id="sa-cancel">Cancel</button>
+            <button type="button" class="ve-btn" id="sa-delete" style="display:none;">Delete</button>
+            <button type="submit" class="ve-btn primary" id="sa-save">Save</button>
           </div>
         </form>
       </div>
@@ -4603,6 +4707,7 @@
           <div class="meta">
             ${escapeHtml(titleCaseSafe(s.display_tier_label || s.tier || '—'))}
             ${s.is_featured ? ' · Featured' : ''}
+            ${(s.activations && s.activations.length) ? ' · ' + s.activations.length + ' activation' + (s.activations.length === 1 ? '' : 's') : ''}
             ${s.website ? ' · ' + escapeHtml(s.website.replace(/^https?:\/\//, '')) : ''}
           </div>
         </div>
@@ -4635,9 +4740,57 @@
     document.getElementById('sp-instagram').value = s ? (s.instagram || '') : '';
     document.getElementById('sp-featured').checked = !!(s && s.is_featured);
     document.getElementById('sp-delete').style.display = s && !s._isNew ? '' : 'none';
+    renderSponsorActivationsEditor(s);
     _setStatus('sp-status', '');
     _modalOpen('sp-modal-backdrop');
     setTimeout(() => document.getElementById('sp-name').focus(), 30);
+  }
+  function activationDaysText(days) {
+    return Array.isArray(days) ? days.filter(Boolean).join(', ') : (days || '');
+  }
+  function parseActivationDays(text) {
+    return String(text || '')
+      .split(',')
+      .map(d => d.trim())
+      .filter(Boolean);
+  }
+  function activationMeta(a) {
+    const parts = [];
+    if (a.zone) parts.push(a.zone);
+    if (activationDaysText(a.days_active)) parts.push(activationDaysText(a.days_active));
+    if (a.start_time || a.end_time) parts.push(`${a.start_time || ''}${a.end_time ? ' to ' + a.end_time : ''}`);
+    if (a.troddr_offer) parts.push(a.troddr_offer);
+    return parts.join(' · ');
+  }
+  function renderSponsorActivationsEditor(s) {
+    const wrap = document.getElementById('sp-activations-wrap');
+    const listEl = document.getElementById('sp-activations-list');
+    const addBtn = document.getElementById('sp-add-activation');
+    if (!wrap || !listEl || !addBtn) return;
+    const canEdit = !!(s && !s._isNew && s.event_sponsor_id);
+    wrap.style.display = canEdit ? '' : 'none';
+    if (!canEdit) {
+      listEl.innerHTML = '';
+      return;
+    }
+    const activations = Array.isArray(s.activations) ? s.activations : [];
+    listEl.innerHTML = activations.length
+      ? activations.map(a => `
+          <div class="sp-activation-editor-row" data-activation-id="${escapeHtml(a.id || '')}">
+            <div>
+              <div class="name">${escapeHtml(a.name || 'Unnamed activation')}</div>
+              <div class="meta">${escapeHtml(activationMeta(a) || titleCaseSafe(a.checkin_method || 'self'))}</div>
+            </div>
+            <button type="button" class="ve-btn" data-action="edit-activation">Edit</button>
+          </div>`).join('')
+      : `<div class="sp-activation-editor-empty">No activations yet. Add one to show it under this sponsor in the app.</div>`;
+    listEl.querySelectorAll('[data-action="edit-activation"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-activation-id]')?.dataset.activationId;
+        const activation = activations.find(a => a.id === id);
+        if (activation) openActivationEditor(activation);
+      });
+    });
   }
   document.getElementById('sp-logo')?.addEventListener('input', (e) => {
     const url = e.target.value.trim();
@@ -4743,6 +4896,90 @@
       location.reload();
     } catch (err) {
       _setStatus('sp-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      delBtn.disabled = false;
+    }
+  }
+
+  // ── Sponsor activation editor ───────────────────────────
+  let _editingActivation = null;
+  function openActivationEditor(a) {
+    if (!_editingSponsor || !_editingSponsor.event_sponsor_id) {
+      _setStatus('sp-status', 'Save the sponsor before adding activations.', 'error');
+      return;
+    }
+    _editingActivation = a ? { ...a } : { _isNew: true };
+    document.getElementById('sa-modal-title').textContent = a ? 'Edit activation' : 'Add activation';
+    document.getElementById('sa-modal-sub').textContent = _editingSponsor.sponsor_name || _editingSponsor.name || 'Sponsor activation';
+    document.getElementById('sa-name').value = a ? (a.name || '') : '';
+    document.getElementById('sa-desc').value = a ? (a.description || '') : '';
+    document.getElementById('sa-zone').value = a ? (a.zone || '') : '';
+    document.getElementById('sa-days').value = a ? activationDaysText(a.days_active) : '';
+    document.getElementById('sa-start').value = a ? String(a.start_time || '').slice(0, 5) : '';
+    document.getElementById('sa-end').value = a ? String(a.end_time || '').slice(0, 5) : '';
+    document.getElementById('sa-offer').value = a ? (a.troddr_offer || '') : '';
+    document.getElementById('sa-method').value = a ? (a.checkin_method || 'self') : 'self';
+    document.getElementById('sa-has-qr').checked = a ? !!a.has_qr : true;
+    document.getElementById('sa-has-nfc').checked = a ? !!a.has_nfc : false;
+    document.getElementById('sa-order').value = a ? Number(a.display_order || 0) : 0;
+    document.getElementById('sa-delete').style.display = a && !a._isNew ? '' : 'none';
+    _setStatus('sa-status', '');
+    _modalOpen('sa-modal-backdrop');
+    setTimeout(() => document.getElementById('sa-name').focus(), 30);
+  }
+  async function saveActivation(e) {
+    e.preventDefault();
+    if (!_editingSponsor || !_editingSponsor.event_sponsor_id || !_editingActivation) return;
+    const payload = {
+      p_token: _getToken(),
+      p_event_sponsor_id: _editingSponsor.event_sponsor_id,
+      p_activation_id: _editingActivation.id || null,
+      p_name: document.getElementById('sa-name').value.trim() || null,
+      p_description: document.getElementById('sa-desc').value.trim() || null,
+      p_zone: document.getElementById('sa-zone').value.trim() || null,
+      p_days_active: parseActivationDays(document.getElementById('sa-days').value),
+      p_start_time: document.getElementById('sa-start').value || null,
+      p_end_time: document.getElementById('sa-end').value || null,
+      p_troddr_offer: document.getElementById('sa-offer').value.trim() || null,
+      p_checkin_method: document.getElementById('sa-method').value || 'self',
+      p_has_qr: document.getElementById('sa-has-qr').checked,
+      p_has_nfc: document.getElementById('sa-has-nfc').checked,
+      p_display_order: Number(document.getElementById('sa-order').value || 0),
+    };
+    const saveBtn = document.getElementById('sa-save');
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
+    try {
+      const { data, error } = await db.rpc('upsert_event_sponsor_activation', payload);
+      if (error || !data || !data.ok) {
+        _setStatus('sa-status', (error && (error.message || error.code)) || (data && data.error) || 'Could not save activation.', 'error');
+        return;
+      }
+      _setStatus('sa-status', 'Saved. Refreshing...', 'success');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      _setStatus('sa-status', (err && err.message) || 'Network error.', 'error');
+    } finally {
+      saveBtn.disabled = false; saveBtn.textContent = 'Save';
+    }
+  }
+  async function deleteActivation() {
+    if (!_editingActivation || !_editingActivation.id) return;
+    if (!confirm('Remove this activation?')) return;
+    const delBtn = document.getElementById('sa-delete');
+    delBtn.disabled = true;
+    try {
+      const { data, error } = await db.rpc('delete_event_sponsor_activation', {
+        p_token: _getToken(),
+        p_activation_id: _editingActivation.id,
+      });
+      if (error || !data || !data.ok) {
+        _setStatus('sa-status', (error && error.message) || (data && data.error) || 'Could not delete activation.', 'error');
+        return;
+      }
+      _modalClose('sa-modal-backdrop');
+      location.reload();
+    } catch (err) {
+      _setStatus('sa-status', (err && err.message) || 'Network error.', 'error');
     } finally {
       delBtn.disabled = false;
     }
@@ -5738,9 +5975,16 @@
     document.getElementById('add-sponsor-btn')?.addEventListener('click', () => openSponsorEditor(null));
     document.getElementById('sp-cancel')?.addEventListener('click', () => _modalClose('sp-modal-backdrop'));
     document.getElementById('sp-delete')?.addEventListener('click', deleteSponsor);
+    document.getElementById('sp-add-activation')?.addEventListener('click', () => openActivationEditor(null));
     document.getElementById('sp-modal')?.addEventListener('submit', saveSponsor);
     document.getElementById('sp-modal-backdrop')?.addEventListener('click', (e) => {
       if (e.target.id === 'sp-modal-backdrop') _modalClose('sp-modal-backdrop');
+    });
+    document.getElementById('sa-cancel')?.addEventListener('click', () => _modalClose('sa-modal-backdrop'));
+    document.getElementById('sa-delete')?.addEventListener('click', deleteActivation);
+    document.getElementById('sa-modal')?.addEventListener('submit', saveActivation);
+    document.getElementById('sa-modal-backdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'sa-modal-backdrop') _modalClose('sa-modal-backdrop');
     });
     // Ticket locations (physical pickup)
     document.getElementById('add-ticket-loc-btn')?.addEventListener('click', () => openTicketLocEditor(null, { online: false }));
@@ -5809,7 +6053,7 @@
     // Esc closes any open modal
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
-      ['sp-modal-backdrop', 'tl-modal-backdrop', 'tr-modal-backdrop', 'sd-modal-backdrop', 'si-modal-backdrop', 'si-import-backdrop', 've-modal-backdrop', 'ps-modal-backdrop', 'bd-modal-backdrop']
+      ['sa-modal-backdrop', 'sp-modal-backdrop', 'tl-modal-backdrop', 'tr-modal-backdrop', 'sd-modal-backdrop', 'si-modal-backdrop', 'si-import-backdrop', 've-modal-backdrop', 'ps-modal-backdrop', 'bd-modal-backdrop']
         .forEach(id => { const el = document.getElementById(id); if (el && el.classList.contains('open')) _modalClose(id); });
     });
   });
