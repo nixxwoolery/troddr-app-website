@@ -2208,6 +2208,96 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* ── TICKET PERFORMANCE ── */
+  .ticket-performance-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    display: grid;
+    gap: 16px;
+  }
+  .ticket-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .ticket-metric {
+    border: 1px solid var(--border-soft);
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    padding: 14px;
+    min-height: 106px;
+  }
+  .ticket-metric .lbl {
+    font-size: 10px; font-weight: 800;
+    color: var(--grey-mid);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .ticket-metric .val {
+    font-size: 26px; font-weight: 800;
+    color: var(--black);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .ticket-metric .sub {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--grey-mid);
+    line-height: 1.35;
+  }
+  .ticket-metric.pending .val {
+    color: var(--grey-light);
+    font-size: 18px;
+  }
+  .ticket-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .ticket-breakdown {
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .ticket-breakdown-title {
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-bottom: 10px;
+  }
+  .ticket-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 0;
+    border-top: 1px solid var(--border-soft);
+    font-size: 12px;
+  }
+  .ticket-row:first-of-type { border-top: 0; padding-top: 0; }
+  .ticket-row .name {
+    color: var(--grey-dark);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ticket-row .count {
+    color: var(--black);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .ticket-empty {
+    color: var(--grey-mid);
+    font-size: 12px;
+    line-height: 1.45;
+    background: var(--bg-soft);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
   /* ── SPONSOR ACTIVATIONS ── */
   .activation-list {
     margin-top: 12px;
@@ -2713,6 +2803,16 @@
           <h2 class="section-title">Guest Engagement</h2>
         </div>
         <div class="stats-grid" id="stats-grid"></div>
+      </section>
+
+      <section class="section" id="ticket-performance">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Ticket Performance</h2>
+            <div class="section-sub">Ticket clicks, provider sources, sales imports, revenue, and campaign attribution.</div>
+          </div>
+        </div>
+        <div class="ticket-performance-card" id="ticket-performance-card"></div>
       </section>
 
       <section class="section" id="vendors">
@@ -3628,6 +3728,120 @@
           ${deltaHtml}
         </div>`;
     }).join('');
+  }
+
+  function ticketProviderRows(providers) {
+    const rows = Array.isArray(providers) ? providers.filter(Boolean) : [];
+    if (!rows.length) {
+      return `<div class="ticket-empty">No ticket providers configured yet. Add ticket links under Manage Tickets.</div>`;
+    }
+    return rows.map((p) => `
+      <div class="ticket-row">
+        <div class="name">${escapeHtml(p.provider || p.name || 'Ticket link')}</div>
+        <div class="count">${Number(p.clicks || 0).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+
+  function campaignRows(campaigns) {
+    const rows = Array.isArray(campaigns) ? campaigns.filter((c) => c && (c.source || c.campaign)) : [];
+    if (!rows.length) {
+      return `<div class="ticket-empty">No campaign tags detected yet. Add UTM tags to shared ticket links to break down clicks by source.</div>`;
+    }
+    return rows.map((c) => `
+      <div class="ticket-row">
+        <div class="name">${escapeHtml(c.campaign || c.source || 'Campaign')}</div>
+        <div class="count">${Number(c.clicks || 0).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+
+  function fallbackTicketProviders(event, ticketLocations) {
+    const providers = [];
+    if (event && event.ticket_url) providers.push({ provider: 'Primary ticket link', clicks: 0 });
+    (Array.isArray(ticketLocations) ? ticketLocations : []).forEach((t) => {
+      if (!t || !t.ticket_url) return;
+      providers.push({
+        provider: t.provider_type || t.name || (t.is_online ? 'Online ticket link' : 'Pickup location'),
+        clicks: 0,
+      });
+    });
+    return providers;
+  }
+
+  function renderTicketPerformance(data, extras, unlocked) {
+    const card = $('ticket-performance-card');
+    if (!card) return;
+    const event = data.event || {};
+    const ticketLocations = (extras && extras.ticket_locations) || data.ticket_locations || [];
+    const fallback = {
+      ticket_clicks: 0,
+      unique_clickers: 0,
+      estimated_sales: null,
+      estimated_revenue: null,
+      currency: event.currency || 'JMD',
+      providers: fallbackTicketProviders(event, ticketLocations),
+      campaigns: [],
+      sales_source: 'not_connected',
+      revenue_source: 'not_connected',
+    };
+
+    paintTicketPerformance(card, fallback, unlocked);
+
+    db.rpc('get_partner_event_ticket_analytics', { p_token: _getToken() })
+      .then(({ data: analytics, error }) => {
+        if (error || !analytics || analytics.error) return;
+        paintTicketPerformance(card, Object.assign({}, fallback, analytics), unlocked);
+      })
+      .catch(() => {});
+  }
+
+  function paintTicketPerformance(card, analytics, unlocked) {
+    const clicks = Number(analytics.ticket_clicks || 0);
+    const unique = Number(analytics.unique_clickers || 0);
+    const sales = analytics.estimated_sales;
+    const revenue = analytics.estimated_revenue;
+    const currency = analytics.currency || 'JMD';
+    const clickRate = unique ? `${unique.toLocaleString()} unique ${unique === 1 ? 'clicker' : 'clickers'}` : 'tracked ticket taps';
+    const salesConnected = sales !== null && sales !== undefined;
+    const revenueConnected = revenue !== null && revenue !== undefined;
+    const providerRows = ticketProviderRows(analytics.providers);
+    const attributionRows = campaignRows(analytics.campaigns);
+
+    card.innerHTML = `
+      <div class="ticket-metric-grid">
+        <div class="ticket-metric">
+          <div class="lbl">Ticket Link Clicks</div>
+          <div class="val">${clicks.toLocaleString()}</div>
+          <div class="sub">${escapeHtml(clickRate)}</div>
+        </div>
+        <div class="ticket-metric ${salesConnected ? '' : 'pending'}">
+          <div class="lbl">Sales / Imports</div>
+          <div class="val">${salesConnected ? Number(sales).toLocaleString() : 'Not connected'}</div>
+          <div class="sub">${salesConnected ? 'from imported or integrated sales data' : 'connect a provider export to show ticket sales'}</div>
+        </div>
+        <div class="ticket-metric ${revenueConnected ? '' : 'pending'}">
+          <div class="lbl">Revenue</div>
+          <div class="val">${revenueConnected ? `${escapeHtml(currency)} ${Number(revenue).toLocaleString()}` : 'Not connected'}</div>
+          <div class="sub">${revenueConnected ? 'from integrated ticketing data' : 'appears once sales revenue is imported'}</div>
+        </div>
+        <div class="ticket-metric ${unlocked ? '' : 'pending'}">
+          <div class="lbl">Conversion Estimate</div>
+          <div class="val">${unlocked && clicks && salesConnected ? `${Math.round((Number(sales) / clicks) * 100)}%` : 'Pending'}</div>
+          <div class="sub">${unlocked ? 'sales divided by ticket clicks when sales are available' : 'unlock Event Insights for conversion depth'}</div>
+        </div>
+      </div>
+      <div class="ticket-breakdown-grid">
+        <div class="ticket-breakdown">
+          <div class="ticket-breakdown-title">Provider Source</div>
+          ${providerRows}
+        </div>
+        <div class="ticket-breakdown">
+          <div class="ticket-breakdown-title">Campaign Attribution</div>
+          ${attributionRows}
+        </div>
+      </div>
+    `;
   }
 
   // ── Vendors (per-vendor card with menu + per-item ratings) ──
@@ -7548,6 +7762,7 @@
     safe('renderEventStatus', () => renderEventStatus(data.event, data.stats));
     safe('renderPreview',     () => renderPreview(data.event, data.tabs));
     safe('renderStats',       () => renderStats(data.stats, data.event.slug, analyticsUnlocked));
+    safe('renderTicketPerformance', () => renderTicketPerformance(data, extras, analyticsUnlocked));
     safe('renderAudience',    () => renderAudience(data));
     // Stash the loaded event data so renderers (e.g. floor-plan vendor dropdown,
     // engagement chart) can reach it without re-plumbing parameters.

@@ -15,7 +15,7 @@ import {
 
 export const config = { runtime: 'edge' };
 
-const INVITE_SHARE_IMAGE_VERSION = '20260701-share-match-v1';
+const INVITE_SHARE_IMAGE_VERSION = '20260701-share-match-v2';
 
 // get_trip_invite_preview returns a TABLE (one row) → PostgREST array.
 function firstRow(data) {
@@ -63,24 +63,22 @@ export default async function handler(request) {
     });
   }
 
-  const destination = invite.trip_destination || invite.trip_title || 'Jamaica';
+  const tripName = invite.trip_title || invite.trip_destination || 'this trip';
+  const destination = invite.trip_destination || tripName;
   const dateRange = formatTripDateRange(invite.trip_start_date, invite.trip_end_date);
 
-  // Match the normal itinerary-share caption exactly so collaboration invites
-  // render like share links in clients that only show og:title.
-  const ogTitle = [
-    `I'm going to ${destination}${dateRange ? `, ${dateRange}` : ''}`,
-    "Here's my itinerary",
-  ].join('\n');
+  // iMessage shows og:title as the caption below the rich preview. Keep the
+  // invite language here while the og:image keeps the share-link visual style.
+  const ogTitle = `Join me on TRODDR to plan "${tripName}" together:`;
 
   const description =
-    dateRange ||
+    [destination, dateRange].filter(Boolean).join(' · ') ||
     `My trip to ${destination}, planned on TRODDR.`;
 
   const imageUrl = `${BASE_URL}/api/og/invite-image?token=${encodeURIComponent(token)}&v=${INVITE_SHARE_IMAGE_VERSION}`;
 
   return renderOgPage({
-    title: `My trip to ${destination}`,
+    title: `Join ${tripName} on TRODDR`,
     ogTitle,
     description,
     imageUrl,
