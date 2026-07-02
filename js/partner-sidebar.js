@@ -38,6 +38,7 @@
     'ic-edit':      '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
     'ic-info':      '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
     'ic-map':       '<path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/>',
+    'ic-bus':       '<path d="M6 3h12a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/><path d="M3 10h18M7 18v3M17 18v3M7 14h.01M17 14h.01M7 6h10"/>',
     'ic-mic':       '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>',
     'ic-ticket':    '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2zm10-4v14"/>',
     'ic-plus':      '<path d="M12 5v14M5 12h14"/>',
@@ -133,6 +134,7 @@
   const NAV_EVENT = [
     { group: 'Event Overview', icon: 'ic-info', page: '/partner/event', section: 'overview', children: [
       { label: 'Event Details', section: 'info' },
+      { label: 'Transportation', section: 'transportation' },
       { label: 'Edit',          section: 'edit' },
     ] },
     { group: 'Event Insights', icon: 'ic-chart', page: '/partner/event', section: 'engagement', children: [
