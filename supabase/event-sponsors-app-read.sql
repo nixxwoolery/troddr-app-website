@@ -59,12 +59,36 @@ as $$
         'description',        coalesce(es.custom_tagline, s.description),
         'instagram',          s.instagram,
         'brand_color',        s.brand_color,
-        'tier',               es.tier,
+        'tier',               case
+                                when lower(es.tier) in ('gold', 'silver', 'bronze') then lower(es.tier)
+                                when lower(coalesce(es.display_tier_label, '')) like '%gold%' then 'gold'
+                                when lower(coalesce(es.display_tier_label, '')) like '%silver%' then 'silver'
+                                when lower(coalesce(es.display_tier_label, '')) like '%bronze%' then 'bronze'
+                                else es.tier
+                              end,
+        'canonical_tier',     case
+                                when lower(es.tier) in ('title', 'platinum', 'presenting') then 'presenting'
+                                when lower(es.tier) in ('gold', 'major') then 'major'
+                                when lower(es.tier) in ('silver', 'bronze', 'supporting') then 'supporting'
+                                when lower(es.tier) = 'community' then 'community'
+                                else 'partner'
+                              end,
         'tier_label',         es.display_tier_label,
         'display_tier_label', es.display_tier_label,
         'is_featured',        es.is_featured
       )
-      order by es.display_order nulls last, es.tier, s.name
+      order by es.display_order nulls last,
+               case
+                 when lower(es.tier) in ('title', 'platinum', 'presenting') then 10
+                 when lower(es.tier) = 'major' then 20
+                 when lower(es.tier) = 'gold' or lower(coalesce(es.display_tier_label, '')) like '%gold%' then 30
+                 when lower(es.tier) = 'silver' or lower(coalesce(es.display_tier_label, '')) like '%silver%' then 40
+                 when lower(es.tier) = 'bronze' or lower(coalesce(es.display_tier_label, '')) like '%bronze%' then 50
+                 when lower(es.tier) = 'supporting' then 60
+                 when lower(es.tier) = 'community' then 70
+                 else 80
+               end,
+               s.name
     ),
     '[]'::jsonb
   )
