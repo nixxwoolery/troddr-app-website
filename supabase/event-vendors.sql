@@ -188,6 +188,7 @@ begin
         'name',        v.name,
         'vendor_type', v.vendor_type,
         'description', v.description,
+        'logo_url',    v.logo_url,
         -- Already linked to this event? The dropdown disables these.
         'on_event', exists (
           select 1 from public.event_vendors ev
@@ -219,12 +220,15 @@ drop function if exists public.upsert_event_vendor(
   text, uuid, uuid, text, text, text, text, boolean);
 drop function if exists public.upsert_event_vendor(
   text, uuid, uuid, text, text, text, text, boolean, text);
+drop function if exists public.upsert_event_vendor(
+  text, uuid, uuid, text, text, text, text, boolean, text, text[]);
 
 create or replace function public.upsert_event_vendor(
   p_token              text,
   p_event_vendor_id    uuid    default null,
   p_vendor_id          uuid    default null,
   p_vendor_name        text    default null,
+  p_logo_url           text    default null,
   p_booth_number       text    default null,
   p_vendor_type        text    default null,
   p_vendor_description text    default null,
@@ -295,17 +299,19 @@ begin
      where id = p_event_vendor_id;
 
     if v_target_vendor_id is not null then
-      if p_vendor_type is not null or p_vendor_description is not null then
+      if p_vendor_type is not null or p_vendor_description is not null or p_logo_url is not null then
         update public.vendors
            set vendor_type = coalesce(p_vendor_type,        vendor_type),
                description = coalesce(p_vendor_description, description),
+               logo_url    = case when p_logo_url is not null then nullif(btrim(p_logo_url), '') else logo_url end,
                updated_at  = now()
          where id = v_vendor_id;
       end if;
-    elsif p_vendor_type is not null or p_vendor_description is not null then
+    elsif p_vendor_type is not null or p_vendor_description is not null or p_logo_url is not null then
       update public.vendors
          set vendor_type = coalesce(p_vendor_type,        vendor_type),
              description = coalesce(p_vendor_description, description),
+             logo_url    = case when p_logo_url is not null then nullif(btrim(p_logo_url), '') else logo_url end,
              updated_at  = now()
        where id = v_vendor_id;
     end if;
@@ -330,9 +336,16 @@ begin
      limit 1;
 
     if v_vendor_id is null then
-      insert into public.vendors (name, vendor_type, description)
-      values (trim(p_vendor_name), p_vendor_type, p_vendor_description)
+      insert into public.vendors (name, vendor_type, description, logo_url)
+      values (trim(p_vendor_name), p_vendor_type, p_vendor_description, nullif(btrim(p_logo_url), ''))
       returning id into v_vendor_id;
+    elsif p_logo_url is not null or p_vendor_type is not null or p_vendor_description is not null then
+      update public.vendors
+         set vendor_type = coalesce(p_vendor_type, vendor_type),
+             description = coalesce(p_vendor_description, description),
+             logo_url    = case when p_logo_url is not null then nullif(btrim(p_logo_url), '') else logo_url end,
+             updated_at  = now()
+       where id = v_vendor_id;
     end if;
   else
     -- Make sure the directory vendor actually exists.
@@ -356,6 +369,14 @@ begin
            filter_tags  = coalesce(p_filter_tags,  filter_tags),
            updated_at   = now()
      where id = v_event_vendor_id;
+    if p_logo_url is not null or p_vendor_type is not null or p_vendor_description is not null then
+      update public.vendors
+         set vendor_type = coalesce(p_vendor_type, vendor_type),
+             description = coalesce(p_vendor_description, description),
+             logo_url    = case when p_logo_url is not null then nullif(btrim(p_logo_url), '') else logo_url end,
+             updated_at  = now()
+       where id = v_vendor_id;
+    end if;
     return jsonb_build_object('ok', true, 'event_vendor_id', v_event_vendor_id, 'already_linked', true);
   end if;
 
@@ -371,7 +392,7 @@ end;
 $$;
 
 grant execute on function public.upsert_event_vendor(
-  text, uuid, uuid, text, text, text, text, boolean, text, text[]
+  text, uuid, uuid, text, text, text, text, text, boolean, text, text[]
 ) to anon, authenticated;
 
 comment on function public.upsert_event_vendor is

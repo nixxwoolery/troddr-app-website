@@ -1432,34 +1432,9 @@
     border-radius: 6px;
     background: #fff;
   }
-  .vmi-row .vmi-image,
   .vmi-row .vmi-desc,
   .vmi-row .vmi-tags { grid-column: span 2; }
-  .vmi-image-wrap {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 76px 1fr;
-    gap: 10px;
-    align-items: start;
-  }
-  .vmi-image-preview {
-    width: 76px; height: 56px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: #fff center / cover no-repeat;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--grey-light);
-    font-size: 9px; font-weight: 700;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    overflow: hidden;
-  }
-  .vmi-image-body { display: grid; gap: 6px; min-width: 0; }
-  .vmi-image-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-  .vmi-image-actions .ve-btn { padding: 6px 10px; font-size: 12px; }
-  .vmi-image-actions input[type=file] { display: none; }
-  .vmi-image-status { font-size: 11px; color: var(--grey-mid); }
-  .vmi-image-status.error { color: var(--red); }
-  .vmi-image-status.success { color: var(--green); }
+  .ve-logo-upload { margin-bottom: 14px; }
   .vmi-checks {
     display: flex; align-items: center; gap: 10px;
     min-height: 34px;
@@ -1487,11 +1462,9 @@
   @media (max-width: 760px) {
     .vmi-row { grid-template-columns: 1fr 1fr 32px; }
     .vmi-row .vmi-name,
-    .vmi-row .vmi-image-wrap,
     .vmi-row .vmi-desc,
     .vmi-row .vmi-tags,
     .vmi-row .vmi-checks { grid-column: 1 / 3; }
-    .vmi-image-wrap { grid-template-columns: 1fr; }
   }
   .ve-actions {
     position: sticky;
@@ -3315,6 +3288,19 @@
             </select></div>
           <div class="ve-field"><label for="ve-name">Name</label>
             <input id="ve-name" type="text" maxlength="200" /></div>
+          <div class="image-upload ve-logo-upload">
+            <div class="image-preview" id="ve-logo-preview">No logo</div>
+            <div class="image-upload-body">
+              <div class="image-upload-actions">
+                <label class="image-pick-btn">Upload logo
+                  <input id="ve-logo-file" type="file" accept="image/*" />
+                </label>
+                <button type="button" class="image-pick-btn" id="ve-logo-clear" style="border-color:var(--border); color:var(--grey-dark);">Clear</button>
+              </div>
+              <input id="ve-logo" class="image-url-input" type="url" maxlength="500" placeholder="Logo URL" />
+              <div class="image-status" id="ve-logo-status"></div>
+            </div>
+          </div>
           <div class="ve-field"><label for="ve-booth">Booth number</label>
             <input id="ve-booth" type="text" maxlength="40" placeholder="e.g. A-12" /></div>
           <div class="ve-field"><label for="ve-zone">Zone / section</label>
@@ -4289,10 +4275,10 @@
     ).join('');
   }
 
-  let _vendorMenuUploads = 0;
+  let _vendorLogoUploading = false;
 
-  function setVendorMenuImagePreview(row, url) {
-    const preview = row && row.querySelector('.vmi-image-preview');
+  function setVendorLogoPreview(url) {
+    const preview = $('ve-logo-preview');
     if (!preview) return;
     if (url) {
       preview.style.backgroundImage = `url('${url}')`;
@@ -4301,39 +4287,38 @@
     } else {
       preview.style.backgroundImage = '';
       preview.style.color = '';
-      preview.textContent = 'No image';
+      preview.textContent = 'No logo';
     }
   }
 
-  function setVendorMenuImageStatus(row, message, kind) {
-    const status = row && row.querySelector('.vmi-image-status');
+  function setVendorLogoStatus(message, kind) {
+    const status = $('ve-logo-status');
     if (!status) return;
     status.textContent = message || '';
-    status.className = `vmi-image-status${kind ? ' ' + kind : ''}`;
+    status.className = `image-status${kind ? ' ' + kind : ''}`;
   }
 
-  function setVendorMenuImageBusy(row, busy) {
-    row.querySelectorAll('.vmi-image-upload-btn, .vmi-image-clear').forEach(btn => { btn.disabled = !!busy; });
+  function setVendorLogoBusy(busy) {
+    _vendorLogoUploading = !!busy;
+    ['ve-logo-file', 've-logo-clear'].forEach(id => { const el = $(id); if (el) el.disabled = !!busy; });
   }
 
-  async function uploadVendorMenuImage(row, file) {
-    if (!row || !file) return;
+  async function uploadVendorLogo(file) {
+    if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setVendorMenuImageStatus(row, 'Please choose an image file.', 'error');
+      setVendorLogoStatus('Please choose an image file.', 'error');
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setVendorMenuImageStatus(row, 'Image too large (10MB max).', 'error');
+      setVendorLogoStatus('Logo too large (10MB max).', 'error');
       return;
     }
     const eventSlug = safeStorageName(window.__eventData?.event?.slug || 'event');
     const vendorName = safeStorageName(document.getElementById('ve-name')?.value || 'vendor');
-    const itemName = safeStorageName(row.querySelector('.vmi-name')?.value || 'menu-item');
-    const fileName = safeStorageName(file.name || 'image');
-    const path = `vendor-menu-items/${eventSlug}/${vendorName}/${itemName}-${Date.now()}-${fileName}`;
-    _vendorMenuUploads += 1;
-    setVendorMenuImageBusy(row, true);
-    setVendorMenuImageStatus(row, 'Uploading...');
+    const fileName = safeStorageName(file.name || 'logo');
+    const path = `vendor-logos/${eventSlug}/${vendorName}-${Date.now()}-${fileName}`;
+    setVendorLogoBusy(true);
+    setVendorLogoStatus('Uploading...');
     try {
       const { data, error } = await db.storage
         .from('partner-intake-assets')
@@ -4342,17 +4327,16 @@
       const pub = db.storage.from('partner-intake-assets').getPublicUrl(data.path);
       const url = pub && pub.data && pub.data.publicUrl;
       if (!url) throw new Error('No public URL returned');
-      row.querySelector('.vmi-image').value = url;
-      setVendorMenuImagePreview(row, url);
-      setVendorMenuImageStatus(row, 'Uploaded. Save vendor to apply.', 'success');
+      $('ve-logo').value = url;
+      setVendorLogoPreview(url);
+      setVendorLogoStatus('Uploaded. Save vendor to apply.', 'success');
     } catch (err) {
-      console.error('vendor menu image upload failed', err);
-      setVendorMenuImageStatus(row, (window.friendlyError || (() => ''))(err,
-        "Image upload didn't go through. Try a smaller file, or paste a URL instead."), 'error');
+      console.error('vendor logo upload failed', err);
+      setVendorLogoStatus((window.friendlyError || (() => ''))(err,
+        "Logo upload didn't go through. Try a smaller file, or paste a URL instead."), 'error');
     } finally {
-      _vendorMenuUploads = Math.max(0, _vendorMenuUploads - 1);
-      setVendorMenuImageBusy(row, false);
-      const fileInput = row.querySelector('.vmi-image-file');
+      setVendorLogoBusy(false);
+      const fileInput = $('ve-logo-file');
       if (fileInput) fileInput.value = '';
     }
   }
@@ -4378,6 +4362,7 @@
     const row = document.createElement('div');
     row.className = 'vmi-row';
     if (item.menu_item_id || item.id) row.dataset.id = item.menu_item_id || item.id;
+    if (item.image_url) row.dataset.imageUrl = item.image_url;
     row.innerHTML = `
       <input class="vmi-name" type="text" maxlength="160" placeholder="Item name" value="${escapeHtml(item.name || '')}">
       <select class="vmi-category">${vendorMenuCategoryOptions(item.category)}</select>
@@ -4385,19 +4370,6 @@
       <input class="vmi-currency" type="text" maxlength="8" placeholder="JMD" value="${escapeHtml(item.currency || 'JMD')}">
       <input class="vmi-price-label" type="text" maxlength="60" placeholder="Price label" value="${escapeHtml(item.price_label || '')}">
       <button type="button" class="vmi-remove" title="Remove item">&times;</button>
-      <div class="vmi-image-wrap">
-        <div class="vmi-image-preview" ${item.image_url ? `style="background-image:url('${escapeHtml(item.image_url)}'); color:transparent;"` : ''}>${item.image_url ? '' : 'No image'}</div>
-        <div class="vmi-image-body">
-          <input class="vmi-image" type="url" maxlength="500" placeholder="Image URL" value="${escapeHtml(item.image_url || '')}">
-          <div class="vmi-image-actions">
-            <label class="ve-btn vmi-image-upload-btn">Upload
-              <input class="vmi-image-file" type="file" accept="image/*">
-            </label>
-            <button type="button" class="ve-btn vmi-image-clear">Clear image</button>
-          </div>
-          <div class="vmi-image-status"></div>
-        </div>
-      </div>
       <input class="vmi-desc" type="text" maxlength="260" placeholder="Short description" value="${escapeHtml(item.description || '')}">
       <input class="vmi-tags" type="text" maxlength="180" placeholder="Tags, comma-separated" value="${escapeHtml(Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || ''))}">
       <div class="vmi-checks">
@@ -4408,19 +4380,6 @@
     row.querySelector('.vmi-remove').addEventListener('click', () => {
       row.remove();
       updateVendorMenuEmpty();
-    });
-    row.querySelector('.vmi-image').addEventListener('input', (e) => {
-      setVendorMenuImagePreview(row, e.target.value.trim());
-      setVendorMenuImageStatus(row, '');
-    });
-    row.querySelector('.vmi-image-file').addEventListener('change', (e) => {
-      const file = e.target.files && e.target.files[0];
-      uploadVendorMenuImage(row, file);
-    });
-    row.querySelector('.vmi-image-clear').addEventListener('click', () => {
-      row.querySelector('.vmi-image').value = '';
-      setVendorMenuImagePreview(row, '');
-      setVendorMenuImageStatus(row, '');
     });
     list.appendChild(row);
     updateVendorMenuEmpty();
@@ -4447,7 +4406,7 @@
         price: priceRaw === '' ? null : Number(priceRaw),
         currency: row.querySelector('.vmi-currency').value.trim() || 'JMD',
         price_label: row.querySelector('.vmi-price-label').value.trim() || null,
-        image_url: row.querySelector('.vmi-image').value.trim() || null,
+        image_url: row.dataset.imageUrl || null,
         description: row.querySelector('.vmi-desc').value.trim() || null,
         tags: parseFilterTags(row.querySelector('.vmi-tags').value),
         is_special: row.querySelector('.vmi-special').checked,
@@ -4473,6 +4432,9 @@
     const name = v.vendor_name || v.name || '';
     $('ve-modal-sub').textContent = name ? `Editing : ${name}` : 'New vendor entry';
     $('ve-name').value     = name;
+    $('ve-logo').value     = v.logo_url || '';
+    setVendorLogoPreview(v.logo_url || '');
+    setVendorLogoStatus('', '');
     $('ve-booth').value    = v.booth_number || '';
     $('ve-zone').value     = v.zone || '';
     $('ve-type').value     = v.vendor_type || '';
@@ -4495,6 +4457,7 @@
           <option value="${escapeHtml(d.vendor_id)}"
                   data-type="${escapeHtml(d.vendor_type || '')}"
                   data-desc="${escapeHtml(d.description || '')}"
+                  data-logo="${escapeHtml(d.logo_url || '')}"
                   ${d.on_event ? 'disabled' : ''}>${escapeHtml(d.name || 'Vendor')}${d.on_event ? ' · already added' : ''}</option>`).join('');
       });
     }
@@ -4512,16 +4475,35 @@
     const form    = document.getElementById('ve-modal');
     const pick    = document.getElementById('ve-pick');
     const addItem = document.getElementById('vmi-add');
+    const logoInput = document.getElementById('ve-logo');
+    const logoFile = document.getElementById('ve-logo-file');
+    const logoClear = document.getElementById('ve-logo-clear');
     if (addItem) addItem.addEventListener('click', () => addVendorMenuRow());
+    if (logoInput) logoInput.addEventListener('input', () => {
+      setVendorLogoPreview(logoInput.value.trim());
+      setVendorLogoStatus('');
+    });
+    if (logoFile) logoFile.addEventListener('change', () => {
+      const file = logoFile.files && logoFile.files[0];
+      uploadVendorLogo(file);
+    });
+    if (logoClear) logoClear.addEventListener('click', () => {
+      $('ve-logo').value = '';
+      setVendorLogoPreview('');
+      setVendorLogoStatus('');
+    });
     if (pick) pick.addEventListener('change', () => {
       const opt = pick.selectedOptions[0];
       if (opt && opt.value) {
         $('ve-name').value = opt.textContent.replace(/ · already added$/, '').trim();
         $('ve-type').value = opt.dataset.type || '';
+        $('ve-logo').value = opt.dataset.logo || '';
+        setVendorLogoPreview(opt.dataset.logo || '');
+        setVendorLogoStatus('');
         $('ve-filter-tags').value = '';
         $('ve-desc').value = opt.dataset.desc || '';
       } else {
-        $('ve-name').value = ''; $('ve-type').value = ''; $('ve-filter-tags').value = ''; $('ve-desc').value = '';
+        $('ve-name').value = ''; $('ve-type').value = ''; $('ve-logo').value = ''; setVendorLogoPreview(''); setVendorLogoStatus(''); $('ve-filter-tags').value = ''; $('ve-desc').value = '';
       }
     });
     if (cancel) cancel.addEventListener('click', closeVendorEditor);
@@ -4540,6 +4522,7 @@
       p_token:               token,
       p_event_vendor_id:     _editingVendor.event_vendor_id || null,
       p_vendor_name:         $('ve-name').value.trim() || null,
+      p_logo_url:            $('ve-logo').value.trim(),
       p_booth_number:        $('ve-booth').value.trim() || null,
       p_zone:                $('ve-zone').value.trim() || null,
       p_vendor_type:         $('ve-type').value || null,
@@ -4553,9 +4536,9 @@
     const status = $('ve-status');
     const saveBtn = $('ve-save');
     const menuItems = collectVendorMenuItems();
-    if (_vendorMenuUploads > 0) {
+    if (_vendorLogoUploading) {
       status.className = 've-status error';
-      status.textContent = 'A menu item image is still uploading. Wait for the uploaded message, then save.';
+      status.textContent = 'The vendor logo is still uploading. Wait for the uploaded message, then save.';
       return;
     }
     const badName = menuItems.find(it => !it.name);
