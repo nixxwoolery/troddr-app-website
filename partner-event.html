@@ -1781,8 +1781,19 @@
   .edit-list-row:last-child { margin-bottom: 0; }
   .edit-list-row .body { flex: 1; min-width: 0; }
   .edit-list-row .name { font-weight: 700; color: var(--black); font-size: 14px; }
-  .edit-list-row .meta { font-size: 12px; color: var(--grey-mid); margin-top: 2px; }
-  .edit-list-row .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .edit-list-row .meta {
+    font-size: 12px;
+    color: var(--grey-mid);
+    margin-top: 2px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .edit-list-row .meta a {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .edit-list-row .actions { display: flex; gap: 6px; flex-shrink: 0; margin-left: auto; }
   .edit-list-empty { padding: 24px 16px; text-align: center; color: var(--grey-mid); font-size: 13px; background: var(--bg-soft); border: 1px dashed var(--border); border-radius: 10px; }
   .add-btn { background: var(--brand-primary); color: var(--brand-text); border: 1px solid var(--brand-primary); padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
   .add-btn:hover:not(:disabled) { filter: brightness(1.08); }
