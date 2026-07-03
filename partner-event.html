@@ -1366,6 +1366,7 @@
     padding: 24px 26px 0;
     box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   }
+  .ve-modal.vendor-modal { max-width: 820px; }
   .ve-modal h3 {
     font-size: 18px; font-weight: 700;
     margin-bottom: 4px;
@@ -1395,6 +1396,75 @@
   .ve-field.checkbox { flex-direction: row; align-items: center; gap: 8px; }
   .ve-field.checkbox input { width: auto; }
   .ve-field.checkbox label { letter-spacing: 0; text-transform: none; font-weight: 500; font-size: 13px; color: var(--grey-dark); }
+  .vmi-editor {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .vmi-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 10px;
+  }
+  .vmi-title {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+  }
+  .vmi-sub { font-size: 11px; color: var(--grey-mid); margin-top: 2px; }
+  .vmi-list { display: grid; gap: 8px; }
+  .vmi-row {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) 120px 92px 90px 90px 32px;
+    gap: 8px;
+    align-items: start;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-soft);
+  }
+  .vmi-row input,
+  .vmi-row select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 8px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+  }
+  .vmi-row .vmi-desc,
+  .vmi-row .vmi-tags { grid-column: span 2; }
+  .vmi-checks {
+    display: flex; align-items: center; gap: 10px;
+    min-height: 34px;
+  }
+  .vmi-checks label {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--grey-dark);
+  }
+  .vmi-checks input { width: auto; padding: 0; }
+  .vmi-remove {
+    width: 32px; height: 32px;
+    border: none; border-radius: 6px;
+    background: transparent; color: var(--red);
+    font-size: 19px; line-height: 1; cursor: pointer;
+  }
+  .vmi-remove:hover { background: var(--red-light); }
+  .vmi-empty {
+    padding: 14px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    color: var(--grey-mid);
+    font-size: 12px;
+    text-align: center;
+  }
+  @media (max-width: 760px) {
+    .vmi-row { grid-template-columns: 1fr 1fr 32px; }
+    .vmi-row .vmi-name,
+    .vmi-row .vmi-desc,
+    .vmi-row .vmi-tags,
+    .vmi-row .vmi-checks { grid-column: 1 / 3; }
+  }
   .ve-actions {
     position: sticky;
     bottom: 0;
@@ -3208,7 +3278,7 @@
 
       <!-- ── Vendor edit modal ── -->
       <div class="ve-modal-backdrop" id="ve-modal-backdrop">
-        <form class="ve-modal" id="ve-modal" autocomplete="off">
+        <form class="ve-modal vendor-modal" id="ve-modal" autocomplete="off">
           <h3>Edit vendor</h3>
           <div class="ve-modal-sub" id="ve-modal-sub"></div>
           <div class="ve-field" id="ve-pick-wrap" style="display:none;"><label for="ve-pick">Pick from your vendor directory</label>
@@ -3235,6 +3305,16 @@
             <textarea id="ve-desc" rows="3" maxlength="500"></textarea></div>
           <div class="ve-field checkbox"><input id="ve-featured" type="checkbox" />
             <label for="ve-featured">Featured (pin to top of lineup)</label></div>
+          <div class="vmi-editor">
+            <div class="vmi-head">
+              <div>
+                <div class="vmi-title">Menu items</div>
+                <div class="vmi-sub">Add item names, prices, descriptions, categories, labels, and sold-out/special flags.</div>
+              </div>
+              <button type="button" class="ve-btn" id="vmi-add">Add item</button>
+            </div>
+            <div class="vmi-list" id="vmi-list"></div>
+          </div>
           <div class="ve-status" id="ve-status"></div>
           <div class="ve-actions">
             <button type="button" class="ve-btn" id="ve-cancel">Cancel</button>
@@ -4162,6 +4242,98 @@
     return Array.isArray(tags) ? tags.join(', ') : (tags || '');
   }
 
+  const VENDOR_MENU_CATEGORIES = [
+    ['', 'Category'],
+    ['food', 'Food'],
+    ['drink', 'Drink'],
+    ['main', 'Main'],
+    ['side', 'Side'],
+    ['dessert', 'Dessert'],
+    ['snack', 'Snack'],
+    ['merch', 'Merch'],
+    ['experience', 'Experience'],
+    ['other', 'Other'],
+  ];
+
+  function vendorMenuCategoryOptions(selected) {
+    return VENDOR_MENU_CATEGORIES.map(([value, label]) =>
+      `<option value="${value}" ${value === (selected || '') ? 'selected' : ''}>${label}</option>`
+    ).join('');
+  }
+
+  function updateVendorMenuEmpty() {
+    const list = $('vmi-list');
+    if (!list) return;
+    const rows = list.querySelectorAll('.vmi-row');
+    const empty = list.querySelector('.vmi-empty');
+    if (!rows.length && !empty) {
+      list.innerHTML = '<div class="vmi-empty">No menu items yet.</div>';
+    } else if (rows.length && empty) {
+      empty.remove();
+    }
+  }
+
+  function addVendorMenuRow(item) {
+    item = item || {};
+    const list = $('vmi-list');
+    if (!list) return;
+    const empty = list.querySelector('.vmi-empty');
+    if (empty) empty.remove();
+    const row = document.createElement('div');
+    row.className = 'vmi-row';
+    if (item.menu_item_id || item.id) row.dataset.id = item.menu_item_id || item.id;
+    row.innerHTML = `
+      <input class="vmi-name" type="text" maxlength="160" placeholder="Item name" value="${escapeHtml(item.name || '')}">
+      <select class="vmi-category">${vendorMenuCategoryOptions(item.category)}</select>
+      <input class="vmi-price" type="number" min="0" step="0.01" placeholder="Price" value="${item.price != null ? escapeHtml(String(item.price)) : ''}">
+      <input class="vmi-currency" type="text" maxlength="8" placeholder="JMD" value="${escapeHtml(item.currency || 'JMD')}">
+      <input class="vmi-price-label" type="text" maxlength="60" placeholder="Price label" value="${escapeHtml(item.price_label || '')}">
+      <button type="button" class="vmi-remove" title="Remove item">&times;</button>
+      <input class="vmi-desc" type="text" maxlength="260" placeholder="Short description" value="${escapeHtml(item.description || '')}">
+      <input class="vmi-tags" type="text" maxlength="180" placeholder="Tags, comma-separated" value="${escapeHtml(Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || ''))}">
+      <div class="vmi-checks">
+        <label><input class="vmi-special" type="checkbox" ${item.is_special ? 'checked' : ''}> Special</label>
+        <label><input class="vmi-sold-out" type="checkbox" ${item.is_sold_out ? 'checked' : ''}> Sold out</label>
+      </div>
+    `;
+    row.querySelector('.vmi-remove').addEventListener('click', () => {
+      row.remove();
+      updateVendorMenuEmpty();
+    });
+    list.appendChild(row);
+    updateVendorMenuEmpty();
+  }
+
+  function renderVendorMenuEditor(items) {
+    const list = $('vmi-list');
+    if (!list) return;
+    list.innerHTML = '';
+    (items || []).forEach(addVendorMenuRow);
+    updateVendorMenuEmpty();
+  }
+
+  function collectVendorMenuItems() {
+    const list = $('vmi-list');
+    if (!list) return [];
+    const rows = Array.from(list.querySelectorAll('.vmi-row'));
+    return rows.map((row, idx) => {
+      const priceRaw = row.querySelector('.vmi-price').value.trim();
+      return {
+        id: row.dataset.id || null,
+        name: row.querySelector('.vmi-name').value.trim(),
+        category: row.querySelector('.vmi-category').value || null,
+        price: priceRaw === '' ? null : Number(priceRaw),
+        currency: row.querySelector('.vmi-currency').value.trim() || 'JMD',
+        price_label: row.querySelector('.vmi-price-label').value.trim() || null,
+        description: row.querySelector('.vmi-desc').value.trim() || null,
+        tags: parseFilterTags(row.querySelector('.vmi-tags').value),
+        is_special: row.querySelector('.vmi-special').checked,
+        is_sold_out: row.querySelector('.vmi-sold-out').checked,
+        sort_order: idx,
+      };
+    }).filter(it => it.name || it.category || it.price != null || it.description || it.price_label || it.tags.length);
+  }
+
   async function loadVendorDirectory() {
     if (_vendorDirectory) return _vendorDirectory;
     try {
@@ -4184,6 +4356,7 @@
     $('ve-filter-tags').value = filterTagsText(v);
     $('ve-desc').value     = v.vendor_description || v.description || '';
     $('ve-featured').checked = !!(v.vendor_is_featured || v.is_featured);
+    renderVendorMenuEditor(v.menu_items || []);
     $('ve-status').className = 've-status';
     $('ve-status').textContent = '';
     // Directory picker: only when adding. Selecting an existing vendor
@@ -4215,6 +4388,8 @@
     const back    = document.getElementById('ve-modal-backdrop');
     const form    = document.getElementById('ve-modal');
     const pick    = document.getElementById('ve-pick');
+    const addItem = document.getElementById('vmi-add');
+    if (addItem) addItem.addEventListener('click', () => addVendorMenuRow());
     if (pick) pick.addEventListener('change', () => {
       const opt = pick.selectedOptions[0];
       if (opt && opt.value) {
@@ -4254,6 +4429,19 @@
     };
     const status = $('ve-status');
     const saveBtn = $('ve-save');
+    const menuItems = collectVendorMenuItems();
+    const badName = menuItems.find(it => !it.name);
+    const badPrice = menuItems.find(it => it.price != null && (isNaN(it.price) || it.price < 0));
+    if (badName) {
+      status.className = 've-status error';
+      status.textContent = 'Every menu item needs a name.';
+      return;
+    }
+    if (badPrice) {
+      status.className = 've-status error';
+      status.textContent = 'Menu prices must be zero or greater.';
+      return;
+    }
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving...';
     try {
@@ -4265,6 +4453,23 @@
         status.className = 've-status error';
         status.textContent = msg;
         return;
+      }
+      const savedEventVendorId = data.event_vendor_id || payload.p_event_vendor_id;
+      if (savedEventVendorId) {
+        const menuRes = await db.rpc('set_event_vendor_menu_items', {
+          p_token: token,
+          p_event_vendor_id: savedEventVendorId,
+          p_items: menuItems,
+        });
+        const menuData = Array.isArray(menuRes.data) ? menuRes.data[0] : menuRes.data;
+        if (menuRes.error || !menuData || menuData.ok === false) {
+          status.className = 've-status error';
+          status.textContent = (menuRes.error && (menuRes.error.message || menuRes.error.code))
+            || (menuData && menuData.error)
+            || 'Vendor saved, but menu items could not be saved. Press Save to retry.';
+          _editingVendor.event_vendor_id = savedEventVendorId;
+          return;
+        }
       }
       status.className = 've-status success';
       status.textContent = 'Saved. Refreshing...';
@@ -4311,7 +4516,7 @@
           <div class="vl-menu-item">
             <div class="vl-menu-item-head">
               <span class="vl-menu-item-name">${escapeHtml(it.name || 'Untitled item')}</span>
-              ${it.price != null ? `<span class="vl-menu-item-price">${escapeHtml(fmtPrice(it.price, it.currency))}</span>` : ''}
+              ${it.price_label ? `<span class="vl-menu-item-price">${escapeHtml(it.price_label)}</span>` : (it.price != null ? `<span class="vl-menu-item-price">${escapeHtml(fmtPrice(it.price, it.currency))}</span>` : '')}
             </div>
             ${it.description ? `<div class="vl-menu-item-desc">${escapeHtml(it.description)}</div>` : ''}
             ${tags.length ? `<div class="vl-menu-item-tags">${tags.join('')}</div>` : ''}
@@ -4491,7 +4696,7 @@
                     <span>${escapeHtml(it.name || 'Untitled item')}</span>
                     ${it.is_special   ? '<span class="menu-special">Special</span>' : ''}
                     ${it.is_sold_out  ? '<span class="menu-sold-out">Sold Out</span>' : ''}
-                    ${it.price != null ? `<span class="price">${fmtPrice(it.price, it.currency)}</span>` : ''}
+                    ${it.price_label ? `<span class="price">${escapeHtml(it.price_label)}</span>` : (it.price != null ? `<span class="price">${fmtPrice(it.price, it.currency)}</span>` : '')}
                   </div>
                   ${it.description ? `<div class="menu-desc">${escapeHtml(it.description)}</div>` : ''}
                   ${tagsHtml ? `<div class="menu-tags">${tagsHtml}</div>` : ''}
