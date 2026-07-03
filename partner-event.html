@@ -1432,6 +1432,7 @@
     border-radius: 6px;
     background: #fff;
   }
+  .vmi-row .vmi-image,
   .vmi-row .vmi-desc,
   .vmi-row .vmi-tags { grid-column: span 2; }
   .vmi-checks {
@@ -1461,6 +1462,7 @@
   @media (max-width: 760px) {
     .vmi-row { grid-template-columns: 1fr 1fr 32px; }
     .vmi-row .vmi-name,
+    .vmi-row .vmi-image,
     .vmi-row .vmi-desc,
     .vmi-row .vmi-tags,
     .vmi-row .vmi-checks { grid-column: 1 / 3; }
@@ -4289,6 +4291,7 @@
       <input class="vmi-currency" type="text" maxlength="8" placeholder="JMD" value="${escapeHtml(item.currency || 'JMD')}">
       <input class="vmi-price-label" type="text" maxlength="60" placeholder="Price label" value="${escapeHtml(item.price_label || '')}">
       <button type="button" class="vmi-remove" title="Remove item">&times;</button>
+      <input class="vmi-image" type="url" maxlength="500" placeholder="Image URL" value="${escapeHtml(item.image_url || '')}">
       <input class="vmi-desc" type="text" maxlength="260" placeholder="Short description" value="${escapeHtml(item.description || '')}">
       <input class="vmi-tags" type="text" maxlength="180" placeholder="Tags, comma-separated" value="${escapeHtml(Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || ''))}">
       <div class="vmi-checks">
@@ -4325,13 +4328,14 @@
         price: priceRaw === '' ? null : Number(priceRaw),
         currency: row.querySelector('.vmi-currency').value.trim() || 'JMD',
         price_label: row.querySelector('.vmi-price-label').value.trim() || null,
+        image_url: row.querySelector('.vmi-image').value.trim() || null,
         description: row.querySelector('.vmi-desc').value.trim() || null,
         tags: parseFilterTags(row.querySelector('.vmi-tags').value),
         is_special: row.querySelector('.vmi-special').checked,
         is_sold_out: row.querySelector('.vmi-sold-out').checked,
         sort_order: idx,
       };
-    }).filter(it => it.name || it.category || it.price != null || it.description || it.price_label || it.tags.length);
+    }).filter(it => it.name || it.category || it.price != null || it.description || it.price_label || it.image_url || it.tags.length);
   }
 
   async function loadVendorDirectory() {
