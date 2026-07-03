@@ -62,11 +62,11 @@ begin
     return jsonb_build_object('ok', false, 'error', 'sponsor_name_required');
   end if;
   v_tier := case lower(coalesce(nullif(btrim(p_tier), ''), 'partner'))
-    when 'title' then 'title'
-    when 'platinum' then 'platinum'
-    when 'gold' then 'gold'
-    when 'silver' then 'silver'
-    when 'bronze' then 'bronze'
+    when 'title' then 'presenting'
+    when 'platinum' then 'presenting'
+    when 'gold' then 'major'
+    when 'silver' then 'supporting'
+    when 'bronze' then 'supporting'
     when 'presenting' then 'presenting'
     when 'major' then 'major'
     when 'supporting' then 'supporting'

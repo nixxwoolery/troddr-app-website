@@ -1,43 +1,36 @@
--- ============================================================
--- Event sponsors app-read access
--- ============================================================
--- The partner dashboard writes sponsor details to public.sponsors and links
--- them to an event through public.event_sponsors. The attendee app needs read
--- access to both active rows.
+-- Emergency restore for the app Sponsors tab.
+-- Run this in Supabase SQL Editor to put get_event_sponsors_by_slug back to
+-- the known-good payload shape from the remote schema snapshot.
 
-grant select on public.sponsors to anon, authenticated;
-grant select on public.event_sponsors to anon, authenticated;
-
-do $$
-begin
-  if not exists (
-    select 1
-      from pg_policies
-     where schemaname = 'public'
-       and tablename = 'sponsors'
-       and policyname = 'active sponsors are publicly readable'
-  ) then
-    create policy "active sponsors are publicly readable"
-      on public.sponsors
-      for select
-      to anon, authenticated
-      using (coalesce(is_active, true) = true);
-  end if;
-
-  if not exists (
-    select 1
-      from pg_policies
-     where schemaname = 'public'
-       and tablename = 'event_sponsors'
-       and policyname = 'active event sponsors are publicly readable'
-  ) then
-    create policy "active event sponsors are publicly readable"
-      on public.event_sponsors
-      for select
-      to anon, authenticated
-      using (coalesce(is_active, true) = true);
-  end if;
-end $$;
+-- Normalize any raw dashboard tiers back to app-renderable tiers. Keep the
+-- human-facing Gold/Silver/Bronze label in display_tier_label.
+update public.event_sponsors
+   set tier = case lower(tier)
+     when 'title' then 'presenting'
+     when 'platinum' then 'presenting'
+     when 'gold' then 'major'
+     when 'silver' then 'supporting'
+     when 'bronze' then 'supporting'
+     when 'presenting' then 'presenting'
+     when 'major' then 'major'
+     when 'supporting' then 'supporting'
+     when 'community' then 'community'
+     else 'partner'
+   end,
+       display_tier_label = coalesce(
+         display_tier_label,
+         case lower(tier)
+           when 'title' then 'Title Sponsor'
+           when 'platinum' then 'Platinum Sponsor'
+           when 'gold' then 'Gold Sponsor'
+           when 'silver' then 'Silver Sponsor'
+           when 'bronze' then 'Bronze Sponsor'
+           else null
+         end
+       ),
+       updated_at = now()
+ where lower(tier) not in ('presenting', 'major', 'supporting', 'community', 'partner')
+    or lower(tier) in ('gold', 'silver', 'bronze', 'title', 'platinum');
 
 create or replace function public.get_event_sponsors_by_slug(p_event_slug text)
 returns jsonb

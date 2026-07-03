@@ -1,17 +1,18 @@
 -- ============================================================
 -- Event sponsor tier repair
 -- ============================================================
--- Restore dashboard/app business tiers from labels after older saves mapped
--- gold/silver/bronze into generic major/supporting buckets.
+-- The current mobile app renders these tier keys:
+-- presenting, major, supporting, community, partner.
+-- Dashboard business tiers such as gold/silver/bronze should be stored in
+-- display_tier_label, while tier stays app-renderable.
 
 update public.event_sponsors
-   set tier = case
-     when lower(coalesce(display_tier_label, '')) like '%gold%' then 'gold'
-     when lower(coalesce(display_tier_label, '')) like '%silver%' then 'silver'
-     when lower(coalesce(display_tier_label, '')) like '%bronze%' then 'bronze'
-     when lower(tier) in ('title', 'platinum', 'gold', 'silver', 'bronze',
-                          'presenting', 'major', 'supporting', 'community', 'partner')
-       then lower(tier)
+   set tier = case lower(tier)
+     when 'title' then 'presenting'
+     when 'platinum' then 'presenting'
+     when 'gold' then 'major'
+     when 'silver' then 'supporting'
+     when 'bronze' then 'supporting'
      else 'partner'
    end,
        display_tier_label = coalesce(
@@ -26,8 +27,5 @@ update public.event_sponsors
          end
        ),
        updated_at = now()
- where lower(tier) not in ('title', 'platinum', 'gold', 'silver', 'bronze',
-                           'presenting', 'major', 'supporting', 'community', 'partner')
-    or lower(coalesce(display_tier_label, '')) like '%gold%'
-    or lower(coalesce(display_tier_label, '')) like '%silver%'
-    or lower(coalesce(display_tier_label, '')) like '%bronze%';
+ where lower(tier) not in ('presenting', 'major', 'supporting', 'community', 'partner')
+    or lower(tier) in ('gold', 'silver', 'bronze');
