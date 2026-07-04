@@ -68,6 +68,7 @@
   white-space: nowrap;
 }
 .fpb-btn:hover { background: var(--fpb-bg-soft); }
+.fpb-btn.active { background: var(--fpb-black); color: #fff; border-color: var(--fpb-black); }
 .fpb-btn.primary { background: var(--fpb-black); color: #fff; border-color: var(--fpb-black); }
 .fpb-btn.primary:hover { background: #000; }
 .fpb-btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -448,6 +449,65 @@
 }
 .fpb-callipers::before { left: 0; }
 .fpb-callipers::after { right: 0; }
+
+/* Crop overlay for uploaded map images */
+.fpb-crop-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 75;
+  pointer-events: none;
+}
+.fpb-crop-shade {
+  position: absolute;
+  background: rgba(0,0,0,0.45);
+  pointer-events: none;
+}
+.fpb-crop-box {
+  position: absolute;
+  border: 2px solid #fff;
+  outline: 2px solid var(--fpb-primary);
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.65) 1px, transparent 1px) 33.333% 0 / 33.333% 100% no-repeat,
+    linear-gradient(to right, rgba(255,255,255,0.65) 1px, transparent 1px) 66.666% 0 / 33.333% 100% no-repeat,
+    linear-gradient(to bottom, rgba(255,255,255,0.65) 1px, transparent 1px) 0 33.333% / 100% 33.333% no-repeat,
+    linear-gradient(to bottom, rgba(255,255,255,0.65) 1px, transparent 1px) 0 66.666% / 100% 33.333% no-repeat;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.02);
+  cursor: move;
+  pointer-events: auto;
+}
+.fpb-crop-box span {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 2px solid var(--fpb-primary);
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+}
+.fpb-crop-box span::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+}
+.fpb-crop-box [data-crop-handle="nw"] { left: -8px; top: -8px; cursor: nwse-resize; }
+.fpb-crop-box [data-crop-handle="ne"] { right: -8px; top: -8px; cursor: nesw-resize; }
+.fpb-crop-box [data-crop-handle="se"] { right: -8px; bottom: -8px; cursor: nwse-resize; }
+.fpb-crop-box [data-crop-handle="sw"] { left: -8px; bottom: -8px; cursor: nesw-resize; }
+.fpb-crop-actions {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 95;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--fpb-border);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+}
 
 /* Scale toolbar button — nudges when an image is uncalibrated */
 .fpb-btn.attn { border-color: var(--fpb-amber); color: var(--fpb-amber); }

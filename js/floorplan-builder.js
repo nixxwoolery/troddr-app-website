@@ -137,6 +137,7 @@
     + '<symbol id="fpb-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></symbol>'
     + '<symbol id="fpb-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>'
     + '<symbol id="fpb-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>'
+    + '<symbol id="fpb-crop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/><path d="M14 6v8H6"/></symbol>'
     + '<symbol id="fpb-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>'
     + '<symbol id="fpb-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>'
     + '<symbol id="fpb-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>'
@@ -275,6 +276,7 @@
       this.panzoom = null;
       this.spacePan = false;
       this._gesture = null;
+      this.crop = null;
     }
 
     // ── Mount / DOM ─────────────────────────────────────────
@@ -362,6 +364,7 @@
     <button type="button" class="fpb-btn icon-only" data-ref="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled><svg><use href="#fpb-redo"/></svg></button>
     ${uploadBtn}
     ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="rotateMapBtn" title="Rotate the saved floor plan 90 degrees clockwise"><svg><use href="#fpb-rotate"/></svg>Rotate</button>' : ''}
+    ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="cropMapBtn" title="Crop the uploaded floor plan image"><svg><use href="#fpb-crop"/></svg>Crop</button>' : ''}
     ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="traceOnlyBtn" title="Hide the uploaded image from the saved guest map while keeping your traced layout"><svg><use href="#fpb-grid-ic"/></svg>Trace only</button>' : ''}
     <button type="button" class="fpb-btn" data-ref="exportBtn" title="Download the floor plan as a PNG image"><svg><use href="#fpb-download"/></svg>Export</button>
     ${extra}
@@ -378,9 +381,23 @@
         <div class="fpb-guide-h" data-ref="guideH" hidden></div>
         <div class="fpb-rubber" data-ref="rubber" hidden></div>
         <div class="fpb-callipers" data-ref="callipers" hidden></div>
+        <div class="fpb-crop-layer" data-ref="cropLayer" hidden>
+          <div class="fpb-crop-shade fpb-crop-shade-top" data-ref="cropShadeTop"></div>
+          <div class="fpb-crop-shade fpb-crop-shade-right" data-ref="cropShadeRight"></div>
+          <div class="fpb-crop-shade fpb-crop-shade-bottom" data-ref="cropShadeBottom"></div>
+          <div class="fpb-crop-shade fpb-crop-shade-left" data-ref="cropShadeLeft"></div>
+          <div class="fpb-crop-box" data-ref="cropBox">
+            <span data-crop-handle="nw"></span><span data-crop-handle="ne"></span>
+            <span data-crop-handle="se"></span><span data-crop-handle="sw"></span>
+          </div>
+        </div>
       </div>
       <div class="fpb-dim" data-ref="dim" hidden></div>
       <div class="fpb-hint" data-ref="hint" hidden></div>
+      <div class="fpb-crop-actions" data-ref="cropActions" hidden>
+        <button type="button" class="fpb-btn" data-ref="cropCancelBtn">Cancel</button>
+        <button type="button" class="fpb-btn primary" data-ref="cropApplyBtn"><svg><use href="#fpb-crop"/></svg>Apply crop</button>
+      </div>
       <div class="fpb-zoom">
         <button type="button" data-ref="zoomIn" title="Zoom in">＋</button>
         <button type="button" data-ref="zoomFit" title="Fit to screen">⊙</button>
@@ -425,6 +442,10 @@
       $.redoBtn.addEventListener('click', () => this.redo());
       $.exportBtn.addEventListener('click', () => this.exportPng());
       if ($.rotateMapBtn) $.rotateMapBtn.addEventListener('click', () => this.rotateMapClockwise());
+      if ($.cropMapBtn) $.cropMapBtn.addEventListener('click', () => this.startCrop());
+      if ($.cropCancelBtn) $.cropCancelBtn.addEventListener('click', () => this.cancelCrop());
+      if ($.cropApplyBtn) $.cropApplyBtn.addEventListener('click', () => this.applyCrop());
+      if ($.cropBox) $.cropBox.addEventListener('pointerdown', (e) => this.startCropDrag(e));
       if ($.traceOnlyBtn) $.traceOnlyBtn.addEventListener('click', () => this.useBackgroundAsTraceOnly());
       $.saveBtn.addEventListener('click', () => this.save());
       $.zoomIn.addEventListener('click', () => this.panzoom && this.panzoom.zoomIn());
@@ -811,6 +832,177 @@
       return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Could not create the rotated floor plan image.')), 'image/png');
       });
+    }
+
+    startCrop() {
+      if (!this.bgUrl) {
+        this.status('Upload a map image before cropping.', 'error');
+        return;
+      }
+      if (!this.opts.onUploadBackground) {
+        this.status('This view cannot save a cropped background image.', 'error');
+        return;
+      }
+      this.closeContextMenu();
+      this.setTool('select');
+      this.crop = {
+        x: Math.round(this.world.w * 0.08),
+        y: Math.round(this.world.h * 0.08),
+        w: Math.round(this.world.w * 0.84),
+        h: Math.round(this.world.h * 0.84),
+      };
+      if (this.panzoom) this.panzoom.setOptions({ disablePan: true });
+      if (this.$.cropLayer) this.$.cropLayer.hidden = false;
+      if (this.$.cropActions) this.$.cropActions.hidden = false;
+      if (this.$.cropMapBtn) this.$.cropMapBtn.classList.add('active');
+      this.hint('Drag the crop box, or pull a corner handle. Apply crop when it frames the map.');
+      this.renderCrop();
+    }
+
+    cancelCrop() {
+      this.crop = null;
+      if (this.$.cropLayer) this.$.cropLayer.hidden = true;
+      if (this.$.cropActions) this.$.cropActions.hidden = true;
+      if (this.$.cropMapBtn) this.$.cropMapBtn.classList.remove('active');
+      if (this.panzoom) this.panzoom.setOptions({ disablePan: this.tool !== 'select' });
+      this.hint('');
+    }
+
+    renderCrop() {
+      if (!this.crop || !this.$.cropBox) return;
+      const c = this.crop;
+      const box = this.$.cropBox;
+      box.style.left = c.x + 'px';
+      box.style.top = c.y + 'px';
+      box.style.width = c.w + 'px';
+      box.style.height = c.h + 'px';
+      if (this.$.cropShadeTop) {
+        this.$.cropShadeTop.style.left = '0px';
+        this.$.cropShadeTop.style.top = '0px';
+        this.$.cropShadeTop.style.width = this.world.w + 'px';
+        this.$.cropShadeTop.style.height = c.y + 'px';
+        this.$.cropShadeRight.style.left = (c.x + c.w) + 'px';
+        this.$.cropShadeRight.style.top = c.y + 'px';
+        this.$.cropShadeRight.style.width = Math.max(0, this.world.w - c.x - c.w) + 'px';
+        this.$.cropShadeRight.style.height = c.h + 'px';
+        this.$.cropShadeBottom.style.left = '0px';
+        this.$.cropShadeBottom.style.top = (c.y + c.h) + 'px';
+        this.$.cropShadeBottom.style.width = this.world.w + 'px';
+        this.$.cropShadeBottom.style.height = Math.max(0, this.world.h - c.y - c.h) + 'px';
+        this.$.cropShadeLeft.style.left = '0px';
+        this.$.cropShadeLeft.style.top = c.y + 'px';
+        this.$.cropShadeLeft.style.width = c.x + 'px';
+        this.$.cropShadeLeft.style.height = c.h + 'px';
+      }
+    }
+
+    startCropDrag(e) {
+      if (!this.crop) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const handle = e.target.dataset.cropHandle || '';
+      const start = this.worldPoint(e);
+      const startCrop = Object.assign({}, this.crop);
+      const min = Math.min(80, Math.max(24, Math.min(this.world.w, this.world.h) * 0.06));
+      const move = (ev) => {
+        const cur = this.worldPoint(ev);
+        const dx = cur.x - start.x;
+        const dy = cur.y - start.y;
+        let x = startCrop.x, y = startCrop.y, w = startCrop.w, h = startCrop.h;
+        if (!handle) {
+          x = clamp(startCrop.x + dx, 0, this.world.w - startCrop.w);
+          y = clamp(startCrop.y + dy, 0, this.world.h - startCrop.h);
+        } else {
+          if (handle.includes('w')) {
+            x = clamp(startCrop.x + dx, 0, startCrop.x + startCrop.w - min);
+            w = startCrop.x + startCrop.w - x;
+          }
+          if (handle.includes('e')) {
+            w = clamp(startCrop.w + dx, min, this.world.w - startCrop.x);
+          }
+          if (handle.includes('n')) {
+            y = clamp(startCrop.y + dy, 0, startCrop.y + startCrop.h - min);
+            h = startCrop.y + startCrop.h - y;
+          }
+          if (handle.includes('s')) {
+            h = clamp(startCrop.h + dy, min, this.world.h - startCrop.y);
+          }
+        }
+        this.crop = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
+        this.renderCrop();
+      };
+      const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    }
+
+    remapElementsForCrop(crop, oldW, oldH) {
+      const newW = Math.max(1, crop.w);
+      const newH = Math.max(1, crop.h);
+      this.elements.forEach((el) => {
+        const oldX = num(el.x) * oldW;
+        const oldY = num(el.y) * oldH;
+        el.x = clamp((oldX - crop.x) / newW, 0, 1);
+        el.y = clamp((oldY - crop.y) / newH, 0, 1);
+        if (el.w != null && el.h != null) {
+          el.w = clamp(num(el.w) * oldW / newW, 0.001, 1);
+          el.h = clamp(num(el.h) * oldH / newH, 0.001, 1);
+        }
+      });
+    }
+
+    async applyCrop() {
+      if (!this.crop || !this.bgUrl || !this.opts.onUploadBackground) return;
+      const btn = this.$.cropApplyBtn;
+      const crop = Object.assign({}, this.crop);
+      const oldW = this.world.w;
+      const oldH = this.world.h;
+      if (crop.w < 10 || crop.h < 10) {
+        this.status('Crop area is too small.', 'error');
+        return;
+      }
+      if (btn) btn.disabled = true;
+      this.status('Cropping floor plan image...');
+      try {
+        const img = await this.loadImageForCanvas(this.bgUrl);
+        const scaleX = (img.naturalWidth || oldW) / oldW;
+        const scaleY = (img.naturalHeight || oldH) / oldH;
+        const sx = Math.round(crop.x * scaleX);
+        const sy = Math.round(crop.y * scaleY);
+        const sw = Math.round(crop.w * scaleX);
+        const sh = Math.round(crop.h * scaleY);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, sw);
+        canvas.height = Math.max(1, sh);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+        const blob = await this.canvasToBlob(canvas);
+        if (blob.size > 8 * 1024 * 1024) {
+          throw new Error('Cropped image is over 8 MB. Use a smaller crop or upload a smaller map image first.');
+        }
+        const file = new File([blob], `floor-plan-cropped-${Date.now()}.png`, { type: 'image/png' });
+        const url = await this.opts.onUploadBackground(file);
+        if (!url) throw new Error('Cropped image upload failed.');
+        this.remapElementsForCrop(crop, oldW, oldH);
+        this.world = { w: canvas.width, h: canvas.height };
+        this.siteFt = { w: canvas.width / this.ppf, h: canvas.height / this.ppf };
+        this.cancelCrop();
+        this.setBackground(url, { silent: true });
+        this.undoStack = [];
+        this.redoStack = [];
+        this.updateUndoButtons();
+        this.setDirty(true);
+        this.renderAll();
+        this.status('Map cropped. Click Save so the app uses the cropped version.', 'success');
+      } catch (err) {
+        console.error('[fpb] crop background', err);
+        this.status((err && err.message) || 'Crop failed.', 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     async rotateBackgroundClockwise() {
