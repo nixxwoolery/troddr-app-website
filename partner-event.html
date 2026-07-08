@@ -6814,6 +6814,24 @@
       ...(e.parking_image_url ? [e.parking_image_url] : []),
       ...(Array.isArray(e.parking_image_urls) ? e.parking_image_urls : []),
     ];
+    const sectionImages = (section) => {
+      const raw = [
+        ...(section && section.image_url ? [section.image_url] : []),
+        ...(Array.isArray(section && section.image_urls)
+          ? section.image_urls
+          : typeof (section && section.image_urls) === 'string'
+            ? section.image_urls.split(/\r?\n|,/)
+            : []),
+      ];
+      return raw.map((url) => String(url || '').trim()).filter(Boolean)
+        .filter((url, index, arr) => arr.indexOf(url) === index);
+    };
+    const sectionImageLinks = (section) => {
+      const urls = sectionImages(section);
+      return urls.length
+        ? '<br>' + urls.map((url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(compactUrl(url))}</a>`).join('<br>')
+        : '';
+    };
     const kbyg = Array.isArray(e.know_before_you_go) ? e.know_before_you_go : [];
     const rows = [
       infoRow('Organizer',     escapeHtml(e.organizer_name || '—')),
@@ -6828,7 +6846,7 @@
       e.weather_contingency ? infoRow('Weather contingency', escapeHtml(e.weather_contingency).replace(/\n/g, '<br>')) : '',
       infoRow('Food',          e.food_available ? 'Available' : 'Not specified'),
       infoRow('Alcohol',       e.alcohol_served ? 'Served' : 'Not specified'),
-      customSections.length ? infoRow('Additional sections', customSections.map((s) => `<strong>${escapeHtml(s.title || 'Info')}</strong>${s.body ? '<br>' + escapeHtml(s.body).replace(/\n/g, '<br>') : ''}`).join('<br><br>')) : '',
+      customSections.length ? infoRow('Additional sections', customSections.map((s) => `<strong>${escapeHtml(s.title || 'Info')}</strong>${s.body ? '<br>' + escapeHtml(s.body).replace(/\n/g, '<br>') : ''}${sectionImageLinks(s)}`).join('<br><br>')) : '',
       faq.length ? infoRow('FAQ', faq.map((item) => `<strong>${escapeHtml(item.question || '')}</strong>${item.answer ? '<br>' + escapeHtml(item.answer).replace(/\n/g, '<br>') : ''}`).join('<br><br>')) : '',
       infoRow('Contact email', e.contact_email ? `<a href="mailto:${escapeHtml(e.contact_email)}">${escapeHtml(e.contact_email)}</a>` : '—'),
       infoRow('Contact phone', escapeHtml(e.contact_phone || '—')),
@@ -7161,6 +7179,11 @@
     ].map((url) => String(url || '').trim()).filter(Boolean)
       .filter((url, index, arr) => arr.indexOf(url) === index)
       .slice(0, 5);
+    const imageUrlsFromValue = (value) => {
+      if (Array.isArray(value)) return value.map((url) => String(url || '').trim()).filter(Boolean);
+      if (typeof value === 'string') return value.split(/\r?\n|,/).map((url) => url.trim()).filter(Boolean);
+      return [];
+    };
     const urlsText = (v) => Array.isArray(v) ? v.join('\n') : '';
     const kbygText = (Array.isArray(e.know_before_you_go) ? e.know_before_you_go : [])
       .map((item) => `${item.icon || 'information-circle-outline'} | ${item.text || ''}`)
@@ -7168,6 +7191,9 @@
     const infoSectionRowHtml = (section, index) => {
       const item = section || {};
       const idxAttr = Number.isInteger(index) ? ` data-info-index="${index}"` : '';
+      const imagesText = imageUrlsFromValue(item.image_urls || item.image_url)
+        .filter((url, i, arr) => arr.indexOf(url) === i)
+        .join('\n');
       return `
         <div class="repeat-item" data-info-section${idxAttr}>
           <div class="repeat-head">
@@ -7182,6 +7208,17 @@
             <div class="edit-field">
               <label>Section details</label>
               <textarea data-info-body maxlength="3000" placeholder="Write this section in plain language.">${escapeHtml(item.body || '')}</textarea>
+            </div>
+            <div class="edit-field">
+              <label>Section images</label>
+              <div class="image-upload-actions">
+                <label class="image-pick-btn">
+                  Upload images
+                  <input type="file" accept="image/*" multiple data-info-image-file />
+                </label>
+              </div>
+              <textarea data-info-image-urls class="image-url-input" maxlength="4000" placeholder="Paste direct image URLs, one per line.">${escapeHtml(imagesText)}</textarea>
+              <div class="image-status" data-info-image-status>Optional. These images show below this section in the app.</div>
             </div>
           </div>
         </div>`;
@@ -7545,6 +7582,64 @@
       removeBtn.closest('[data-info-section]')?.remove();
       ensureEmptyState(infoList, '[data-info-empty]', 'data-info-empty', 'No promoter sections added yet.');
     });
+
+    let infoSectionUploading = 0;
+    const setInfoImageStatus = (row, text, kind) => {
+      const status = row?.querySelector('[data-info-image-status]');
+      if (!status) return;
+      status.textContent = text || '';
+      status.className = 'image-status' + (kind ? ' ' + kind : '');
+    };
+    const appendInfoImageUrl = (row, url) => {
+      const textarea = row?.querySelector('[data-info-image-urls]');
+      if (!textarea) return;
+      const urls = imageUrlsFromValue(textarea.value);
+      const clean = String(url || '').trim();
+      if (clean && !urls.includes(clean)) urls.push(clean);
+      textarea.value = urls.join('\n');
+    };
+    infoList?.addEventListener('change', async (evt) => {
+      const input = evt.target.closest?.('[data-info-image-file]');
+      if (!input) return;
+      const row = input.closest('[data-info-section]');
+      const files = Array.from(input.files || []);
+      if (!row || !files.length) return;
+      const accepted = files.slice(0, 8);
+      const skipped = files.length - accepted.length;
+      const slug = safeStorageName((event && event.slug) || 'event');
+      infoSectionUploading += 1;
+      input.disabled = true;
+      setInfoImageStatus(row, `Uploading ${accepted.length} image${accepted.length === 1 ? '' : 's'}...`);
+      try {
+        for (let i = 0; i < accepted.length; i += 1) {
+          const file = accepted[i];
+          if (!file.type.startsWith('image/')) throw new Error(`${file.name || 'Selected file'} is not an image.`);
+          if (file.size > 10 * 1024 * 1024) throw new Error(`${file.name || 'Selected image'} is too large (10MB max).`);
+          const safeName = safeStorageName(file.name || 'info-section-image');
+          const path = `info-section-images/${slug}/${Date.now()}-${i}-${safeName}`;
+          setInfoImageStatus(row, `Uploading ${file.name || 'image'} (${i + 1} of ${accepted.length})...`);
+          const { data, error } = await db.storage
+            .from('partner-intake-assets')
+            .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+          if (error) throw error;
+          const pub = db.storage.from('partner-intake-assets').getPublicUrl(data.path);
+          const url = pub && pub.data && pub.data.publicUrl;
+          if (!url) throw new Error('No public URL returned');
+          appendInfoImageUrl(row, url);
+        }
+        const suffix = skipped > 0 ? ` ${skipped} extra file${skipped === 1 ? '' : 's'} skipped.` : '';
+        setInfoImageStatus(row, `Uploaded. Click "Save changes" to apply.${suffix}`, 'success');
+      } catch (err) {
+        console.error('info section image upload failed', err);
+        setInfoImageStatus(row, (window.friendlyError || (() => ''))(err,
+          "Image upload didn't go through. Try a smaller image, or paste a URL instead."), 'error');
+      } finally {
+        infoSectionUploading = Math.max(0, infoSectionUploading - 1);
+        input.disabled = false;
+        input.value = '';
+      }
+    });
+
     $('ed-add-faq')?.addEventListener('click', () => {
       removeEmptyState('[data-faq-empty]');
       faqList?.insertAdjacentHTML('beforeend', faqRowHtml(null));
@@ -7912,6 +8007,10 @@
         showStatus('Parking images are still uploading. Wait for the uploaded message, then save changes.', 'error');
         return;
       }
+      if (infoSectionUploading > 0) {
+        showStatus('Info section images are still uploading. Wait for the uploaded message, then save changes.', 'error');
+        return;
+      }
 
       const num = (v) => v === '' || v == null ? null : Number(v);
       const str = (v) => { const s = (v ?? '').toString().trim(); return s === '' ? null : s; };
@@ -7925,9 +8024,15 @@
             : {};
           const title = row.querySelector('[data-info-title]')?.value.trim() || '';
           const body = row.querySelector('[data-info-body]')?.value.trim() || '';
-          return Object.assign(original, { title, body });
+          const imageUrls = imageUrlsFromValue(row.querySelector('[data-info-image-urls]')?.value || '')
+            .filter((url, i, arr) => arr.indexOf(url) === i);
+          const next = Object.assign(original, { title, body });
+          delete next.image_url;
+          if (imageUrls.length) next.image_urls = imageUrls;
+          else delete next.image_urls;
+          return next;
         })
-        .filter((item) => item.title || item.body);
+        .filter((item) => item.title || item.body || imageUrlsFromValue(item.image_urls).length);
       const collectFaqItems = () => Array.from(document.querySelectorAll('[data-faq-item]'))
         .map((row) => {
           const index = Number(row.dataset.faqIndex);
