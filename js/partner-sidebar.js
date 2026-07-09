@@ -139,6 +139,7 @@
       { label: 'Tickets',        section: 'tickets' },
       { label: 'Lineup',         section: 'schedule' },
       { label: 'Transportation', section: 'transportation' },
+      { label: 'Parking',        section: 'parking' },
     ] },
     { group: 'Event Insights', icon: 'ic-chart', page: '/partner/event', section: 'engagement', children: [
       { label: 'Guest Engagement',   section: 'engagement' },
@@ -217,7 +218,9 @@
     const placeCount = partnerEntities
       ? partnerEntities.filter((e) => e && e.type === 'place').length : 0;
 
-    const isEvent = active === '/partner/event' || active === '/partner/event-floorplan';
+    const isEvent = active === '/partner/event'
+      || active === '/partner/event-floorplan'
+      || active === '/partner/event-parking';
     const tree = (active === '/partner/group') ? NAV_GROUP
                : isEvent ? NAV_EVENT
                : NAV_INDIVIDUAL;
@@ -293,6 +296,9 @@
     if (!anchor) return;
     document.dispatchEvent(new CustomEvent('psb:select', { detail: { section: anchor } }));
     smoothScrollTo(anchor);
+    document.querySelectorAll('.psb-sublink.jump-link').forEach((l) => {
+      l.classList.toggle('active', l.dataset.section === anchor);
+    });
   }
 
   // Wire one sidebar element's interactive parts. Idempotent — a
