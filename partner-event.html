@@ -3029,17 +3029,16 @@
         <div class="chapter-sub">Everything attendees see in the TRODDR app: schedule, map, tickets, sponsors, and more.</div>
       </div>
 
-      <section class="section" id="info">
+      <section class="section" id="sponsors">
         <div class="section-head section-head-with-edit">
           <div>
-            <h2 class="section-title">Info</h2>
-            <div class="section-sub">Organizer, dress code, age restriction, amenities, and other public facts.</div>
+            <h2 class="section-title">Sponsors</h2>
+            <div class="section-sub">Active sponsor lineup for this event.</div>
           </div>
-          <button type="button" class="section-edit-btn" data-edit-target="edit" title="Edit core event details">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-sponsors" title="Manage sponsors">Edit</button>
         </div>
-        <div class="info-card" id="info-card"></div>
+        <div class="sponsors-grid" id="sponsors-grid"></div>
       </section>
-
       <section class="section" id="vendors-lineup">
         <div class="section-head section-head-with-edit">
           <div>
@@ -3049,28 +3048,6 @@
           <button type="button" class="section-edit-btn" data-edit-target="edit-vendors" title="Manage vendors">Edit</button>
         </div>
         <div class="vl-card" id="vendors-lineup-card"></div>
-      </section>
-
-      <section class="section" id="schedule">
-        <div class="section-head section-head-with-edit">
-          <div>
-            <h2 class="section-title">Schedule</h2>
-            <div class="section-sub">Days, set times, and must-see moments.</div>
-          </div>
-          <button type="button" class="section-edit-btn" data-edit-target="edit-schedule" title="Manage schedule">Edit</button>
-        </div>
-        <div class="schedule-card" id="schedule-card"></div>
-      </section>
-      <section class="section" id="map">
-        <div class="section-head section-head-with-edit">
-          <div>
-            <h2 class="section-title">Map</h2>
-            <div class="section-sub">Upload your floor plan, drop markers for vendors and zones, and share with a designer.</div>
-          </div>
-          <a id="fp-open-editor" class="section-edit-btn" style="text-decoration:none;" title="Open the full floor plan editor">Open editor →</a>
-        </div>
-
-        <div class="compact-status-card" id="map-status-card"></div>
       </section>
       <section class="section" id="tickets">
         <div class="section-head section-head-with-edit">
@@ -3082,15 +3059,15 @@
         </div>
         <div class="info-card" id="tickets-card"></div>
       </section>
-      <section class="section" id="sponsors">
+      <section class="section" id="schedule">
         <div class="section-head section-head-with-edit">
           <div>
-            <h2 class="section-title">Sponsors</h2>
-            <div class="section-sub">Active sponsor lineup for this event.</div>
+            <h2 class="section-title">Schedule</h2>
+            <div class="section-sub">Days, set times, and must-see moments.</div>
           </div>
-          <button type="button" class="section-edit-btn" data-edit-target="edit-sponsors" title="Manage sponsors">Edit</button>
+          <button type="button" class="section-edit-btn" data-edit-target="edit-schedule" title="Manage schedule">Edit</button>
         </div>
-        <div class="sponsors-grid" id="sponsors-grid"></div>
+        <div class="schedule-card" id="schedule-card"></div>
       </section>
       <section class="section" id="transportation">
         <div class="section-head section-head-with-edit">
@@ -3102,15 +3079,26 @@
         </div>
         <div class="info-card" id="transportation-card"></div>
       </section>
-      <section class="section" id="parking">
+      <section class="section" id="info">
         <div class="section-head section-head-with-edit">
           <div>
-            <h2 class="section-title">Parking</h2>
-            <div class="section-sub">Parking notes, lot images, and the guest parking manager.</div>
+            <h2 class="section-title">Info</h2>
+            <div class="section-sub">Organizer, dress code, age restriction, amenities, parking notes, and other public facts.</div>
           </div>
-          <a id="parking-open-manager" class="section-edit-btn" style="text-decoration:none;" title="Manage parking">Manage parking</a>
+          <button type="button" class="section-edit-btn" data-edit-target="edit" title="Edit core event details">Edit</button>
         </div>
-        <div class="info-card" id="parking-card"></div>
+        <div class="info-card" id="info-card"></div>
+      </section>
+      <section class="section" id="map">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Map</h2>
+            <div class="section-sub">Upload your floor plan, drop markers for vendors and zones, and share with a designer.</div>
+          </div>
+          <a id="fp-open-editor" class="section-edit-btn" style="text-decoration:none;" title="Open the full floor plan editor">Open editor →</a>
+        </div>
+
+        <div class="compact-status-card" id="map-status-card"></div>
       </section>
       <section class="section" id="passes" style="display:none;">
         <div class="section-head section-head-with-edit">
@@ -6815,40 +6803,6 @@
     });
   }
 
-  // ── Parking ────────────────────────────────────────────
-  function renderParking(event) {
-    const card = $('parking-card');
-    if (!card) return;
-    const e = event || {};
-    const infoSections = Array.isArray(e.info_sections) ? e.info_sections : [];
-    const parkingSection = infoSections.find((s) => {
-      const title = String((s && s.title) || '').toLowerCase();
-      return title === 'parking' || title === 'parking & shuttles';
-    });
-    const parkingImages = [
-      ...(e.parking_image_url ? [e.parking_image_url] : []),
-      ...(Array.isArray(e.parking_image_urls) ? e.parking_image_urls : []),
-    ];
-    const parkingInfo = e.parking_info || (parkingSection && parkingSection.body) || '';
-    const rows = [
-      parkingInfo ? infoRow('Parking notes', escapeHtml(parkingInfo).replace(/\n/g, '<br>')) : '',
-      parkingImages.length
-        ? infoRow('Parking images', parkingImages.map((url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(compactUrl(url))}</a>`).join('<br>'))
-        : '',
-      infoRow('Parking manager', '<a id="parking-manager-link" href="#">Open parking lots and QR manager</a>'),
-    ].filter(Boolean).join('');
-    card.innerHTML = rows || `<div class="section-empty">No parking details set yet.</div>`;
-
-    const openParking = (e) => {
-      e.preventDefault();
-      const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
-      if (window.PartnerAuth) window.PartnerAuth.navigate('/partner/event-parking', token);
-      else location.href = `/partner/event-parking${token ? '?token=' + encodeURIComponent(token) : ''}`;
-    };
-    document.getElementById('parking-open-manager')?.addEventListener('click', openParking);
-    document.getElementById('parking-manager-link')?.addEventListener('click', openParking);
-  }
-
   // ── Info ───────────────────────────────────────────────
   function renderInfo(event) {
     const card = $('info-card');
@@ -6861,6 +6815,10 @@
       return title === 'parking' || title === 'parking & shuttles';
     });
     const customSections = infoSections.filter((s) => s !== parkingSection);
+    const parkingImages = [
+      ...(e.parking_image_url ? [e.parking_image_url] : []),
+      ...(Array.isArray(e.parking_image_urls) ? e.parking_image_urls : []),
+    ];
     const sectionImages = (section) => {
       const raw = [
         ...(section && section.image_url ? [section.image_url] : []),
@@ -6885,6 +6843,8 @@
       infoRow('Event type',    escapeHtml(e.event_type || '—')),
       infoRow('Description',   e.description ? escapeHtml(e.description).replace(/\n/g, '<br>') : '—'),
       kbyg.length ? infoRow('Know Before You Go', kbyg.map((item) => escapeHtml(item.text || '')).filter(Boolean).join('<br>')) : '',
+      e.parking_info || parkingSection ? infoRow('Parking', escapeHtml(e.parking_info || parkingSection.body || '').replace(/\n/g, '<br>')) : '',
+      parkingImages.length ? infoRow('Parking images', parkingImages.map((url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(compactUrl(url))}</a>`).join('<br>')) : '',
       infoRow('Dress code',    escapeHtml(e.dress_code || '—')),
       infoRow('Minimum age',   e.min_age != null ? `${e.min_age}+` : '—'),
       e.accessibility_info ? infoRow('Accessibility', escapeHtml(e.accessibility_info).replace(/\n/g, '<br>')) : '',
@@ -8261,7 +8221,6 @@
         { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
         { section: 'schedule',       icon: 'ic-calendar', label: 'Lineup' },
         { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
-        { section: 'parking',        icon: 'ic-map',      label: 'Parking' },
         { section: 'info',            icon: 'ic-doc',      label: 'Info', hidden: true },
         { section: 'map',            icon: 'ic-map',      label: 'Map', hidden: true },
         // Temporarily hidden while these sections are productized.
@@ -8523,7 +8482,6 @@
 
     // New view-only sections.
     safe('renderMap',            () => renderMap(data.event));
-    safe('renderParking',        () => renderParking(data.event));
     safe('renderInfo',           () => renderInfo(data.event));
     safe('renderTickets',        () => renderTickets(data.event, extras.ticket_locations || data.ticket_locations));
     safe('renderTransportation', () => renderTransportation(extras.transport_routes || data.transport_routes));

@@ -139,7 +139,7 @@
       { label: 'Tickets',        section: 'tickets' },
       { label: 'Lineup',         section: 'schedule' },
       { label: 'Transportation', section: 'transportation' },
-      { label: 'Parking',        section: 'parking' },
+      { label: 'Parking',        section: '', page: '/partner/event-parking' },
     ] },
     { group: 'Event Insights', icon: 'ic-chart', page: '/partner/event', section: 'engagement', children: [
       { label: 'Guest Engagement',   section: 'engagement' },
@@ -164,9 +164,10 @@
 
   // ── Build a single section ─────────────────────────────────
   function sectionHtml(section, active) {
-    const isActive = section.page === active;
     const children = section.children || [];
     const hasChildren = children.length > 0;
+    const isActive = section.page === active
+      || children.some((child) => childTargetPage(section, child) === active);
     const openCls = isActive && hasChildren ? ' open' : '';
     const activeCls = isActive ? ' active' : '';
 
@@ -196,7 +197,7 @@
           html += `<a class="psb-sublink jump-link" href="#${anchor}" data-section="${anchor}">${escapeHtml(child.label)}</a>`;
         } else {
           // Cross-page navigation (optionally to an anchor).
-          html += `<a class="psb-sublink" data-href="${tPage}" data-hash="${anchor}">${escapeHtml(child.label)}</a>`;
+          html += `<a class="psb-sublink${samePage ? ' active' : ''}" data-href="${tPage}" data-hash="${anchor}">${escapeHtml(child.label)}</a>`;
         }
       });
       html += `</div>`;
@@ -379,7 +380,9 @@
       .filter(Boolean);
     function update() {
       const scrollY = window.scrollY + 120;
-      const visible = sections.filter((sec) => sec.offsetParent !== null);
+      const visible = sections
+        .filter((sec) => sec.offsetParent !== null)
+        .sort((a, b) => a.offsetTop - b.offsetTop);
       let activeId = visible[0] && visible[0].id;
       visible.forEach((sec) => { if (sec.offsetTop <= scrollY) activeId = sec.id; });
       jumpLinks.forEach((l) => l.classList.toggle('active', l.dataset.section === activeId));
