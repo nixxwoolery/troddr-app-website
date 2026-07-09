@@ -134,12 +134,13 @@
   // (dispatched on click) to switch to the right pane before scrolling.
   const NAV_EVENT = [
     { group: 'Event Details', icon: 'ic-info', page: '/partner/event', section: 'info', children: [
+      { label: 'Info',           section: 'info' },
       { label: 'Sponsors',       section: 'sponsors' },
       { label: 'Vendors',        section: 'vendors-lineup' },
       { label: 'Tickets',        section: 'tickets' },
       { label: 'Lineup',         section: 'schedule' },
       { label: 'Transportation', section: 'transportation' },
-      { label: 'Parking',        section: '', page: '/partner/event-parking' },
+      { label: 'Manage Parking', section: 'parking-lots' },
     ] },
     { group: 'Event Insights', icon: 'ic-chart', page: '/partner/event', section: 'engagement', children: [
       { label: 'Guest Engagement',   section: 'engagement' },
@@ -148,6 +149,7 @@
     ] },
     { group: 'Event Planning', icon: 'ic-grid', page: '/partner/event', section: 'builder-root', children: [
       { label: 'Floor Plan', section: 'builder-root' },
+      { label: 'Parking Editor', section: '', page: '/partner/event-parking' },
     ] },
     { group: 'Billing', icon: 'ic-dollar', page: '/partner/event', section: 'billing' },
   ];

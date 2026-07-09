@@ -3029,6 +3029,16 @@
         <div class="chapter-sub">Everything attendees see in the TRODDR app: schedule, map, tickets, sponsors, and more.</div>
       </div>
 
+      <section class="section" id="info">
+        <div class="section-head section-head-with-edit">
+          <div>
+            <h2 class="section-title">Info</h2>
+            <div class="section-sub">Organizer, dress code, age restriction, amenities, parking notes, and other public facts.</div>
+          </div>
+          <button type="button" class="section-edit-btn" data-edit-target="edit" title="Edit core event details">Edit</button>
+        </div>
+        <div class="info-card" id="info-card"></div>
+      </section>
       <section class="section" id="sponsors">
         <div class="section-head section-head-with-edit">
           <div>
@@ -3079,15 +3089,15 @@
         </div>
         <div class="info-card" id="transportation-card"></div>
       </section>
-      <section class="section" id="info">
+      <section class="section" id="parking-lots">
         <div class="section-head section-head-with-edit">
           <div>
-            <h2 class="section-title">Info</h2>
-            <div class="section-sub">Organizer, dress code, age restriction, amenities, parking notes, and other public facts.</div>
+            <h2 class="section-title">Manage Parking</h2>
+            <div class="section-sub">Parking lots, capacity, pricing, status, and QR setup for guest parking.</div>
           </div>
-          <button type="button" class="section-edit-btn" data-edit-target="edit" title="Edit core event details">Edit</button>
+          <a id="parking-lots-open-manager" class="section-edit-btn" style="text-decoration:none;" title="Manage parking lots">Open manager</a>
         </div>
-        <div class="info-card" id="info-card"></div>
+        <div class="info-card" id="parking-lots-card"></div>
       </section>
       <section class="section" id="map">
         <div class="section-head section-head-with-edit">
@@ -6865,6 +6875,46 @@
     card.innerHTML = rows || `<div class="section-empty">No info set yet.</div>`;
   }
 
+  // ── Manage Parking ─────────────────────────────────────
+  function renderParkingLots(parkingData) {
+    const card = $('parking-lots-card');
+    if (!card) return;
+    const lots = Array.isArray(parkingData && parkingData.lots) ? parkingData.lots : [];
+    const openManager = (e) => {
+      if (e) e.preventDefault();
+      const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+      if (window.PartnerAuth) window.PartnerAuth.navigate('/partner/event-parking', token);
+      else location.href = `/partner/event-parking${token ? '?token=' + encodeURIComponent(token) : ''}`;
+    };
+    document.getElementById('parking-lots-open-manager')?.addEventListener('click', openManager);
+
+    if (!lots.length) {
+      card.innerHTML = `
+        <div class="section-empty" style="margin-bottom:14px;">No parking lots configured yet.</div>
+        <button type="button" class="section-edit-btn" id="parking-lots-empty-action">Add parking lots</button>`;
+      document.getElementById('parking-lots-empty-action')?.addEventListener('click', openManager);
+      return;
+    }
+
+    const totalCapacity = lots.reduce((sum, lot) => sum + (Number(lot.capacity) || 0), 0);
+    const placedCount = lots.filter((lot) => lot.x != null && lot.y != null).length;
+    const rows = [
+      infoRow('Lots', `${lots.length} lot${lots.length === 1 ? '' : 's'}${totalCapacity ? ` · ${totalCapacity.toLocaleString()} spaces` : ''}`),
+      infoRow('Map placement', `${placedCount} of ${lots.length} placed on the floor plan`),
+      infoRow('Parking lots', `<ul class="info-list">${lots.map((lot) => {
+        const meta = [
+          lot.tier ? `${escapeHtml(lot.tier)} tier` : '',
+          lot.capacity ? `${Number(lot.capacity).toLocaleString()} spaces` : '',
+          lot.price != null ? `${escapeHtml(lot.currency || 'USD')} ${Number(lot.price).toLocaleString()}` : '',
+          lot.status_override ? `status: ${escapeHtml(String(lot.status_override).replace(/_/g, ' '))}` : 'auto status',
+          lot.show_vehicle_count ? 'vehicle count visible' : '',
+        ].filter(Boolean).join(' · ');
+        return `<li class="info-list-item"><div class="name">${escapeHtml(lot.name || 'Parking lot')}</div><div class="meta">${meta || 'No details set yet.'}</div></li>`;
+      }).join('')}</ul>`),
+    ].join('');
+    card.innerHTML = rows;
+  }
+
   // ── Tickets ────────────────────────────────────────────
   function renderTickets(event, ticketLocations) {
     const card = $('tickets-card');
@@ -8216,12 +8266,13 @@
         { section: 'billing',        icon: 'ic-doc',      label: 'Billing' },
 
         { header: 'Event Details' },
+        { section: 'info',            icon: 'ic-doc',      label: 'Info' },
         { section: 'sponsors',       icon: 'ic-bolt',     label: 'Sponsors' },
         { section: 'vendors-lineup',  icon: 'ic-shop',     label: 'Vendors' },
         { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
         { section: 'schedule',       icon: 'ic-calendar', label: 'Lineup' },
         { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
-        { section: 'info',            icon: 'ic-doc',      label: 'Info', hidden: true },
+        { section: 'parking-lots',    icon: 'ic-map',      label: 'Manage Parking' },
         { section: 'map',            icon: 'ic-map',      label: 'Map', hidden: true },
         // Temporarily hidden while these sections are productized.
         // { section: 'passes',         icon: 'ic-pass',     label: 'Passes' },
@@ -8386,17 +8437,20 @@
     let capsRes;
     let extrasRes;
     let billingRes;
+    let parkingRes;
     try {
       const results = await Promise.allSettled([
         db.rpc('get_partner_event_by_token',         { p_token: token }),
         db.rpc('get_partner_capabilities_by_token',  { p_token: token }),
         db.rpc('get_partner_event_extras_by_token',  { p_token: token }),
         db.rpc('get_event_billing_by_token',         { p_token: token }),
+        db.rpc('get_partner_parking',                { p_token: token }),
       ]);
       eventRes   = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
       capsRes    = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
       extrasRes  = results[2].status === 'fulfilled' ? results[2].value : { error: results[2].reason };
       billingRes = results[3].status === 'fulfilled' ? results[3].value : { error: results[3].reason };
+      parkingRes = results[4].status === 'fulfilled' ? results[4].value : { error: results[4].reason };
     } catch (err) {
       showLoadError(err, "We couldn't reach the dashboard service. Refresh the page, or open the latest dashboard link from TRODDR.");
       return;
@@ -8406,6 +8460,7 @@
     const caps = capsRes && capsRes.data;
     // Extras RPC is optional : if it's not deployed yet, fall through gracefully.
     const extras = (extrasRes && extrasRes.data) || {};
+    const parkingData = (parkingRes && parkingRes.data && parkingRes.data.ok) ? parkingRes.data : null;
 
     // Analytics paywall state. Defaults to locked when billing is unavailable
     // or the event isn't attached to a company account yet.
@@ -8483,6 +8538,7 @@
     // New view-only sections.
     safe('renderMap',            () => renderMap(data.event));
     safe('renderInfo',           () => renderInfo(data.event));
+    safe('renderParkingLots',    () => renderParkingLots(parkingData));
     safe('renderTickets',        () => renderTickets(data.event, extras.ticket_locations || data.ticket_locations));
     safe('renderTransportation', () => renderTransportation(extras.transport_routes || data.transport_routes));
 
