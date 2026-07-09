@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Parking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
+<script src="/js/partner-errors.js"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black: #111; --grey-dark: #333; --grey-mid: #666; --grey-light: #999;
+    --border: #e8e8e8; --border-soft: #f0f0f0;
+    --bg: #fff; --bg-soft: #f8f9fa;
+    --radius: 10px; --radius-lg: 16px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --brand-primary: #111; --brand-accent: #C3D600; --brand-text: #fff;
+    --blue: #0a7aff;
+    --red: #c0392b; --green: #1a7f4e; --amber: #b86e00; --orange: #d2691e; --grey: #6b7280;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', sans-serif; background: var(--bg-soft); color: var(--black); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  .header { position: sticky; top: 0; z-index: 200; background: #fff; border-bottom: 1px solid var(--border); }
+  .navbar { max-width: 1280px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 24px; }
+  .logo { font-size: 26px; font-weight: 700; color: var(--blue); text-decoration: none; letter-spacing: -1px; }
+  .nav-badge { background: var(--bg-soft); color: var(--grey-dark); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); margin-left: auto; }
+
+  .page-hero { background: var(--brand-primary); color: var(--brand-text); padding: 28px 24px 36px; position: relative; overflow: hidden; }
+  .hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 0 8px; z-index: 2; }
+  .hero-eyebrow { display: inline-block; background: rgba(255,255,255,0.18); color: var(--brand-text); font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.22); }
+  .page-hero h1 { font-size: clamp(22px, 3.2vw, 30px); font-weight: 800; line-height: 1.15; margin-bottom: 6px; letter-spacing: -0.6px; max-width: 760px; }
+  .hero-meta { color: rgba(255,255,255,0.92); font-size: 13px; font-weight: 500; }
+
+  .layout { max-width: 1380px; margin: 0 auto; padding: 14px 18px 0; display: grid; grid-template-columns: 240px 1fr; gap: 16px; position: relative; z-index: 10; }
+  .main { min-width: 0; padding-bottom: 100px; }
+  .sidebar { position: sticky; top: 76px; align-self: start; height: max-content; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px; box-shadow: var(--shadow-sm); }
+
+  .state { text-align: center; padding: 40px 24px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .state-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .state-msg { font-size: 14px; color: var(--grey-mid); max-width: 380px; margin: 0 auto; }
+  .hidden { display: none !important; }
+  .skeleton-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; }
+  .skeleton { display: block; background: linear-gradient(90deg, var(--border-soft) 0%, var(--bg-soft) 50%, var(--border-soft) 100%); background-size: 200% 100%; animation: sk 1.4s ease-in-out infinite; border-radius: 6px; height: 14px; margin-bottom: 8px; }
+  .skeleton-title { height: 22px; margin-bottom: 14px; }
+  @keyframes sk { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ── EDITOR GRID ── */
+  .parking-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .parking-grid { grid-template-columns: 1fr; } }
+
+  .panel { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+  .panel-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border-soft); }
+  .panel-head h2 { font-size: 14px; font-weight: 700; }
+  .panel-head .hint { font-size: 12px; color: var(--grey-mid); margin-left: auto; }
+  .panel-body { padding: 14px 16px; }
+
+  /* Canvas */
+  .canvas-wrap { position: relative; width: 100%; background: var(--bg-soft); border-radius: var(--radius); overflow: hidden; user-select: none; }
+  .canvas-wrap img { display: block; width: 100%; height: auto; -webkit-user-drag: none; }
+  .canvas-empty { display: flex; align-items: center; justify-content: center; min-height: 320px; padding: 30px; text-align: center; color: var(--grey-mid); font-size: 13px; }
+  .lot-marker { position: absolute; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: grab; touch-action: none; }
+  .lot-marker.sel { outline: 3px solid rgba(10,122,255,0.5); outline-offset: 2px; }
+  .lot-marker .lbl { position: absolute; top: 34px; left: 50%; transform: translateX(-50%); white-space: nowrap; background: rgba(255,255,255,0.96); color: var(--black); font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 5px; border: 1px solid var(--border); pointer-events: none; }
+
+  /* List */
+  .lot-row { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
+  .lot-row.sel { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10,122,255,0.12); }
+  .lot-row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .lot-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+  .lot-row input, .lot-row select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; color: var(--black); background: #fff; }
+  .lot-row input[type="text"] { font-weight: 600; }
+  .lot-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .lot-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-light); margin-bottom: 4px; }
+  .lot-row-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .placed-tag { font-size: 11px; font-weight: 600; }
+  .placed-tag.ok { color: var(--green); }
+  .placed-tag.no { color: var(--amber); }
+  .link-btn { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; margin-left: auto; font-family: inherit; }
+  .link-btn.blue { color: var(--blue); margin-left: 0; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--black); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn.primary { background: var(--brand-primary); color: var(--brand-text); border-color: var(--brand-primary); }
+  .btn.primary:disabled { opacity: 0.45; cursor: default; }
+  .btn.block { width: 100%; }
+
+  .savebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 150; background: #fff; border-top: 1px solid var(--border); padding: 12px 18px; display: flex; align-items: center; gap: 14px; justify-content: flex-end; }
+  .savebar .msg { margin-right: auto; font-size: 13px; color: var(--grey-mid); }
+  .savebar .msg.dirty { color: var(--amber); font-weight: 600; }
+  .savebar .msg.ok { color: var(--green); font-weight: 600; }
+
+  /* QR modal */
+  .qr-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .qr-card { position: relative; background: #fff; border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .qr-close { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 24px; line-height: 1; color: var(--grey-mid); cursor: pointer; }
+  .qr-title { font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+  .qr-img { min-height: 240px; display: flex; align-items: center; justify-content: center; }
+  .qr-img img { width: 240px; height: 240px; image-rendering: pixelated; }
+  .qr-url { font-size: 11px; color: var(--grey-mid); word-break: break-all; margin: 10px 0 14px; }
+  .qr-warn { font-size: 12px; color: var(--amber); font-weight: 600; margin-bottom: 12px; }
+  .qr-hint { font-size: 12px; color: var(--grey-mid); line-height: 1.5; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Event Partner</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Parking</span>
+    <h1 id="hero-title">Loading…</h1>
+    <div class="hero-meta" id="hero-meta"></div>
+  </div>
+</section>
+
+<!-- LOADING -->
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main">
+    <div class="skeleton-card" style="margin-bottom:14px;">
+      <span class="skeleton skeleton-title" style="width:30%;"></span>
+      <span class="skeleton" style="width:90%;"></span>
+    </div>
+    <div class="skeleton-card" style="height:400px;"></div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="layout hidden" id="view-error">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <div class="state">
+      <div class="state-title">We couldn't load parking</div>
+      <p class="state-msg">This link may have expired. Open the latest dashboard link from TRODDR, or message us if this looks wrong.</p>
+      <pre id="error-detail" style="margin-top:18px;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--grey-mid);text-align:left;max-width:560px;margin:18px auto 0;white-space:pre-wrap;overflow:auto;"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div class="layout hidden" id="view-editor">
+  <aside class="sidebar"></aside>
+  <main class="main">
+    <div class="parking-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Place lots on the map</h2>
+          <span class="hint">Tap the map to add · drag to move</span>
+        </div>
+        <div class="panel-body">
+          <div class="canvas-wrap" id="canvas-wrap"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Parking lots</h2>
+          <span class="hint" id="lot-count"></span>
+        </div>
+        <div class="panel-body">
+          <div id="lot-list"></div>
+          <button class="btn block" id="add-lot" style="margin-top:4px;">+ Add a lot</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="savebar hidden" id="savebar">
+  <span class="msg" id="save-msg">All changes saved</span>
+  <button class="btn primary" id="save-btn" disabled>Save</button>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const $ = (id) => document.getElementById(id);
+
+  // Status override → label + marker colour. '' = Auto (crowd estimate).
+  const STATUS = [
+    { v: '',            label: 'Auto (crowd estimate)', color: '#0a7aff' },
+    { v: 'available',   label: 'Available',             color: '#1a7f4e' },
+    { v: 'filling',     label: 'Filling up',            color: '#b86e00' },
+    { v: 'nearly_full', label: 'Nearly full',           color: '#d2691e' },
+    { v: 'full',        label: 'Full',                  color: '#c0392b' },
+    { v: 'closed',      label: 'Closed',                color: '#6b7280' },
+  ];
+  const statusColor = (v) => (STATUS.find((s) => s.v === (v || '')) || STATUS[0]).color;
+
+  let eventId = null, eventSlug = null;
+  let floorPlanUrl = null;
+  let lots = [];           // { id, name, capacity, status_override, x, y, lat, lng, price, currency }
+
+  // Canonical QR payload for a lot — must match lib/parking/qr.ts in the app.
+  const parkingLotUrl = (lotId) => `https://troddr.com/park/${lotId}`;
+  let selectedId = null;
+  let dirty = false;
+
+  function getToken() {
+    return window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+  }
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      }));
+
+  function markDirty() {
+    dirty = true;
+    const msg = $('save-msg'); msg.textContent = 'Unsaved changes'; msg.className = 'msg dirty';
+    $('save-btn').disabled = false;
+  }
+
+  // ── Canvas ──────────────────────────────────────────────────
+  function renderCanvas() {
+    const wrap = $('canvas-wrap');
+    if (!floorPlanUrl) {
+      wrap.innerHTML = '<div class="canvas-empty">Upload a floor plan in the Floor Plan editor first — then you can place lots exactly where they are on the map so guests can navigate to them.</div>';
+      return;
+    }
+    wrap.innerHTML = '<img id="fp-img" alt="Floor plan" />';
+    const img = $('fp-img');
+    img.onload = renderMarkers;
+    img.src = floorPlanUrl;
+    // Click on empty map → drop a new lot at those fractional coords.
+    wrap.onclick = (e) => {
+      if (e.target.closest('.lot-marker')) return;
+      const rect = img.getBoundingClientRect();
+      if (!rect.width) return;
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      if (x < 0 || x > 1 || y < 0 || y > 1) return;
+      addLot(x, y);
+    };
+  }
+
+  function renderMarkers() {
+    const wrap = $('canvas-wrap');
+    wrap.querySelectorAll('.lot-marker').forEach((n) => n.remove());
+    const img = $('fp-img');
+    if (!img) return;
+    lots.forEach((lot, i) => {
+      if (lot.x == null || lot.y == null) return;
+      const m = document.createElement('div');
+      m.className = 'lot-marker' + (lot.id === selectedId ? ' sel' : '');
+      m.style.left = (lot.x * 100) + '%';
+      m.style.top = (lot.y * 100) + '%';
+      m.style.background = statusColor(lot.status_override);
+      m.textContent = String(i + 1);
+      const lbl = document.createElement('span');
+      lbl.className = 'lbl';
+      lbl.textContent = lot.name || 'Parking';
+      m.appendChild(lbl);
+      attachDrag(m, lot);
+      wrap.appendChild(m);
+    });
+  }
+
+  function attachDrag(el, lot) {
+    let moved = false, startX = 0, startY = 0;
+    const onMove = (ev) => {
+      const img = $('fp-img'); const rect = img.getBoundingClientRect();
+      if (!rect.width) return;
+      if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) moved = true;
+      lot.x = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
+      lot.y = Math.min(1, Math.max(0, (ev.clientY - rect.top) / rect.height));
+      el.style.left = (lot.x * 100) + '%';
+      el.style.top = (lot.y * 100) + '%';
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      el.style.cursor = 'grab';
+      if (moved) { markDirty(); }
+      selectLot(lot.id);
+    };
+    el.addEventListener('pointerdown', (ev) => {
+      ev.preventDefault();
+      moved = false; startX = ev.clientX; startY = ev.clientY;
+      el.style.cursor = 'grabbing';
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
+  }
+
+  // ── List ────────────────────────────────────────────────────
+  function renderList() {
+    const list = $('lot-list');
+    $('lot-count').textContent = lots.length ? `${lots.length} lot${lots.length === 1 ? '' : 's'}` : '';
+    if (!lots.length) {
+      list.innerHTML = '<div style="color:var(--grey-mid);font-size:13px;padding:8px 2px 14px;">No lots yet. Tap the map or use “Add a lot”.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    lots.forEach((lot, i) => {
+      const placed = lot.x != null && lot.y != null;
+      const row = document.createElement('div');
+      row.className = 'lot-row' + (lot.id === selectedId ? ' sel' : '');
+      row.innerHTML = `
+        <div class="lot-row-top">
+          <span class="lot-swatch" style="background:${statusColor(lot.status_override)}"></span>
+          <input type="text" data-f="name" placeholder="Lot name (e.g. North Lot)" value="${(lot.name || '').replace(/"/g, '&quot;')}" />
+        </div>
+        <div class="lot-fields">
+          <div class="lot-field">
+            <label>Price</label>
+            <input type="number" min="0" step="0.01" data-f="price" placeholder="e.g. 10" value="${lot.price ?? ''}" />
+          </div>
+          <div class="lot-field">
+            <label>Currency</label>
+            <select data-f="currency">
+              <option value="USD" ${(lot.currency || 'USD') === 'USD' ? 'selected' : ''}>USD</option>
+              <option value="JMD" ${(lot.currency || 'USD') === 'JMD' ? 'selected' : ''}>JMD</option>
+            </select>
+          </div>
+          <div class="lot-field">
+            <label>Capacity (spaces)</label>
+            <input type="number" min="0" data-f="capacity" placeholder="e.g. 250" value="${lot.capacity ?? ''}" />
+          </div>
+          <div class="lot-field">
+            <label>Status</label>
+            <select data-f="status_override">
+              ${STATUS.map((s) => `<option value="${s.v}" ${(lot.status_override || '') === s.v ? 'selected' : ''}>${s.label}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="lot-row-actions">
+          <span class="placed-tag ${placed ? 'ok' : 'no'}">${placed ? '● Placed on map' : '○ Not placed'}</span>
+          ${placed ? `<button class="link-btn blue" data-a="locate">Show</button>` : ''}
+          <button class="link-btn blue" data-a="qr">QR code</button>
+          <button class="link-btn" data-a="delete">Remove</button>
+        </div>`;
+      row.querySelector('[data-f="name"]').addEventListener('input', (e) => { lot.name = e.target.value; markDirty(); renderMarkers(); });
+      row.querySelector('[data-f="price"]').addEventListener('input', (e) => { lot.price = e.target.value === '' ? null : Math.max(0, parseFloat(e.target.value) || 0); markDirty(); });
+      row.querySelector('[data-f="currency"]').addEventListener('change', (e) => { lot.currency = e.target.value; markDirty(); });
+      row.querySelector('[data-f="capacity"]').addEventListener('input', (e) => { lot.capacity = e.target.value === '' ? null : Math.max(0, parseInt(e.target.value, 10) || 0); markDirty(); });
+      row.querySelector('[data-f="status_override"]').addEventListener('change', (e) => { lot.status_override = e.target.value || null; markDirty(); renderList(); renderMarkers(); });
+      const locate = row.querySelector('[data-a="locate"]');
+      if (locate) locate.addEventListener('click', () => selectLot(lot.id, true));
+      row.querySelector('[data-a="qr"]').addEventListener('click', () => showQR(lot));
+      row.querySelector('[data-a="delete"]').addEventListener('click', () => removeLot(lot.id));
+      row.addEventListener('click', (e) => { if (!e.target.closest('input,select,button')) selectLot(lot.id); });
+      list.appendChild(row);
+    });
+  }
+
+  function selectLot(id, scrollCanvas) {
+    selectedId = id;
+    renderList(); renderMarkers();
+    if (scrollCanvas) $('canvas-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function addLot(x, y) {
+    lots.push({ id: uid(), name: '', capacity: null, status_override: null, x: x ?? null, y: y ?? null, lat: null, lng: null, price: null, currency: 'USD' });
+    selectedId = lots[lots.length - 1].id;
+    markDirty(); renderList(); renderMarkers();
+  }
+
+  function removeLot(id) {
+    lots = lots.filter((l) => l.id !== id);
+    if (selectedId === id) selectedId = null;
+    markDirty(); renderList(); renderMarkers();
+  }
+
+  // ── Per-lot QR code ─────────────────────────────────────────
+  function showQR(lot) {
+    const url = parkingLotUrl(lot.id);
+    const safeName = (lot.name || 'Parking').replace(/</g, '&lt;');
+    const fileName = 'parking-' + (lot.name || 'lot').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.png';
+    const overlay = document.createElement('div');
+    overlay.className = 'qr-overlay';
+    overlay.innerHTML = `
+      <div class="qr-card">
+        <button class="qr-close" aria-label="Close">&times;</button>
+        <div class="qr-title">${safeName}</div>
+        <div class="qr-img" id="qr-img"></div>
+        <div class="qr-url">${url}</div>
+        ${dirty ? '<div class="qr-warn">Save your changes first — this code only works once the lot is saved.</div>' : ''}
+        <a class="btn primary block" id="qr-download" download="${fileName}">Download PNG</a>
+        <div class="qr-hint">Print and post this at the lot entrance. Guests scan it in the TRODDR app to check in.</div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    overlay.querySelector('.qr-close').addEventListener('click', close);
+
+    QRCode.toDataURL(url, { width: 512, margin: 2, errorCorrectionLevel: 'M' }, (err, dataUrl) => {
+      const holder = overlay.querySelector('#qr-img');
+      if (err || !dataUrl) { holder.textContent = 'Could not generate this QR code.'; return; }
+      const img = document.createElement('img');
+      img.src = dataUrl; img.alt = 'Parking QR code';
+      holder.appendChild(img);
+      overlay.querySelector('#qr-download').href = dataUrl;
+    });
+  }
+
+  // ── Save ────────────────────────────────────────────────────
+  async function save() {
+    $('save-btn').disabled = true;
+    const msg = $('save-msg'); msg.textContent = 'Saving…'; msg.className = 'msg';
+    const payload = lots.map((l, i) => ({
+      id: l.id,
+      name: (l.name || '').trim() || 'Parking',
+      capacity: l.capacity ?? null,
+      status_override: l.status_override || null,
+      x: l.x ?? null,
+      y: l.y ?? null,
+      lat: l.lat ?? null,
+      lng: l.lng ?? null,
+      price: l.price ?? null,
+      currency: l.currency || 'USD',
+      sort_order: i,
+    }));
+    try {
+      const { data, error } = await db.rpc('save_partner_parking_lots', { p_token: getToken(), p_lots: payload });
+      if (error || !data || !data.ok) {
+        msg.textContent = 'Save failed: ' + ((error && (error.message || error.code)) || (data && data.error) || 'unknown'); msg.className = 'msg dirty';
+        $('save-btn').disabled = false;
+        return;
+      }
+      dirty = false;
+      msg.textContent = 'All changes saved'; msg.className = 'msg ok';
+    } catch (err) {
+      msg.textContent = 'Network error — try again'; msg.className = 'msg dirty';
+      $('save-btn').disabled = false;
+    }
+  }
+
+  // ── Sidebar ─────────────────────────────────────────────────
+  function setupSidebar(capabilities, opts) {
+    opts = opts || {};
+    window.PartnerSidebar?.mount({
+      active: '/partner/event-parking',
+      capabilities,
+      partner: opts.partner,
+      jumpLinks: [{ section: 'view-editor', icon: 'ic-map', label: 'Parking' }],
+    });
+  }
+
+  function showLoadError(error) {
+    const detail = (error && (error.message || error.code || error.details || error.hint)) || (typeof error === 'string' ? error : '');
+    $('error-detail').textContent = detail || '';
+    $('view-loading').classList.add('hidden');
+    $('view-error').classList.remove('hidden');
+    window.PartnerAuth?.mountSessionControl('partner');
+    setupSidebar();
+  }
+
+  async function load() {
+    const token = window.PartnerAuth?.getToken({ require: false }) || new URLSearchParams(location.search).get('token') || '';
+    if (!token) {
+      if (window.PartnerAuth) window.PartnerAuth.getToken({ require: true });
+      else showLoadError('Missing token');
+      return;
+    }
+
+    let res, capsRes;
+    try {
+      const results = await Promise.allSettled([
+        db.rpc('get_partner_parking', { p_token: token }),
+        db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+      ]);
+      res     = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
+      capsRes = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
+    } catch (err) { showLoadError(err); return; }
+
+    const { data, error } = res;
+    if (error || !data || !data.ok || !data.event) { showLoadError(error || (data && data.error) || 'No event'); return; }
+
+    const e = data.event;
+    eventId = e.id; eventSlug = e.slug; floorPlanUrl = e.floor_plan_url || null;
+    lots = (Array.isArray(data.lots) ? data.lots : []).map((l) => ({
+      id: l.id, name: l.name || '', capacity: l.capacity ?? null,
+      status_override: l.status_override || null,
+      x: l.x != null ? Number(l.x) : null, y: l.y != null ? Number(l.y) : null,
+      lat: l.lat ?? null, lng: l.lng ?? null,
+      price: l.price != null ? Number(l.price) : null, currency: l.currency || 'USD',
+    }));
+
+    $('hero-title').textContent = e.title || 'Parking';
+    $('hero-meta').textContent = 'Add your parking lots and place them on the map. Guests log where they park, find their car, and see how full each lot is.';
+
+    $('view-loading').classList.add('hidden');
+    $('view-editor').classList.remove('hidden');
+    $('savebar').classList.remove('hidden');
+
+    window.PartnerAuth?.mountSessionControl('partner');
+    setupSidebar(capsRes && capsRes.data && capsRes.data.capabilities, { partner: capsRes && capsRes.data && capsRes.data.partner });
+
+    renderCanvas(); renderList();
+    $('add-lot').addEventListener('click', () => addLot());
+    $('save-btn').addEventListener('click', save);
+    window.addEventListener('beforeunload', (ev) => { if (dirty) { ev.preventDefault(); ev.returnValue = ''; } });
+  }
+
+  document.addEventListener('DOMContentLoaded', load);
+</script>
+
+</body>
+</html>

@@ -6789,12 +6789,19 @@
       </div>
       <div class="compact-status-actions">
         <a id="fp-status-open-editor" class="section-edit-btn" style="text-decoration:none;">Open editor</a>
+        <a id="fp-status-open-parking" class="section-edit-btn" style="text-decoration:none;">Manage parking</a>
       </div>`;
     document.getElementById('fp-status-open-editor')?.addEventListener('click', (e) => {
       e.preventDefault();
       const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
       if (window.PartnerAuth) window.PartnerAuth.navigate('/partner/event-floorplan', token);
       else location.href = `/partner/event-floorplan${token ? '?token=' + encodeURIComponent(token) : ''}`;
+    });
+    document.getElementById('fp-status-open-parking')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+      if (window.PartnerAuth) window.PartnerAuth.navigate('/partner/event-parking', token);
+      else location.href = `/partner/event-parking${token ? '?token=' + encodeURIComponent(token) : ''}`;
     });
   }
 
@@ -8200,23 +8207,24 @@
         { section: 'actions',        icon: 'ic-bolt',     label: 'Action Center' },
         { section: 'overview',       icon: 'ic-info',     label: 'Public Preview' },
 
-        { header: 'Analytics' },
-        { section: 'engagement',     icon: 'ic-chart',    label: 'Engagement' },
-        { section: 'vendors',        icon: 'ic-shop',     label: 'Vendor Insights' },
+        { header: 'Event Insights' },
+        { section: 'engagement',         icon: 'ic-chart',    label: 'Guest Engagement' },
+        { section: 'ticket-performance', icon: 'ic-ticket',   label: 'Ticket Performance' },
+        { section: 'vendors',            icon: 'ic-shop',     label: 'Vendor Insights' },
         { section: 'audience',       icon: 'ic-users',    label: 'Audience', id: 'nav-audience', hidden: !opts.hasAudience },
         { section: 'unlocks',        icon: 'ic-lock',     label: 'Unlocks' },
 
         { header: 'Billing' },
         { section: 'billing',        icon: 'ic-doc',      label: 'Billing' },
 
-        { header: 'Details' },
-        { section: 'info',            icon: 'ic-doc',      label: 'Info' },
-        { section: 'vendors-lineup',  icon: 'ic-shop',     label: 'Vendors' },
-        { section: 'schedule',       icon: 'ic-calendar', label: 'Schedule' },
-        { section: 'map',            icon: 'ic-map',      label: 'Map' },
-        { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
+        { header: 'Event Details' },
         { section: 'sponsors',       icon: 'ic-bolt',     label: 'Sponsors' },
+        { section: 'vendors-lineup',  icon: 'ic-shop',     label: 'Vendors' },
+        { section: 'tickets',        icon: 'ic-ticket',   label: 'Tickets' },
+        { section: 'schedule',       icon: 'ic-calendar', label: 'Lineup' },
         { section: 'transportation', icon: 'ic-bus',      label: 'Transportation' },
+        { section: 'info',            icon: 'ic-doc',      label: 'Info', hidden: true },
+        { section: 'map',            icon: 'ic-map',      label: 'Map', hidden: true },
         // Temporarily hidden while these sections are productized.
         // { section: 'passes',         icon: 'ic-pass',     label: 'Passes' },
         { section: 'bands',          icon: 'ic-mic',      label: 'Bands', id: 'nav-bands', hidden: !opts.isCarnival },

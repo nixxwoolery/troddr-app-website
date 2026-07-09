@@ -95,6 +95,7 @@
       { "source": "/partner/feedback", "destination": "/partner-feedback.html" },
       { "source": "/partner/event",    "destination": "/partner-event.html" },
       { "source": "/partner/event-floorplan", "destination": "/partner-event-floorplan.html" },
+      { "source": "/partner/event-parking", "destination": "/partner-event-parking.html" },
       { "source": "/partner/specials", "destination": "/partner-specials.html" },
       { "source": "/partner/billing",  "destination": "/partner-billing.html" },
       { "source": "/partner/group",    "destination": "/partner-group.html" },

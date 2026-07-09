@@ -96,6 +96,7 @@
     { group: 'Event', icon: 'ic-calendar', page: '/partner/event', cap: 'event', children: [
       { label: 'Event Dashboard', section: '' },
       { label: 'Floor Plan',      section: '', page: '/partner/event-floorplan' },
+      { label: 'Parking',         section: '', page: '/partner/event-parking' },
     ] },
     { group: 'Account', icon: 'ic-dollar', page: '/partner/billing', cap: 'billing', children: [
       { label: 'Billing Summary',             section: 'summary' },
@@ -132,13 +133,17 @@
   // carries a `section` anchor; the page listens for the `psb:select` event
   // (dispatched on click) to switch to the right pane before scrolling.
   const NAV_EVENT = [
-    { group: 'Event Overview', icon: 'ic-info', page: '/partner/event', section: 'overview', children: [
-      { label: 'Event Details', section: 'info' },
+    { group: 'Event Details', icon: 'ic-info', page: '/partner/event', section: 'info', children: [
+      { label: 'Sponsors',       section: 'sponsors' },
+      { label: 'Vendors',        section: 'vendors-lineup' },
+      { label: 'Tickets',        section: 'tickets' },
+      { label: 'Lineup',         section: 'schedule' },
       { label: 'Transportation', section: 'transportation' },
-      { label: 'Edit',          section: 'edit' },
     ] },
     { group: 'Event Insights', icon: 'ic-chart', page: '/partner/event', section: 'engagement', children: [
-      { label: 'All Vendors Performance', section: 'vendors' },
+      { label: 'Guest Engagement',   section: 'engagement' },
+      { label: 'Ticket Performance', section: 'ticket-performance' },
+      { label: 'Vendor Insights',    section: 'vendors' },
     ] },
     { group: 'Event Planning', icon: 'ic-grid', page: '/partner/event', section: 'builder-root', children: [
       { label: 'Floor Plan', section: 'builder-root' },
