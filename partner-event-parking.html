@@ -67,6 +67,15 @@
   .panel-head h2 { font-size: 14px; font-weight: 700; }
   .panel-head .hint { font-size: 12px; color: var(--grey-mid); margin-left: auto; }
   .panel-body { padding: 14px 16px; }
+  .map-tools { display: grid; gap: 10px; margin-bottom: 12px; }
+  .map-tool-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .map-url-row { display: flex; gap: 8px; }
+  .map-url-row input { flex: 1; min-width: 180px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; }
+  .map-status { min-height: 18px; font-size: 12px; color: var(--grey-mid); }
+  .map-status.error { color: var(--red); font-weight: 600; }
+  .map-status.success { color: var(--green); font-weight: 600; }
+  .file-btn { position: relative; overflow: hidden; }
+  .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
   /* Canvas */
   .canvas-wrap { position: relative; width: 100%; background: var(--bg-soft); border-radius: var(--radius); overflow: hidden; user-select: none; }
@@ -86,6 +95,11 @@
   .lot-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .lot-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-light); margin-bottom: 4px; }
   .lot-row-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .lot-visibility { display: grid; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft); }
+  .lot-visibility-title { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey-light); }
+  .lot-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+  .lot-check { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; color: var(--grey-dark); }
+  .lot-check input { width: auto; }
   .placed-tag { font-size: 11px; font-weight: 600; }
   .placed-tag.ok { color: var(--green); }
   .placed-tag.no { color: var(--amber); }
@@ -162,10 +176,24 @@
     <div class="parking-grid">
       <div class="panel">
         <div class="panel-head">
-          <h2>Place lots on the map</h2>
+          <h2>Place lots on the parking map</h2>
           <span class="hint">Tap the map to add · drag to move</span>
         </div>
         <div class="panel-body">
+          <div class="map-tools">
+            <div class="map-tool-actions">
+              <label class="btn file-btn">
+                Upload map image
+                <input id="parking-map-file" type="file" accept="image/*" />
+              </label>
+              <button class="btn" id="parking-map-clear" type="button">Clear map</button>
+            </div>
+            <div class="map-url-row">
+              <input id="parking-map-url" type="url" placeholder="Paste a direct parking map image URL" />
+              <button class="btn" id="parking-map-url-apply" type="button">Use URL</button>
+            </div>
+            <div class="map-status" id="parking-map-status"></div>
+          </div>
           <div class="canvas-wrap" id="canvas-wrap"></div>
         </div>
       </div>
@@ -205,13 +233,16 @@
   const statusColor = (v) => (STATUS.find((s) => s.v === (v || '')) || STATUS[0]).color;
 
   let eventId = null, eventSlug = null;
-  let floorPlanUrl = null;
-  let lots = [];           // { id, name, capacity, status_override, x, y, lat, lng, price, currency }
+  let parkingMapUrl = null;
+  let parkingExtraImageUrls = [];
+  let lots = [];           // { id, name, capacity, status_override, x, y, lat, lng, price, currency, show_* }
 
   // Canonical QR payload for a lot — must match lib/parking/qr.ts in the app.
   const parkingLotUrl = (lotId) => `https://troddr.com/park/${lotId}`;
   let selectedId = null;
   let dirty = false;
+  let mapDirty = false;
+  let mapUploading = false;
 
   function getToken() {
     return window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
@@ -226,18 +257,50 @@
     const msg = $('save-msg'); msg.textContent = 'Unsaved changes'; msg.className = 'msg dirty';
     $('save-btn').disabled = false;
   }
+  function safeStorageName(s) {
+    return String(s || 'map').trim().replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^_+|_+$/g, '') || 'map';
+  }
+  function setMapStatus(text, kind) {
+    const el = $('parking-map-status');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'map-status' + (kind ? ' ' + kind : '');
+  }
+  function isLikelyRenderableImageUrl(url) {
+    if (!url) return true;
+    try {
+      const u = new URL(url);
+      if (!/^https?:$/.test(u.protocol)) return false;
+      if (/drive\.google\.com$/i.test(u.hostname)) return false;
+      if (/\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(u.pathname + u.search)) return true;
+      return /supabase\.co$/i.test(u.hostname) || /\/storage\/v1\/object\/public\//i.test(u.pathname);
+    } catch (_) {
+      return false;
+    }
+  }
+  function setParkingMapUrl(url, opts) {
+    parkingMapUrl = String(url || '').trim() || null;
+    const input = $('parking-map-url');
+    if (input) input.value = parkingMapUrl || '';
+    if (!opts || !opts.silent) {
+      mapDirty = true;
+      markDirty();
+      setMapStatus(parkingMapUrl ? 'Parking map updated. Save to publish it.' : 'Parking map cleared. Save to publish it.', 'success');
+    }
+    renderCanvas();
+  }
 
   // ── Canvas ──────────────────────────────────────────────────
   function renderCanvas() {
     const wrap = $('canvas-wrap');
-    if (!floorPlanUrl) {
-      wrap.innerHTML = '<div class="canvas-empty">Upload a floor plan in the Floor Plan editor first — then you can place lots exactly where they are on the map so guests can navigate to them.</div>';
+    if (!parkingMapUrl) {
+      wrap.innerHTML = '<div class="canvas-empty">Upload a parking map image in Event Info first — then you can place lots exactly where guests will see them.</div>';
       return;
     }
-    wrap.innerHTML = '<img id="fp-img" alt="Floor plan" />';
+    wrap.innerHTML = '<img id="fp-img" alt="Parking map" />';
     const img = $('fp-img');
     img.onload = renderMarkers;
-    img.src = floorPlanUrl;
+    img.src = parkingMapUrl;
     // Click on empty map → drop a new lot at those fractional coords.
     wrap.onclick = (e) => {
       if (e.target.closest('.lot-marker')) return;
@@ -248,6 +311,71 @@
       if (x < 0 || x > 1 || y < 0 || y > 1) return;
       addLot(x, y);
     };
+  }
+
+  function wireMapTools() {
+    const urlInput = $('parking-map-url');
+    const useUrlBtn = $('parking-map-url-apply');
+    const clearBtn = $('parking-map-clear');
+    const fileInput = $('parking-map-file');
+
+    useUrlBtn?.addEventListener('click', () => {
+      const url = (urlInput?.value || '').trim();
+      if (!url) {
+        setMapStatus('Paste a parking map image URL first.', 'error');
+        return;
+      }
+      if (!isLikelyRenderableImageUrl(url)) {
+        setMapStatus('Use a direct image URL so the parking map can display.', 'error');
+        return;
+      }
+      setParkingMapUrl(url);
+    });
+
+    clearBtn?.addEventListener('click', () => {
+      if (fileInput) fileInput.value = '';
+      setParkingMapUrl('');
+    });
+
+    fileInput?.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        setMapStatus('Please choose an image file.', 'error');
+        fileInput.value = '';
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setMapStatus('Image too large (10MB max).', 'error');
+        fileInput.value = '';
+        return;
+      }
+      const slug = safeStorageName(eventSlug || 'event');
+      const safeName = safeStorageName(file.name || 'parking-map');
+      const path = `parking-images/${slug}/${Date.now()}-${safeName}`;
+      mapUploading = true;
+      fileInput.disabled = true;
+      setMapStatus('Uploading parking map...');
+      try {
+        const { data, error } = await db.storage
+          .from('partner-intake-assets')
+          .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+        if (error) throw error;
+        const pub = db.storage.from('partner-intake-assets').getPublicUrl(data.path);
+        const url = pub && pub.data && pub.data.publicUrl;
+        if (!url) throw new Error('No public URL returned');
+        setParkingMapUrl(url);
+        setMapStatus('Uploaded. Save to publish this parking map.', 'success');
+      } catch (err) {
+        console.error('parking map upload failed', err);
+        setMapStatus((window.friendlyError || (() => ''))(err,
+          "Parking map upload didn't go through. Try a smaller image, or paste a URL instead."), 'error');
+      } finally {
+        mapUploading = false;
+        fileInput.disabled = false;
+        fileInput.value = '';
+      }
+    });
   }
 
   function renderMarkers() {
@@ -340,8 +468,17 @@
             </select>
           </div>
         </div>
+        <div class="lot-visibility">
+          <div class="lot-visibility-title">Guest display</div>
+          <div class="lot-checks">
+            <label class="lot-check"><input type="checkbox" data-f="show_status" ${lot.show_status !== false ? 'checked' : ''} /> Show status</label>
+            <label class="lot-check"><input type="checkbox" data-f="show_vehicle_count" ${lot.show_vehicle_count ? 'checked' : ''} /> Show available count</label>
+            <label class="lot-check"><input type="checkbox" data-f="show_capacity" ${lot.show_capacity !== false ? 'checked' : ''} /> Show capacity</label>
+            <label class="lot-check"><input type="checkbox" data-f="show_price" ${lot.show_price !== false ? 'checked' : ''} /> Show price</label>
+          </div>
+        </div>
         <div class="lot-row-actions">
-          <span class="placed-tag ${placed ? 'ok' : 'no'}">${placed ? '● Placed on map' : '○ Not placed'}</span>
+          <span class="placed-tag ${placed ? 'ok' : 'no'}">${placed ? '● Placed on parking map' : '○ Not placed'}</span>
           ${placed ? `<button class="link-btn blue" data-a="locate">Show</button>` : ''}
           <button class="link-btn blue" data-a="qr">QR code</button>
           <button class="link-btn" data-a="delete">Remove</button>
@@ -351,6 +488,10 @@
       row.querySelector('[data-f="currency"]').addEventListener('change', (e) => { lot.currency = e.target.value; markDirty(); });
       row.querySelector('[data-f="capacity"]').addEventListener('input', (e) => { lot.capacity = e.target.value === '' ? null : Math.max(0, parseInt(e.target.value, 10) || 0); markDirty(); });
       row.querySelector('[data-f="status_override"]').addEventListener('change', (e) => { lot.status_override = e.target.value || null; markDirty(); renderList(); renderMarkers(); });
+      row.querySelector('[data-f="show_status"]').addEventListener('change', (e) => { lot.show_status = !!e.target.checked; markDirty(); });
+      row.querySelector('[data-f="show_vehicle_count"]').addEventListener('change', (e) => { lot.show_vehicle_count = !!e.target.checked; markDirty(); });
+      row.querySelector('[data-f="show_capacity"]').addEventListener('change', (e) => { lot.show_capacity = !!e.target.checked; markDirty(); });
+      row.querySelector('[data-f="show_price"]').addEventListener('change', (e) => { lot.show_price = !!e.target.checked; markDirty(); });
       const locate = row.querySelector('[data-a="locate"]');
       if (locate) locate.addEventListener('click', () => selectLot(lot.id, true));
       row.querySelector('[data-a="qr"]').addEventListener('click', () => showQR(lot));
@@ -367,7 +508,22 @@
   }
 
   function addLot(x, y) {
-    lots.push({ id: uid(), name: '', capacity: null, status_override: null, x: x ?? null, y: y ?? null, lat: null, lng: null, price: null, currency: 'USD' });
+    lots.push({
+      id: uid(),
+      name: '',
+      capacity: null,
+      status_override: null,
+      x: x ?? null,
+      y: y ?? null,
+      lat: null,
+      lng: null,
+      price: null,
+      currency: 'USD',
+      show_status: true,
+      show_vehicle_count: false,
+      show_capacity: true,
+      show_price: true,
+    });
     selectedId = lots[lots.length - 1].id;
     markDirty(); renderList(); renderMarkers();
   }
@@ -412,6 +568,10 @@
 
   // ── Save ────────────────────────────────────────────────────
   async function save() {
+    if (mapUploading) {
+      const msg = $('save-msg'); msg.textContent = 'Parking map is still uploading. Wait for the uploaded message, then save.'; msg.className = 'msg dirty';
+      return;
+    }
     $('save-btn').disabled = true;
     const msg = $('save-msg'); msg.textContent = 'Saving…'; msg.className = 'msg';
     const payload = lots.map((l, i) => ({
@@ -425,9 +585,26 @@
       lng: l.lng ?? null,
       price: l.price ?? null,
       currency: l.currency || 'USD',
+      show_status: l.show_status !== false,
+      show_vehicle_count: !!l.show_vehicle_count,
+      show_capacity: l.show_capacity !== false,
+      show_price: l.show_price !== false,
       sort_order: i,
     }));
     try {
+      if (mapDirty) {
+        const { data: mapData, error: mapError } = await db.rpc('update_partner_event', {
+          p_token: getToken(),
+          p_parking_image_url: parkingMapUrl || '',
+          p_parking_image_urls: parkingExtraImageUrls.filter((url) => url && url !== parkingMapUrl),
+        });
+        if (mapError || !mapData || mapData.ok === false) {
+          msg.textContent = 'Save failed: ' + ((mapError && (mapError.message || mapError.code)) || (mapData && mapData.error) || 'parking map could not be saved');
+          msg.className = 'msg dirty';
+          $('save-btn').disabled = false;
+          return;
+        }
+      }
       const { data, error } = await db.rpc('save_partner_parking_lots', { p_token: getToken(), p_lots: payload });
       if (error || !data || !data.ok) {
         msg.textContent = 'Save failed: ' + ((error && (error.message || error.code)) || (data && data.error) || 'unknown'); msg.className = 'msg dirty';
@@ -435,6 +612,7 @@
         return;
       }
       dirty = false;
+      mapDirty = false;
       msg.textContent = 'All changes saved'; msg.className = 'msg ok';
     } catch (err) {
       msg.textContent = 'Network error — try again'; msg.className = 'msg dirty';
@@ -470,31 +648,54 @@
       return;
     }
 
-    let res, capsRes;
+    let res, capsRes, eventRes;
     try {
       const results = await Promise.allSettled([
         db.rpc('get_partner_parking', { p_token: token }),
         db.rpc('get_partner_capabilities_by_token', { p_token: token }),
+        db.rpc('get_partner_event_by_token', { p_token: token }),
       ]);
       res     = results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason };
       capsRes = results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason };
+      eventRes = results[2].status === 'fulfilled' ? results[2].value : { error: results[2].reason };
     } catch (err) { showLoadError(err); return; }
 
     const { data, error } = res;
     if (error || !data || !data.ok || !data.event) { showLoadError(error || (data && data.error) || 'No event'); return; }
 
     const e = data.event;
-    eventId = e.id; eventSlug = e.slug; floorPlanUrl = e.floor_plan_url || null;
+    const eventDetails = (eventRes && eventRes.data && eventRes.data.event) || {};
+    eventId = e.id; eventSlug = e.slug;
+    parkingMapUrl =
+      e.parking_image_url ||
+      (Array.isArray(e.parking_image_urls) ? e.parking_image_urls[0] : null) ||
+      eventDetails.parking_image_url ||
+      (Array.isArray(eventDetails.parking_image_urls) ? eventDetails.parking_image_urls[0] : null) ||
+      null;
+    parkingExtraImageUrls = [
+      ...(Array.isArray(e.parking_image_urls) ? e.parking_image_urls : []),
+      ...(Array.isArray(eventDetails.parking_image_urls) ? eventDetails.parking_image_urls : []),
+    ]
+      .map((url) => String(url || '').trim())
+      .filter(Boolean)
+      .filter((url, index, arr) => arr.indexOf(url) === index)
+      .filter((url) => url !== parkingMapUrl);
+    const mapInput = $('parking-map-url');
+    if (mapInput) mapInput.value = parkingMapUrl || '';
     lots = (Array.isArray(data.lots) ? data.lots : []).map((l) => ({
       id: l.id, name: l.name || '', capacity: l.capacity ?? null,
       status_override: l.status_override || null,
       x: l.x != null ? Number(l.x) : null, y: l.y != null ? Number(l.y) : null,
       lat: l.lat ?? null, lng: l.lng ?? null,
       price: l.price != null ? Number(l.price) : null, currency: l.currency || 'USD',
+      show_status: l.show_status !== false,
+      show_vehicle_count: !!l.show_vehicle_count,
+      show_capacity: l.show_capacity !== false,
+      show_price: l.show_price !== false,
     }));
 
     $('hero-title').textContent = e.title || 'Parking';
-    $('hero-meta').textContent = 'Add your parking lots and place them on the map. Guests log where they park, find their car, and see how full each lot is.';
+    $('hero-meta').textContent = 'Add your parking lots and place them on the parking map. Guests log where they park, find their car, and see how full each lot is.';
 
     $('view-loading').classList.add('hidden');
     $('view-editor').classList.remove('hidden');
@@ -503,7 +704,7 @@
     window.PartnerAuth?.mountSessionControl('partner');
     setupSidebar(capsRes && capsRes.data && capsRes.data.capabilities, { partner: capsRes && capsRes.data && capsRes.data.partner });
 
-    renderCanvas(); renderList();
+    renderCanvas(); renderList(); wireMapTools();
     $('add-lot').addEventListener('click', () => addLot());
     $('save-btn').addEventListener('click', save);
     window.addEventListener('beforeunload', (ev) => { if (dirty) { ev.preventDefault(); ev.returnValue = ''; } });

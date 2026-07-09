@@ -6900,14 +6900,18 @@
     const placedCount = lots.filter((lot) => lot.x != null && lot.y != null).length;
     const rows = [
       infoRow('Lots', `${lots.length} lot${lots.length === 1 ? '' : 's'}${totalCapacity ? ` · ${totalCapacity.toLocaleString()} spaces` : ''}`),
-      infoRow('Map placement', `${placedCount} of ${lots.length} placed on the floor plan`),
+      infoRow('Map placement', `${placedCount} of ${lots.length} placed on the parking map`),
       infoRow('Parking lots', `<ul class="info-list">${lots.map((lot) => {
         const meta = [
           lot.tier ? `${escapeHtml(lot.tier)} tier` : '',
-          lot.capacity ? `${Number(lot.capacity).toLocaleString()} spaces` : '',
-          lot.price != null ? `${escapeHtml(lot.currency || 'USD')} ${Number(lot.price).toLocaleString()}` : '',
-          lot.status_override ? `status: ${escapeHtml(String(lot.status_override).replace(/_/g, ' '))}` : 'auto status',
-          lot.show_vehicle_count ? 'vehicle count visible' : '',
+          lot.capacity ? `${Number(lot.capacity).toLocaleString()} spaces${lot.show_capacity === false ? ' (hidden)' : ''}` : '',
+          lot.price != null ? `${escapeHtml(lot.currency || 'USD')} ${Number(lot.price).toLocaleString()}${lot.show_price === false ? ' (hidden)' : ''}` : '',
+          lot.show_status === false
+            ? 'status hidden'
+            : lot.status_override
+              ? `status: ${escapeHtml(String(lot.status_override).replace(/_/g, ' '))}`
+              : 'auto status',
+          lot.show_vehicle_count ? 'available count visible' : 'available count hidden',
         ].filter(Boolean).join(' · ');
         return `<li class="info-list-item"><div class="name">${escapeHtml(lot.name || 'Parking lot')}</div><div class="meta">${meta || 'No details set yet.'}</div></li>`;
       }).join('')}</ul>`),
