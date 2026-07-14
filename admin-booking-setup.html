@@ -754,6 +754,7 @@ const state = {
   config: null,  // from admin_get_place_booking_config
   selectedDates: new Set(),
   availRoomTypeId: null,
+  setupDirty: false,
 };
 
 // ── Visibility helpers ────────────────────────────────────────────────────────
@@ -873,9 +874,28 @@ function renderSetupTab() {
   $('cfg-commission').value         = p.commission_terms || '';
   $('cfg-internal-notes').value     = p.internal_booking_notes || '';
   setStatus('setup-save-status', '');
+  state.setupDirty = false;
+}
+
+function markSetupDirty() {
+  if (!state.config || state.setupDirty) return;
+  state.setupDirty = true;
+  setStatus('setup-save-status', 'Unsaved changes');
+}
+
+function validateSetup() {
+  const issues = [];
+  const email = $('cfg-bookings-email').value.trim();
+  if ($('cfg-accepts-stay').checked && !email) issues.push('Bookings email is required when stay bookings are enabled.');
+  if (email && !$('cfg-bookings-email').checkValidity()) issues.push('Enter a valid bookings email address.');
+  if ((intVal('cfg-min-nights') || 0) < 1) issues.push('Minimum nights must be at least 1.');
+  if ($('cfg-deposit-req').checked && floatVal('cfg-deposit-amount') == null) issues.push('Enter a default deposit amount when deposits are required.');
+  $('setup-alert').innerHTML = issues.length ? `<div class="alert alert-err"><strong>Check the following:</strong><br>${issues.map(escHtml).join('<br>')}</div>` : '';
+  return issues.length === 0;
 }
 
 async function saveSetup() {
+  if (!validateSetup()) return;
   const btn = $('save-setup-btn');
   btn.disabled = true;
   setStatus('setup-save-status', 'Saving…');
@@ -910,6 +930,7 @@ async function saveSetup() {
     return;
   }
   setStatus('setup-save-status', 'Saved', 'ok');
+  state.setupDirty = false;
   // Refresh state
   state.config.place = { ...state.config.place, ...params };
 }
@@ -1537,6 +1558,7 @@ function syncBookingRoute(tab = routeState().tab) {
 }
 function switchBookingTab(name, updateHash = true) {
   if (!BOOKING_TABS.includes(name)) name = 'setup';
+  if (state.setupDirty && routeState().tab === 'setup' && name !== 'setup' && !confirm('You have unsaved booking setup changes. Leave without saving?')) return;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
   if (updateHash) syncBookingRoute(name);
@@ -1563,6 +1585,7 @@ $('place-search').addEventListener('keydown', e => {
 });
 
 $('change-place-btn').addEventListener('click', () => {
+  if (state.setupDirty && !confirm('You have unsaved booking setup changes. Change property without saving?')) return;
   state.placeId = null; state.config = null;
   syncBookingRoute();
   $('navbar-place-name').classList.add('hidden');
@@ -1571,6 +1594,15 @@ $('change-place-btn').addEventListener('click', () => {
 });
 
 $('save-setup-btn').addEventListener('click', saveSetup);
+document.querySelectorAll('#tab-setup input, #tab-setup select, #tab-setup textarea').forEach(el => {
+  el.addEventListener('input', markSetupDirty);
+  el.addEventListener('change', markSetupDirty);
+});
+window.addEventListener('beforeunload', e => {
+  if (!state.setupDirty) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
 
 $('add-room-btn').addEventListener('click', showNewRoomForm);
 $('add-rate-btn').addEventListener('click', showNewRateForm);
