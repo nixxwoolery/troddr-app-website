@@ -428,6 +428,7 @@
     renderMessages(data.new_messages || []);
     renderUpdates(data.recent_event_updates || []);
     showDashboard();
+    if (location.hash) switchTab(location.hash.slice(1));
     loadLowScores();      // separate RPCs; fill their tabs when ready
     loadSuggestions();
   }
@@ -533,12 +534,15 @@
 
   // ── Tabs ────────────────────────────────────────────────
   function switchTab(name) {
+    if (!document.querySelector(`.tab[data-tab="${name}"]`)) return;
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+    if (location.hash !== `#${name}`) history.replaceState(null, '', `#${name}`);
   }
   document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => switchTab(t.dataset.tab));
   });
+  window.addEventListener('hashchange', () => switchTab(location.hash.slice(1)));
 
   // ── Specials ────────────────────────────────────────────
   function renderSpecials(specials) {

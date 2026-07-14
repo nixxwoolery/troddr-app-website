@@ -169,6 +169,16 @@
   .analytics-empty { padding: 12px 4px; color: var(--grey-light); font-size: 12px; }
   .analytics-pill { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 4px; background: var(--red-light); color: var(--red); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; }
   .analytics-scroll { max-height: 520px; overflow-y: auto; }
+  .analytics-summary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .analytics-summary-item { padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--bg-soft); }
+  .analytics-summary-item strong { display:block; font-size:20px; line-height:1.1; }
+  .analytics-summary-item span { display:block; margin-top:4px; color:var(--grey-mid); font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+  .analytics-detail { margin-top:12px; border-top:1px solid var(--border); }
+  .analytics-detail summary { padding:12px 4px 0; color:var(--primary); cursor:pointer; font-size:11px; font-weight:700; }
+  .analytics-detail[open] summary { margin-bottom:8px; }
+  .analytics-subheading { margin:12px 4px 5px; color:var(--grey-mid); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+  .analytics-insight { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:9px; background:var(--red-light); color:var(--red); font-size:12px; }
+  .analytics-insight strong { flex:none; }
 
   /* ── Auth gate ────────────────────────────────────────── */
   #gate { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
@@ -461,6 +471,12 @@
     try { return path[1] ? decodeURIComponent(path[1]) : ''; } catch (e) { return ''; }
   }
 
+  function reviewTabFromRoute() {
+    if (sectionFromRoute() !== 'review') return '';
+    const tab = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] || '';
+    return ['specials','submissions','messages','updates','lowscores','suggestions'].includes(tab) ? tab : '';
+  }
+
   function closeDrawer() {
     $('app-shell').classList.remove('drawer-open');
     $('menu-btn').setAttribute('aria-expanded', 'false');
@@ -508,11 +524,15 @@
       return;
     }
     const iframe = frameFor(key);
-    if (iframe.dataset.loaded) return;
+    if (iframe.dataset.loaded) {
+      if (key === 'review' && reviewTabFromRoute()) iframe.contentWindow.location.hash = reviewTabFromRoute();
+      return;
+    }
     iframe.dataset.loaded = '1';
     iframe.addEventListener('load', () => stripChildHeader(iframe));
     const sep = iframe.dataset.src.includes('?') ? '&' : '?';
-    iframe.src = iframe.dataset.src + sep + 'token=' + encodeURIComponent(adminToken);
+    iframe.src = iframe.dataset.src + sep + 'token=' + encodeURIComponent(adminToken)
+      + (key === 'review' && reviewTabFromRoute() ? '#' + reviewTabFromRoute() : '');
   }
 
   function showSection(key, options = {}) {
@@ -534,6 +554,7 @@
     document.title = `TRODDR Admin · ${SECTION_META[key].title}`;
     const route = key === 'analytics' ? `#/analytics?days=${analyticsDays}`
       : key === 'events' && eventRouteId ? `#/events/${encodeURIComponent(eventRouteId)}`
+      : key === 'review' && (options.tab || (options.fromRoute && reviewTabFromRoute())) ? `#/review/${options.tab || reviewTabFromRoute()}`
       : '#/' + key;
     if (!options.fromRoute && location.hash !== route) history.pushState({ section: key }, '', route);
     if (options.fromRoute && location.hash !== route) history.replaceState({ section: key }, '', route);
@@ -617,15 +638,15 @@
     const pending = data.pending || {};
     const feedback = data.feedback || {};
     const attention = [
-      [pending.submissions, 'Event submissions to review', 'review'],
-      [pending.specials, 'Specials pending approval', 'review'],
-      [pending.messages, 'New partner messages', 'review'],
+      [pending.submissions, 'Event submissions to review', 'review', 'submissions'],
+      [pending.specials, 'Specials pending approval', 'review', 'specials'],
+      [pending.messages, 'New partner messages', 'review', 'messages'],
       [pending.bookings, 'Bookings awaiting response', 'bookings'],
       [pending.bookings_attention, 'Bookings flagged for TRODDR', 'bookings'],
-      [pending.suggested_places, 'Unmatched place suggestions', 'review'],
+      [pending.suggested_places, 'Unmatched place suggestions', 'review', 'suggestions'],
       [feedback.app_open, 'Open app feedback', 'feedback'],
     ];
-    $('ov-attention').innerHTML = attention.map(([count, label, nav]) => `<div class="overview-row ${Number(count) > 0 ? 'hot' : ''}"><span class="count">${fmt(count)}</span><span class="name">${esc(label)}</span>${Number(count) > 0 ? `<button class="overview-link" data-nav="${nav}">Open →</button>` : ''}</div>`).join('');
+    $('ov-attention').innerHTML = attention.map(([count, label, nav, tab]) => `<div class="overview-row ${Number(count) > 0 ? 'hot' : ''}"><span class="count">${fmt(count)}</span><span class="name">${esc(label)}</span>${Number(count) > 0 ? `<button class="overview-link" data-nav="${nav}"${tab ? ` data-tab="${tab}"` : ''}>Open →</button>` : ''}</div>`).join('');
 
     $('ov-feedback').innerHTML = overviewRow('Event feedback', feedback.event_total, `+${fmt(feedback.event_7d)} this week`)
       + overviewRow('Place feedback', feedback.place_total, `+${fmt(feedback.place_7d)} this week`)
@@ -663,7 +684,7 @@
   $('overview-retry').addEventListener('click', loadOverview);
   $('ov-attention').addEventListener('click', (e) => {
     const button = e.target.closest('[data-nav]');
-    if (button) showSection(button.dataset.nav);
+    if (button) showSection(button.dataset.nav, { tab: button.dataset.tab || '' });
   });
 
   /* ── Shell-native Analytics ──────────────────────────── */
@@ -710,12 +731,41 @@
       el.innerHTML = '<div class="analytics-empty">Nothing in this window.</div>';
       return;
     }
+    el.innerHTML = rows.length > 8
+      ? `${rankHtml(rows.slice(0, 8), options)}<details class="analytics-detail"><summary>Show all ${fmt(rows.length)}</summary>${rankHtml(rows, options)}</details>`
+      : rankHtml(rows, options);
+  }
+
+  function rankHtml(rows, options) {
     const values = rows.map((row) => Number(options.value(row)) || 0);
     const max = Math.max(1, ...values);
-    el.innerHTML = rows.map((row, index) => {
+    return rows.map((row, index) => {
       const sub = options.sub?.(row);
       return `<div class="analytics-rank ${options.extraClass?.(row) || ''}"><span class="name">${esc(options.name(row))}${sub ? `<small>${esc(sub)}</small>` : ''}</span><span class="value">${fmt(values[index])}</span><span class="bar"><span style="width:${Math.max(2, values[index] / max * 100)}%"></span></span></div>`;
     }).join('');
+  }
+
+  function renderActionSummary(rows) {
+    const groups = { Discovery: 0, Events: 0, Commerce: 0, Feedback: 0 };
+    const classify = (name) => {
+      name = String(name || '').toLowerCase();
+      if (/review|feedback|rating/.test(name)) return 'Feedback';
+      if (/vendor|ticket|menu|outbound|booking|special/.test(name)) return 'Commerce';
+      if (/event|media|save|share|interest|going/.test(name)) return 'Events';
+      return 'Discovery';
+    };
+    rows.forEach((row) => { groups[classify(row.name)] += Number(row.n) || 0; });
+    const options = { name: (r) => String(r.name || '').replace(/_/g, ' '), sub: (r) => `${fmt(r.users)} users`, value: (r) => r.n };
+    $('an-by-event').innerHTML = `<div class="analytics-summary-grid">${Object.entries(groups).map(([label, value]) => `<div class="analytics-summary-item"><strong>${fmt(value)}</strong><span>${label} actions</span></div>`).join('')}</div><details class="analytics-detail"><summary>View all ${fmt(rows.length)} action types</summary>${rankHtml(rows, options)}</details>`;
+  }
+
+  function renderSearchSummary(rows) {
+    if (!rows.length) { $('an-search').innerHTML = '<div class="analytics-empty">No searches in this window.</div>'; return; }
+    const zeros = rows.filter((row) => Number(row.zero_results) > 0).sort((a,b) => b.zero_results-a.zero_results);
+    const successful = rows.filter((row) => !Number(row.zero_results)).slice(0, 6);
+    const options = { name: (r) => `“${r.q}”`, sub: (r) => r.zero_results > 0 ? `${r.zero_results}× zero results` : (r.avg_results != null ? `~${r.avg_results} results` : ''), value: (r) => r.n, extraClass: (r) => r.zero_results > 0 ? 'zero' : '' };
+    const zeroTotal = zeros.reduce((sum,row) => sum + (Number(row.zero_results)||0), 0);
+    $('an-search').innerHTML = `${zeros.length ? `<div class="analytics-insight"><strong>${fmt(zeroTotal)}</strong><span>zero-result searches across ${fmt(zeros.length)} queries need content or synonym review</span></div><div class="analytics-subheading">Queries needing attention</div>${rankHtml(zeros.slice(0,5), options)}` : ''}${successful.length ? `<div class="analytics-subheading">Top successful searches</div>${rankHtml(successful, options)}` : ''}<details class="analytics-detail"><summary>View all ${fmt(rows.length)} search terms</summary>${rankHtml(rows, options)}</details>`;
   }
 
   function renderAnalytics(data) {
@@ -727,13 +777,13 @@
     const generated = data.generated_at ? new Date(data.generated_at) : new Date();
     $('an-updated').textContent = `Updated ${generated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
     renderAnalyticsChart(data.daily || []);
-    renderRankList('an-by-event', data.by_event, { name: (r) => String(r.name || '').replace(/_/g, ' '), sub: (r) => `${fmt(r.users)} users`, value: (r) => r.n });
+    renderActionSummary(data.by_event || []);
     renderRankList('an-top-places', data.top_places, { name: (r) => r.name, value: (r) => r.views });
     renderRankList('an-top-events', data.top_events, { name: (r) => r.title, sub: (r) => r.saves > 0 ? `${fmt(r.saves)} saves` : '', value: (r) => r.views });
     renderRankList('an-top-vendors', data.top_vendors, { name: (r) => r.name, sub: (r) => r.event_title, value: (r) => r.clicks });
     renderRankList('an-top-guides', data.top_guides, { name: (r) => r.title, value: (r) => r.views });
     renderRankList('an-top-specials', data.top_specials, { name: (r) => r.title, value: (r) => r.views });
-    renderRankList('an-search', data.search_terms, { name: (r) => `“${r.q}”`, sub: (r) => r.zero_results > 0 ? `${r.zero_results}× zero results` : (r.avg_results != null ? `~${r.avg_results} results` : ''), value: (r) => r.n, extraClass: (r) => r.zero_results > 0 ? 'zero' : '' });
+    renderSearchSummary(data.search_terms || []);
     $('an-zero-pill').classList.toggle('hidden', !(data.search_terms || []).some((r) => r.zero_results > 0));
     renderRankList('an-platform', data.by_platform, { name: (r) => r.platform, value: (r) => r.n });
     renderRankList('an-outbound', data.outbound, { name: (r) => String(r.type || '').replace('_clicked', '').replace(/_/g, ' '), value: (r) => r.n });
