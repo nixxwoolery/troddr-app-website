@@ -107,6 +107,45 @@
   .section.active { display: block; }
   .section iframe { width: 100%; height: 100%; border: none; display: block; background: var(--bg-soft); }
 
+  /* ── Shell-native overview ────────────────────────────── */
+  .native-overview { height: 100%; overflow-y: auto; padding: 24px; }
+  .overview-inner { max-width: 1280px; margin: 0 auto; padding-bottom: 48px; }
+  .overview-label {
+    margin: 26px 0 10px; color: var(--grey-mid);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .overview-label:first-child { margin-top: 0; }
+  .overview-counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .overview-card {
+    padding: 20px; background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .overview-count { padding: 16px 18px; }
+  .overview-count .num { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.8px; }
+  .overview-count .label {
+    margin-top: 6px; color: var(--grey-mid);
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .overview-count .sub { margin-top: 2px; color: var(--grey-light); font-size: 11px; }
+  .overview-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; margin-top: 26px; }
+  .overview-chart-legend { display: flex; gap: 18px; margin-bottom: 10px; color: var(--grey-mid); font-size: 11px; font-weight: 600; }
+  .overview-chart-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+  #ov-chart svg { display: block; width: 100%; height: auto; }
+  .overview-row { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .overview-row:last-child { border-bottom: 0; }
+  .overview-row .count { min-width: 34px; padding: 3px 8px; border-radius: 99px; background: var(--bg-soft); color: var(--grey-mid); text-align: center; font-weight: 800; }
+  .overview-row.hot .count { background: var(--red-light); color: var(--red); }
+  .overview-row .name { flex: 1; color: var(--grey-dark); font-weight: 600; }
+  .overview-row .value { font-weight: 800; text-align: right; }
+  .overview-row small { display: block; color: var(--grey-light); font-size: 11px; font-weight: 500; }
+  .overview-link { padding: 5px 7px; border: 0; background: transparent; color: var(--primary); cursor: pointer; font: 700 11px/1 'Poppins', sans-serif; }
+  .overview-link:hover { text-decoration: underline; }
+  .overview-state { min-height: 280px; display: grid; place-items: center; color: var(--grey-mid); text-align: center; }
+  .overview-state .spinner { margin: 0 auto 14px; }
+  .overview-error { max-width: 420px; }
+  .overview-error strong { display: block; color: var(--black); margin-bottom: 5px; }
+  .overview-error button { margin-top: 14px; }
+
   /* ── Auth gate ────────────────────────────────────────── */
   #gate { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
   .gate-card {
@@ -158,6 +197,9 @@
     .workspace-heading h1 { font-size: 16px; }
     .workspace-heading p { display: none; }
     .refresh-label { display: none; }
+    .native-overview { padding: 18px 14px; }
+    .overview-counts { grid-template-columns: repeat(2, 1fr); }
+    .overview-two-col { grid-template-columns: 1fr; }
   }
   @media (max-width: 480px) {
     .workspace-header { gap: 8px; }
@@ -220,7 +262,32 @@
     <main id="main">
       <div class="frames">
     <div class="section active" id="sec-overview">
-      <iframe data-src="/admin-overview.html" title="Overview"></iframe>
+      <div class="native-overview" id="overview-view">
+        <div class="overview-state" id="overview-loading"><div><div class="spinner"></div><p>Loading overview…</p></div></div>
+        <div class="overview-state hidden" id="overview-error"><div class="overview-error"><strong>Overview could not be loaded</strong><p id="overview-error-message">Check your connection and try again.</p><button class="icon-btn" id="overview-retry">Try again</button></div></div>
+        <div class="overview-inner hidden" id="overview-content">
+          <div class="overview-label">Users</div>
+          <div class="overview-counts">
+            <div class="overview-card overview-count"><div class="num" id="ov-u-total">–</div><div class="label">Total users</div><div class="sub" id="ov-u-new">&nbsp;</div></div>
+            <div class="overview-card overview-count"><div class="num" id="ov-u-today">–</div><div class="label">Active today</div><div class="sub">Including guest sessions</div></div>
+            <div class="overview-card overview-count"><div class="num" id="ov-u-7d">–</div><div class="label">Active · 7 days</div><div class="sub">Including guest sessions</div></div>
+            <div class="overview-card overview-count"><div class="num" id="ov-u-push">–</div><div class="label">Push opt-in</div><div class="sub" id="ov-u-push-pct">&nbsp;</div></div>
+          </div>
+          <div class="overview-label">Activity · last 30 days</div>
+          <div class="overview-card">
+            <div class="overview-chart-legend"><span><i style="background:#bcd9f0"></i>Events tracked</span><span><i style="background:#0077CC"></i>Active users</span></div>
+            <div id="ov-chart"></div>
+          </div>
+          <div class="overview-two-col">
+            <div><div class="overview-label">Needs attention</div><div class="overview-card" id="ov-attention"></div></div>
+            <div><div class="overview-label">Feedback</div><div class="overview-card" id="ov-feedback"></div><div class="overview-label">Platform</div><div class="overview-card" id="ov-platform"></div></div>
+          </div>
+          <div class="overview-two-col">
+            <div><div class="overview-label">Loyalty programs</div><div class="overview-card" id="ov-loyalty"></div></div>
+            <div><div class="overview-label">Check-in &amp; Insider partners</div><div class="overview-card" id="ov-checkin"></div></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="section" id="sec-analytics">
       <iframe data-src="/admin-analytics.html" title="Analytics"></iframe>
@@ -282,7 +349,15 @@
   };
   const SECTIONS = Object.keys(SECTION_META);
   let currentSection = 'overview';
+  let overviewLoaded = false;
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
+  const fmt = (n) => {
+    if (n == null) return '–';
+    const value = Number(n);
+    return Number.isFinite(value) ? value.toLocaleString() : String(n);
+  };
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 
   function sectionFromRoute() {
     const key = location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
@@ -306,6 +381,10 @@
   }
 
   function loadSection(key) {
+    if (key === 'overview') {
+      if (!overviewLoaded) loadOverview();
+      return;
+    }
     const iframe = frameFor(key);
     if (iframe.dataset.loaded) return;
     iframe.dataset.loaded = '1';
@@ -348,8 +427,109 @@
   $('drawer-backdrop').addEventListener('click', closeDrawer);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
   $('refresh-section').addEventListener('click', () => {
+    if (currentSection === 'overview') {
+      loadOverview();
+      return;
+    }
     const frame = frameFor(currentSection);
     if (frame.src) frame.contentWindow.location.reload();
+  });
+
+  /* ── Shell-native Overview ───────────────────────────── */
+  function overviewRow(label, value, sub = '') {
+    return `<div class="overview-row"><span class="name">${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</span><span class="value">${fmt(value)}</span></div>`;
+  }
+
+  function renderOverviewChart(daily) {
+    if (!daily.length) {
+      $('ov-chart').innerHTML = '<div class="overview-row"><span class="name">No activity recorded in this period.</span></div>';
+      return;
+    }
+    const W = 1200, H = 260, padL = 44, padR = 10, padT = 12, padB = 30;
+    const iw = W - padL - padR, ih = H - padT - padB;
+    const maxE = Math.max(1, ...daily.map((d) => Number(d.events) || 0));
+    const maxU = Math.max(1, ...daily.map((d) => Number(d.users) || 0));
+    const step = iw / daily.length;
+    const bw = Math.max(4, step * 0.62);
+    let bars = '', labels = '', grid = '';
+    const points = [];
+    for (let g = 0; g <= 4; g++) {
+      const y = padT + ih - (ih * g / 4);
+      grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#f0f0f0"/>`
+        + `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${Math.round(maxE * g / 4).toLocaleString()}</text>`;
+    }
+    daily.forEach((d, i) => {
+      const cx = padL + step * i + step / 2;
+      const events = Number(d.events) || 0;
+      const users = Number(d.users) || 0;
+      const bh = ih * events / maxE;
+      bars += `<rect x="${cx - bw / 2}" y="${padT + ih - bh}" width="${bw}" height="${Math.max(bh, 1)}" rx="2" fill="#bcd9f0"><title>${esc(d.d)}: ${fmt(events)} events, ${fmt(users)} users</title></rect>`;
+      points.push(`${cx},${padT + ih - ih * users / maxU}`);
+      if (i % 5 === 0 || i === daily.length - 1) labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#999">${esc(String(d.d).slice(5))}</text>`;
+    });
+    $('ov-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Events tracked and active users over the last 30 days">${grid}${bars}<polyline points="${points.join(' ')}" fill="none" stroke="#0077CC" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
+  }
+
+  function renderOverview(data) {
+    const u = data.users || {};
+    $('ov-u-total').textContent = fmt(u.total);
+    $('ov-u-new').textContent = `+${fmt(u.new_7d)} this week · +${fmt(u.new_30d)} this month`;
+    $('ov-u-today').textContent = fmt(u.active_today);
+    $('ov-u-7d').textContent = fmt(u.active_7d);
+    $('ov-u-push').textContent = fmt(u.push_opt_in);
+    $('ov-u-push-pct').textContent = u.total ? `${Math.round(u.push_opt_in / u.total * 100)}% of users` : 'No registered users';
+    renderOverviewChart(data.activity_daily || []);
+
+    const pending = data.pending || {};
+    const feedback = data.feedback || {};
+    const attention = [
+      [pending.submissions, 'Event submissions to review', 'review'],
+      [pending.specials, 'Specials pending approval', 'review'],
+      [pending.messages, 'New partner messages', 'review'],
+      [pending.bookings, 'Bookings awaiting response', 'bookings'],
+      [pending.bookings_attention, 'Bookings flagged for TRODDR', 'bookings'],
+      [pending.suggested_places, 'Unmatched place suggestions', 'review'],
+      [feedback.app_open, 'Open app feedback', 'feedback'],
+    ];
+    $('ov-attention').innerHTML = attention.map(([count, label, nav]) => `<div class="overview-row ${Number(count) > 0 ? 'hot' : ''}"><span class="count">${fmt(count)}</span><span class="name">${esc(label)}</span>${Number(count) > 0 ? `<button class="overview-link" data-nav="${nav}">Open →</button>` : ''}</div>`).join('');
+
+    $('ov-feedback').innerHTML = overviewRow('Event feedback', feedback.event_total, `+${fmt(feedback.event_7d)} this week`)
+      + overviewRow('Place feedback', feedback.place_total, `+${fmt(feedback.place_7d)} this week`)
+      + overviewRow('Open app feedback', feedback.app_open);
+    const events = data.events || {}, catalog = data.catalog || {};
+    $('ov-platform').innerHTML = overviewRow('Events live today', events.live_today)
+      + overviewRow('Events in next 30 days', events.upcoming_30d)
+      + overviewRow('Places', catalog.places) + overviewRow('Vendors', catalog.vendors)
+      + overviewRow('Guides', catalog.guides) + overviewRow('Active specials', catalog.active_specials);
+
+    const partners = data.partners || {};
+    const loyalty = partners.loyalty || [];
+    $('ov-loyalty').innerHTML = loyalty.length ? loyalty.map((item) => `<div class="overview-row"><span class="name">${esc(item.place)}<small>${esc(item.reward)} · ${fmt(item.required_stamps)} stamps</small></span><span class="value">${item.is_active ? 'Active' : 'Inactive'}<small>${fmt(item.cards)} cards · ${fmt(item.stamps_30d)} stamps 30d</small></span></div>`).join('') : overviewRow('No loyalty programs yet', '—');
+    const checkins = partners.checkin_places || [];
+    $('ov-checkin').innerHTML = (checkins.length ? checkins.map((item) => `<div class="overview-row"><span class="name">${esc(item.place)}</span><span class="value"><small>${[item.checkin && 'check-in', item.nfc && 'NFC', item.loyalty && 'loyalty', item.insider && 'insider'].filter(Boolean).join(' · ')}</small></span></div>`).join('') : overviewRow('No check-in partners yet', '—'))
+      + overviewRow('Active perks', partners.active_perks);
+  }
+
+  async function loadOverview() {
+    $('overview-loading').classList.remove('hidden');
+    $('overview-error').classList.add('hidden');
+    $('overview-content').classList.add('hidden');
+    const { data, error } = await db.rpc('admin_get_overview', { p_admin_token: adminToken });
+    $('overview-loading').classList.add('hidden');
+    if (error || !data) {
+      $('overview-error-message').textContent = error?.message || 'The overview returned no data.';
+      $('overview-error').classList.remove('hidden');
+      return;
+    }
+    overviewLoaded = true;
+    renderOverview(data);
+    $('overview-content').classList.remove('hidden');
+  }
+
+  $('overview-retry').addEventListener('click', loadOverview);
+  $('ov-attention').addEventListener('click', (e) => {
+    const button = e.target.closest('[data-nav]');
+    if (button) showSection(button.dataset.nav);
   });
 
   // Child pages (e.g. Overview's "Open →" shortcuts) request section switches.
@@ -367,9 +547,11 @@
     // Reset every iframe so a fresh sign-in re-authenticates cleanly.
     SECTIONS.forEach((k) => {
       const f = frameFor(k);
+      if (!f) return;
       f.removeAttribute('src');
       delete f.dataset.loaded;
     });
+    overviewLoaded = false;
     $('gate-input').value = '';
     show('gate');
   });
