@@ -303,6 +303,7 @@
     <nav class="section-nav" aria-label="Dashboard sections">
       <button class="section-tab active" data-section="overview" title="Overview"><span class="nav-icon" aria-hidden="true">◫</span><span class="nav-label">Overview</span></button>
       <button class="section-tab" data-section="analytics" title="Analytics"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-label">Analytics</span></button>
+      <button class="section-tab" data-section="performance" title="Performance"><span class="nav-icon" aria-hidden="true">▥</span><span class="nav-label">Performance</span></button>
       <button class="section-tab" data-section="events" title="Events"><span class="nav-icon" aria-hidden="true">◇</span><span class="nav-label">Events</span></button>
       <button class="section-tab" data-section="feedback" title="Feedback"><span class="nav-icon" aria-hidden="true">◎</span><span class="nav-label">Feedback</span></button>
       <button class="section-tab" data-section="engagement" title="Engagement"><span class="nav-icon" aria-hidden="true">♧</span><span class="nav-label">Engagement</span></button>
@@ -386,6 +387,23 @@
               <div class="overview-label">Place views · this month</div><div class="overview-card analytics-scroll" id="an-place-views"></div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="section" id="sec-performance">
+      <div class="native-performance" id="performance-view">
+        <div class="overview-state" id="performance-loading"><div><div class="spinner"></div><p>Loading performance…</p></div></div>
+        <div class="overview-state hidden" id="performance-error"><div class="overview-error"><strong>Performance data could not be loaded</strong><p id="performance-error-message"></p><button class="icon-btn" id="performance-retry">Try again</button></div></div>
+        <div class="performance-inner hidden" id="performance-content">
+          <div class="performance-toolbar">
+            <div class="performance-tabs" role="tablist" aria-label="Content type">
+              <button class="performance-tab active" data-performance-tab="eat" role="tab">Eat</button><button class="performance-tab" data-performance-tab="stay" role="tab">Stay</button><button class="performance-tab" data-performance-tab="play" role="tab">Play</button><button class="performance-tab" data-performance-tab="guides" role="tab">Guides</button><button class="performance-tab" data-performance-tab="events" role="tab">Events</button><button class="performance-tab" data-performance-tab="trips" role="tab">Trip Places</button>
+            </div>
+            <div class="performance-ranges" aria-label="Performance date range"><button class="range-btn" data-performance-days="7">7 days</button><button class="range-btn active" data-performance-days="30">30 days</button><button class="range-btn" data-performance-days="90">90 days</button></div>
+          </div>
+          <div class="overview-counts" id="performance-kpis"></div>
+          <div class="performance-heading"><div><h2 id="performance-list-title">Eat performance</h2><p id="performance-list-note"></p></div><span id="performance-updated"></span></div>
+          <div class="overview-card performance-ranking" id="performance-ranking"></div>
         </div>
       </div>
     </div>
@@ -485,6 +503,7 @@
   const SECTION_META = {
     overview:  { title: 'Overview',  description: 'Platform health and work requiring attention' },
     analytics: { title: 'Analytics', description: 'Usage, discovery and conversion performance' },
+    performance:{ title: 'Performance',description: 'Performance of places, guides, events and trip additions' },
     events:    { title: 'Events',    description: 'Event performance, audiences and updates' },
     feedback:  { title: 'Feedback',  description: 'Customer feedback, ratings and product signals' },
     engagement:{ title: 'Engagement',description: 'Loyalty participation and Insider progression' },
@@ -508,6 +527,10 @@
   let billingTab = 'review';
   let engagementLoaded = false;
   let engagementTab = 'loyalty';
+  let performanceLoaded = false;
+  let performanceTab = 'eat';
+  let performanceDays = 30;
+  let performanceData = null;
   let overviewData = null;
 
   function setSidebarCollapsed(collapsed) {
@@ -579,6 +602,15 @@
     if (sectionFromRoute() !== 'engagement') return 'loyalty';
     return location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] === 'insider' ? 'insider' : 'loyalty';
   }
+  function performanceTabFromRoute() {
+    if (sectionFromRoute() !== 'performance') return 'eat';
+    const tab = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] || 'eat';
+    return ['eat','stay','play','guides','events','trips'].includes(tab) ? tab : 'eat';
+  }
+  function performanceDaysFromRoute() {
+    const days = Number(new URLSearchParams(location.hash.split('?')[1] || '').get('days'));
+    return [7,30,90].includes(days) ? days : 30;
+  }
 
   function closeDrawer() {
     $('app-shell').classList.remove('drawer-open');
@@ -607,6 +639,12 @@
       analyticsDays = routedDays;
       updateAnalyticsRangeControls();
       if (!analyticsLoaded) loadAnalytics(analyticsDays);
+      return;
+    }
+    if (key === 'performance') {
+      switchPerformanceTab(performanceTab, false);
+      updatePerformanceRangeControls();
+      if (!performanceLoaded) loadPerformance(performanceDays);
       return;
     }
     if (key === 'events') {
@@ -670,6 +708,10 @@
     if (key === 'bookings') { bookingTab = options.tab || (options.fromRoute ? bookingTabFromRoute() : bookingTab); if (options.fromRoute) bookingPlaceId = bookingPlaceFromRoute(); }
     if (key === 'billing') billingTab = options.tab || (options.fromRoute ? billingTabFromRoute() : billingTab);
     if (key === 'engagement') engagementTab = options.tab || (options.fromRoute ? engagementTabFromRoute() : engagementTab);
+    if (key === 'performance') {
+      performanceTab = options.tab || (options.fromRoute ? performanceTabFromRoute() : performanceTab);
+      if (options.fromRoute) { const days = performanceDaysFromRoute(); if (days !== performanceDays) performanceLoaded = false; performanceDays = days; }
+    }
     currentSection = key;
     SECTIONS.forEach((k) => {
       $('sec-' + k).classList.toggle('active', k === key);
@@ -690,6 +732,7 @@
       : key === 'bookings' ? `#/bookings/${bookingTab}${bookingPlaceId ? `?place=${encodeURIComponent(bookingPlaceId)}` : ''}`
       : key === 'billing' ? `#/billing/${billingTab}`
       : key === 'engagement' ? `#/engagement/${engagementTab}`
+      : key === 'performance' ? `#/performance/${performanceTab}?days=${performanceDays}`
       : '#/' + key;
     if (!options.fromRoute && location.hash !== route) history.pushState({ section: key }, '', route);
     if (options.fromRoute && location.hash !== route) history.replaceState({ section: key }, '', route);
@@ -715,6 +758,10 @@
     }
     if (currentSection === 'analytics') {
       loadAnalytics(analyticsDays);
+      return;
+    }
+    if (currentSection === 'performance') {
+      loadPerformance(performanceDays);
       return;
     }
     if (currentSection === 'events') {
@@ -839,6 +886,77 @@
     const button = e.target.closest('[data-engagement-link]');
     if (button) showSection('engagement', { tab: button.dataset.engagementLink });
   });
+
+  /* ── Content Performance ─────────────────────────────── */
+  const performanceLabels = { eat:'Eat', stay:'Stay', play:'Play', guides:'Guides', events:'Events', trips:'Trip Places' };
+
+  function performanceRoute() { return `#/performance/${performanceTab}?days=${performanceDays}`; }
+  function updatePerformanceRangeControls() {
+    document.querySelectorAll('[data-performance-days]').forEach(button => {
+      const active = Number(button.dataset.performanceDays) === performanceDays;
+      button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+    });
+  }
+  function switchPerformanceTab(tab, updateRoute = true) {
+    performanceTab = ['eat','stay','play','guides','events','trips'].includes(tab) ? tab : 'eat';
+    document.querySelectorAll('.performance-tab').forEach(button => {
+      const active = button.dataset.performanceTab === performanceTab;
+      button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active));
+    });
+    if (performanceData) renderPerformance(performanceData);
+    if (updateRoute) history.pushState({ section:'performance', tab:performanceTab }, '', performanceRoute());
+  }
+  function performanceKpi(value, label, context='') {
+    return `<div class="overview-card overview-count"><div class="num">${fmt(value)}</div><div class="label">${esc(label)}</div><div class="sub">${esc(context)}</div></div>`;
+  }
+  function renderPerformance(data) {
+    const allPlaces = data.places || [];
+    let rows, primary, secondary, note;
+    if (['eat','stay','play'].includes(performanceTab)) {
+      rows = allPlaces.filter(row => String(row.category).toLowerCase() === performanceTab).sort((a,b)=>(b.views||0)-(a.views||0));
+      primary = 'views'; secondary = row => `${fmt(row.users)} people · ${fmt(row.trip_adds)} trip adds`;
+      note = 'Ranked by listing views; trip additions show planning intent.';
+    } else if (performanceTab === 'guides') {
+      rows = (data.guides || []).slice().sort((a,b)=>(b.views||0)-(a.views||0));
+      primary = 'views'; secondary = row => `${fmt(row.users)} people${row.location ? ` · ${row.location}` : ''}`;
+      note = 'Ranked by guide views.';
+    } else if (performanceTab === 'events') {
+      rows = (data.events || []).slice().sort((a,b)=>(b.views||0)-(a.views||0));
+      primary = 'views'; secondary = row => `${fmt(row.users)} people · ${fmt(row.saves)} saves · ${fmt(row.trip_adds)} trip adds`;
+      note = 'Ranked by event views with saves and trip additions alongside.';
+    } else {
+      rows = allPlaces.slice().sort((a,b)=>(b.trip_adds||0)-(a.trip_adds||0));
+      primary = 'trip_adds'; secondary = row => `${fmt(row.trips)} trips · ${fmt(row.views)} views · ${String(row.category||'').toUpperCase()}`;
+      note = 'Places most often added to trips during this period.';
+    }
+    rows = rows.filter(row => Number(row[primary]) > 0);
+    const totalPrimary = rows.reduce((sum,row)=>sum+(Number(row[primary])||0),0);
+    const totalUsers = rows.reduce((sum,row)=>sum+(Number(row.users)||0),0);
+    const totalTripAdds = rows.reduce((sum,row)=>sum+(Number(row.trip_adds)||0),0);
+    const totalSaves = rows.reduce((sum,row)=>sum+(Number(row.saves)||0),0);
+    $('performance-kpis').innerHTML = performanceKpi(rows.length, 'Active listings', `With activity in ${performanceDays} days`)
+      + performanceKpi(totalPrimary, primary === 'trip_adds' ? 'Trip additions' : 'Views', 'Across ranked content')
+      + performanceKpi(performanceTab === 'trips' ? rows.reduce((sum,row)=>sum+(Number(row.trips)||0),0) : totalUsers, performanceTab === 'trips' ? 'Trip appearances' : 'People', performanceTab === 'trips' ? 'Distinct trips per place, summed' : 'Sum of listing audiences')
+      + performanceKpi(performanceTab === 'events' ? totalSaves : totalTripAdds, performanceTab === 'events' ? 'Event saves' : 'Trip additions', 'Planning intent');
+    $('performance-list-title').textContent = `${performanceLabels[performanceTab]} performance`;
+    $('performance-list-note').textContent = note;
+    $('performance-updated').textContent = data.generated_at ? `Updated ${new Date(data.generated_at).toLocaleString()}` : '';
+    const visible = rows.slice(0,20);
+    const max = Math.max(1, ...visible.map(row=>Number(row[primary])||0));
+    $('performance-ranking').innerHTML = visible.length ? visible.map((row,index) => `<div class="performance-row"><span class="performance-position">${index+1}</span><div class="performance-name"><strong>${esc(row.name || row.slug || 'Unknown')}</strong><small>${esc(secondary(row))}</small></div><div class="performance-bar"><span style="width:${Math.max(2,(Number(row[primary])||0)/max*100)}%"></span></div><div class="performance-value"><strong>${fmt(row[primary])}</strong><small>${primary === 'trip_adds' ? 'adds' : 'views'}</small></div></div>`).join('') : `<div class="analytics-empty">No ${esc(performanceLabels[performanceTab].toLowerCase())} activity recorded in this period.</div>`;
+  }
+  async function loadPerformance(days = performanceDays) {
+    performanceDays = days; updatePerformanceRangeControls();
+    $('performance-loading').classList.remove('hidden'); $('performance-error').classList.add('hidden'); $('performance-content').classList.add('hidden');
+    const { data, error } = await db.rpc('admin_get_performance', { p_admin_token:adminToken, p_days:performanceDays });
+    $('performance-loading').classList.add('hidden');
+    if (error || !data) { $('performance-error-message').textContent = error?.message || 'The performance report returned no data.'; $('performance-error').classList.remove('hidden'); return; }
+    performanceData = data; performanceLoaded = true; renderPerformance(data); $('performance-content').classList.remove('hidden');
+    if (currentSection === 'performance' && location.hash !== performanceRoute()) history.replaceState({section:'performance'},'',performanceRoute());
+  }
+  document.querySelectorAll('.performance-tab').forEach(button => button.addEventListener('click', () => switchPerformanceTab(button.dataset.performanceTab)));
+  document.querySelectorAll('[data-performance-days]').forEach(button => button.addEventListener('click', () => { performanceDays = Number(button.dataset.performanceDays); performanceLoaded = false; history.pushState({section:'performance'},'',performanceRoute()); loadPerformance(performanceDays); }));
+  $('performance-retry').addEventListener('click', () => loadPerformance(performanceDays));
 
   /* ── Engagement: Loyalty + Insider ───────────────────── */
   function switchEngagementTab(tab, updateRoute = true) {
@@ -1070,6 +1188,8 @@
     overviewLoaded = false;
     overviewData = null;
     engagementLoaded = false;
+    performanceLoaded = false;
+    performanceData = null;
     analyticsLoaded = false;
     $('gate-input').value = '';
     show('gate');
