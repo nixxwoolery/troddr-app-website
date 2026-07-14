@@ -137,6 +137,7 @@
     <nav class="section-nav">
       <button class="section-tab active" data-section="overview">Overview</button>
       <button class="section-tab" data-section="analytics">Analytics</button>
+      <button class="section-tab" data-section="events">Events</button>
       <button class="section-tab" data-section="feedback">Feedback</button>
       <button class="section-tab" data-section="review">Review</button>
       <button class="section-tab" data-section="billing">Billing</button>
@@ -154,6 +155,9 @@
     </div>
     <div class="section" id="sec-analytics">
       <iframe data-src="/admin-analytics.html" title="Analytics"></iframe>
+    </div>
+    <div class="section" id="sec-events">
+      <iframe data-src="/admin-events.html" title="Events console"></iframe>
     </div>
     <div class="section" id="sec-feedback">
       <iframe data-src="/admin-feedback.html" title="Feedback inbox"></iframe>
@@ -197,7 +201,7 @@
   }
 
   /* ── Sections (lazy-loaded iframes) ───────────────────── */
-  const SECTIONS = ['overview', 'analytics', 'feedback', 'review', 'billing', 'bookings'];
+  const SECTIONS = ['overview', 'analytics', 'events', 'feedback', 'review', 'billing', 'bookings'];
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
 
   // Strip the child page's own sticky header so the shell bar is the only chrome.

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR Admin · Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="robots" content="noindex,nofollow" />
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#fff; --bg-soft:#f8f9fa;
+    --primary:#0077CC; --primary-text:#fff;
+    --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea;
+    --amber:#b86e00; --amber-light:#fff4e0;
+    --blue-light:#e8f4ff;
+    --radius:10px; --radius-lg:16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft); color: var(--black);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--black); color: #fff;
+    border-bottom: 1px solid #000;
+  }
+  .navbar {
+    max-width: 1380px; margin: 0 auto;
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .navbar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .navbar .tag {
+    background: rgba(255,255,255,0.12); color: #fff;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+  }
+
+  .layout {
+    max-width: 1380px; margin: 24px auto; padding: 0 24px 48px;
+    display: grid; grid-template-columns: 300px 1fr; gap: 18px;
+    align-items: start;
+  }
+
+  /* ── Event list sidebar ─────────────────────────────────── */
+  .event-list { display: flex; flex-direction: column; gap: 8px; }
+  .event-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .event-card:hover { border-color: var(--primary); }
+  .event-card.active { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+  .event-card .ec-title {
+    font-size: 13px; font-weight: 700; letter-spacing: -0.2px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .event-card .ec-meta { font-size: 11px; color: var(--grey-mid); margin-top: 2px; }
+  .event-card .ec-stats { font-size: 10px; color: var(--grey-light); margin-top: 4px; }
+  .live-dot {
+    display: inline-block; width: 8px; height: 8px;
+    background: var(--green); border-radius: 50%;
+    box-shadow: 0 0 0 3px var(--green-light);
+    flex-shrink: 0;
+  }
+
+  /* ── Console ────────────────────────────────────────────── */
+  .console-head { margin-bottom: 16px; }
+  .console-head h2 {
+    font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .console-head .sub { font-size: 13px; color: var(--grey-mid); margin-top: 2px; }
+
+  .pill {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .pill.live      { background: var(--green-light); color: var(--green); }
+  .pill.published { background: var(--blue-light); color: var(--primary); }
+  .pill.draft     { background: var(--bg-soft); color: var(--grey-mid); border: 1px solid var(--border); }
+  .pill.featured  { background: var(--amber-light); color: var(--amber); }
+  .pill.up        { background: var(--green-light); color: var(--green); }
+  .pill.down      { background: var(--red-light); color: var(--red); }
+
+  .kpis {
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 10px; margin-bottom: 18px;
+  }
+  .kpi {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px;
+  }
+  .kpi .num { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+  .kpi .lbl {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid); margin-top: 5px;
+  }
+
+  .card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 18px 20px;
+  }
+  .section-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid); margin: 20px 0 10px;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+
+  .chart-legend {
+    display: flex; gap: 18px; margin-bottom: 10px;
+    font-size: 11px; font-weight: 600; color: var(--grey-mid);
+  }
+  .chart-legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+  .chart-wrap svg { width: 100%; height: auto; display: block; }
+
+  /* Composer */
+  .composer input[type="text"], .composer textarea {
+    width: 100%; font-family: inherit; font-size: 13px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 8px;
+  }
+  .composer textarea { min-height: 72px; resize: vertical; }
+  .composer-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .composer-row label {
+    font-size: 12px; font-weight: 600; color: var(--grey-dark);
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+  }
+  .composer .post-btn {
+    padding: 9px 18px; background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .composer .post-btn:disabled { opacity: 0.5; cursor: default; }
+  .composer .result-note { font-size: 12px; font-weight: 600; }
+  .composer .result-note.ok { color: var(--green); }
+  .composer .result-note.err { color: var(--red); }
+
+  /* Update / feedback entries */
+  .entry {
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry .e-title {
+    font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .entry .e-meta { font-size: 11px; color: var(--grey-light); }
+  .entry .e-body { font-size: 12px; color: var(--grey-dark); margin-top: 3px; white-space: pre-wrap; }
+
+  .rank-row {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 4px 12px; padding: 8px 4px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px; align-items: center;
+  }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-row .rr-name {
+    font-weight: 600; color: var(--grey-dark);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .rank-row .rr-name small { color: var(--grey-light); font-weight: 500; margin-left: 6px; }
+  .rank-row .rr-n { font-weight: 800; }
+  .rank-row .rr-bar {
+    grid-column: 1 / -1; height: 5px; border-radius: 100px;
+    background: var(--bg-soft); overflow: hidden;
+  }
+  .rank-row .rr-bar > span { display: block; height: 100%; background: var(--primary); border-radius: 100px; }
+
+  .dims-inline { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .dim-chip {
+    font-size: 11px; font-weight: 600;
+    background: var(--blue-light); color: var(--primary);
+    padding: 3px 9px; border-radius: 100px; text-transform: capitalize;
+  }
+  .dim-chip b { font-weight: 800; }
+  .chip {
+    font-size: 11px; font-weight: 600;
+    background: var(--bg-soft); color: var(--grey-dark);
+    border: 1px solid var(--border);
+    padding: 3px 10px; border-radius: 100px;
+  }
+
+  .empty-note { font-size: 12px; color: var(--grey-light); padding: 12px 4px; }
+
+  /* Gate + loading */
+  .gate {
+    max-width: 420px; margin: 80px auto;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 34px 30px;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.08); text-align: center;
+    grid-column: 1 / -1;
+  }
+  .gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .gate p { color: var(--grey-mid); font-size: 14px; margin-bottom: 18px; }
+  .gate input {
+    width: 100%; padding: 11px 14px;
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;
+  }
+  .gate button {
+    width: 100%; padding: 11px 22px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .gate-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+  .gate-error.show { display: block; }
+  .loading {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 90px 0; color: var(--grey-mid);
+  }
+  .spinner {
+    width: 30px; height: 30px;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+
+  @media (max-width: 1000px) {
+    .layout { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(3, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <h1>TRODDR Admin</h1>
+    <span class="tag">Events</span>
+  </div>
+</header>
+
+<div class="gate hidden" id="gate" style="margin: 80px auto;">
+  <h2>Admin sign-in</h2>
+  <p>Enter your admin token to open the events console.</p>
+  <input id="gate-input" type="password" placeholder="admin token..." />
+  <button id="gate-go">Continue</button>
+  <div class="gate-error" id="gate-error">Invalid or revoked token.</div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>Loading events…</p>
+</div>
+
+<div class="layout hidden" id="main">
+  <aside class="event-list" id="event-list"></aside>
+
+  <section id="console">
+    <div class="loading" id="console-loading" style="padding:60px 0;">
+      <div class="spinner"></div>
+      <p>Loading event…</p>
+    </div>
+    <div id="console-body" class="hidden">
+
+      <div class="console-head">
+        <h2 id="ev-title"></h2>
+        <div class="sub" id="ev-sub"></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="num" id="k-views">–</div><div class="lbl">Views</div></div>
+        <div class="kpi"><div class="num" id="k-saves">–</div><div class="lbl">Saves</div></div>
+        <div class="kpi"><div class="num" id="k-interested">–</div><div class="lbl">Interested</div></div>
+        <div class="kpi"><div class="num" id="k-going">–</div><div class="lbl">Going</div></div>
+        <div class="kpi"><div class="num" id="k-vendor">–</div><div class="lbl">Vendor clicks</div></div>
+        <div class="kpi"><div class="num" id="k-ticket">–</div><div class="lbl">Ticket clicks</div></div>
+      </div>
+
+      <div class="card chart-wrap">
+        <div class="chart-legend">
+          <span><span class="dot" style="background:#bcd9f0"></span>Views</span>
+          <span><span class="dot" style="background:#0077CC"></span>Vendor clicks</span>
+        </div>
+        <div id="chart"></div>
+      </div>
+
+      <div class="section-label">Post an update</div>
+      <div class="card composer">
+        <input type="text" id="up-title" placeholder="Update title (e.g. Gates now open)" />
+        <textarea id="up-message" placeholder="Message shown in the app's event updates feed…"></textarea>
+        <div class="composer-row">
+          <label><input type="checkbox" id="up-push" /> Also send push (<span id="up-audience">–</span> people)</label>
+          <button class="post-btn" id="up-post">Post update</button>
+          <span class="result-note" id="up-result"></span>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:20px;">
+        <div>
+          <div class="section-label" style="margin-top:0;">Updates feed</div>
+          <div class="card" id="updates"></div>
+          <div class="section-label">Feedback</div>
+          <div class="card" id="feedback"></div>
+        </div>
+        <div>
+          <div class="section-label" style="margin-top:0;">Top vendors</div>
+          <div class="card" id="top-vendors"></div>
+          <div class="section-label">Notifications sent</div>
+          <div class="card" id="deliveries"></div>
+          <div class="section-label">Parking lots</div>
+          <div class="card" id="parking"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const $ = (id) => document.getElementById(id);
+
+  let adminToken = '';
+  let currentEventId = null;
+  let currentConsole = null;
+
+  function loadToken() {
+    const urlT = new URLSearchParams(location.search).get('token');
+    if (urlT) {
+      try { sessionStorage.setItem('troddr_admin_token', urlT); } catch (e) {}
+      return urlT;
+    }
+    try { return sessionStorage.getItem('troddr_admin_token') || ''; } catch (e) { return ''; }
+  }
+
+  function show(view) {
+    $('gate').classList.toggle('hidden', view !== 'gate');
+    $('loading').classList.toggle('hidden', view !== 'loading');
+    $('main').classList.toggle('hidden', view !== 'main');
+  }
+
+  const fmt = (n) => (n == null ? '–' : Number(n).toLocaleString());
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const when = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const whenTime = (iso) => iso ? new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+  const nice = (s) => String(s ?? '').replace(/_/g, ' ');
+
+  /* ── Event list ────────────────────────────────────────── */
+  function renderEventList(events) {
+    $('event-list').innerHTML = events.map(e => `
+      <div class="event-card ${e.id === currentEventId ? 'active' : ''}" data-id="${e.id}">
+        <div class="ec-title">${e.is_live ? '<span class="live-dot"></span>' : ''}${esc(e.title)}</div>
+        <div class="ec-meta">${when(e.start_date)}${e.end_date && e.end_date !== e.start_date ? ' – ' + when(e.end_date) : ''}${e.town ? ' · ' + esc(e.town) : ''}</div>
+        <div class="ec-stats">${fmt(e.views_30d)} views 30d · ${fmt(e.interested)} interested · ${fmt(e.feedback)} feedback</div>
+      </div>`).join('');
+    $('event-list').querySelectorAll('.event-card').forEach(c =>
+      c.addEventListener('click', () => openEvent(c.dataset.id)));
+  }
+
+  /* ── Chart (views bars + clicks line) ──────────────────── */
+  function renderChart(daily) {
+    const W = 1000, H = 220, padL = 44, padR = 10, padT = 12, padB = 28;
+    const iw = W - padL - padR, ih = H - padT - padB;
+    const maxV = Math.max(1, ...daily.map(d => d.views));
+    const maxC = Math.max(1, ...daily.map(d => d.clicks));
+    const n = daily.length;
+    const step = iw / n;
+    const bw = Math.max(4, step * 0.62);
+
+    let bars = '', labels = '', grid = '';
+    for (let g = 0; g <= 4; g++) {
+      const y = padT + ih - (ih * g / 4);
+      grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#f0f0f0"/>`
+            + `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${Math.round(maxV * g / 4).toLocaleString()}</text>`;
+    }
+    const pts = [];
+    daily.forEach((d, i) => {
+      const cx = padL + step * i + step / 2;
+      const bh = ih * (d.views / maxV);
+      bars += `<rect x="${cx - bw / 2}" y="${padT + ih - bh}" width="${bw}" height="${Math.max(bh, 1)}" rx="2" fill="#bcd9f0"><title>${d.d}: ${d.views} views, ${d.clicks} vendor clicks</title></rect>`;
+      pts.push(`${cx},${padT + ih - ih * (d.clicks / maxC)}`);
+      if (i % 5 === 0 || i === n - 1) {
+        labels += `<text x="${cx}" y="${H - 6}" text-anchor="middle" font-size="10" fill="#999">${String(d.d).slice(5)}</text>`;
+      }
+    });
+    const line = `<polyline points="${pts.join(' ')}" fill="none" stroke="#0077CC" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    $('chart').innerHTML =
+      `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="font-family:inherit;">${grid}${bars}${line}${labels}</svg>`;
+  }
+
+  /* ── Console sections ──────────────────────────────────── */
+  function renderConsole(data) {
+    currentConsole = data;
+    const ev = data.event || {};
+    $('ev-title').innerHTML = `${esc(ev.title)}
+      ${ev.is_live ? '<span class="pill live">● live</span>' : ''}
+      ${ev.status ? `<span class="pill ${esc(ev.status)}">${esc(ev.status)}</span>` : ''}
+      ${ev.is_featured ? '<span class="pill featured">featured</span>' : ''}`;
+    $('ev-sub').textContent = [
+      `${when(ev.start_date)}${ev.end_date && ev.end_date !== ev.start_date ? ' – ' + when(ev.end_date) : ''}`,
+      ev.venue_name, ev.town, ev.parish,
+    ].filter(Boolean).join(' · ');
+
+    const k = data.kpis || {};
+    $('k-views').textContent      = fmt(k.views);
+    $('k-saves').textContent      = fmt(k.saves);
+    $('k-interested').textContent = fmt(k.interested);
+    $('k-going').textContent      = fmt(k.going);
+    $('k-vendor').textContent     = fmt(k.vendor_clicks);
+    $('k-ticket').textContent     = fmt(k.ticket_clicks);
+    $('up-audience').textContent  = fmt(k.push_audience);
+
+    renderChart(data.daily || []);
+
+    $('updates').innerHTML = (data.updates || []).length === 0
+      ? '<div class="empty-note">No updates posted yet.</div>'
+      : data.updates.map(u => `
+        <div class="entry">
+          <div class="e-title">${esc(u.title)}</div>
+          <div class="e-meta">${whenTime(u.created_at)}</div>
+          <div class="e-body">${esc(u.message)}</div>
+        </div>`).join('');
+
+    $('feedback').innerHTML = (data.feedback || []).length === 0
+      ? '<div class="empty-note">No feedback yet.</div>'
+      : data.feedback.map(f => `
+        <div class="entry">
+          <div class="e-title">${esc(f.username)}
+            ${f.vote ? `<span class="pill ${esc(f.vote)}">${f.vote === 'up' ? '👍 up' : '👎 down'}</span>` : ''}
+          </div>
+          <div class="e-meta">${when(f.created_at)}</div>
+          <div class="dims-inline">
+            ${Object.entries(f.ratings || {}).map(([kk, v]) => `<span class="dim-chip">${esc(nice(kk))} <b>${v}</b></span>`).join('')}
+            ${(f.quick_tags || []).map(t => `<span class="chip">${esc(nice(t))}</span>`).join('')}
+          </div>
+        </div>`).join('');
+
+    const tv = data.top_vendors || [];
+    const maxClicks = Math.max(1, ...tv.map(v => v.clicks));
+    $('top-vendors').innerHTML = tv.length === 0
+      ? '<div class="empty-note">No vendor clicks yet.</div>'
+      : tv.map(v => `
+        <div class="rank-row">
+          <span class="rr-name">${esc(v.name)}</span>
+          <span class="rr-n">${fmt(v.clicks)}</span>
+          <span class="rr-bar"><span style="width:${Math.max(2, v.clicks / maxClicks * 100)}%"></span></span>
+        </div>`).join('');
+
+    $('deliveries').innerHTML = (data.deliveries || []).length === 0
+      ? '<div class="empty-note">No notifications sent for this event.</div>'
+      : data.deliveries.map(d => `
+        <div class="rank-row">
+          <span class="rr-name">${esc(nice(d.type))}<small>last ${whenTime(d.last_sent)}</small></span>
+          <span class="rr-n">${fmt(d.n)}</span>
+        </div>`).join('');
+
+    $('parking').innerHTML = (data.parking || []).length === 0
+      ? '<div class="empty-note">No parking lots configured.</div>'
+      : data.parking.map(l => `
+        <div class="rank-row">
+          <span class="rr-name">${esc(l.name)}<small>${l.tier ? esc(l.tier) + ' · ' : ''}${l.capacity ? 'cap ' + fmt(l.capacity) + ' · ' : ''}${fmt(l.reports_24h)} reports 24h</small></span>
+          <span class="rr-n">${l.status_override ? `<span class="chip">${esc(nice(l.status_override))}</span>` : ''}</span>
+        </div>`).join('');
+  }
+
+  /* ── Data flow ─────────────────────────────────────────── */
+  async function openEvent(eventId) {
+    currentEventId = eventId;
+    document.querySelectorAll('.event-card').forEach(c =>
+      c.classList.toggle('active', c.dataset.id === eventId));
+    $('console-loading').classList.remove('hidden');
+    $('console-body').classList.add('hidden');
+    const { data, error } = await db.rpc('admin_get_event_console', {
+      p_admin_token: adminToken, p_event_id: eventId,
+    });
+    $('console-loading').classList.add('hidden');
+    if (error || !data) return;
+    renderConsole(data);
+    $('console-body').classList.remove('hidden');
+  }
+
+  async function boot() {
+    show('loading');
+    const { data, error } = await db.rpc('admin_list_events', { p_admin_token: adminToken });
+    if (error || !data) {
+      try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
+      adminToken = '';
+      $('gate-error').classList.add('show');
+      show('gate');
+      return;
+    }
+    show('main');
+    renderEventList(data);
+    if (data.length) openEvent(data[0].id);
+  }
+
+  /* ── Composer ──────────────────────────────────────────── */
+  $('up-post').addEventListener('click', async () => {
+    const title = $('up-title').value.trim();
+    const message = $('up-message').value.trim();
+    const sendPush = $('up-push').checked;
+    const note = $('up-result');
+    note.className = 'result-note';
+    note.textContent = '';
+    if (!title || !message || !currentEventId) {
+      note.className = 'result-note err';
+      note.textContent = 'Title and message are required.';
+      return;
+    }
+    if (sendPush) {
+      const audience = currentConsole?.kpis?.push_audience ?? 0;
+      if (!confirm(`Send a push notification to ~${audience} people?`)) return;
+    }
+    $('up-post').disabled = true;
+
+    const { data, error } = await db.rpc('admin_post_event_update', {
+      p_admin_token: adminToken, p_event_id: currentEventId,
+      p_title: title, p_message: message,
+    });
+    if (error || !data) {
+      $('up-post').disabled = false;
+      note.className = 'result-note err';
+      note.textContent = 'Post failed' + (error ? ': ' + error.message : '');
+      return;
+    }
+
+    let pushSummary = '';
+    if (sendPush) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/notify-event-update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'apikey': SUPABASE_ANON,
+          },
+          body: JSON.stringify({
+            admin_token: adminToken, event_id: currentEventId,
+            title, message,
+          }),
+        });
+        const out = await res.json();
+        pushSummary = res.ok
+          ? ` · push sent to ${out.sent ?? 0}`
+          : ` · push failed (${out.error || res.status})`;
+      } catch (e) {
+        pushSummary = ' · push failed (network)';
+      }
+    }
+
+    $('up-post').disabled = false;
+    $('up-title').value = '';
+    $('up-message').value = '';
+    $('up-push').checked = false;
+    note.className = 'result-note ok';
+    note.textContent = 'Update posted ✓' + pushSummary;
+    openEvent(currentEventId); // refresh feed
+  });
+
+  /* ── Gate ──────────────────────────────────────────────── */
+  $('gate-go').addEventListener('click', () => {
+    const t = $('gate-input').value.trim();
+    if (!t) return;
+    adminToken = t;
+    try { sessionStorage.setItem('troddr_admin_token', t); } catch (e) {}
+    $('gate-error').classList.remove('show');
+    boot();
+  });
+  $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
+
+  adminToken = loadToken();
+  if (adminToken) boot(); else show('gate');
+</script>
+
+</body>
+</html>
