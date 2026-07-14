@@ -29,25 +29,37 @@
     font-size: 15px; line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     display: flex; flex-direction: column;
+    overflow: hidden;
   }
   .hidden { display: none !important; }
 
-  /* ── Shell header / section nav ───────────────────────── */
-  .shell-header {
-    flex: 0 0 auto;
+  /* ── Responsive application shell ────────────────────── */
+  .app-shell { flex: 1; min-height: 0; display: flex; }
+  .sidebar {
+    flex: 0 0 240px; width: 240px; min-height: 0;
+    display: flex; flex-direction: column;
     background: var(--black); color: #fff;
-    border-bottom: 1px solid #000;
+    border-right: 1px solid #000;
   }
-  .shell-bar {
-    max-width: 1320px; margin: 0 auto;
-    padding: 0 24px; height: 56px;
-    display: flex; align-items: center; gap: 20px;
+  .brand {
+    height: 68px; padding: 0 22px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
   }
-  .shell-bar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
-  .section-nav { display: flex; gap: 4px; margin-left: 8px; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    display: grid; place-items: center;
+    background: var(--primary); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .brand-copy strong { display: block; font-size: 15px; line-height: 1.2; }
+  .brand-copy span { display: block; color: rgba(255,255,255,0.5); font-size: 10px; margin-top: 2px; }
+  .section-nav { display: flex; flex: 1; flex-direction: column; gap: 4px; padding: 18px 12px; }
   .section-tab {
-    padding: 8px 16px;
+    min-height: 44px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 12px; width: 100%;
     font-family: inherit; font-size: 13px; font-weight: 600;
+    text-align: left;
     color: rgba(255,255,255,0.65);
     background: transparent; border: none;
     border-radius: 8px; cursor: pointer;
@@ -55,9 +67,10 @@
   }
   .section-tab:hover { color: #fff; background: rgba(255,255,255,0.08); }
   .section-tab.active { color: #fff; background: rgba(255,255,255,0.16); }
-  .shell-spacer { flex: 1; }
+  .nav-icon { width: 20px; text-align: center; font-size: 15px; line-height: 1; }
+  .sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
   .signout-btn {
-    padding: 7px 14px;
+    width: 100%; min-height: 42px; padding: 8px 12px;
     font-family: inherit; font-size: 12px; font-weight: 600;
     color: rgba(255,255,255,0.8);
     background: rgba(255,255,255,0.08);
@@ -65,6 +78,27 @@
     border-radius: 8px; cursor: pointer;
   }
   .signout-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+  .workspace { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .workspace-header {
+    flex: 0 0 68px; height: 68px; padding: 0 24px;
+    display: flex; align-items: center; gap: 12px;
+    background: #fff; border-bottom: 1px solid var(--border);
+  }
+  .workspace-heading { min-width: 0; }
+  .workspace-heading h1 { font-size: 18px; line-height: 1.25; letter-spacing: -0.35px; }
+  .workspace-heading p { color: var(--grey-light); font-size: 11px; margin-top: 2px; }
+  .workspace-spacer { flex: 1; }
+  .icon-btn {
+    min-width: 40px; min-height: 40px; padding: 8px 12px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border: 1px solid var(--border); border-radius: 9px;
+    background: #fff; color: var(--grey-dark); cursor: pointer;
+    font: 600 12px/1 'Poppins', sans-serif;
+  }
+  .icon-btn:hover { background: var(--bg-soft); border-color: #d9d9d9; }
+  .menu-btn { display: none; }
+  .drawer-backdrop { display: none; }
 
   /* ── Section / iframe area ────────────────────────────── */
   #main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -104,10 +138,33 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  @media (max-width: 720px) {
-    .shell-bar { gap: 8px; padding: 0 12px; }
-    .section-tab { padding: 8px 10px; font-size: 12px; }
-    .shell-bar h1 { display: none; }
+  @media (max-width: 900px) {
+    .sidebar {
+      position: fixed; z-index: 1000; inset: 0 auto 0 0;
+      width: min(280px, 86vw); transform: translateX(-102%);
+      transition: transform 0.2s ease;
+      box-shadow: 20px 0 50px rgba(0,0,0,0.25);
+    }
+    .app-shell.drawer-open .sidebar { transform: translateX(0); }
+    .drawer-backdrop {
+      position: fixed; z-index: 999; inset: 0;
+      display: block; visibility: hidden; opacity: 0;
+      background: rgba(0,0,0,0.42); border: 0;
+      transition: opacity 0.2s ease, visibility 0.2s;
+    }
+    .app-shell.drawer-open .drawer-backdrop { visibility: visible; opacity: 1; }
+    .menu-btn { display: inline-flex; }
+    .workspace-header { height: 60px; flex-basis: 60px; padding: 0 12px; }
+    .workspace-heading h1 { font-size: 16px; }
+    .workspace-heading p { display: none; }
+    .refresh-label { display: none; }
+  }
+  @media (max-width: 480px) {
+    .workspace-header { gap: 8px; }
+    .icon-btn { min-width: 40px; padding: 8px 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar, .drawer-backdrop { transition: none; }
   }
 </style>
 </head>
@@ -130,26 +187,38 @@
   <p>Verifying token…</p>
 </div>
 
-<!-- ── Main shell ──────────────────────────────────────── -->
-<header class="shell-header hidden" id="shell-header">
-  <div class="shell-bar">
-    <h1>TRODDR Admin</h1>
-    <nav class="section-nav">
-      <button class="section-tab active" data-section="overview">Overview</button>
-      <button class="section-tab" data-section="analytics">Analytics</button>
-      <button class="section-tab" data-section="events">Events</button>
-      <button class="section-tab" data-section="feedback">Feedback</button>
-      <button class="section-tab" data-section="review">Review</button>
-      <button class="section-tab" data-section="billing">Billing</button>
-      <button class="section-tab" data-section="bookings">Bookings</button>
+<!-- ── Main application shell ──────────────────────────── -->
+<div class="app-shell hidden" id="app-shell">
+  <button class="drawer-backdrop" id="drawer-backdrop" aria-label="Close navigation"></button>
+  <aside class="sidebar" id="sidebar" aria-label="Admin navigation">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">T</div>
+      <div class="brand-copy"><strong>TRODDR</strong><span>Administration</span></div>
+    </div>
+    <nav class="section-nav" aria-label="Dashboard sections">
+      <button class="section-tab active" data-section="overview"><span class="nav-icon" aria-hidden="true">◫</span>Overview</button>
+      <button class="section-tab" data-section="analytics"><span class="nav-icon" aria-hidden="true">↗</span>Analytics</button>
+      <button class="section-tab" data-section="events"><span class="nav-icon" aria-hidden="true">◇</span>Events</button>
+      <button class="section-tab" data-section="feedback"><span class="nav-icon" aria-hidden="true">◎</span>Feedback</button>
+      <button class="section-tab" data-section="review"><span class="nav-icon" aria-hidden="true">✓</span>Review</button>
+      <button class="section-tab" data-section="billing"><span class="nav-icon" aria-hidden="true">$</span>Billing</button>
+      <button class="section-tab" data-section="bookings"><span class="nav-icon" aria-hidden="true">▦</span>Bookings</button>
     </nav>
-    <div class="shell-spacer"></div>
-    <button class="signout-btn" id="signout">Sign out</button>
-  </div>
-</header>
+    <div class="sidebar-footer"><button class="signout-btn" id="signout">Sign out</button></div>
+  </aside>
 
-<div id="main" class="hidden">
-  <div class="frames">
+  <div class="workspace">
+    <header class="workspace-header">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">☰</button>
+      <div class="workspace-heading">
+        <h1 id="section-title">Overview</h1>
+        <p id="section-description">Platform health and work requiring attention</p>
+      </div>
+      <div class="workspace-spacer"></div>
+      <button class="icon-btn" id="refresh-section" title="Refresh this section" aria-label="Refresh this section"><span aria-hidden="true">↻</span><span class="refresh-label">Refresh</span></button>
+    </header>
+    <main id="main">
+      <div class="frames">
     <div class="section active" id="sec-overview">
       <iframe data-src="/admin-overview.html" title="Overview"></iframe>
     </div>
@@ -171,6 +240,8 @@
     <div class="section" id="sec-bookings">
       <iframe data-src="/admin-booking-setup.html" title="Booking setup"></iframe>
     </div>
+      </div>
+    </main>
   </div>
 </div>
 
@@ -185,8 +256,7 @@
   function show(view) {
     $('gate').classList.toggle('hidden', view !== 'gate');
     $('loading').classList.toggle('hidden', view !== 'loading');
-    $('shell-header').classList.toggle('hidden', view !== 'main');
-    $('main').classList.toggle('hidden', view !== 'main');
+    $('app-shell').classList.toggle('hidden', view !== 'main');
   }
 
   /* ── Token storage ────────────────────────────────────── */
@@ -201,8 +271,28 @@
   }
 
   /* ── Sections (lazy-loaded iframes) ───────────────────── */
-  const SECTIONS = ['overview', 'analytics', 'events', 'feedback', 'review', 'billing', 'bookings'];
+  const SECTION_META = {
+    overview:  { title: 'Overview',  description: 'Platform health and work requiring attention' },
+    analytics: { title: 'Analytics', description: 'Usage, discovery and conversion performance' },
+    events:    { title: 'Events',    description: 'Event performance, audiences and updates' },
+    feedback:  { title: 'Feedback',  description: 'Customer feedback, ratings and product signals' },
+    review:    { title: 'Review',    description: 'Submissions and requests awaiting action' },
+    billing:   { title: 'Billing',   description: 'Companies, invoices, payments and renewals' },
+    bookings:  { title: 'Bookings',  description: 'Property booking configuration and availability' },
+  };
+  const SECTIONS = Object.keys(SECTION_META);
+  let currentSection = 'overview';
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
+
+  function sectionFromRoute() {
+    const key = location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
+    return SECTIONS.includes(key) ? key : 'overview';
+  }
+
+  function closeDrawer() {
+    $('app-shell').classList.remove('drawer-open');
+    $('menu-btn').setAttribute('aria-expanded', 'false');
+  }
 
   // Strip the child page's own sticky header so the shell bar is the only chrome.
   function stripChildHeader(iframe) {
@@ -224,17 +314,43 @@
     iframe.src = iframe.dataset.src + sep + 'token=' + encodeURIComponent(adminToken);
   }
 
-  function showSection(key) {
+  function showSection(key, options = {}) {
+    if (!SECTIONS.includes(key)) key = 'overview';
+    currentSection = key;
     SECTIONS.forEach((k) => {
       $('sec-' + k).classList.toggle('active', k === key);
     });
-    document.querySelectorAll('.section-tab').forEach((t) =>
-      t.classList.toggle('active', t.dataset.section === key));
+    document.querySelectorAll('.section-tab').forEach((t) => {
+      const active = t.dataset.section === key;
+      t.classList.toggle('active', active);
+      if (active) t.setAttribute('aria-current', 'page');
+      else t.removeAttribute('aria-current');
+    });
+    $('section-title').textContent = SECTION_META[key].title;
+    $('section-description').textContent = SECTION_META[key].description;
+    document.title = `TRODDR Admin · ${SECTION_META[key].title}`;
+    const route = '#/' + key;
+    if (!options.fromRoute && location.hash !== route) history.pushState({ section: key }, '', route);
+    if (options.fromRoute && location.hash !== route) history.replaceState({ section: key }, '', route);
     loadSection(key);
+    closeDrawer();
   }
 
   document.querySelectorAll('.section-tab').forEach((t) =>
     t.addEventListener('click', () => showSection(t.dataset.section)));
+  window.addEventListener('hashchange', () => showSection(sectionFromRoute(), { fromRoute: true }));
+
+  $('menu-btn').addEventListener('click', () => {
+    const open = !$('app-shell').classList.contains('drawer-open');
+    $('app-shell').classList.toggle('drawer-open', open);
+    $('menu-btn').setAttribute('aria-expanded', String(open));
+  });
+  $('drawer-backdrop').addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+  $('refresh-section').addEventListener('click', () => {
+    const frame = frameFor(currentSection);
+    if (frame.src) frame.contentWindow.location.reload();
+  });
 
   // Child pages (e.g. Overview's "Open →" shortcuts) request section switches.
   window.addEventListener('message', (e) => {
@@ -276,7 +392,7 @@
       return;
     }
     show('main');
-    showSection('overview');
+    showSection(sectionFromRoute(), { fromRoute: true });
   }
 
   $('gate-go').addEventListener('click', () => {

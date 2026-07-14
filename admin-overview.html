@@ -331,8 +331,8 @@
       { n: p.messages,           label: 'New partner messages',         nav: 'review'   },
       { n: p.bookings,           label: 'Bookings awaiting response',   nav: 'bookings' },
       { n: p.bookings_attention, label: 'Bookings flagged for TRODDR',  nav: 'bookings' },
-      { n: p.suggested_places,   label: 'Unmatched place suggestions',  nav: null       },
-      { n: fb.app_open,          label: 'Open app feedback',            nav: null       },
+      { n: p.suggested_places,   label: 'Unmatched place suggestions',  nav: 'review'   },
+      { n: fb.app_open,          label: 'Open app feedback',            nav: 'feedback' },
     ];
     $('attention').innerHTML = rows.map(r => `
       <div class="att-row ${r.n > 0 ? 'hot' : ''}">

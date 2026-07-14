@@ -330,6 +330,7 @@
     <button class="tab" data-tab="messages">Messages <span class="badge" id="badge-messages">0</span></button>
     <button class="tab" data-tab="updates">Recent Event Updates <span class="badge" id="badge-updates">0</span></button>
     <button class="tab" data-tab="lowscores">Low Scores <span class="badge" id="badge-lowscores">0</span></button>
+    <button class="tab" data-tab="suggestions">Suggestions <span class="badge" id="badge-suggestions">0</span></button>
   </div>
 
   <div class="panel active" id="panel-specials"></div>
@@ -337,6 +338,7 @@
   <div class="panel" id="panel-messages"></div>
   <div class="panel" id="panel-updates"></div>
   <div class="panel" id="panel-lowscores"></div>
+  <div class="panel" id="panel-suggestions"></div>
 
 </div>
 
@@ -426,7 +428,8 @@
     renderMessages(data.new_messages || []);
     renderUpdates(data.recent_event_updates || []);
     showDashboard();
-    loadLowScores(); // separate RPC; fills its tab when ready
+    loadLowScores();      // separate RPCs; fill their tabs when ready
+    loadSuggestions();
   }
 
   // ── Low-rated places (avg review score < 3) ─────────────
@@ -449,6 +452,49 @@
                 <span>last ${new Date(r.last_at).toLocaleDateString()}</span>
                 <span>${escapeHtml(r.slug || '')}</span>
               </div>
+            </div>
+          </div>
+          <div style="padding: 10px 20px 14px;">
+            ${(r.reviewers || []).map(rv => `
+              <div class="item-meta" style="padding: 6px 0; border-bottom: 1px solid var(--border-soft); margin-bottom: 0;">
+                <span><strong>${escapeHtml(rv.name)}</strong></span>
+                <span>scored ${rv.score != null ? Number(rv.score).toFixed(1) : '–'}</span>
+                <span>${new Date(rv.created_at).toLocaleDateString()}</span>
+                ${rv.email ? `<a href="mailto:${escapeHtml(rv.email)}?subject=${encodeURIComponent('Your TRODDR feedback on ' + r.name)}" style="color: var(--primary); font-weight: 600;">${escapeHtml(rv.email)}</a>` : ''}
+                ${(rv.quick_tags || []).length ? `<span>${rv.quick_tags.map(escapeHtml).join(', ')}</span>` : ''}
+              </div>`).join('')}
+          </div>
+        </div>`).join('');
+  }
+
+  // ── Unmatched place suggestions (from in-app search) ────
+  async function loadSuggestions() {
+    const { data } = await db.rpc('admin_get_suggested_places', { p_admin_token: adminToken });
+    const rows = data || [];
+    $('badge-suggestions').textContent = rows.length;
+    document.querySelector('[data-tab="suggestions"]').classList.toggle('urgent', rows.length > 0);
+    $('panel-suggestions').innerHTML = rows.length === 0
+      ? '<div class="empty">No unmatched suggestions. All caught up.</div>'
+      : rows.map(s => `
+        <div class="item">
+          <div class="item-head">
+            <div class="item-head-body">
+              <div class="item-title">${escapeHtml(s.spot_name)}
+                ${s.category ? `<span class="item-status-pill draft">${escapeHtml(s.category)}</span>` : ''}
+                ${s.user_rating ? `<span class="item-status-pill approved">${escapeHtml(s.user_rating)}</span>` : ''}
+                ${s.notify_when_added ? '<span class="item-status-pill reviewing">notify when added</span>' : ''}
+              </div>
+              <div class="item-meta">
+                ${s.location ? `<span>${escapeHtml(s.location)}${s.country ? ', ' + escapeHtml(s.country) : ''}</span>` : ''}
+                <span>by <strong>${escapeHtml(s.suggested_by)}</strong>${s.suggested_by_email ? ` · <a href="mailto:${escapeHtml(s.suggested_by_email)}" style="color: var(--primary);">${escapeHtml(s.suggested_by_email)}</a>` : ''}</span>
+                <span>${new Date(s.created_at).toLocaleDateString()}</span>
+                ${s.intent ? `<span>intent: <strong>${escapeHtml(s.intent)}</strong></span>` : ''}
+                ${s.suggestion_count > 1 ? `<span><strong>${s.suggestion_count}</strong> suggestions</span>` : ''}
+                ${s.want_to_go_count > 0 ? `<span><strong>${s.want_to_go_count}</strong> want to go</span>` : ''}
+              </div>
+              ${s.experience_note ? `<div class="item-meta" style="margin-top:4px;">"${escapeHtml(s.experience_note)}"</div>` : ''}
+              ${s.description ? `<div class="item-meta" style="margin-top:4px;">${escapeHtml(s.description)}</div>` : ''}
+              ${s.contact_info ? `<div class="item-meta" style="margin-top:4px;">Contact: ${escapeHtml(s.contact_info)}</div>` : ''}
             </div>
           </div>
         </div>`).join('');
