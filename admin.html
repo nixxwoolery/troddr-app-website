@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <link href="/css/admin-events-view.css" rel="stylesheet" />
 <link href="/css/admin-feedback-view.css" rel="stylesheet" />
+<link href="/css/admin-review-view.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="robots" content="noindex,nofollow" />
 
@@ -401,7 +402,7 @@
       </div>
     </div>
     <div class="section" id="sec-review">
-      <iframe data-src="/admin-review.html" title="Review queue"></iframe>
+      <div class="native-review" id="review-view"><div class="overview-state" id="review-loading"><div><div class="spinner"></div><p>Loading review queue…</p></div></div><div class="overview-state hidden" id="review-error"><div class="overview-error"><strong>Review queue could not be loaded</strong><p id="review-error-message"></p><button class="icon-btn" id="review-retry">Try again</button></div></div><div class="review-inner hidden" id="review-content"><div class="review-tabs" role="tablist" id="review-tabs"></div><div id="review-panels"></div></div></div>
     </div>
     <div class="section" id="sec-billing">
       <iframe data-src="/admin-billing.html" title="Billing console"></iframe>
@@ -416,6 +417,7 @@
 
 <script src="/js/admin-events-view.js"></script>
 <script src="/js/admin-feedback-view.js"></script>
+<script src="/js/admin-review-view.js"></script>
 <script>
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -460,6 +462,8 @@
   let eventRouteId = '';
   let feedbackInitialized = false;
   let feedbackTab = 'event';
+  let reviewInitialized = false;
+  let reviewTab = 'specials';
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
   const fmt = (n) => {
     if (n == null) return '–';
@@ -552,6 +556,14 @@
       AdminFeedbackView.load(feedbackTab);
       return;
     }
+    if (key === 'review') {
+      if (!reviewInitialized) {
+        AdminReviewView.init({ db, getToken: () => adminToken, navigate: (tab) => { reviewTab = tab; history.pushState({ section:'review', tab }, '', `#/review/${tab}`); } });
+        reviewInitialized = true;
+      }
+      AdminReviewView.load(reviewTab);
+      return;
+    }
     const iframe = frameFor(key);
     if (iframe.dataset.loaded) {
       if (key === 'review' && reviewTabFromRoute()) iframe.contentWindow.location.hash = reviewTabFromRoute();
@@ -569,6 +581,7 @@
     if (key === 'analytics' && options.fromRoute) analyticsDays = analyticsDaysFromRoute();
     if (key === 'events' && options.fromRoute) eventRouteId = eventIdFromRoute();
     if (key === 'feedback') feedbackTab = options.tab || (options.fromRoute ? feedbackTabFromRoute() : feedbackTab);
+    if (key === 'review') reviewTab = options.tab || (options.fromRoute ? (reviewTabFromRoute() || 'specials') : reviewTab);
     currentSection = key;
     SECTIONS.forEach((k) => {
       $('sec-' + k).classList.toggle('active', k === key);
@@ -619,6 +632,10 @@
     }
     if (currentSection === 'feedback') {
       AdminFeedbackView.refresh(feedbackTab);
+      return;
+    }
+    if (currentSection === 'review') {
+      AdminReviewView.refresh(reviewTab);
       return;
     }
     const frame = frameFor(currentSection);
@@ -847,6 +864,7 @@
     analyticsLoaded = false;
     AdminEventsView.reset();
     AdminFeedbackView.reset();
+    AdminReviewView.reset();
     updateAnalyticsRangeControls();
     history.replaceState({ section: 'analytics' }, '', `#/analytics?days=${analyticsDays}`);
     loadAnalytics(analyticsDays);
