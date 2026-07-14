@@ -404,6 +404,9 @@
           <div class="overview-counts" id="performance-kpis"></div>
           <div class="performance-heading"><div><h2 id="performance-list-title">Eat performance</h2><p id="performance-list-note"></p></div><span id="performance-updated"></span></div>
           <div class="overview-card performance-ranking" id="performance-ranking"></div>
+          <div class="performance-quality hidden" id="performance-quality"></div>
+          <div class="overview-label">Needs attention · no activity</div>
+          <div class="overview-card" id="performance-zero"></div>
         </div>
       </div>
     </div>
@@ -909,13 +912,19 @@
   function performanceKpi(value, label, context='') {
     return `<div class="overview-card overview-count"><div class="num">${fmt(value)}</div><div class="label">${esc(label)}</div><div class="sub">${esc(context)}</div></div>`;
   }
+  function performanceChange(current, previous) {
+    current = Number(current)||0; previous = Number(previous)||0;
+    if (!previous) return current ? 'New' : '—';
+    const change = Math.round((current-previous)/previous*100);
+    return `${change > 0 ? '+' : ''}${change}%`;
+  }
   function renderPerformance(data) {
     const allPlaces = data.places || [];
     let rows, primary, secondary, note;
     if (['eat','stay','play'].includes(performanceTab)) {
       rows = allPlaces.filter(row => String(row.category).toLowerCase() === performanceTab).sort((a,b)=>(b.views||0)-(a.views||0));
-      primary = 'views'; secondary = row => `${fmt(row.users)} people`;
-      note = 'Ranked by listing views.';
+      primary = 'views'; secondary = row => `${fmt(row.users)} people · ${fmt(row.saves)} saves · ${row.views ? Math.round((Number(row.saves)||0)/row.views*100) : 0}% save rate`;
+      note = 'Ranked by listing views, with save conversion and change versus the previous period.';
     } else if (performanceTab === 'guides') {
       rows = (data.guides || []).slice().sort((a,b)=>(b.views||0)-(a.views||0));
       primary = 'views'; secondary = row => `${fmt(row.users)} people${row.location ? ` · ${row.location}` : ''}`;
@@ -929,22 +938,30 @@
       primary = 'trip_adds'; secondary = row => `${fmt(row.trips)} trips · ${fmt(row.views)} views · ${String(row.category||'').toUpperCase()}`;
       note = 'Places most often added to trips during this period.';
     }
+    const today = new Date().toISOString().slice(0,10);
+    const zeroRows = rows.filter(row => Number(row[primary]) === 0 && (performanceTab !== 'events' || !row.start_date || row.start_date >= today));
+    const previousKey = primary === 'trip_adds' ? 'previous_trip_adds' : 'previous_views';
+    const previousPrimary = rows.reduce((sum,row)=>sum+(Number(row[previousKey])||0),0);
     rows = rows.filter(row => Number(row[primary]) > 0);
     const totalPrimary = rows.reduce((sum,row)=>sum+(Number(row[primary])||0),0);
-    const totalUsers = rows.reduce((sum,row)=>sum+(Number(row.users)||0),0);
+    const totalUsers = Number(data.audiences?.[performanceTab]) || 0;
     const totalSaves = rows.reduce((sum,row)=>sum+(Number(row.saves)||0),0);
     const activeLabel = performanceTab === 'events' ? 'Active events' : performanceTab === 'guides' ? 'Active guides' : 'Active listings';
     let kpis = performanceKpi(rows.length, activeLabel, `With activity in ${performanceDays} days`)
-      + performanceKpi(totalPrimary, primary === 'trip_adds' ? 'Trip additions' : 'Views', 'Across ranked content')
+      + performanceKpi(totalPrimary, primary === 'trip_adds' ? 'Trip additions' : 'Views', `${performanceChange(totalPrimary,previousPrimary)} vs previous period`)
       + performanceKpi(performanceTab === 'trips' ? rows.reduce((sum,row)=>sum+(Number(row.trips)||0),0) : totalUsers, performanceTab === 'trips' ? 'Trip appearances' : 'People', performanceTab === 'trips' ? 'Distinct trips per place, summed' : 'Sum of listing audiences');
-    if (performanceTab === 'events') kpis += performanceKpi(totalSaves, 'Event saves', 'Planning intent');
+    if (['eat','stay','play','events'].includes(performanceTab)) kpis += performanceKpi(totalSaves, performanceTab === 'events' ? 'Event saves' : 'Place saves', totalPrimary ? `${Math.round(totalSaves/totalPrimary*100)}% save rate` : 'No views yet');
     $('performance-kpis').innerHTML = kpis;
     $('performance-list-title').textContent = `${performanceLabels[performanceTab]} performance`;
     $('performance-list-note').textContent = note;
     $('performance-updated').textContent = data.generated_at ? `Updated ${new Date(data.generated_at).toLocaleString()}` : '';
     const visible = rows.slice(0,20);
     const max = Math.max(1, ...visible.map(row=>Number(row[primary])||0));
-    $('performance-ranking').innerHTML = visible.length ? visible.map((row,index) => `<div class="performance-row"><span class="performance-position">${index+1}</span><div class="performance-name"><strong>${esc(row.name || row.slug || 'Unknown')}</strong><small>${esc(secondary(row))}</small></div><div class="performance-bar"><span style="width:${Math.max(2,(Number(row[primary])||0)/max*100)}%"></span></div><div class="performance-value"><strong>${fmt(row[primary])}</strong><small>${primary === 'trip_adds' ? 'adds' : 'views'}</small></div></div>`).join('') : `<div class="analytics-empty">No ${esc(performanceLabels[performanceTab].toLowerCase())} activity recorded in this period.</div>`;
+    $('performance-ranking').innerHTML = visible.length ? visible.map((row,index) => `<div class="performance-row"><span class="performance-position">${index+1}</span><div class="performance-name"><strong>${esc(row.name || row.slug || 'Unknown')}</strong><small>${esc(secondary(row))}</small></div><div class="performance-bar"><span style="width:${Math.max(2,(Number(row[primary])||0)/max*100)}%"></span></div><div class="performance-value"><strong>${fmt(row[primary])}</strong><small>${primary === 'trip_adds' ? 'adds' : 'views'} · ${performanceChange(row[primary],row[previousKey])}</small></div></div>`).join('') : `<div class="analytics-empty">No ${esc(performanceLabels[performanceTab].toLowerCase())} activity recorded in this period.</div>`;
+    $('performance-zero').innerHTML = zeroRows.length ? zeroRows.slice(0,10).map(row => `<div class="overview-row"><span class="name">${esc(row.name || row.slug || 'Unknown')}<small>${esc(row.location || row.town || row.parish || '')}</small></span><span class="value">0 ${primary === 'trip_adds' ? 'adds' : 'views'}</span></div>`).join('') + (zeroRows.length > 10 ? `<div class="performance-more">+${fmt(zeroRows.length-10)} more without activity</div>` : '') : `<div class="analytics-empty">Everything in this category has activity.</div>`;
+    const unattributed = data.unattributed || {}, missing = performanceTab === 'guides' ? unattributed.guides : performanceTab === 'events' ? unattributed.events : ['eat','stay','play'].includes(performanceTab) ? unattributed.places : 0;
+    $('performance-quality').classList.toggle('hidden', !Number(missing));
+    $('performance-quality').innerHTML = Number(missing) ? `<strong>${fmt(missing)} unmatched tracking events</strong><span>These records could not be connected to current catalog content and are excluded from rankings.</span>` : '';
   }
   async function loadPerformance(days = performanceDays) {
     performanceDays = days; updatePerformanceRangeControls();

@@ -34,6 +34,8 @@
 .performance-name { min-width:0; }.performance-name strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }.performance-name small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--grey-light); font-size:10px; }
 .performance-bar { height:9px; overflow:hidden; border-radius:99px; background:var(--bg-soft); }.performance-bar span { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--viz-blue),#43a5dc); }
 .performance-value { text-align:right; font-variant-numeric:tabular-nums; }.performance-value strong { display:block; font-size:14px; }.performance-value small { display:block; color:var(--grey-light); font-size:9px; text-transform:uppercase; }
+.performance-quality { display:flex; align-items:center; gap:10px; margin-top:14px; padding:12px 14px; border:1px solid #efd8a8; border-radius:10px; background:var(--viz-amber-soft); font-size:11px; }.performance-quality span { color:var(--grey-mid); }
+.performance-more { padding:12px 4px 2px; color:var(--grey-light); font-size:10px; text-align:center; }
 
 .native-engagement { height:100%; overflow:auto; padding:24px; }
 .engagement-inner { max-width:1280px; margin:0 auto; padding-bottom:48px; }
