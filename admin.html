@@ -146,6 +146,29 @@
   .overview-error strong { display: block; color: var(--black); margin-bottom: 5px; }
   .overview-error button { margin-top: 14px; }
 
+  /* ── Shell-native analytics ───────────────────────────── */
+  .native-analytics { height: 100%; overflow-y: auto; padding: 24px; }
+  .analytics-inner { max-width: 1280px; margin: 0 auto; padding-bottom: 48px; }
+  .analytics-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .range-btn {
+    min-height: 36px; padding: 7px 16px; border: 1px solid var(--border); border-radius: 99px;
+    background: #fff; color: var(--grey-mid); cursor: pointer; font: 600 12px/1 'Poppins', sans-serif;
+  }
+  .range-btn:hover { border-color: var(--grey-light); color: var(--black); }
+  .range-btn.active { border-color: var(--black); background: var(--black); color: #fff; }
+  .analytics-updated { margin-left: auto; color: var(--grey-light); font-size: 11px; }
+  .analytics-rank { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 8px 4px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .analytics-rank:last-child { border-bottom: 0; }
+  .analytics-rank .name { min-width: 0; overflow: hidden; color: var(--grey-dark); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  .analytics-rank .name small { margin-left: 6px; color: var(--grey-light); font-weight: 500; }
+  .analytics-rank .value { font-weight: 800; }
+  .analytics-rank .bar { grid-column: 1 / -1; height: 5px; overflow: hidden; border-radius: 99px; background: var(--bg-soft); }
+  .analytics-rank .bar span { display: block; height: 100%; border-radius: 99px; background: var(--primary); }
+  .analytics-rank.zero .bar span { background: var(--red); }
+  .analytics-empty { padding: 12px 4px; color: var(--grey-light); font-size: 12px; }
+  .analytics-pill { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 4px; background: var(--red-light); color: var(--red); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; }
+  .analytics-scroll { max-height: 520px; overflow-y: auto; }
+
   /* ── Auth gate ────────────────────────────────────────── */
   #gate { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
   .gate-card {
@@ -198,6 +221,7 @@
     .workspace-heading p { display: none; }
     .refresh-label { display: none; }
     .native-overview { padding: 18px 14px; }
+    .native-analytics { padding: 18px 14px; }
     .overview-counts { grid-template-columns: repeat(2, 1fr); }
     .overview-two-col { grid-template-columns: 1fr; }
   }
@@ -290,7 +314,40 @@
       </div>
     </div>
     <div class="section" id="sec-analytics">
-      <iframe data-src="/admin-analytics.html" title="Analytics"></iframe>
+      <div class="native-analytics" id="analytics-view">
+        <div class="overview-state" id="analytics-loading"><div><div class="spinner"></div><p>Loading analytics…</p></div></div>
+        <div class="overview-state hidden" id="analytics-error"><div class="overview-error"><strong>Analytics could not be loaded</strong><p id="analytics-error-message">Check your connection and try again.</p><button class="icon-btn" id="analytics-retry">Try again</button></div></div>
+        <div class="analytics-inner hidden" id="analytics-content">
+          <div class="analytics-toolbar" aria-label="Analytics date range">
+            <button class="range-btn" data-days="7">7 days</button><button class="range-btn active" data-days="30">30 days</button><button class="range-btn" data-days="90">90 days</button>
+            <span class="analytics-updated" id="an-updated"></span>
+          </div>
+          <div class="overview-counts">
+            <div class="overview-card overview-count"><div class="num" id="an-events">–</div><div class="label">Events tracked</div></div>
+            <div class="overview-card overview-count"><div class="num" id="an-users">–</div><div class="label">Active users</div><div class="sub">Including guest sessions</div></div>
+            <div class="overview-card overview-count"><div class="num" id="an-sessions">–</div><div class="label">Sessions</div></div>
+            <div class="overview-card overview-count"><div class="num" id="an-signups">–</div><div class="label">New signups</div></div>
+          </div>
+          <div class="overview-card" style="margin-top:24px"><div class="overview-chart-legend"><span><i style="background:#bcd9f0"></i>Events tracked</span><span><i style="background:#0077CC"></i>Active users</span></div><div id="an-chart"></div></div>
+          <div class="overview-two-col">
+            <div>
+              <div class="overview-label">Action breakdown</div><div class="overview-card" id="an-by-event"></div>
+              <div class="overview-label">Top places</div><div class="overview-card" id="an-top-places"></div>
+              <div class="overview-label">Top vendors</div><div class="overview-card" id="an-top-vendors"></div>
+              <div class="overview-label">Top guides</div><div class="overview-card" id="an-top-guides"></div>
+              <div class="overview-label">Outbound traffic</div><div class="overview-card" id="an-outbound"></div>
+              <div class="overview-label">Top outbound targets</div><div class="overview-card" id="an-outbound-targets"></div>
+            </div>
+            <div>
+              <div class="overview-label">Searches <span class="analytics-pill hidden" id="an-zero-pill">HAS ZERO-RESULT QUERIES</span></div><div class="overview-card" id="an-search"></div>
+              <div class="overview-label">Top events</div><div class="overview-card" id="an-top-events"></div>
+              <div class="overview-label">Top specials</div><div class="overview-card" id="an-top-specials"></div>
+              <div class="overview-label">Platform</div><div class="overview-card" id="an-platform"></div>
+              <div class="overview-label">Place views · this month</div><div class="overview-card analytics-scroll" id="an-place-views"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="section" id="sec-events">
       <iframe data-src="/admin-events.html" title="Events console"></iframe>
@@ -350,6 +407,8 @@
   const SECTIONS = Object.keys(SECTION_META);
   let currentSection = 'overview';
   let overviewLoaded = false;
+  let analyticsLoaded = false;
+  let analyticsDays = 30;
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
   const fmt = (n) => {
     if (n == null) return '–';
@@ -362,6 +421,12 @@
   function sectionFromRoute() {
     const key = location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
     return SECTIONS.includes(key) ? key : 'overview';
+  }
+
+  function analyticsDaysFromRoute() {
+    const query = location.hash.split('?')[1] || '';
+    const days = Number(new URLSearchParams(query).get('days'));
+    return [7, 30, 90].includes(days) ? days : 30;
   }
 
   function closeDrawer() {
@@ -385,6 +450,14 @@
       if (!overviewLoaded) loadOverview();
       return;
     }
+    if (key === 'analytics') {
+      const routedDays = analyticsDaysFromRoute();
+      if (routedDays !== analyticsDays) analyticsLoaded = false;
+      analyticsDays = routedDays;
+      updateAnalyticsRangeControls();
+      if (!analyticsLoaded) loadAnalytics(analyticsDays);
+      return;
+    }
     const iframe = frameFor(key);
     if (iframe.dataset.loaded) return;
     iframe.dataset.loaded = '1';
@@ -395,6 +468,7 @@
 
   function showSection(key, options = {}) {
     if (!SECTIONS.includes(key)) key = 'overview';
+    if (key === 'analytics' && options.fromRoute) analyticsDays = analyticsDaysFromRoute();
     currentSection = key;
     SECTIONS.forEach((k) => {
       $('sec-' + k).classList.toggle('active', k === key);
@@ -408,7 +482,7 @@
     $('section-title').textContent = SECTION_META[key].title;
     $('section-description').textContent = SECTION_META[key].description;
     document.title = `TRODDR Admin · ${SECTION_META[key].title}`;
-    const route = '#/' + key;
+    const route = key === 'analytics' ? `#/analytics?days=${analyticsDays}` : '#/' + key;
     if (!options.fromRoute && location.hash !== route) history.pushState({ section: key }, '', route);
     if (options.fromRoute && location.hash !== route) history.replaceState({ section: key }, '', route);
     loadSection(key);
@@ -429,6 +503,10 @@
   $('refresh-section').addEventListener('click', () => {
     if (currentSection === 'overview') {
       loadOverview();
+      return;
+    }
+    if (currentSection === 'analytics') {
+      loadAnalytics(analyticsDays);
       return;
     }
     const frame = frameFor(currentSection);
@@ -532,6 +610,106 @@
     if (button) showSection(button.dataset.nav);
   });
 
+  /* ── Shell-native Analytics ──────────────────────────── */
+  function updateAnalyticsRangeControls() {
+    document.querySelectorAll('#analytics-view .range-btn').forEach((button) => {
+      const active = Number(button.dataset.days) === analyticsDays;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function renderAnalyticsChart(daily) {
+    if (!daily.length) {
+      $('an-chart').innerHTML = '<div class="analytics-empty">No activity recorded in this period.</div>';
+      return;
+    }
+    const W = 1200, H = 260, padL = 44, padR = 10, padT = 12, padB = 30;
+    const iw = W - padL - padR, ih = H - padT - padB;
+    const maxE = Math.max(1, ...daily.map((d) => Number(d.events) || 0));
+    const maxU = Math.max(1, ...daily.map((d) => Number(d.users) || 0));
+    const step = iw / daily.length;
+    const bw = Math.max(2, step * 0.62);
+    const labelEvery = Math.max(1, Math.ceil(daily.length / 12));
+    let grid = '', bars = '', labels = '';
+    const points = [];
+    for (let g = 0; g <= 4; g++) {
+      const y = padT + ih - ih * g / 4;
+      grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#f0f0f0"/><text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${Math.round(maxE * g / 4).toLocaleString()}</text>`;
+    }
+    daily.forEach((d, i) => {
+      const events = Number(d.events) || 0, users = Number(d.users) || 0;
+      const cx = padL + step * i + step / 2;
+      const bh = ih * events / maxE;
+      bars += `<rect x="${cx - bw / 2}" y="${padT + ih - bh}" width="${bw}" height="${Math.max(bh, 1)}" rx="1.5" fill="#bcd9f0"><title>${esc(d.d)}: ${fmt(events)} events, ${fmt(users)} users</title></rect>`;
+      points.push(`${cx},${padT + ih - ih * users / maxU}`);
+      if (i % labelEvery === 0 || i === daily.length - 1) labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#999">${esc(String(d.d).slice(5))}</text>`;
+    });
+    $('an-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Events tracked and active users over ${analyticsDays} days" style="display:block;width:100%;height:auto">${grid}${bars}<polyline points="${points.join(' ')}" fill="none" stroke="#0077CC" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
+  }
+
+  function renderRankList(id, rows, options) {
+    const el = $(id);
+    if (!rows?.length) {
+      el.innerHTML = '<div class="analytics-empty">Nothing in this window.</div>';
+      return;
+    }
+    const values = rows.map((row) => Number(options.value(row)) || 0);
+    const max = Math.max(1, ...values);
+    el.innerHTML = rows.map((row, index) => {
+      const sub = options.sub?.(row);
+      return `<div class="analytics-rank ${options.extraClass?.(row) || ''}"><span class="name">${esc(options.name(row))}${sub ? `<small>${esc(sub)}</small>` : ''}</span><span class="value">${fmt(values[index])}</span><span class="bar"><span style="width:${Math.max(2, values[index] / max * 100)}%"></span></span></div>`;
+    }).join('');
+  }
+
+  function renderAnalytics(data) {
+    const totals = data.totals || {};
+    $('an-events').textContent = fmt(totals.events);
+    $('an-users').textContent = fmt(totals.users);
+    $('an-sessions').textContent = fmt(totals.sessions);
+    $('an-signups').textContent = fmt(totals.signups);
+    const generated = data.generated_at ? new Date(data.generated_at) : new Date();
+    $('an-updated').textContent = `Updated ${generated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    renderAnalyticsChart(data.daily || []);
+    renderRankList('an-by-event', data.by_event, { name: (r) => String(r.name || '').replace(/_/g, ' '), sub: (r) => `${fmt(r.users)} users`, value: (r) => r.n });
+    renderRankList('an-top-places', data.top_places, { name: (r) => r.name, value: (r) => r.views });
+    renderRankList('an-top-events', data.top_events, { name: (r) => r.title, sub: (r) => r.saves > 0 ? `${fmt(r.saves)} saves` : '', value: (r) => r.views });
+    renderRankList('an-top-vendors', data.top_vendors, { name: (r) => r.name, sub: (r) => r.event_title, value: (r) => r.clicks });
+    renderRankList('an-top-guides', data.top_guides, { name: (r) => r.title, value: (r) => r.views });
+    renderRankList('an-top-specials', data.top_specials, { name: (r) => r.title, value: (r) => r.views });
+    renderRankList('an-search', data.search_terms, { name: (r) => `“${r.q}”`, sub: (r) => r.zero_results > 0 ? `${r.zero_results}× zero results` : (r.avg_results != null ? `~${r.avg_results} results` : ''), value: (r) => r.n, extraClass: (r) => r.zero_results > 0 ? 'zero' : '' });
+    $('an-zero-pill').classList.toggle('hidden', !(data.search_terms || []).some((r) => r.zero_results > 0));
+    renderRankList('an-platform', data.by_platform, { name: (r) => r.platform, value: (r) => r.n });
+    renderRankList('an-outbound', data.outbound, { name: (r) => String(r.type || '').replace('_clicked', '').replace(/_/g, ' '), value: (r) => r.n });
+    renderRankList('an-outbound-targets', data.outbound_targets, { name: (r) => r.name, value: (r) => r.n });
+    renderRankList('an-place-views', data.place_views_month, { name: (r) => r.name, value: (r) => r.views });
+  }
+
+  async function loadAnalytics(days) {
+    $('analytics-loading').classList.remove('hidden');
+    $('analytics-error').classList.add('hidden');
+    $('analytics-content').classList.add('hidden');
+    const { data, error } = await db.rpc('admin_get_analytics', { p_admin_token: adminToken, p_days: days });
+    $('analytics-loading').classList.add('hidden');
+    if (error || !data) {
+      $('analytics-error-message').textContent = error?.message || 'Analytics returned no data.';
+      $('analytics-error').classList.remove('hidden');
+      return;
+    }
+    analyticsLoaded = true;
+    renderAnalytics(data);
+    $('analytics-content').classList.remove('hidden');
+  }
+
+  document.querySelectorAll('#analytics-view .range-btn').forEach((button) => button.addEventListener('click', () => {
+    analyticsDays = Number(button.dataset.days);
+    analyticsLoaded = false;
+    updateAnalyticsRangeControls();
+    history.replaceState({ section: 'analytics' }, '', `#/analytics?days=${analyticsDays}`);
+    loadAnalytics(analyticsDays);
+  }));
+  $('analytics-retry').addEventListener('click', () => loadAnalytics(analyticsDays));
+
   // Child pages (e.g. Overview's "Open →" shortcuts) request section switches.
   window.addEventListener('message', (e) => {
     if (e.origin !== window.location.origin) return;
@@ -552,6 +730,7 @@
       delete f.dataset.loaded;
     });
     overviewLoaded = false;
+    analyticsLoaded = false;
     $('gate-input').value = '';
     show('gate');
   });
