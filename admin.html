@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <link href="/css/admin-events-view.css" rel="stylesheet" />
+<link href="/css/admin-feedback-view.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="robots" content="noindex,nofollow" />
 
@@ -386,7 +387,18 @@
       </div>
     </div>
     <div class="section" id="sec-feedback">
-      <iframe data-src="/admin-feedback.html" title="Feedback inbox"></iframe>
+      <div class="native-feedback" id="feedback-view">
+        <div class="overview-state" id="feedback-loading"><div><div class="spinner"></div><p>Loading feedback…</p></div></div>
+        <div class="overview-state hidden" id="feedback-error"><div class="overview-error"><strong>Feedback could not be loaded</strong><p id="feedback-error-message"></p><button class="icon-btn" id="feedback-retry">Try again</button></div></div>
+        <div class="feedback-inner hidden" id="feedback-content">
+          <div class="feedback-tabs" role="tablist" aria-label="Feedback categories"><button class="feedback-tab active" data-feedback-tab="event" role="tab"><strong id="fb-count-event">–</strong><span>Event feedback</span></button><button class="feedback-tab" data-feedback-tab="place" role="tab"><strong id="fb-count-place">–</strong><span>Place feedback</span></button><button class="feedback-tab" data-feedback-tab="app" role="tab"><strong id="fb-count-app">–</strong><span>App feedback open</span></button><button class="feedback-tab" data-feedback-tab="items" role="tab"><strong id="fb-count-items">–</strong><span>Item ratings</span></button></div>
+          <section class="feedback-panel active" id="feedback-panel-event" role="tabpanel"><div class="feedback-grid"><div><div class="feedback-label">Ratings</div><div class="feedback-card" id="fb-event-avgs"></div></div><div><div class="feedback-label">Quick tags</div><div class="feedback-card" id="fb-event-tags"></div></div></div><div class="feedback-label">Responses</div><div id="fb-event-items"></div></section>
+          <section class="feedback-panel" id="feedback-panel-place" role="tabpanel"><div class="feedback-grid"><div><div class="feedback-label">Dimension averages</div><div class="feedback-card" id="fb-place-avgs"></div></div><div><div class="feedback-label">Quick tags</div><div class="feedback-card" id="fb-place-tags"></div></div></div><div class="feedback-label">Responses</div><div id="fb-place-items"></div></section>
+          <section class="feedback-panel" id="feedback-panel-app" role="tabpanel"><div class="feedback-label">Inbox</div><div id="fb-app-items"></div></section>
+          <section class="feedback-panel" id="feedback-panel-items" role="tabpanel"><div class="feedback-grid"><div><div class="feedback-label">Most rated items</div><div class="feedback-card" id="fb-items-top"></div></div><div><div class="feedback-label">Sentiment</div><div class="feedback-card" id="fb-items-summary"></div></div></div><div class="feedback-label">Recent ratings</div><div class="feedback-card" id="fb-items-recent"></div></section>
+        </div>
+        <div class="events-modal hidden" id="feedback-profile-modal" role="dialog" aria-modal="true"><div class="events-modal-card"><button class="events-modal-close" id="feedback-profile-close" aria-label="Close profile">×</button><div id="feedback-profile-body"></div></div></div>
+      </div>
     </div>
     <div class="section" id="sec-review">
       <iframe data-src="/admin-review.html" title="Review queue"></iframe>
@@ -403,6 +415,7 @@
 </div>
 
 <script src="/js/admin-events-view.js"></script>
+<script src="/js/admin-feedback-view.js"></script>
 <script>
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -445,6 +458,8 @@
   let analyticsDays = 30;
   let eventsInitialized = false;
   let eventRouteId = '';
+  let feedbackInitialized = false;
+  let feedbackTab = 'event';
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
   const fmt = (n) => {
     if (n == null) return '–';
@@ -475,6 +490,12 @@
     if (sectionFromRoute() !== 'review') return '';
     const tab = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] || '';
     return ['specials','submissions','messages','updates','lowscores','suggestions'].includes(tab) ? tab : '';
+  }
+
+  function feedbackTabFromRoute() {
+    if (sectionFromRoute() !== 'feedback') return 'event';
+    const tab = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] || 'event';
+    return ['event','place','app','items'].includes(tab) ? tab : 'event';
   }
 
   function closeDrawer() {
@@ -523,6 +544,14 @@
       AdminEventsView.load(eventRouteId);
       return;
     }
+    if (key === 'feedback') {
+      if (!feedbackInitialized) {
+        AdminFeedbackView.init({ db, getToken: () => adminToken, navigate: (tab) => { feedbackTab = tab; history.pushState({ section:'feedback', tab }, '', `#/feedback/${tab}`); } });
+        feedbackInitialized = true;
+      }
+      AdminFeedbackView.load(feedbackTab);
+      return;
+    }
     const iframe = frameFor(key);
     if (iframe.dataset.loaded) {
       if (key === 'review' && reviewTabFromRoute()) iframe.contentWindow.location.hash = reviewTabFromRoute();
@@ -539,6 +568,7 @@
     if (!SECTIONS.includes(key)) key = 'overview';
     if (key === 'analytics' && options.fromRoute) analyticsDays = analyticsDaysFromRoute();
     if (key === 'events' && options.fromRoute) eventRouteId = eventIdFromRoute();
+    if (key === 'feedback') feedbackTab = options.tab || (options.fromRoute ? feedbackTabFromRoute() : feedbackTab);
     currentSection = key;
     SECTIONS.forEach((k) => {
       $('sec-' + k).classList.toggle('active', k === key);
@@ -555,6 +585,7 @@
     const route = key === 'analytics' ? `#/analytics?days=${analyticsDays}`
       : key === 'events' && eventRouteId ? `#/events/${encodeURIComponent(eventRouteId)}`
       : key === 'review' && (options.tab || (options.fromRoute && reviewTabFromRoute())) ? `#/review/${options.tab || reviewTabFromRoute()}`
+      : key === 'feedback' ? `#/feedback/${feedbackTab}`
       : '#/' + key;
     if (!options.fromRoute && location.hash !== route) history.pushState({ section: key }, '', route);
     if (options.fromRoute && location.hash !== route) history.replaceState({ section: key }, '', route);
@@ -584,6 +615,10 @@
     }
     if (currentSection === 'events') {
       AdminEventsView.refresh(eventRouteId);
+      return;
+    }
+    if (currentSection === 'feedback') {
+      AdminFeedbackView.refresh(feedbackTab);
       return;
     }
     const frame = frameFor(currentSection);
@@ -644,7 +679,7 @@
       [pending.bookings, 'Bookings awaiting response', 'bookings'],
       [pending.bookings_attention, 'Bookings flagged for TRODDR', 'bookings'],
       [pending.suggested_places, 'Unmatched place suggestions', 'review', 'suggestions'],
-      [feedback.app_open, 'Open app feedback', 'feedback'],
+      [feedback.app_open, 'Open app feedback', 'feedback', 'app'],
     ];
     $('ov-attention').innerHTML = attention.map(([count, label, nav, tab]) => `<div class="overview-row ${Number(count) > 0 ? 'hot' : ''}"><span class="count">${fmt(count)}</span><span class="name">${esc(label)}</span>${Number(count) > 0 ? `<button class="overview-link" data-nav="${nav}"${tab ? ` data-tab="${tab}"` : ''}>Open →</button>` : ''}</div>`).join('');
 
@@ -811,6 +846,7 @@
     analyticsDays = Number(button.dataset.days);
     analyticsLoaded = false;
     AdminEventsView.reset();
+    AdminFeedbackView.reset();
     updateAnalyticsRangeControls();
     history.replaceState({ section: 'analytics' }, '', `#/analytics?days=${analyticsDays}`);
     loadAnalytics(analyticsDays);
