@@ -305,6 +305,7 @@
       <button class="section-tab" data-section="analytics" title="Analytics"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-label">Analytics</span></button>
       <button class="section-tab" data-section="events" title="Events"><span class="nav-icon" aria-hidden="true">◇</span><span class="nav-label">Events</span></button>
       <button class="section-tab" data-section="feedback" title="Feedback"><span class="nav-icon" aria-hidden="true">◎</span><span class="nav-label">Feedback</span></button>
+      <button class="section-tab" data-section="engagement" title="Engagement"><span class="nav-icon" aria-hidden="true">♧</span><span class="nav-label">Engagement</span></button>
       <button class="section-tab" data-section="review" title="Review"><span class="nav-icon" aria-hidden="true">✓</span><span class="nav-label">Review</span></button>
       <button class="section-tab" data-section="billing" title="Billing"><span class="nav-icon" aria-hidden="true">$</span><span class="nav-label">Billing</span></button>
       <button class="section-tab" data-section="bookings" title="Bookings"><span class="nav-icon" aria-hidden="true">▦</span><span class="nav-label">Bookings</span></button>
@@ -346,8 +347,8 @@
             <div><div class="overview-label">Feedback</div><div class="overview-card" id="ov-feedback"></div><div class="overview-label">Platform</div><div class="overview-card" id="ov-platform"></div></div>
           </div>
           <div class="overview-two-col">
-            <div><div class="overview-label">Loyalty programs</div><div class="overview-card" id="ov-loyalty"></div></div>
-            <div><div class="overview-label">Check-in &amp; Insider partners</div><div class="overview-card" id="ov-checkin"></div></div>
+            <div><div class="overview-label">Loyalty programs <button class="overview-link" data-engagement-link="loyalty">Explore →</button></div><div class="overview-card" id="ov-loyalty"></div></div>
+            <div><div class="overview-label">Insider partners <button class="overview-link" data-engagement-link="insider">Explore →</button></div><div class="overview-card" id="ov-checkin"></div></div>
           </div>
         </div>
       </div>
@@ -427,6 +428,17 @@
         <div class="events-modal hidden" id="feedback-profile-modal" role="dialog" aria-modal="true"><div class="events-modal-card"><button class="events-modal-close" id="feedback-profile-close" aria-label="Close profile">×</button><div id="feedback-profile-body"></div></div></div>
       </div>
     </div>
+    <div class="section" id="sec-engagement">
+      <div class="native-engagement" id="engagement-view">
+        <div class="overview-state" id="engagement-loading"><div><div class="spinner"></div><p>Loading engagement…</p></div></div>
+        <div class="overview-state hidden" id="engagement-error"><div class="overview-error"><strong>Engagement data could not be loaded</strong><p id="engagement-error-message"></p><button class="icon-btn" id="engagement-retry">Try again</button></div></div>
+        <div class="engagement-inner hidden" id="engagement-content">
+          <div class="engagement-tabs" role="tablist"><button class="engagement-tab active" data-engagement-tab="loyalty" role="tab">Loyalty Programs</button><button class="engagement-tab" data-engagement-tab="insider" role="tab">Insider</button></div>
+          <section class="engagement-panel active" id="engagement-panel-loyalty" role="tabpanel"><div class="overview-counts" id="loyalty-kpis"></div><div class="overview-label">Program performance</div><div class="overview-card" id="loyalty-programs"></div></section>
+          <section class="engagement-panel" id="engagement-panel-insider" role="tabpanel"><div class="overview-counts" id="insider-kpis"></div><div class="overview-label">Tier distribution</div><div class="overview-card"><div class="tier-stack" id="insider-tier-stack"></div><div class="tier-legend" id="insider-tier-legend"></div></div><div class="overview-label">Partner distribution</div><div class="overview-card" id="insider-partners"></div></section>
+        </div>
+      </div>
+    </div>
     <div class="section" id="sec-review">
       <div class="native-review" id="review-view"><div class="overview-state" id="review-loading"><div><div class="spinner"></div><p>Loading review queue…</p></div></div><div class="overview-state hidden" id="review-error"><div class="overview-error"><strong>Review queue could not be loaded</strong><p id="review-error-message"></p><button class="icon-btn" id="review-retry">Try again</button></div></div><div class="review-inner hidden" id="review-content"><div class="review-tabs" role="tablist" id="review-tabs"></div><div id="review-panels"></div></div></div>
     </div>
@@ -475,6 +487,7 @@
     analytics: { title: 'Analytics', description: 'Usage, discovery and conversion performance' },
     events:    { title: 'Events',    description: 'Event performance, audiences and updates' },
     feedback:  { title: 'Feedback',  description: 'Customer feedback, ratings and product signals' },
+    engagement:{ title: 'Engagement',description: 'Loyalty participation and Insider progression' },
     review:    { title: 'Review',    description: 'Submissions and requests awaiting action' },
     billing:   { title: 'Billing',   description: 'Companies, invoices, payments and renewals' },
     bookings:  { title: 'Bookings',  description: 'Property booking configuration and availability' },
@@ -493,6 +506,9 @@
   let bookingTab = 'setup';
   let bookingPlaceId = '';
   let billingTab = 'review';
+  let engagementLoaded = false;
+  let engagementTab = 'loyalty';
+  let overviewData = null;
 
   function setSidebarCollapsed(collapsed) {
     $('app-shell').classList.toggle('sidebar-collapsed', collapsed);
@@ -559,6 +575,10 @@
     const tab = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] || 'review';
     return ['review','companies','invoice','requests','setup','notifications','settings','usage','audit'].includes(tab) ? tab : 'review';
   }
+  function engagementTabFromRoute() {
+    if (sectionFromRoute() !== 'engagement') return 'loyalty';
+    return location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] === 'insider' ? 'insider' : 'loyalty';
+  }
 
   function closeDrawer() {
     $('app-shell').classList.remove('drawer-open');
@@ -622,6 +642,11 @@
       AdminReviewView.load(reviewTab);
       return;
     }
+    if (key === 'engagement') {
+      switchEngagementTab(engagementTab, false);
+      if (!engagementLoaded) loadEngagement();
+      return;
+    }
     const iframe = frameFor(key);
     if (iframe.dataset.loaded) {
       if (key === 'review' && reviewTabFromRoute()) iframe.contentWindow.location.hash = reviewTabFromRoute();
@@ -644,6 +669,7 @@
     if (key === 'review') reviewTab = options.tab || (options.fromRoute ? (reviewTabFromRoute() || 'specials') : reviewTab);
     if (key === 'bookings') { bookingTab = options.tab || (options.fromRoute ? bookingTabFromRoute() : bookingTab); if (options.fromRoute) bookingPlaceId = bookingPlaceFromRoute(); }
     if (key === 'billing') billingTab = options.tab || (options.fromRoute ? billingTabFromRoute() : billingTab);
+    if (key === 'engagement') engagementTab = options.tab || (options.fromRoute ? engagementTabFromRoute() : engagementTab);
     currentSection = key;
     SECTIONS.forEach((k) => {
       $('sec-' + k).classList.toggle('active', k === key);
@@ -663,6 +689,7 @@
       : key === 'feedback' ? `#/feedback/${feedbackTab}`
       : key === 'bookings' ? `#/bookings/${bookingTab}${bookingPlaceId ? `?place=${encodeURIComponent(bookingPlaceId)}` : ''}`
       : key === 'billing' ? `#/billing/${billingTab}`
+      : key === 'engagement' ? `#/engagement/${engagementTab}`
       : '#/' + key;
     if (!options.fromRoute && location.hash !== route) history.pushState({ section: key }, '', route);
     if (options.fromRoute && location.hash !== route) history.replaceState({ section: key }, '', route);
@@ -700,6 +727,10 @@
     }
     if (currentSection === 'review') {
       AdminReviewView.refresh(reviewTab);
+      return;
+    }
+    if (currentSection === 'engagement') {
+      loadEngagement(true);
       return;
     }
     const frame = frameFor(currentSection);
@@ -794,6 +825,7 @@
       return;
     }
     overviewLoaded = true;
+    overviewData = data;
     renderOverview(data);
     $('overview-content').classList.remove('hidden');
   }
@@ -803,6 +835,75 @@
     const button = e.target.closest('[data-nav]');
     if (button) showSection(button.dataset.nav, { tab: button.dataset.tab || '' });
   });
+  $('overview-view').addEventListener('click', (e) => {
+    const button = e.target.closest('[data-engagement-link]');
+    if (button) showSection('engagement', { tab: button.dataset.engagementLink });
+  });
+
+  /* ── Engagement: Loyalty + Insider ───────────────────── */
+  function switchEngagementTab(tab, updateRoute = true) {
+    engagementTab = tab === 'insider' ? 'insider' : 'loyalty';
+    document.querySelectorAll('.engagement-tab').forEach((button) => {
+      const active = button.dataset.engagementTab === engagementTab;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+    document.querySelectorAll('.engagement-panel').forEach((panel) =>
+      panel.classList.toggle('active', panel.id === `engagement-panel-${engagementTab}`));
+    if (updateRoute) history.pushState({ section:'engagement', tab:engagementTab }, '', `#/engagement/${engagementTab}`);
+  }
+
+  function engagementKpi(value, label, context = '') {
+    return `<div class="overview-card overview-count"><div class="num">${fmt(value)}</div><div class="label">${esc(label)}</div><div class="sub">${esc(context)}</div></div>`;
+  }
+
+  function renderEngagement(data) {
+    const partners = data.partners || {};
+    const loyalty = partners.loyalty || [];
+    const loyaltyTotals = loyalty.reduce((out, row) => {
+      out.cards += Number(row.cards) || 0; out.stamps += Number(row.stamps_30d) || 0;
+      out.redeemed += Number(row.redeemed_cycles) || 0; return out;
+    }, { cards:0, stamps:0, redeemed:0 });
+    $('loyalty-kpis').innerHTML = engagementKpi(loyalty.length, 'Programs', `${loyalty.filter(r => r.is_active).length} active`)
+      + engagementKpi(loyaltyTotals.cards, 'Loyalty cards', 'Across all programs')
+      + engagementKpi(loyaltyTotals.stamps, 'Stamps · 30 days', 'Recent participation')
+      + engagementKpi(loyaltyTotals.redeemed, 'Rewards redeemed', 'Completed cycles');
+    const maxCards = Math.max(1, ...loyalty.map(r => Number(r.cards) || 0));
+    $('loyalty-programs').innerHTML = loyalty.length ? loyalty.slice().sort((a,b)=>(b.cards||0)-(a.cards||0)).map(row => `<div class="loyalty-row"><div class="loyalty-name">${esc(row.place)}<small>${esc(row.reward)} · ${fmt(row.required_stamps)} stamps required${row.is_active ? '' : ' · inactive'}</small></div><div class="loyalty-track" aria-label="${fmt(row.cards)} cards"><span style="width:${Math.max(2,(Number(row.cards)||0)/maxCards*100)}%"></span></div><div class="loyalty-values"><strong>${fmt(row.cards)} cards</strong>${fmt(row.stamps_30d)} stamps 30d · ${fmt(row.redeemed_cycles)} redeemed</div></div>`).join('') : '<div class="analytics-empty">No loyalty programs yet.</div>';
+
+    const checkins = partners.checkin_places || [];
+    const tiers = checkins.reduce((out,row) => {
+      const insider = row.insider || {}; ['guest','familiar','regular','favourite'].forEach(k => out[k] += Number(insider[k]) || 0); return out;
+    }, { guest:0, familiar:0, regular:0, favourite:0 });
+    const tierTotal = Object.values(tiers).reduce((a,b)=>a+b,0);
+    const insiderPartners = checkins.filter(row => row.insider);
+    $('insider-kpis').innerHTML = engagementKpi(tierTotal, 'Tier memberships', 'Across Insider partners')
+      + engagementKpi(insiderPartners.length, 'Insider partners', `${checkins.filter(r=>r.checkin).length} with check-in`)
+      + engagementKpi(tiers.regular + tiers.favourite, 'High-engagement', 'Regular + Favourite')
+      + engagementKpi(tiers.favourite, 'Favourites', tierTotal ? `${Math.round(tiers.favourite/tierTotal*100)}% of memberships` : 'No memberships yet');
+    const tierKeys = [['guest','Guest'],['familiar','Familiar'],['regular','Regular'],['favourite','Favourite']];
+    $('insider-tier-stack').innerHTML = tierTotal ? tierKeys.map(([key,label]) => `<span class="tier-${key}" style="width:${tiers[key]/tierTotal*100}%" title="${label}: ${fmt(tiers[key])}">${tiers[key]/tierTotal >= .1 ? fmt(tiers[key]) : ''}</span>`).join('') : '';
+    $('insider-tier-legend').innerHTML = tierKeys.map(([key,label]) => `<span><i class="tier-${key}"></i>${label} · ${fmt(tiers[key])}</span>`).join('');
+    $('insider-partners').innerHTML = insiderPartners.length ? insiderPartners.map(row => {
+      const values = tierKeys.map(([key]) => Number(row.insider?.[key]) || 0), total = values.reduce((a,b)=>a+b,0);
+      return `<div class="insider-row"><div><strong>${esc(row.place)}</strong><small>${[row.checkin&&'check-in',row.nfc&&'NFC',row.loyalty&&'loyalty'].filter(Boolean).join(' · ')}</small></div><div class="insider-mini-stack">${tierKeys.map(([key],i)=>`<span class="tier-${key}" style="width:${total ? values[i]/total*100 : 0}%" title="${key}: ${fmt(values[i])}"></span>`).join('')}</div><div class="insider-total">${fmt(total)} memberships</div></div>`;
+    }).join('') : '<div class="analytics-empty">No Insider partners yet.</div>';
+  }
+
+  async function loadEngagement(force = false) {
+    $('engagement-loading').classList.remove('hidden');
+    $('engagement-error').classList.add('hidden');
+    $('engagement-content').classList.add('hidden');
+    let data = !force ? overviewData : null, error = null;
+    if (!data) ({ data, error } = await db.rpc('admin_get_overview', { p_admin_token:adminToken }));
+    $('engagement-loading').classList.add('hidden');
+    if (error || !data) { $('engagement-error-message').textContent = error?.message || 'Engagement data returned no results.'; $('engagement-error').classList.remove('hidden'); return; }
+    overviewData = data; engagementLoaded = true; renderEngagement(data);
+    $('engagement-content').classList.remove('hidden'); switchEngagementTab(engagementTab, false);
+  }
+
+  document.querySelectorAll('.engagement-tab').forEach(button => button.addEventListener('click', () => switchEngagementTab(button.dataset.engagementTab)));
+  $('engagement-retry').addEventListener('click', () => loadEngagement(true));
 
   /* ── Shell-native Analytics ──────────────────────────── */
   function updateAnalyticsRangeControls() {
@@ -967,6 +1068,8 @@
       delete f.dataset.loaded;
     });
     overviewLoaded = false;
+    overviewData = null;
+    engagementLoaded = false;
     analyticsLoaded = false;
     $('gate-input').value = '';
     show('gate');

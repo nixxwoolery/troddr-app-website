@@ -14,11 +14,38 @@
 
 .workspace-header { box-shadow:0 1px 0 rgba(17,17,17,.03); }
 .workspace-heading h1 { font-size:20px; }
-.native-overview,.native-analytics,.native-events,.native-feedback,.native-review {
+.native-overview,.native-analytics,.native-events,.native-feedback,.native-review,.native-engagement {
   background:
     radial-gradient(circle at 8% -10%, rgba(8,120,201,.055), transparent 28%),
     var(--bg-soft);
 }
+
+.native-engagement { height:100%; overflow:auto; padding:24px; }
+.engagement-inner { max-width:1280px; margin:0 auto; padding-bottom:48px; }
+.engagement-tabs { display:inline-flex; gap:5px; margin-bottom:22px; padding:4px; border:1px solid var(--border); border-radius:11px; background:#fff; }
+.engagement-tab { min-height:38px; padding:8px 16px; border:0; border-radius:8px; background:transparent; color:var(--grey-mid); cursor:pointer; font:600 12px 'Poppins',sans-serif; }
+.engagement-tab.active { background:var(--black); color:#fff; }
+.engagement-panel { display:none; }.engagement-panel.active { display:block; }
+.loyalty-row { display:grid; grid-template-columns:minmax(180px,1.2fr) minmax(220px,2fr) auto; gap:18px; align-items:center; padding:14px 4px; border-bottom:1px solid var(--border); }
+.loyalty-row:last-child { border-bottom:0; }
+.loyalty-name { min-width:0; font-size:13px; font-weight:700; }
+.loyalty-name small { display:block; margin-top:2px; color:var(--grey-light); font-size:11px; font-weight:500; }
+.loyalty-track { height:10px; overflow:hidden; border-radius:99px; background:var(--bg-soft); }
+.loyalty-track span { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--viz-teal),#50b9ae); }
+.loyalty-values { min-width:180px; text-align:right; font-size:11px; color:var(--grey-mid); }
+.loyalty-values strong { display:block; color:var(--black); font-size:13px; }
+.tier-stack { display:flex; height:34px; overflow:hidden; border-radius:9px; background:var(--bg-soft); }
+.tier-stack span { min-width:2px; display:grid; place-items:center; color:#fff; font-size:10px; font-weight:700; }
+.tier-guest { background:#9aa8b2; }.tier-familiar { background:var(--viz-blue); }.tier-regular { background:var(--viz-purple); }.tier-favourite { background:var(--viz-teal); }
+.tier-legend { display:flex; flex-wrap:wrap; gap:14px; margin-top:12px; }
+.tier-legend span { display:flex; align-items:center; gap:6px; color:var(--grey-mid); font-size:11px; }
+.tier-legend i { width:9px; height:9px; border-radius:3px; }
+.insider-row { display:grid; grid-template-columns:minmax(160px,1fr) minmax(240px,2fr) auto; gap:16px; align-items:center; padding:13px 4px; border-bottom:1px solid var(--border); }
+.insider-row:last-child { border-bottom:0; }
+.insider-row strong { font-size:13px; }.insider-row small { display:block; color:var(--grey-light); font-size:10px; }
+.insider-mini-stack { display:flex; height:10px; overflow:hidden; border-radius:99px; background:var(--bg-soft); }
+.insider-mini-stack span { min-width:1px; }
+.insider-total { text-align:right; font-variant-numeric:tabular-nums; font-size:12px; font-weight:700; }
 
 .overview-counts { gap:14px; }
 .overview-count {
@@ -89,6 +116,11 @@
 @media(max-width:900px) {
   .analytics-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .overview-count { min-height:100px; }
+}
+@media(max-width:700px) {
+  .native-engagement { padding:16px 14px; }
+  .loyalty-row,.insider-row { grid-template-columns:1fr; gap:8px; }
+  .loyalty-values,.insider-total { min-width:0; text-align:left; }
 }
 @media(max-width:520px) {
   .overview-counts { grid-template-columns:1fr 1fr; gap:8px; }
