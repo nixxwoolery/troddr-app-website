@@ -44,7 +44,9 @@
 .events-composer input,.events-composer textarea { width:100%; margin-bottom:8px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font:13px 'Poppins',sans-serif; }
 .events-composer textarea { min-height:72px; resize:vertical; }
 .events-composer-row { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
-.events-composer-row label { display:flex; align-items:center; gap:6px; color:var(--grey-dark); font-size:12px; font-weight:600; }
+.events-composer-row label { min-width:240px; flex:1; display:flex; align-items:center; gap:6px; color:var(--grey-dark); font-size:12px; font-weight:600; }
+.events-composer-row label input { width:auto; flex:none; margin:0; padding:0; }
+.events-composer-row .icon-btn { flex:none; white-space:nowrap; }
 .events-result { font-size:12px; font-weight:600; }
 .events-result.ok { color:#1a7f4e; }.events-result.err { color:var(--red); }
 .events-who { padding:0; border:0; background:none; color:var(--primary); cursor:pointer; font:600 13px 'Poppins',sans-serif; }
@@ -55,4 +57,4 @@
 .events-profile-row:last-child { border-bottom:0; }
 .events-profile-meta { margin:3px 0 14px; color:var(--grey-light); font-size:11px; }
 @media(max-width:1100px){.events-layout{grid-template-columns:1fr}.events-sidebar{position:static;max-height:none}.events-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:360px}.events-divider{grid-column:1/-1}.events-kpis{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:700px){.native-events{padding:14px}.events-list{grid-template-columns:1fr;max-height:320px}.events-two-col{grid-template-columns:1fr}.events-kpis{grid-template-columns:repeat(2,1fr)}.events-console-head h2{font-size:19px}}
+@media(max-width:700px){.native-events{padding:14px}.events-list{grid-template-columns:1fr;max-height:320px}.events-two-col{grid-template-columns:1fr}.events-kpis{grid-template-columns:repeat(2,1fr)}.events-console-head h2{font-size:19px}.events-composer-row{align-items:stretch;flex-direction:column}.events-composer-row label{min-width:0}.events-composer-row .icon-btn{width:100%}}

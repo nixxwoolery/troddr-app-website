@@ -72,6 +72,16 @@
   .section-tab.active { color: #fff; background: rgba(255,255,255,0.16); }
   .nav-icon { width: 20px; text-align: center; font-size: 15px; line-height: 1; }
   .sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-footer { display: grid; gap: 7px; }
+  .collapse-btn {
+    width: 100%; min-height: 38px; padding: 7px 11px;
+    display: flex; align-items: center; gap: 11px;
+    border: 1px solid rgba(255,255,255,0.14); border-radius: 8px;
+    background: transparent; color: rgba(255,255,255,0.7); cursor: pointer;
+    font: 600 11px/1 'Poppins', sans-serif;
+  }
+  .collapse-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .collapse-icon { width: 20px; flex: none; text-align: center; font-size: 17px; }
   .signout-btn {
     width: 100%; min-height: 42px; padding: 8px 12px;
     font-family: inherit; font-size: 12px; font-weight: 600;
@@ -102,6 +112,20 @@
   .icon-btn:hover { background: var(--bg-soft); border-color: #d9d9d9; }
   .menu-btn { display: none; }
   .drawer-backdrop { display: none; }
+
+  @media (min-width: 901px) {
+    .sidebar { transition: width 0.18s ease, flex-basis 0.18s ease; }
+    .app-shell.sidebar-collapsed .sidebar { width: 72px; flex-basis: 72px; }
+    .app-shell.sidebar-collapsed .brand { justify-content: center; padding: 0 12px; }
+    .app-shell.sidebar-collapsed .brand-copy,
+    .app-shell.sidebar-collapsed .nav-label,
+    .app-shell.sidebar-collapsed .footer-label { display: none; }
+    .app-shell.sidebar-collapsed .section-tab,
+    .app-shell.sidebar-collapsed .collapse-btn { justify-content: center; padding-left: 8px; padding-right: 8px; }
+    .app-shell.sidebar-collapsed .nav-icon { width: 24px; font-size: 17px; }
+    .app-shell.sidebar-collapsed .signout-btn { overflow: hidden; font-size: 0; }
+    .app-shell.sidebar-collapsed .signout-btn::before { content: '↪'; font-size: 17px; }
+  }
 
   /* ── Section / iframe area ────────────────────────────── */
   #main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -229,6 +253,7 @@
     }
     .app-shell.drawer-open .drawer-backdrop { visibility: visible; opacity: 1; }
     .menu-btn { display: inline-flex; }
+    .collapse-btn { display: none; }
     .workspace-header { height: 60px; flex-basis: 60px; padding: 0 12px; }
     .workspace-heading h1 { font-size: 16px; }
     .workspace-heading p { display: none; }
@@ -275,15 +300,15 @@
       <div class="brand-copy"><strong>TRODDR</strong><span>Administration</span></div>
     </div>
     <nav class="section-nav" aria-label="Dashboard sections">
-      <button class="section-tab active" data-section="overview"><span class="nav-icon" aria-hidden="true">◫</span>Overview</button>
-      <button class="section-tab" data-section="analytics"><span class="nav-icon" aria-hidden="true">↗</span>Analytics</button>
-      <button class="section-tab" data-section="events"><span class="nav-icon" aria-hidden="true">◇</span>Events</button>
-      <button class="section-tab" data-section="feedback"><span class="nav-icon" aria-hidden="true">◎</span>Feedback</button>
-      <button class="section-tab" data-section="review"><span class="nav-icon" aria-hidden="true">✓</span>Review</button>
-      <button class="section-tab" data-section="billing"><span class="nav-icon" aria-hidden="true">$</span>Billing</button>
-      <button class="section-tab" data-section="bookings"><span class="nav-icon" aria-hidden="true">▦</span>Bookings</button>
+      <button class="section-tab active" data-section="overview" title="Overview"><span class="nav-icon" aria-hidden="true">◫</span><span class="nav-label">Overview</span></button>
+      <button class="section-tab" data-section="analytics" title="Analytics"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-label">Analytics</span></button>
+      <button class="section-tab" data-section="events" title="Events"><span class="nav-icon" aria-hidden="true">◇</span><span class="nav-label">Events</span></button>
+      <button class="section-tab" data-section="feedback" title="Feedback"><span class="nav-icon" aria-hidden="true">◎</span><span class="nav-label">Feedback</span></button>
+      <button class="section-tab" data-section="review" title="Review"><span class="nav-icon" aria-hidden="true">✓</span><span class="nav-label">Review</span></button>
+      <button class="section-tab" data-section="billing" title="Billing"><span class="nav-icon" aria-hidden="true">$</span><span class="nav-label">Billing</span></button>
+      <button class="section-tab" data-section="bookings" title="Bookings"><span class="nav-icon" aria-hidden="true">▦</span><span class="nav-label">Bookings</span></button>
     </nav>
-    <div class="sidebar-footer"><button class="signout-btn" id="signout">Sign out</button></div>
+    <div class="sidebar-footer"><button class="collapse-btn" id="collapse-sidebar" aria-controls="sidebar" aria-expanded="true"><span class="collapse-icon" id="collapse-icon" aria-hidden="true">‹</span><span class="footer-label">Collapse sidebar</span></button><button class="signout-btn" id="signout"><span class="footer-label">Sign out</span></button></div>
   </aside>
 
   <div class="workspace">
@@ -464,6 +489,20 @@
   let feedbackTab = 'event';
   let reviewInitialized = false;
   let reviewTab = 'specials';
+
+  function setSidebarCollapsed(collapsed) {
+    $('app-shell').classList.toggle('sidebar-collapsed', collapsed);
+    $('collapse-sidebar').setAttribute('aria-expanded', String(!collapsed));
+    $('collapse-sidebar').setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    $('collapse-icon').textContent = collapsed ? '›' : '‹';
+    const label = $('collapse-sidebar').querySelector('.footer-label');
+    if (label) label.textContent = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+    try { localStorage.setItem('troddr_admin_sidebar_collapsed', collapsed ? '1' : '0'); } catch (e) {}
+  }
+
+  try { setSidebarCollapsed(localStorage.getItem('troddr_admin_sidebar_collapsed') === '1'); } catch (e) {}
+  $('collapse-sidebar').addEventListener('click', () =>
+    setSidebarCollapsed(!$('app-shell').classList.contains('sidebar-collapsed')));
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
   const fmt = (n) => {
     if (n == null) return '–';
