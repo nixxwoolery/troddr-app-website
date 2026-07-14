@@ -152,6 +152,16 @@
   .dash-header .sub {
     font-size: 12px; color: var(--grey-mid); font-weight: 400;
   }
+  .booking-health { margin-bottom:16px; padding:16px 18px; border:1px solid var(--border); border-radius:var(--radius-lg); background:#fff; }
+  .booking-health-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .booking-health-head strong { flex:1; font-size:14px; }
+  .health-badge { padding:4px 10px; border-radius:99px; background:var(--amber-light); color:var(--amber); font-size:10px; font-weight:700; text-transform:uppercase; }
+  .health-badge.ready { background:var(--green-light); color:var(--green); }
+  .health-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px 14px; }
+  .health-item { display:flex; align-items:center; gap:8px; padding:7px 0; color:var(--grey-mid); font-size:12px; }
+  .health-mark { width:20px; height:20px; display:grid; place-items:center; flex:none; border-radius:50%; background:var(--red-light); color:var(--red); font-size:11px; font-weight:800; }
+  .health-item.done .health-mark { background:var(--green-light); color:var(--green); }
+  .health-item button { margin-left:auto; padding:3px 6px; border:0; background:none; color:var(--primary); cursor:pointer; font:700 10px 'Poppins',sans-serif; }
   .btn-ghost {
     padding: 8px 14px; border: 1px solid var(--border);
     border-radius: 8px; background: #fff; color: var(--grey-dark);
@@ -416,6 +426,8 @@
     .avail-grid { grid-template-columns: repeat(4, 1fr); }
   }
   @media (max-width: 600px) {
+    .tabs { overflow-x: auto; }
+    .tab { flex: none; padding: 10px 13px; }
     .avail-grid { grid-template-columns: repeat(2, 1fr); }
     .avail-controls { flex-direction: column; align-items: flex-start; }
   }
@@ -470,6 +482,7 @@
     </div>
     <button class="btn-ghost" id="change-place-btn">Change property</button>
   </div>
+  <div class="booking-health" id="booking-health"></div>
 
   <div class="tabs">
     <button class="tab active" data-tab="setup">Setup</button>
@@ -850,7 +863,22 @@ function renderDashboard() {
   renderRatesTab();
   renderAvailabilityTab();
   renderPoliciesTab();
+  renderBookingHealth();
   switchBookingTab(routeState().tab, false);
+}
+
+function renderBookingHealth() {
+  const cfg = state.config || {}, place = cfg.place || {};
+  const checks = [
+    ['Booking contact and email', !!(place.bookings_email && place.booking_contact_name), 'setup'],
+    ['Check-in, check-out and stay rules', !!(place.check_in_time && place.check_out_time && place.min_nights), 'setup'],
+    ['At least one active room type', (cfg.room_types || []).some(r => r.is_active !== false), 'rooms'],
+    ['At least one active rate plan', (cfg.rate_plans || []).some(r => r.is_active !== false), 'rates'],
+    ['Availability configured', (cfg.availability_60d || []).length > 0, 'availability'],
+    ['Cancellation policy configured', (cfg.cancellation_policies || []).length > 0 || !!place.cancellation_policy_text, 'policies'],
+  ];
+  const complete = checks.filter(c => c[1]).length, ready = complete === checks.length;
+  $('booking-health').innerHTML = `<div class="booking-health-head"><strong>Booking readiness</strong><span class="health-badge ${ready ? 'ready' : ''}">${ready ? 'Ready to launch' : `${complete} of ${checks.length} complete`}</span></div><div class="health-list">${checks.map(([label, done, tab]) => `<div class="health-item ${done ? 'done' : ''}"><span class="health-mark">${done ? '✓' : '!'}</span><span>${escHtml(label)}</span>${done ? '' : `<button data-health-tab="${tab}">Fix →</button>`}</div>`).join('')}</div>`;
 }
 
 // ── Setup tab ─────────────────────────────────────────────────────────────────
@@ -929,10 +957,10 @@ async function saveSetup() {
     setStatus('setup-save-status', 'Error: ' + (data?.error || error?.message), 'err');
     return;
   }
-  setStatus('setup-save-status', 'Saved', 'ok');
   state.setupDirty = false;
-  // Refresh state
-  state.config.place = { ...state.config.place, ...params };
+  await refreshConfig();
+  renderBookingHealth();
+  setStatus('setup-save-status', 'Saved', 'ok');
 }
 
 // ── Rooms tab ─────────────────────────────────────────────────────────────────
@@ -1594,6 +1622,10 @@ $('change-place-btn').addEventListener('click', () => {
 });
 
 $('save-setup-btn').addEventListener('click', saveSetup);
+$('booking-health').addEventListener('click', e => {
+  const button = e.target.closest('[data-health-tab]');
+  if (button) switchBookingTab(button.dataset.healthTab);
+});
 document.querySelectorAll('#tab-setup input, #tab-setup select, #tab-setup textarea').forEach(el => {
   el.addEventListener('input', markSetupDirty);
   el.addEventListener('change', markSetupDirty);
