@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR Admin · Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="robots" content="noindex,nofollow" />
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#fff; --bg-soft:#f8f9fa;
+    --primary:#0077CC; --primary-text:#fff;
+    --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea;
+    --amber:#b86e00; --amber-light:#fff4e0;
+    --blue-light:#e8f4ff;
+    --radius:10px; --radius-lg:16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft); color: var(--black);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--black); color: #fff;
+    border-bottom: 1px solid #000;
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .navbar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .navbar .tag {
+    background: rgba(255,255,255,0.12); color: #fff;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+  }
+
+  .layout { max-width: 1280px; margin: 24px auto; padding: 0 24px 48px; }
+
+  /* Count cards double as tab switches (admin-review pattern) */
+  .counts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .count-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .count-card:hover { border-color: var(--primary); transform: translateY(-1px); }
+  .count-card.active { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+  .count-card .num {
+    font-size: 28px; font-weight: 800;
+    letter-spacing: -0.8px; line-height: 1;
+  }
+  .count-card .num.urgent { color: var(--red); }
+  .count-card .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 6px;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .section-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin: 22px 0 10px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+  }
+  .two-col {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; align-items: start;
+  }
+
+  /* Dimension average bars */
+  .dim-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 36px;
+    gap: 10px; align-items: center;
+    padding: 6px 0;
+    font-size: 12px;
+  }
+  .dim-row .dr-name { font-weight: 600; color: var(--grey-dark); text-transform: capitalize; }
+  .dim-row .dr-bar { height: 6px; border-radius: 100px; background: var(--bg-soft); overflow: hidden; }
+  .dim-row .dr-bar > span { display: block; height: 100%; background: var(--primary); border-radius: 100px; }
+  .dim-row .dr-val { font-weight: 800; text-align: right; }
+
+  /* Tag chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-size: 12px; font-weight: 600;
+    background: var(--bg-soft); color: var(--grey-dark);
+    border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 100px;
+  }
+  .chip b { color: var(--primary); margin-left: 5px; }
+
+  /* Feedback item cards */
+  .item {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+    padding: 16px 20px;
+  }
+  .item-title {
+    font-size: 15px; font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .item-meta {
+    font-size: 12px; color: var(--grey-mid);
+    display: flex; flex-wrap: wrap; gap: 4px 14px;
+    margin-bottom: 8px;
+  }
+  .item-text { font-size: 13px; color: var(--grey-dark); margin-bottom: 8px; white-space: pre-wrap; }
+  .item .chips { margin-top: 8px; }
+  .item .chip { padding: 3px 10px; font-size: 11px; }
+
+  .pill {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .pill.up, .pill.liked, .pill.resolved, .pill.closed { background: var(--green-light); color: var(--green); }
+  .pill.down, .pill.disliked { background: var(--red-light); color: var(--red); }
+  .pill.submitted { background: var(--red-light); color: var(--red); }
+  .pill.reviewing { background: var(--amber-light); color: var(--amber); }
+
+  .dims-inline { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dim-chip {
+    font-size: 11px; font-weight: 600;
+    background: var(--blue-light); color: var(--primary);
+    padding: 3px 9px; border-radius: 100px;
+    text-transform: capitalize;
+  }
+  .dim-chip b { font-weight: 800; }
+
+  /* App feedback triage controls */
+  .triage {
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--border-soft);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .triage textarea {
+    width: 100%; min-height: 64px;
+    font-family: inherit; font-size: 13px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; resize: vertical;
+  }
+  .triage-row { display: flex; gap: 8px; align-items: center; }
+  .triage select {
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: #fff; color: var(--grey-dark);
+  }
+  .triage .save-btn {
+    padding: 8px 16px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .triage .save-btn:disabled { opacity: 0.5; cursor: default; }
+  .triage .saved-note { font-size: 11px; color: var(--green); font-weight: 600; }
+  .team-response {
+    background: var(--green-light);
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 12px; color: var(--grey-dark);
+    margin-top: 8px;
+  }
+  .team-response b { color: var(--green); }
+
+  /* Ranked rows (items tab) */
+  .rank-row {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 4px 12px; padding: 8px 4px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px; align-items: center;
+  }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-row .rr-name {
+    font-weight: 600; color: var(--grey-dark);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .rank-row .rr-name small { color: var(--grey-light); font-weight: 500; margin-left: 6px; }
+  .rank-row .rr-n { font-weight: 800; white-space: nowrap; }
+  .rank-row .rr-n .neg { color: var(--red); font-weight: 700; margin-left: 6px; }
+
+  .empty-note { font-size: 12px; color: var(--grey-light); padding: 12px 4px; }
+
+  /* Gate + loading */
+  .gate {
+    max-width: 420px; margin: 80px auto;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 34px 30px;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.08); text-align: center;
+  }
+  .gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .gate p { color: var(--grey-mid); font-size: 14px; margin-bottom: 18px; }
+  .gate input {
+    width: 100%; padding: 11px 14px;
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;
+  }
+  .gate button {
+    width: 100%; padding: 11px 22px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .gate-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+  .gate-error.show { display: block; }
+  .loading {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 90px 0; color: var(--grey-mid);
+  }
+  .spinner {
+    width: 30px; height: 30px;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+
+  @media (max-width: 900px) {
+    .counts { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <h1>TRODDR Admin</h1>
+    <span class="tag">Feedback</span>
+  </div>
+</header>
+
+<div class="gate hidden" id="gate">
+  <h2>Admin sign-in</h2>
+  <p>Enter your admin token to view feedback.</p>
+  <input id="gate-input" type="password" placeholder="admin token..." />
+  <button id="gate-go">Continue</button>
+  <div class="gate-error" id="gate-error">Invalid or revoked token.</div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>Loading feedback…</p>
+</div>
+
+<div class="layout hidden" id="main">
+
+  <div class="counts">
+    <div class="count-card active" data-tab="event"><div class="num" id="c-event">–</div><div class="lbl">Event feedback</div></div>
+    <div class="count-card" data-tab="place"><div class="num" id="c-place">–</div><div class="lbl">Place feedback</div></div>
+    <div class="count-card" data-tab="app"><div class="num" id="c-app">–</div><div class="lbl">App feedback open</div></div>
+    <div class="count-card" data-tab="items"><div class="num" id="c-items">–</div><div class="lbl">Item ratings</div></div>
+  </div>
+
+  <!-- Event feedback -->
+  <div class="panel active" id="panel-event">
+    <div class="two-col">
+      <div>
+        <div class="section-label">Ratings</div>
+        <div class="card" id="event-avgs"></div>
+      </div>
+      <div>
+        <div class="section-label">Quick tags</div>
+        <div class="card"><div class="chips" id="event-tags"></div></div>
+      </div>
+    </div>
+    <div class="section-label">Responses</div>
+    <div id="event-items"></div>
+  </div>
+
+  <!-- Place feedback -->
+  <div class="panel" id="panel-place">
+    <div class="two-col">
+      <div>
+        <div class="section-label">Dimension averages</div>
+        <div class="card" id="place-avgs"></div>
+      </div>
+      <div>
+        <div class="section-label">Quick tags</div>
+        <div class="card"><div class="chips" id="place-tags"></div></div>
+      </div>
+    </div>
+    <div class="section-label">Responses</div>
+    <div id="place-items"></div>
+  </div>
+
+  <!-- App feedback -->
+  <div class="panel" id="panel-app">
+    <div class="section-label">Inbox</div>
+    <div id="app-items"></div>
+  </div>
+
+  <!-- Item ratings -->
+  <div class="panel" id="panel-items">
+    <div class="two-col">
+      <div>
+        <div class="section-label">Most rated items</div>
+        <div class="card" id="items-top"></div>
+      </div>
+      <div>
+        <div class="section-label">Sentiment</div>
+        <div class="card" id="items-summary"></div>
+      </div>
+    </div>
+    <div class="section-label">Recent ratings</div>
+    <div id="items-recent"></div>
+  </div>
+
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const $ = (id) => document.getElementById(id);
+
+  let adminToken = '';
+  let feedbackData = null;
+
+  function loadToken() {
+    const urlT = new URLSearchParams(location.search).get('token');
+    if (urlT) {
+      try { sessionStorage.setItem('troddr_admin_token', urlT); } catch (e) {}
+      return urlT;
+    }
+    try { return sessionStorage.getItem('troddr_admin_token') || ''; } catch (e) { return ''; }
+  }
+
+  function show(view) {
+    $('gate').classList.toggle('hidden', view !== 'gate');
+    $('loading').classList.toggle('hidden', view !== 'loading');
+    $('main').classList.toggle('hidden', view !== 'main');
+  }
+
+  const fmt = (n) => (n == null ? '–' : Number(n).toLocaleString());
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const when = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const nice = (s) => String(s ?? '').replace(/_/g, ' ');
+
+  /* ── Tabs ──────────────────────────────────────────────── */
+  function switchTab(key) {
+    document.querySelectorAll('.count-card').forEach(c =>
+      c.classList.toggle('active', c.dataset.tab === key));
+    document.querySelectorAll('.panel').forEach(p =>
+      p.classList.toggle('active', p.id === 'panel-' + key));
+  }
+  document.querySelectorAll('.count-card').forEach(c =>
+    c.addEventListener('click', () => switchTab(c.dataset.tab)));
+
+  /* ── Shared renderers ──────────────────────────────────── */
+  function dimBars(elId, avgs) {
+    const entries = Object.entries(avgs || {});
+    $(elId).innerHTML = entries.length === 0
+      ? '<div class="empty-note">No ratings yet.</div>'
+      : entries.map(([k, v]) => `
+        <div class="dim-row">
+          <span class="dr-name">${esc(nice(k))}</span>
+          <span class="dr-bar"><span style="width:${Math.min(100, v / 5 * 100)}%"></span></span>
+          <span class="dr-val">${v}</span>
+        </div>`).join('');
+  }
+
+  function tagChips(elId, tags) {
+    $(elId).innerHTML = (!tags || tags.length === 0)
+      ? '<div class="empty-note">No tags yet.</div>'
+      : tags.map(t => `<span class="chip">${esc(nice(t.tag))}<b>${fmt(t.n)}</b></span>`).join('');
+  }
+
+  const ratingChips = (ratings) => Object.entries(ratings || {})
+    .map(([k, v]) => `<span class="dim-chip">${esc(nice(k))} <b>${v}</b></span>`).join('');
+  const tagChipsInline = (tags) => (tags || [])
+    .map(t => `<span class="chip">${esc(nice(t))}</span>`).join('');
+
+  /* ── Event tab ─────────────────────────────────────────── */
+  function renderEvent(ev) {
+    const s = ev.summary || {};
+    dimBars('event-avgs', s.avgs);
+    $('event-avgs').insertAdjacentHTML('afterbegin',
+      `<div class="dim-row" style="padding-bottom:10px;">
+         <span class="dr-name">Votes</span>
+         <span></span>
+         <span class="dr-val" style="white-space:nowrap;">👍 ${fmt(s.up)}${s.down > 0 ? ` · 👎 ${fmt(s.down)}` : ''}</span>
+       </div>`);
+    tagChips('event-tags', ev.tags);
+    $('event-items').innerHTML = (ev.items || []).length === 0
+      ? '<div class="card empty-note">No event feedback in this window.</div>'
+      : ev.items.map(i => `
+        <div class="item">
+          <div class="item-title">${esc(i.event_title || 'Unknown event')}
+            ${i.vote ? `<span class="pill ${i.vote}">${i.vote === 'up' ? '👍 up' : '👎 down'}</span>` : ''}
+          </div>
+          <div class="item-meta"><span>${esc(i.username)}</span><span>${when(i.created_at)}</span></div>
+          <div class="dims-inline">${ratingChips(i.ratings)}</div>
+          ${(i.quick_tags || []).length ? `<div class="chips">${tagChipsInline(i.quick_tags)}</div>` : ''}
+        </div>`).join('');
+  }
+
+  /* ── Place tab ─────────────────────────────────────────── */
+  function renderPlace(pl) {
+    const s = pl.summary || {};
+    dimBars('place-avgs', s.avgs);
+    if ((s.would_return || 0) + (s.would_not_return || 0) > 0) {
+      $('place-avgs').insertAdjacentHTML('afterbegin',
+        `<div class="dim-row" style="padding-bottom:10px;">
+           <span class="dr-name">Would return</span>
+           <span></span>
+           <span class="dr-val" style="white-space:nowrap;">${fmt(s.would_return)} yes · ${fmt(s.would_not_return)} no</span>
+         </div>`);
+    }
+    tagChips('place-tags', pl.tags);
+    $('place-items').innerHTML = (pl.items || []).length === 0
+      ? '<div class="card empty-note">No place feedback in this window.</div>'
+      : pl.items.map(i => `
+        <div class="item">
+          <div class="item-title">${esc(i.place_name || 'Unknown place')}
+            ${i.context && i.context !== 'general' ? `<span class="pill reviewing">${esc(nice(i.context))}</span>` : ''}
+            ${i.would_return === true ? '<span class="pill up">would return</span>' : ''}
+            ${i.would_return === false ? '<span class="pill down">would not return</span>' : ''}
+          </div>
+          <div class="item-meta"><span>${esc(i.username)}</span><span>${when(i.created_at)}</span></div>
+          <div class="dims-inline">${ratingChips(i.ratings)}</div>
+          ${(i.quick_tags || []).length ? `<div class="chips">${tagChipsInline(i.quick_tags)}</div>` : ''}
+        </div>`).join('');
+  }
+
+  /* ── App tab (with triage) ─────────────────────────────── */
+  function renderApp(app) {
+    $('app-items').innerHTML = (app.items || []).length === 0
+      ? '<div class="card empty-note">No app feedback yet.</div>'
+      : app.items.map(i => `
+        <div class="item" data-id="${i.id}">
+          <div class="item-title">${esc(i.category || 'General')}
+            <span class="pill ${esc(i.status)}">${esc(nice(i.status))}</span>
+          </div>
+          <div class="item-meta">
+            <span>${esc(i.username)}</span><span>${when(i.created_at)}</span>
+            ${i.upvotes > 0 ? `<span>▲ ${fmt(i.upvotes)} upvotes</span>` : ''}
+          </div>
+          <div class="item-text">${esc(i.feedback)}</div>
+          <div class="team-response" ${i.team_response ? '' : 'style="display:none;"'}>
+            <b>Team response${i.responded_at ? ' · ' + when(i.responded_at) : ''}:</b> <span class="tr-text">${esc(i.team_response || '')}</span>
+          </div>
+          <div class="triage">
+            <textarea placeholder="Write a team response… (optional)"></textarea>
+            <div class="triage-row">
+              <select>
+                ${['submitted','reviewing','resolved','closed'].map(s =>
+                  `<option value="${s}" ${s === i.status ? 'selected' : ''}>${s}</option>`).join('')}
+              </select>
+              <button class="save-btn">Save</button>
+              <span class="saved-note" style="display:none;">Saved ✓</span>
+            </div>
+          </div>
+        </div>`).join('');
+
+    $('app-items').querySelectorAll('.item').forEach(card => {
+      const btn = card.querySelector('.save-btn');
+      btn.addEventListener('click', async () => {
+        const status = card.querySelector('select').value;
+        const response = card.querySelector('textarea').value.trim();
+        btn.disabled = true;
+        const { data, error } = await db.rpc('admin_set_app_feedback', {
+          p_admin_token: adminToken,
+          p_id: card.dataset.id,
+          p_status: status,
+          p_team_response: response || null,
+        });
+        btn.disabled = false;
+        if (error || !data) { alert('Save failed' + (error ? ': ' + error.message : '')); return; }
+        const pill = card.querySelector('.pill');
+        pill.className = 'pill ' + data.status;
+        pill.textContent = nice(data.status);
+        if (data.team_response) {
+          const tr = card.querySelector('.team-response');
+          tr.style.display = '';
+          tr.querySelector('.tr-text').textContent = data.team_response;
+          card.querySelector('textarea').value = '';
+        }
+        const note = card.querySelector('.saved-note');
+        note.style.display = '';
+        setTimeout(() => { note.style.display = 'none'; }, 2500);
+      });
+    });
+  }
+
+  /* ── Items tab ─────────────────────────────────────────── */
+  function renderItems(it) {
+    const s = it.summary || {};
+    $('items-summary').innerHTML = `
+      <div class="dim-row"><span class="dr-name">Total ratings</span><span></span><span class="dr-val">${fmt(s.total)}</span></div>
+      <div class="dim-row"><span class="dr-name">Liked</span>
+        <span class="dr-bar"><span style="width:${s.total ? s.liked / s.total * 100 : 0}%; background:var(--green);"></span></span>
+        <span class="dr-val">${fmt(s.liked)}</span></div>
+      <div class="dim-row"><span class="dr-name">Disliked</span>
+        <span class="dr-bar"><span style="width:${s.total ? s.disliked / s.total * 100 : 0}%; background:var(--red);"></span></span>
+        <span class="dr-val">${fmt(s.disliked)}</span></div>`;
+
+    $('items-top').innerHTML = (it.top_items || []).length === 0
+      ? '<div class="empty-note">No item ratings in this window.</div>'
+      : it.top_items.map(r => `
+        <div class="rank-row">
+          <span class="rr-name">${esc(r.item)}<small>${esc(r.vendor)}${r.event_title ? ' · ' + esc(r.event_title) : ''}</small></span>
+          <span class="rr-n">👍 ${fmt(r.liked)}${r.disliked > 0 ? `<span class="neg">👎 ${fmt(r.disliked)}</span>` : ''}</span>
+        </div>`).join('');
+
+    $('items-recent').innerHTML = (it.items || []).length === 0
+      ? '<div class="card empty-note">No item ratings in this window.</div>'
+      : `<div class="card">` + it.items.map(r => `
+        <div class="rank-row">
+          <span class="rr-name">${esc(r.item)}<small>${esc(r.vendor)} · ${esc(r.username)} · ${when(r.created_at)}</small></span>
+          <span class="rr-n"><span class="pill ${esc(r.rating)}">${esc(r.rating)}</span></span>
+        </div>`).join('') + `</div>`;
+  }
+
+  /* ── Boot ──────────────────────────────────────────────── */
+  async function boot() {
+    show('loading');
+    const { data, error } = await db.rpc('admin_get_feedback', { p_admin_token: adminToken });
+    if (error || !data) {
+      try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
+      adminToken = '';
+      $('gate-error').classList.add('show');
+      show('gate');
+      return;
+    }
+    feedbackData = data;
+
+    $('c-event').textContent = fmt(data.counts.event);
+    $('c-place').textContent = fmt(data.counts.place);
+    $('c-app').textContent   = fmt(data.counts.app_open);
+    $('c-app').classList.toggle('urgent', data.counts.app_open > 0);
+    $('c-items').textContent = fmt(data.counts.items);
+
+    renderEvent(data.event);
+    renderPlace(data.place);
+    renderApp(data.app);
+    renderItems(data.items_tab);
+    show('main');
+  }
+
+  $('gate-go').addEventListener('click', () => {
+    const t = $('gate-input').value.trim();
+    if (!t) return;
+    adminToken = t;
+    try { sessionStorage.setItem('troddr_admin_token', t); } catch (e) {}
+    $('gate-error').classList.remove('show');
+    boot();
+  });
+  $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
+
+  adminToken = loadToken();
+  if (adminToken) boot(); else show('gate');
+</script>
+
+</body>
+</html>

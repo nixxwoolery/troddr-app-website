@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR Admin · Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="robots" content="noindex,nofollow" />
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#fff; --bg-soft:#f8f9fa;
+    --primary:#0077CC; --primary-text:#fff;
+    --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea;
+    --amber:#b86e00; --amber-light:#fff4e0;
+    --blue-light:#e8f4ff;
+    --radius:10px; --radius-lg:16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft); color: var(--black);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--black); color: #fff;
+    border-bottom: 1px solid #000;
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .navbar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .navbar .tag {
+    background: rgba(255,255,255,0.12); color: #fff;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+  }
+
+  .layout { max-width: 1280px; margin: 24px auto; padding: 0 24px 48px; }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 18px;
+  }
+  .range-btn {
+    padding: 7px 16px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    color: var(--grey-mid);
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 100px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .range-btn:hover { border-color: var(--grey-light); color: var(--black); }
+  .range-btn.active { background: var(--black); border-color: var(--black); color: #fff; }
+  .toolbar .refreshed { margin-left: auto; font-size: 11px; color: var(--grey-light); }
+
+  .counts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .count-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+  }
+  .count-card .num {
+    font-size: 28px; font-weight: 800;
+    letter-spacing: -0.8px; line-height: 1;
+  }
+  .count-card .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 6px;
+  }
+  .count-card .sub { font-size: 11px; color: var(--grey-light); margin-top: 2px; }
+
+  .section-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin: 26px 0 10px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .chart-legend {
+    display: flex; gap: 18px; margin-bottom: 10px;
+    font-size: 11px; font-weight: 600; color: var(--grey-mid);
+  }
+  .chart-legend .dot {
+    display: inline-block; width: 9px; height: 9px;
+    border-radius: 2px; margin-right: 5px;
+  }
+  .chart-wrap svg { width: 100%; height: auto; display: block; }
+
+  /* Ranked bar rows */
+  .rank-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+    align-items: center;
+  }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-row .rr-name {
+    font-weight: 600; color: var(--grey-dark);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .rank-row .rr-name small { color: var(--grey-light); font-weight: 500; margin-left: 6px; }
+  .rank-row .rr-n { font-weight: 800; font-size: 13px; }
+  .rank-row .rr-bar {
+    grid-column: 1 / -1;
+    height: 5px; border-radius: 100px;
+    background: var(--bg-soft);
+    overflow: hidden;
+  }
+  .rank-row .rr-bar > span {
+    display: block; height: 100%;
+    background: var(--primary); border-radius: 100px;
+  }
+  .rank-row.zero .rr-bar > span { background: var(--red); }
+  .empty-note { font-size: 12px; color: var(--grey-light); padding: 12px 4px; }
+
+  .pill {
+    display: inline-block;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+    background: var(--red-light); color: var(--red);
+    margin-left: 8px;
+  }
+
+  /* Gate + loading */
+  .gate {
+    max-width: 420px; margin: 80px auto;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 34px 30px;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.08); text-align: center;
+  }
+  .gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .gate p { color: var(--grey-mid); font-size: 14px; margin-bottom: 18px; }
+  .gate input {
+    width: 100%; padding: 11px 14px;
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;
+  }
+  .gate button {
+    width: 100%; padding: 11px 22px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .gate-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+  .gate-error.show { display: block; }
+
+  .loading {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 90px 0; color: var(--grey-mid);
+  }
+  .spinner {
+    width: 30px; height: 30px;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+
+  @media (max-width: 900px) {
+    .counts { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <h1>TRODDR Admin</h1>
+    <span class="tag">Analytics</span>
+  </div>
+</header>
+
+<div class="gate hidden" id="gate">
+  <h2>Admin sign-in</h2>
+  <p>Enter your admin token to view analytics.</p>
+  <input id="gate-input" type="password" placeholder="admin token..." />
+  <button id="gate-go">Continue</button>
+  <div class="gate-error" id="gate-error">Invalid or revoked token.</div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>Loading analytics…</p>
+</div>
+
+<div class="layout hidden" id="main">
+
+  <div class="toolbar">
+    <button class="range-btn" data-days="7">7 days</button>
+    <button class="range-btn active" data-days="30">30 days</button>
+    <button class="range-btn" data-days="90">90 days</button>
+    <span class="refreshed" id="refreshed"></span>
+  </div>
+
+  <div class="counts">
+    <div class="count-card"><div class="num" id="t-events">–</div><div class="lbl">Events tracked</div></div>
+    <div class="count-card"><div class="num" id="t-users">–</div><div class="lbl">Active users</div><div class="sub">incl. guest sessions</div></div>
+    <div class="count-card"><div class="num" id="t-sessions">–</div><div class="lbl">Sessions</div></div>
+    <div class="count-card"><div class="num" id="t-signups">–</div><div class="lbl">New signups</div></div>
+  </div>
+
+  <div class="card chart-wrap">
+    <div class="chart-legend">
+      <span><span class="dot" style="background:#bcd9f0"></span>Events tracked</span>
+      <span><span class="dot" style="background:#0077CC"></span>Active users</span>
+    </div>
+    <div id="chart"></div>
+  </div>
+
+  <div class="two-col" style="margin-top:26px;">
+    <div>
+      <div class="section-label" style="margin-top:0;">Action breakdown</div>
+      <div class="card" id="by-event"></div>
+      <div class="section-label">Top places</div>
+      <div class="card" id="top-places"></div>
+      <div class="section-label">Top vendors</div>
+      <div class="card" id="top-vendors"></div>
+      <div class="section-label">Top guides</div>
+      <div class="card" id="top-guides"></div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-top:0;">Searches <span class="pill" id="zero-pill" style="display:none;">has zero-result queries</span></div>
+      <div class="card" id="search-terms"></div>
+      <div class="section-label">Top events</div>
+      <div class="card" id="top-events"></div>
+      <div class="section-label">Top specials</div>
+      <div class="card" id="top-specials"></div>
+      <div class="section-label">Platform</div>
+      <div class="card" id="by-platform"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const $ = (id) => document.getElementById(id);
+
+  let adminToken = '';
+  let currentDays = 30;
+
+  function loadToken() {
+    const urlT = new URLSearchParams(location.search).get('token');
+    if (urlT) {
+      try { sessionStorage.setItem('troddr_admin_token', urlT); } catch (e) {}
+      return urlT;
+    }
+    try { return sessionStorage.getItem('troddr_admin_token') || ''; } catch (e) { return ''; }
+  }
+
+  function show(view) {
+    $('gate').classList.toggle('hidden', view !== 'gate');
+    $('loading').classList.toggle('hidden', view !== 'loading');
+    $('main').classList.toggle('hidden', view !== 'main');
+  }
+
+  const fmt = (n) => (n == null ? '–' : Number(n).toLocaleString());
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+  /* ── Chart (same style as Overview) ────────────────────── */
+  function renderChart(daily) {
+    const W = 1200, H = 260, padL = 44, padR = 10, padT = 12, padB = 30;
+    const iw = W - padL - padR, ih = H - padT - padB;
+    const maxE = Math.max(1, ...daily.map(d => d.events));
+    const maxU = Math.max(1, ...daily.map(d => d.users));
+    const n = daily.length;
+    const step = iw / n;
+    const bw = Math.max(2, step * 0.62);
+    const labelEvery = Math.max(1, Math.ceil(n / 12));
+
+    let bars = '', labels = '', grid = '';
+    for (let g = 0; g <= 4; g++) {
+      const y = padT + ih - (ih * g / 4);
+      const val = Math.round(maxE * g / 4);
+      grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#f0f0f0"/>`
+            + `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${val.toLocaleString()}</text>`;
+    }
+
+    const pts = [];
+    daily.forEach((d, i) => {
+      const cx = padL + step * i + step / 2;
+      const bh = ih * (d.events / maxE);
+      bars += `<rect x="${cx - bw / 2}" y="${padT + ih - bh}" width="${bw}" height="${Math.max(bh, 1)}" rx="1.5" fill="#bcd9f0"><title>${d.d}: ${d.events} events, ${d.users} users</title></rect>`;
+      pts.push(`${cx},${padT + ih - ih * (d.users / maxU)}`);
+      if (i % labelEvery === 0 || i === n - 1) {
+        labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#999">${String(d.d).slice(5)}</text>`;
+      }
+    });
+    const line = `<polyline points="${pts.join(' ')}" fill="none" stroke="#0077CC" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+    $('chart').innerHTML =
+      `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="font-family:inherit;">${grid}${bars}${line}${labels}</svg>`;
+  }
+
+  /* ── Ranked bar list ───────────────────────────────────── */
+  function rankList(elId, rows, opts) {
+    const { name, value, sub, extraClass } = opts;
+    const el = $(elId);
+    if (!rows || rows.length === 0) {
+      el.innerHTML = '<div class="empty-note">Nothing in this window.</div>';
+      return;
+    }
+    const max = Math.max(1, ...rows.map(value));
+    el.innerHTML = rows.map(r => `
+      <div class="rank-row ${extraClass ? extraClass(r) : ''}">
+        <span class="rr-name">${esc(name(r))}${sub && sub(r) ? `<small>${esc(sub(r))}</small>` : ''}</span>
+        <span class="rr-n">${fmt(value(r))}</span>
+        <span class="rr-bar"><span style="width:${Math.max(2, value(r) / max * 100)}%"></span></span>
+      </div>`).join('');
+  }
+
+  /* ── Render everything ─────────────────────────────────── */
+  function render(data) {
+    const t = data.totals || {};
+    $('t-events').textContent   = fmt(t.events);
+    $('t-users').textContent    = fmt(t.users);
+    $('t-sessions').textContent = fmt(t.sessions);
+    $('t-signups').textContent  = fmt(t.signups);
+    $('refreshed').textContent  = 'Updated ' + new Date(data.generated_at).toLocaleTimeString();
+
+    renderChart(data.daily || []);
+
+    rankList('by-event', data.by_event, {
+      name: r => r.name.replace(/_/g, ' '),
+      sub:  r => `${fmt(r.users)} users`,
+      value: r => r.n,
+    });
+
+    rankList('top-places', data.top_places, {
+      name: r => r.name, sub: null, value: r => r.views,
+    });
+
+    rankList('top-events', data.top_events, {
+      name: r => r.title,
+      sub:  r => r.saves > 0 ? `${fmt(r.saves)} saves` : null,
+      value: r => r.views,
+    });
+
+    rankList('top-vendors', data.top_vendors, {
+      name: r => r.name,
+      sub:  r => r.event_title,
+      value: r => r.clicks,
+    });
+
+    rankList('top-guides', data.top_guides, {
+      name: r => r.title, sub: null, value: r => r.views,
+    });
+
+    rankList('top-specials', data.top_specials, {
+      name: r => r.title, sub: null, value: r => r.views,
+    });
+
+    rankList('search-terms', data.search_terms, {
+      name: r => `“${r.q}”`,
+      sub:  r => r.zero_results > 0
+              ? `${r.zero_results}× zero results`
+              : (r.avg_results != null ? `~${r.avg_results} results` : null),
+      value: r => r.n,
+      extraClass: r => r.zero_results > 0 ? 'zero' : '',
+    });
+    const hasZero = (data.search_terms || []).some(r => r.zero_results > 0);
+    $('zero-pill').style.display = hasZero ? '' : 'none';
+
+    rankList('by-platform', data.by_platform, {
+      name: r => r.platform, sub: null, value: r => r.n,
+    });
+  }
+
+  /* ── Boot / range ──────────────────────────────────────── */
+  async function load(days) {
+    show('loading');
+    const { data, error } = await db.rpc('admin_get_analytics', {
+      p_admin_token: adminToken, p_days: days,
+    });
+    if (error || !data) {
+      try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
+      adminToken = '';
+      $('gate-error').classList.add('show');
+      show('gate');
+      return;
+    }
+    render(data);
+    show('main');
+  }
+
+  document.querySelectorAll('.range-btn').forEach(b =>
+    b.addEventListener('click', () => {
+      currentDays = Number(b.dataset.days);
+      document.querySelectorAll('.range-btn').forEach(x =>
+        x.classList.toggle('active', x === b));
+      load(currentDays);
+    }));
+
+  $('gate-go').addEventListener('click', () => {
+    const t = $('gate-input').value.trim();
+    if (!t) return;
+    adminToken = t;
+    try { sessionStorage.setItem('troddr_admin_token', t); } catch (e) {}
+    $('gate-error').classList.remove('show');
+    load(currentDays);
+  });
+  $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
+
+  adminToken = loadToken();
+  if (adminToken) load(currentDays); else show('gate');
+</script>
+
+</body>
+</html>

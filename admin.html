@@ -135,7 +135,10 @@
   <div class="shell-bar">
     <h1>TRODDR Admin</h1>
     <nav class="section-nav">
-      <button class="section-tab active" data-section="review">Review</button>
+      <button class="section-tab active" data-section="overview">Overview</button>
+      <button class="section-tab" data-section="analytics">Analytics</button>
+      <button class="section-tab" data-section="feedback">Feedback</button>
+      <button class="section-tab" data-section="review">Review</button>
       <button class="section-tab" data-section="billing">Billing</button>
       <button class="section-tab" data-section="bookings">Bookings</button>
     </nav>
@@ -146,7 +149,16 @@
 
 <div id="main" class="hidden">
   <div class="frames">
-    <div class="section active" id="sec-review">
+    <div class="section active" id="sec-overview">
+      <iframe data-src="/admin-overview.html" title="Overview"></iframe>
+    </div>
+    <div class="section" id="sec-analytics">
+      <iframe data-src="/admin-analytics.html" title="Analytics"></iframe>
+    </div>
+    <div class="section" id="sec-feedback">
+      <iframe data-src="/admin-feedback.html" title="Feedback inbox"></iframe>
+    </div>
+    <div class="section" id="sec-review">
       <iframe data-src="/admin-review.html" title="Review queue"></iframe>
     </div>
     <div class="section" id="sec-billing">
@@ -185,7 +197,7 @@
   }
 
   /* ── Sections (lazy-loaded iframes) ───────────────────── */
-  const SECTIONS = ['review', 'billing', 'bookings'];
+  const SECTIONS = ['overview', 'analytics', 'feedback', 'review', 'billing', 'bookings'];
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
 
   // Strip the child page's own sticky header so the shell bar is the only chrome.
@@ -220,6 +232,13 @@
   document.querySelectorAll('.section-tab').forEach((t) =>
     t.addEventListener('click', () => showSection(t.dataset.section)));
 
+  // Child pages (e.g. Overview's "Open →" shortcuts) request section switches.
+  window.addEventListener('message', (e) => {
+    if (e.origin !== window.location.origin) return;
+    const key = e.data && e.data.troddrAdminNav;
+    if (key && SECTIONS.includes(key)) showSection(key);
+  });
+
   /* ── Sign out ─────────────────────────────────────────── */
   $('signout').addEventListener('click', () => {
     try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
@@ -253,7 +272,7 @@
       return;
     }
     show('main');
-    showSection('review');
+    showSection('overview');
   }
 
   $('gate-go').addEventListener('click', () => {

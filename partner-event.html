@@ -1799,6 +1799,32 @@
   .add-btn:hover:not(:disabled) { filter: brightness(1.08); }
   .add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .secondary-btn { background: #fff; color: var(--grey-dark); border-color: var(--border); }
+  .vip-courts-card { margin-top: 14px; }
+  .vip-courts-title { font-size: 14px; font-weight: 800; color: var(--black); }
+  .vip-courts-help { margin-top: 4px; font-size: 12px; line-height: 1.55; color: var(--grey-mid); }
+  .vip-courts-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .vip-court-option { position: relative; display: inline-flex; }
+  .vip-court-option input { position: absolute; opacity: 0; pointer-events: none; }
+  .vip-court-option span {
+    display: inline-flex; align-items: center; gap: 7px; min-height: 36px;
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: 999px;
+    background: #fff; color: var(--grey-dark); font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: border-color .15s ease, background .15s ease, color .15s ease;
+  }
+  .vip-court-option span::before {
+    content: ''; width: 13px; height: 13px; border: 1.5px solid var(--grey-mid);
+    border-radius: 4px; background: #fff; box-sizing: border-box;
+  }
+  .vip-court-option input:focus-visible + span { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+  .vip-court-option input:checked + span {
+    border-color: var(--brand-primary); background: var(--bg-soft); color: var(--black);
+  }
+  .vip-court-option input:checked + span::before {
+    border-color: var(--brand-primary); background: var(--brand-primary);
+    box-shadow: inset 0 0 0 3px #fff;
+  }
+  .vip-courts-warning { margin-top: 12px; font-size: 12px; color: var(--red); }
+  .vip-courts-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 16px; }
   .schedule-editor-day { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
   .schedule-editor-day-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg-soft); border-bottom: 1px solid var(--border); }
   .schedule-editor-day-head .body { flex: 1; min-width: 0; }
@@ -3191,6 +3217,11 @@
             <button type="button" class="add-btn" id="add-vendor-btn">+ Add vendor</button>
           </div>
           <div id="edit-vendors-list"></div>
+        </div>
+        <div class="edit-list-card vip-courts-card">
+          <div class="vip-courts-title">VIP-only food courts</div>
+          <div class="vip-courts-help">Vendors in these zones show a VIP badge. General-ticket holders can hide them. This does not restrict entry.</div>
+          <div id="vip-courts-control"></div>
         </div>
       </section>
 
@@ -4723,11 +4754,110 @@
   }
 
   // ── Manage Vendors (Editor view) ──────────────────────
+  function renderVipFoodCourts(data) {
+    const control = document.getElementById('vip-courts-control');
+    if (!control) return;
+
+    const vendors = Array.isArray(data && data.vendors) ? data.vendors : [];
+    const savedVipZones = Array.isArray(data && data.event && data.event.vip_zones)
+      ? data.event.vip_zones.filter(zone => typeof zone === 'string')
+      : [];
+    const zones = [];
+    const seen = new Set();
+    vendors.forEach((vendor) => {
+      const zone = vendor && vendor.zone;
+      if (typeof zone !== 'string' || !zone.trim() || seen.has(zone)) return;
+      seen.add(zone);
+      zones.push(zone);
+    });
+    zones.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+    const liveZones = new Set(zones);
+    const staleZones = savedVipZones.filter(zone => !liveZones.has(zone));
+
+    if (!zones.length) {
+      control.innerHTML = `
+        <div class="edit-list-empty" style="margin-top:16px;">Assign vendors to zones first, then choose which are VIP-only.</div>
+        ${staleZones.length ? `
+          <div class="vip-courts-warning">${staleZones.length} saved VIP zone${staleZones.length === 1 ? '' : 's'} no longer ${staleZones.length === 1 ? 'has' : 'have'} vendors. Clear the stale setting to keep this event tidy.</div>
+          <div class="vip-courts-actions">
+            <button type="button" class="add-btn secondary-btn" id="vip-courts-save">Clear VIP settings</button>
+          </div>
+          <div class="edit-status" id="vip-courts-status" role="status" aria-live="polite"></div>` : ''}`;
+    } else {
+      control.innerHTML = `
+        <div class="vip-courts-options" role="group" aria-label="VIP-only food courts">
+          ${zones.map((zone, index) => `
+            <label class="vip-court-option" for="vip-court-${index}">
+              <input id="vip-court-${index}" type="checkbox" value="${escapeHtml(zone)}" ${savedVipZones.includes(zone) ? 'checked' : ''} />
+              <span>${escapeHtml(zone)}</span>
+            </label>`).join('')}
+        </div>
+        ${staleZones.length ? `<div class="vip-courts-warning">${staleZones.length} previously selected zone${staleZones.length === 1 ? '' : 's'} no longer ${staleZones.length === 1 ? 'matches' : 'match'} a vendor zone and will be removed when you save.</div>` : ''}
+        <div class="vip-courts-actions">
+          <button type="button" class="add-btn" id="vip-courts-save">Save VIP food courts</button>
+        </div>
+        <div class="edit-status" id="vip-courts-status" role="status" aria-live="polite"></div>`;
+    }
+
+    const saveButton = document.getElementById('vip-courts-save');
+    if (!saveButton) return;
+    saveButton.addEventListener('click', async () => {
+      const status = document.getElementById('vip-courts-status');
+      const token = window.PartnerAuth?.getToken()
+        || new URLSearchParams(location.search).get('token')
+        || '';
+      const selectedZones = Array.from(control.querySelectorAll('.vip-court-option input:checked'))
+        .map(input => input.value);
+
+      if (!token) {
+        status.className = 'edit-status show error';
+        status.textContent = "We couldn't find your account from this link. Open the dashboard from your bookmarked URL.";
+        return;
+      }
+
+      saveButton.disabled = true;
+      const originalLabel = saveButton.textContent;
+      saveButton.textContent = 'Saving...';
+      status.className = 'edit-status';
+      status.textContent = '';
+      try {
+        const { data: result, error } = await db.rpc('update_partner_event_vip_zones', {
+          p_token: token,
+          p_vip_zones: selectedZones,
+        });
+        if (error || !result || !result.ok) {
+          throw error || new Error((result && result.error) || 'Could not save VIP food courts.');
+        }
+        const savedZones = Array.isArray(result.vip_zones) ? result.vip_zones : [];
+        const droppedCount = selectedZones.length - savedZones.length;
+        control.querySelectorAll('.vip-court-option input').forEach((input) => {
+          input.checked = savedZones.includes(input.value);
+        });
+        if (window.__eventData && window.__eventData.event) {
+          window.__eventData.event.vip_zones = savedZones;
+        }
+        status.className = 'edit-status show success';
+        status.textContent = droppedCount > 0
+          ? `Saved. ${droppedCount} zone${droppedCount === 1 ? '' : 's'} no longer existed and ${droppedCount === 1 ? 'was' : 'were'} removed.`
+          : (savedZones.length ? 'VIP-only food courts saved.' : 'VIP food court settings cleared.');
+        control.querySelector('.vip-courts-warning')?.remove();
+      } catch (err) {
+        status.className = 'edit-status show error';
+        status.textContent = (err && (err.message || err.code)) || 'Could not save VIP food courts.';
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = originalLabel;
+      }
+    });
+  }
+
   function renderVendorsEditor(data) {
     const vendors = (data && data.vendors) || [];
     const lead = document.getElementById('edit-vendors-lead');
     const wrap = document.getElementById('edit-vendors-list');
     if (!lead || !wrap) return;
+    renderVipFoodCourts(data);
     lead.textContent = vendors.length
       ? `${vendors.length} vendor${vendors.length === 1 ? '' : 's'} in the lineup.`
       : 'No vendors yet.';

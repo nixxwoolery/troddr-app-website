@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR Admin · Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="robots" content="noindex,nofollow" />
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || 'https://rprpwudhplodaqmmwqkf.supabase.co';
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+  :root {
+    --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+    --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#fff; --bg-soft:#f8f9fa;
+    --primary:#0077CC; --primary-text:#fff;
+    --green:#1a7f4e; --green-light:#e6f5ec;
+    --red:#c0392b; --red-light:#fdecea;
+    --amber:#b86e00; --amber-light:#fff4e0;
+    --blue-light:#e8f4ff;
+    --radius:10px; --radius-lg:16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-soft); color: var(--black);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--black); color: #fff;
+    border-bottom: 1px solid #000;
+  }
+  .navbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .navbar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .navbar .tag {
+    background: rgba(255,255,255,0.12); color: #fff;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+  }
+
+  .layout { max-width: 1280px; margin: 24px auto; padding: 0 24px 48px; }
+
+  .section-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin: 26px 0 10px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  .counts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .count-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+  }
+  .count-card .num {
+    font-size: 28px; font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.8px; line-height: 1;
+  }
+  .count-card .num.urgent { color: var(--red); }
+  .count-card .num.muted  { color: var(--grey-light); }
+  .count-card .num.good   { color: var(--green); }
+  .count-card .lbl {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--grey-mid);
+    margin-top: 6px;
+  }
+  .count-card .sub {
+    font-size: 11px; color: var(--grey-light);
+    margin-top: 2px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  /* Chart */
+  .chart-legend {
+    display: flex; gap: 18px; margin-bottom: 10px;
+    font-size: 11px; font-weight: 600; color: var(--grey-mid);
+  }
+  .chart-legend .dot {
+    display: inline-block; width: 9px; height: 9px;
+    border-radius: 2px; margin-right: 5px; vertical-align: baseline;
+  }
+  .chart-wrap svg { width: 100%; height: auto; display: block; }
+
+  /* Attention rows */
+  .att-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 4px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .att-row:last-child { border-bottom: none; }
+  .att-row .att-count {
+    min-width: 34px; text-align: center;
+    font-size: 13px; font-weight: 800;
+    padding: 3px 8px; border-radius: 100px;
+    background: var(--bg-soft); color: var(--grey-mid);
+  }
+  .att-row.hot .att-count { background: var(--red-light); color: var(--red); }
+  .att-row .att-label { flex: 1; font-weight: 600; color: var(--grey-dark); }
+  .att-row .att-go {
+    font-size: 11px; font-weight: 700; color: var(--primary);
+    background: none; border: none; cursor: pointer;
+    font-family: inherit; padding: 4px 6px;
+  }
+  .att-row .att-go:hover { text-decoration: underline; }
+
+  .kv-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 9px 4px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-row .k { color: var(--grey-dark); font-weight: 600; }
+  .kv-row .v { font-weight: 800; }
+  .kv-row .v small { font-weight: 500; color: var(--grey-light); margin-left: 6px; }
+
+  /* Gate + loading */
+  .gate {
+    max-width: 420px; margin: 80px auto;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 34px 30px;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.08); text-align: center;
+  }
+  .gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .gate p { color: var(--grey-mid); font-size: 14px; margin-bottom: 18px; }
+  .gate input {
+    width: 100%; padding: 11px 14px;
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;
+  }
+  .gate button {
+    width: 100%; padding: 11px 22px;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .gate-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+  .gate-error.show { display: block; }
+
+  .loading {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 90px 0; color: var(--grey-mid);
+  }
+  .spinner {
+    width: 30px; height: 30px;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+
+  @media (max-width: 900px) {
+    .counts { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <h1>TRODDR Admin</h1>
+    <span class="tag">Overview</span>
+  </div>
+</header>
+
+<!-- Gate (standalone use; the shell auto-passes ?token=) -->
+<div class="gate hidden" id="gate">
+  <h2>Admin sign-in</h2>
+  <p>Enter your admin token to view the overview.</p>
+  <input id="gate-input" type="password" placeholder="admin token..." />
+  <button id="gate-go">Continue</button>
+  <div class="gate-error" id="gate-error">Invalid or revoked token.</div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>Loading overview…</p>
+</div>
+
+<div class="layout hidden" id="main">
+
+  <div class="section-label">Users</div>
+  <div class="counts">
+    <div class="count-card"><div class="num" id="u-total">–</div><div class="lbl">Total users</div><div class="sub" id="u-new7">&nbsp;</div></div>
+    <div class="count-card"><div class="num" id="u-today">–</div><div class="lbl">Active today</div><div class="sub">incl. guest sessions</div></div>
+    <div class="count-card"><div class="num" id="u-7d">–</div><div class="lbl">Active · 7 days</div><div class="sub">incl. guest sessions</div></div>
+    <div class="count-card"><div class="num" id="u-push">–</div><div class="lbl">Push opt-in</div><div class="sub" id="u-push-pct">&nbsp;</div></div>
+  </div>
+
+  <div class="section-label">Activity — last 30 days</div>
+  <div class="card chart-wrap">
+    <div class="chart-legend">
+      <span><span class="dot" style="background:#bcd9f0"></span>Events tracked</span>
+      <span><span class="dot" style="background:#0077CC"></span>Active users</span>
+    </div>
+    <div id="chart"></div>
+  </div>
+
+  <div class="two-col" style="margin-top:26px;">
+    <div>
+      <div class="section-label" style="margin-top:0;">Needs attention</div>
+      <div class="card" id="attention"></div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-top:0;">Feedback</div>
+      <div class="card" id="feedback"></div>
+      <div class="section-label">Platform</div>
+      <div class="card" id="snapshot"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+  const $ = (id) => document.getElementById(id);
+
+  let adminToken = '';
+
+  function loadToken() {
+    const urlT = new URLSearchParams(location.search).get('token');
+    if (urlT) {
+      try { sessionStorage.setItem('troddr_admin_token', urlT); } catch (e) {}
+      return urlT;
+    }
+    try { return sessionStorage.getItem('troddr_admin_token') || ''; } catch (e) { return ''; }
+  }
+
+  function show(view) {
+    $('gate').classList.toggle('hidden', view !== 'gate');
+    $('loading').classList.toggle('hidden', view !== 'loading');
+    $('main').classList.toggle('hidden', view !== 'main');
+  }
+
+  const fmt = (n) => (n == null ? '–' : Number(n).toLocaleString());
+
+  /* Ask the admin.html shell to switch section (no-op standalone). */
+  function goSection(key) {
+    try { window.parent.postMessage({ troddrAdminNav: key }, window.location.origin); } catch (e) {}
+  }
+
+  /* ── Chart: bars = events, line = active users ─────────── */
+  function renderChart(daily) {
+    const W = 1200, H = 260, padL = 44, padR = 10, padT = 12, padB = 30;
+    const iw = W - padL - padR, ih = H - padT - padB;
+    const maxE = Math.max(1, ...daily.map(d => d.events));
+    const maxU = Math.max(1, ...daily.map(d => d.users));
+    const n = daily.length;
+    const step = iw / n;
+    const bw = Math.max(4, step * 0.62);
+
+    let bars = '', line = '', labels = '', grid = '';
+
+    for (let g = 0; g <= 4; g++) {
+      const y = padT + ih - (ih * g / 4);
+      const val = Math.round(maxE * g / 4);
+      grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#f0f0f0"/>`
+            + `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${val.toLocaleString()}</text>`;
+    }
+
+    const pts = [];
+    daily.forEach((d, i) => {
+      const cx = padL + step * i + step / 2;
+      const bh = ih * (d.events / maxE);
+      bars += `<rect x="${cx - bw / 2}" y="${padT + ih - bh}" width="${bw}" height="${Math.max(bh, 1)}" rx="2" fill="#bcd9f0"><title>${d.d}: ${d.events} events, ${d.users} users</title></rect>`;
+      pts.push(`${cx},${padT + ih - ih * (d.users / maxU)}`);
+      if (i % 5 === 0 || i === n - 1) {
+        const lbl = String(d.d).slice(5); // MM-DD
+        labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#999">${lbl}</text>`;
+      }
+    });
+    line = `<polyline points="${pts.join(' ')}" fill="none" stroke="#0077CC" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+    $('chart').innerHTML =
+      `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="font-family:inherit;">${grid}${bars}${line}${labels}</svg>`;
+  }
+
+  /* ── Needs attention ───────────────────────────────────── */
+  function renderAttention(p, fb) {
+    const rows = [
+      { n: p.submissions,        label: 'Event submissions to review',  nav: 'review'   },
+      { n: p.specials,           label: 'Specials pending approval',    nav: 'review'   },
+      { n: p.messages,           label: 'New partner messages',         nav: 'review'   },
+      { n: p.bookings,           label: 'Bookings awaiting response',   nav: 'bookings' },
+      { n: p.bookings_attention, label: 'Bookings flagged for TRODDR',  nav: 'bookings' },
+      { n: p.suggested_places,   label: 'Unmatched place suggestions',  nav: null       },
+      { n: fb.app_open,          label: 'Open app feedback',            nav: null       },
+    ];
+    $('attention').innerHTML = rows.map(r => `
+      <div class="att-row ${r.n > 0 ? 'hot' : ''}">
+        <span class="att-count">${fmt(r.n)}</span>
+        <span class="att-label">${r.label}</span>
+        ${r.nav && r.n > 0 ? `<button class="att-go" data-nav="${r.nav}">Open →</button>` : ''}
+      </div>`).join('');
+    $('attention').querySelectorAll('.att-go').forEach(b =>
+      b.addEventListener('click', () => goSection(b.dataset.nav)));
+  }
+
+  /* ── Feedback + snapshot ───────────────────────────────── */
+  function renderFeedback(fb) {
+    $('feedback').innerHTML = `
+      <div class="kv-row"><span class="k">Event feedback</span>
+        <span class="v">${fmt(fb.event_total)}<small>+${fmt(fb.event_7d)} this week</small></span></div>
+      <div class="kv-row"><span class="k">Place feedback</span>
+        <span class="v">${fmt(fb.place_total)}<small>+${fmt(fb.place_7d)} this week</small></span></div>
+      <div class="kv-row"><span class="k">Open app feedback</span>
+        <span class="v">${fmt(fb.app_open)}</span></div>`;
+  }
+
+  function renderSnapshot(ev, cat) {
+    $('snapshot').innerHTML = `
+      <div class="kv-row"><span class="k">Events live today</span><span class="v">${fmt(ev.live_today)}</span></div>
+      <div class="kv-row"><span class="k">Events in next 30 days</span><span class="v">${fmt(ev.upcoming_30d)}</span></div>
+      <div class="kv-row"><span class="k">Places</span><span class="v">${fmt(cat.places)}</span></div>
+      <div class="kv-row"><span class="k">Vendors</span><span class="v">${fmt(cat.vendors)}</span></div>
+      <div class="kv-row"><span class="k">Guides</span><span class="v">${fmt(cat.guides)}</span></div>
+      <div class="kv-row"><span class="k">Active specials</span><span class="v">${fmt(cat.active_specials)}</span></div>`;
+  }
+
+  /* ── Boot ──────────────────────────────────────────────── */
+  async function boot() {
+    show('loading');
+    const { data, error } = await db.rpc('admin_get_overview', { p_admin_token: adminToken });
+    if (error || !data) {
+      try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
+      adminToken = '';
+      $('gate-error').classList.add('show');
+      show('gate');
+      return;
+    }
+
+    const u = data.users;
+    $('u-total').textContent = fmt(u.total);
+    $('u-new7').textContent  = `+${fmt(u.new_7d)} this week · +${fmt(u.new_30d)} this month`;
+    $('u-today').textContent = fmt(u.active_today);
+    $('u-7d').textContent    = fmt(u.active_7d);
+    $('u-push').textContent  = fmt(u.push_opt_in);
+    $('u-push-pct').textContent = u.total ? `${Math.round(u.push_opt_in / u.total * 100)}% of users` : '';
+
+    renderChart(data.activity_daily || []);
+    renderAttention(data.pending, data.feedback);
+    renderFeedback(data.feedback);
+    renderSnapshot(data.events, data.catalog);
+    show('main');
+  }
+
+  $('gate-go').addEventListener('click', () => {
+    const t = $('gate-input').value.trim();
+    if (!t) return;
+    adminToken = t;
+    try { sessionStorage.setItem('troddr_admin_token', t); } catch (e) {}
+    $('gate-error').classList.remove('show');
+    boot();
+  });
+  $('gate-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-go').click(); });
+
+  adminToken = loadToken();
+  if (adminToken) boot(); else show('gate');
+</script>
+
+</body>
+</html>
