@@ -914,16 +914,16 @@
     let rows, primary, secondary, note;
     if (['eat','stay','play'].includes(performanceTab)) {
       rows = allPlaces.filter(row => String(row.category).toLowerCase() === performanceTab).sort((a,b)=>(b.views||0)-(a.views||0));
-      primary = 'views'; secondary = row => `${fmt(row.users)} people · ${fmt(row.trip_adds)} trip adds`;
-      note = 'Ranked by listing views; trip additions show planning intent.';
+      primary = 'views'; secondary = row => `${fmt(row.users)} people`;
+      note = 'Ranked by listing views.';
     } else if (performanceTab === 'guides') {
       rows = (data.guides || []).slice().sort((a,b)=>(b.views||0)-(a.views||0));
       primary = 'views'; secondary = row => `${fmt(row.users)} people${row.location ? ` · ${row.location}` : ''}`;
       note = 'Ranked by guide views.';
     } else if (performanceTab === 'events') {
       rows = (data.events || []).slice().sort((a,b)=>(b.views||0)-(a.views||0));
-      primary = 'views'; secondary = row => `${fmt(row.users)} people · ${fmt(row.saves)} saves · ${fmt(row.trip_adds)} trip adds`;
-      note = 'Ranked by event views with saves and trip additions alongside.';
+      primary = 'views'; secondary = row => `${fmt(row.users)} people · ${fmt(row.saves)} saves`;
+      note = 'Ranked by event views with saves alongside.';
     } else {
       rows = allPlaces.slice().sort((a,b)=>(b.trip_adds||0)-(a.trip_adds||0));
       primary = 'trip_adds'; secondary = row => `${fmt(row.trips)} trips · ${fmt(row.views)} views · ${String(row.category||'').toUpperCase()}`;
@@ -932,12 +932,13 @@
     rows = rows.filter(row => Number(row[primary]) > 0);
     const totalPrimary = rows.reduce((sum,row)=>sum+(Number(row[primary])||0),0);
     const totalUsers = rows.reduce((sum,row)=>sum+(Number(row.users)||0),0);
-    const totalTripAdds = rows.reduce((sum,row)=>sum+(Number(row.trip_adds)||0),0);
     const totalSaves = rows.reduce((sum,row)=>sum+(Number(row.saves)||0),0);
-    $('performance-kpis').innerHTML = performanceKpi(rows.length, 'Active listings', `With activity in ${performanceDays} days`)
+    const activeLabel = performanceTab === 'events' ? 'Active events' : performanceTab === 'guides' ? 'Active guides' : 'Active listings';
+    let kpis = performanceKpi(rows.length, activeLabel, `With activity in ${performanceDays} days`)
       + performanceKpi(totalPrimary, primary === 'trip_adds' ? 'Trip additions' : 'Views', 'Across ranked content')
-      + performanceKpi(performanceTab === 'trips' ? rows.reduce((sum,row)=>sum+(Number(row.trips)||0),0) : totalUsers, performanceTab === 'trips' ? 'Trip appearances' : 'People', performanceTab === 'trips' ? 'Distinct trips per place, summed' : 'Sum of listing audiences')
-      + performanceKpi(performanceTab === 'events' ? totalSaves : totalTripAdds, performanceTab === 'events' ? 'Event saves' : 'Trip additions', 'Planning intent');
+      + performanceKpi(performanceTab === 'trips' ? rows.reduce((sum,row)=>sum+(Number(row.trips)||0),0) : totalUsers, performanceTab === 'trips' ? 'Trip appearances' : 'People', performanceTab === 'trips' ? 'Distinct trips per place, summed' : 'Sum of listing audiences');
+    if (performanceTab === 'events') kpis += performanceKpi(totalSaves, 'Event saves', 'Planning intent');
+    $('performance-kpis').innerHTML = kpis;
     $('performance-list-title').textContent = `${performanceLabels[performanceTab]} performance`;
     $('performance-list-note').textContent = note;
     $('performance-updated').textContent = data.generated_at ? `Updated ${new Date(data.generated_at).toLocaleString()}` : '';
