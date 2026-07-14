@@ -489,6 +489,7 @@
   let feedbackTab = 'event';
   let reviewInitialized = false;
   let reviewTab = 'specials';
+  let bookingTab = 'setup';
 
   function setSidebarCollapsed(collapsed) {
     $('app-shell').classList.toggle('sidebar-collapsed', collapsed);
@@ -539,6 +540,12 @@
     if (sectionFromRoute() !== 'feedback') return 'event';
     const tab = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] || 'event';
     return ['event','place','app','items'].includes(tab) ? tab : 'event';
+  }
+
+  function bookingTabFromRoute() {
+    if (sectionFromRoute() !== 'bookings') return 'setup';
+    const tab = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1] || 'setup';
+    return ['setup','rooms','rates','availability','policies'].includes(tab) ? tab : 'setup';
   }
 
   function closeDrawer() {
@@ -606,13 +613,14 @@
     const iframe = frameFor(key);
     if (iframe.dataset.loaded) {
       if (key === 'review' && reviewTabFromRoute()) iframe.contentWindow.location.hash = reviewTabFromRoute();
+      if (key === 'bookings') iframe.contentWindow.location.hash = bookingTab;
       return;
     }
     iframe.dataset.loaded = '1';
     iframe.addEventListener('load', () => stripChildHeader(iframe));
     const sep = iframe.dataset.src.includes('?') ? '&' : '?';
     iframe.src = iframe.dataset.src + sep + 'token=' + encodeURIComponent(adminToken)
-      + (key === 'review' && reviewTabFromRoute() ? '#' + reviewTabFromRoute() : '');
+      + (key === 'review' && reviewTabFromRoute() ? '#' + reviewTabFromRoute() : key === 'bookings' ? '#' + bookingTab : '');
   }
 
   function showSection(key, options = {}) {
@@ -621,6 +629,7 @@
     if (key === 'events' && options.fromRoute) eventRouteId = eventIdFromRoute();
     if (key === 'feedback') feedbackTab = options.tab || (options.fromRoute ? feedbackTabFromRoute() : feedbackTab);
     if (key === 'review') reviewTab = options.tab || (options.fromRoute ? (reviewTabFromRoute() || 'specials') : reviewTab);
+    if (key === 'bookings') bookingTab = options.tab || (options.fromRoute ? bookingTabFromRoute() : bookingTab);
     currentSection = key;
     SECTIONS.forEach((k) => {
       $('sec-' + k).classList.toggle('active', k === key);
@@ -638,6 +647,7 @@
       : key === 'events' && eventRouteId ? `#/events/${encodeURIComponent(eventRouteId)}`
       : key === 'review' && (options.tab || (options.fromRoute && reviewTabFromRoute())) ? `#/review/${options.tab || reviewTabFromRoute()}`
       : key === 'feedback' ? `#/feedback/${feedbackTab}`
+      : key === 'bookings' ? `#/bookings/${bookingTab}`
       : '#/' + key;
     if (!options.fromRoute && location.hash !== route) history.pushState({ section: key }, '', route);
     if (options.fromRoute && location.hash !== route) history.replaceState({ section: key }, '', route);
@@ -915,6 +925,11 @@
     if (e.origin !== window.location.origin) return;
     const key = e.data && e.data.troddrAdminNav;
     if (key && SECTIONS.includes(key)) showSection(key);
+    const tab = e.data && e.data.troddrBookingTab;
+    if (tab && currentSection === 'bookings' && ['setup','rooms','rates','availability','policies'].includes(tab)) {
+      bookingTab = tab;
+      history.replaceState({ section:'bookings', tab }, '', `#/bookings/${tab}`);
+    }
   });
 
   /* ── Sign out ─────────────────────────────────────────── */

@@ -846,6 +846,7 @@ function renderDashboard() {
   renderRatesTab();
   renderAvailabilityTab();
   renderPoliciesTab();
+  switchBookingTab(location.hash.slice(1) || 'setup', false);
 }
 
 // ── Setup tab ─────────────────────────────────────────────────────────────────
@@ -1520,14 +1521,16 @@ async function refreshConfig() {
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    $(`tab-${tab.dataset.tab}`)?.classList.add('active');
-  });
-});
+const BOOKING_TABS = ['setup','rooms','rates','availability','policies'];
+function switchBookingTab(name, updateHash = true) {
+  if (!BOOKING_TABS.includes(name)) name = 'setup';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
+  if (updateHash && location.hash !== `#${name}`) location.hash = name;
+  try { window.parent.postMessage({ troddrBookingTab: name }, window.location.origin); } catch (e) {}
+}
+document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => switchBookingTab(tab.dataset.tab)));
+window.addEventListener('hashchange', () => switchBookingTab(location.hash.slice(1), false));
 
 // ── Event listeners ───────────────────────────────────────────────────────────
 $('gate-go').addEventListener('click', async () => {
