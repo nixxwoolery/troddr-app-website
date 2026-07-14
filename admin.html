@@ -6,6 +6,7 @@
 <title>TRODDR Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="/css/admin-events-view.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="robots" content="noindex,nofollow" />
 
@@ -350,7 +351,29 @@
       </div>
     </div>
     <div class="section" id="sec-events">
-      <iframe data-src="/admin-events.html" title="Events console"></iframe>
+      <div class="native-events" id="events-view">
+        <div class="overview-state" id="events-loading"><div><div class="spinner"></div><p>Loading events…</p></div></div>
+        <div class="overview-state hidden" id="events-error"><div class="overview-error"><strong>Events could not be loaded</strong><p id="events-error-message">Check your connection and try again.</p><button class="icon-btn" id="events-retry">Try again</button></div></div>
+        <div class="events-layout hidden" id="events-content">
+          <aside class="events-sidebar">
+            <div class="events-tools"><input id="events-search" type="search" placeholder="Search events or locations…" aria-label="Search events" /><div class="events-filters"><button class="events-filter active" data-filter="all" aria-pressed="true">All</button><button class="events-filter" data-filter="live" aria-pressed="false">Live</button><button class="events-filter" data-filter="upcoming" aria-pressed="false">Upcoming</button><button class="events-filter" data-filter="past" aria-pressed="false">Past</button></div></div>
+            <div class="events-list" id="events-list"></div>
+          </aside>
+          <section id="events-console">
+            <div class="overview-state hidden" id="event-detail-loading"><div><div class="spinner"></div><p>Loading event…</p></div></div>
+            <div class="overview-state hidden" id="event-detail-error"><div class="overview-error"><strong>Event could not be loaded</strong><p id="event-detail-error-message"></p><button class="icon-btn" id="event-detail-retry">Try again</button></div></div>
+            <div class="hidden" id="event-detail">
+              <div class="events-console-head"><h2 id="event-title"></h2><p id="event-subtitle"></p></div>
+              <div class="events-kpis" id="event-kpis"></div>
+              <div class="events-card"><div class="overview-chart-legend"><span><i style="background:#bcd9f0"></i>Views</span><span><i style="background:#0077CC"></i>Vendor clicks</span></div><div id="event-chart"></div></div>
+              <div class="events-label">Post an update</div>
+              <div class="events-card events-composer"><input id="event-update-title" placeholder="Update title (e.g. Gates now open)" /><textarea id="event-update-message" placeholder="Message shown in the event updates feed…"></textarea><div class="events-composer-row"><label><input type="checkbox" id="event-update-push" /> Also send push (<span id="event-push-audience">–</span> people)</label><button class="icon-btn" id="event-update-post">Post update</button><span class="events-result" id="event-update-result" aria-live="polite"></span></div></div>
+              <div class="events-two-col"><div><div class="events-label">Updates feed</div><div class="events-card" id="event-updates"></div><div class="events-label">Feedback</div><div class="events-card" id="event-feedback"></div><div class="events-label">Most-saved items <span id="event-saved-count"></span></div><div class="events-card events-scroll" id="event-saved-items"></div></div><div><div class="events-label">Top vendors</div><div class="events-card" id="event-vendors"></div><div class="events-label">Interested &amp; going <span id="event-audience-count"></span></div><div class="events-card events-scroll" id="event-audience"></div><div class="events-label">Notifications sent</div><div class="events-card" id="event-deliveries"></div><div class="events-label">Parking lots</div><div class="events-card" id="event-parking"></div></div></div>
+            </div>
+          </section>
+        </div>
+        <div class="events-modal hidden" id="events-profile-modal" role="dialog" aria-modal="true" aria-labelledby="events-profile-title"><div class="events-modal-card" id="events-profile-card"><button class="events-modal-close" id="events-profile-close" aria-label="Close profile">×</button><div id="events-profile-body"></div></div></div>
+      </div>
     </div>
     <div class="section" id="sec-feedback">
       <iframe data-src="/admin-feedback.html" title="Feedback inbox"></iframe>
@@ -369,6 +392,7 @@
   </div>
 </div>
 
+<script src="/js/admin-events-view.js"></script>
 <script>
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -409,6 +433,8 @@
   let overviewLoaded = false;
   let analyticsLoaded = false;
   let analyticsDays = 30;
+  let eventsInitialized = false;
+  let eventRouteId = '';
   function frameFor(key) { return $('sec-' + key).querySelector('iframe'); }
   const fmt = (n) => {
     if (n == null) return '–';
@@ -427,6 +453,12 @@
     const query = location.hash.split('?')[1] || '';
     const days = Number(new URLSearchParams(query).get('days'));
     return [7, 30, 90].includes(days) ? days : 30;
+  }
+
+  function eventIdFromRoute() {
+    if (sectionFromRoute() !== 'events') return '';
+    const path = location.hash.replace(/^#\/?/, '').split('?')[0].split('/');
+    try { return path[1] ? decodeURIComponent(path[1]) : ''; } catch (e) { return ''; }
   }
 
   function closeDrawer() {
@@ -458,6 +490,23 @@
       if (!analyticsLoaded) loadAnalytics(analyticsDays);
       return;
     }
+    if (key === 'events') {
+      if (!eventsInitialized) {
+        AdminEventsView.init({
+          db,
+          getToken: () => adminToken,
+          url: SUPABASE_URL,
+          anon: SUPABASE_ANON,
+          navigate: (eventId) => {
+            eventRouteId = eventId;
+            history.pushState({ section: 'events', eventId }, '', `#/events/${encodeURIComponent(eventId)}`);
+          },
+        });
+        eventsInitialized = true;
+      }
+      AdminEventsView.load(eventRouteId);
+      return;
+    }
     const iframe = frameFor(key);
     if (iframe.dataset.loaded) return;
     iframe.dataset.loaded = '1';
@@ -469,6 +518,7 @@
   function showSection(key, options = {}) {
     if (!SECTIONS.includes(key)) key = 'overview';
     if (key === 'analytics' && options.fromRoute) analyticsDays = analyticsDaysFromRoute();
+    if (key === 'events' && options.fromRoute) eventRouteId = eventIdFromRoute();
     currentSection = key;
     SECTIONS.forEach((k) => {
       $('sec-' + k).classList.toggle('active', k === key);
@@ -482,7 +532,9 @@
     $('section-title').textContent = SECTION_META[key].title;
     $('section-description').textContent = SECTION_META[key].description;
     document.title = `TRODDR Admin · ${SECTION_META[key].title}`;
-    const route = key === 'analytics' ? `#/analytics?days=${analyticsDays}` : '#/' + key;
+    const route = key === 'analytics' ? `#/analytics?days=${analyticsDays}`
+      : key === 'events' && eventRouteId ? `#/events/${encodeURIComponent(eventRouteId)}`
+      : '#/' + key;
     if (!options.fromRoute && location.hash !== route) history.pushState({ section: key }, '', route);
     if (options.fromRoute && location.hash !== route) history.replaceState({ section: key }, '', route);
     loadSection(key);
@@ -507,6 +559,10 @@
     }
     if (currentSection === 'analytics') {
       loadAnalytics(analyticsDays);
+      return;
+    }
+    if (currentSection === 'events') {
+      AdminEventsView.refresh(eventRouteId);
       return;
     }
     const frame = frameFor(currentSection);
@@ -704,6 +760,7 @@
   document.querySelectorAll('#analytics-view .range-btn').forEach((button) => button.addEventListener('click', () => {
     analyticsDays = Number(button.dataset.days);
     analyticsLoaded = false;
+    AdminEventsView.reset();
     updateAnalyticsRangeControls();
     history.replaceState({ section: 'analytics' }, '', `#/analytics?days=${analyticsDays}`);
     loadAnalytics(analyticsDays);
