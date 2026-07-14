@@ -42,12 +42,12 @@
 
   function chart(daily) {
     if (!daily.length) { $('event-chart').innerHTML = empty('No activity recorded for this event.'); return; }
-    const W=1000,H=220,L=44,R=10,T=12,B=28,iw=W-L-R,ih=H-T-B;
+    const W=1000,H=220,L=48,R=48,T=18,B=28,iw=W-L-R,ih=H-T-B;
     const maxV=Math.max(1,...daily.map((d)=>Number(d.views)||0)), maxC=Math.max(1,...daily.map((d)=>Number(d.clicks)||0));
     const step=iw/daily.length,bw=Math.max(4,step*.62),pts=[]; let grid='',bars='',labels='';
-    for(let g=0;g<=4;g++){const y=T+ih-ih*g/4;grid+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="#f0f0f0"/><text x="${L-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#999">${Math.round(maxV*g/4).toLocaleString()}</text>`;}
+    for(let g=0;g<=4;g++){const y=T+ih-ih*g/4;grid+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="#f0f0f0"/><text x="${L-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#777">${Math.round(maxV*g/4).toLocaleString()}</text><text x="${W-R+8}" y="${y+4}" text-anchor="start" font-size="10" fill="#777">${Math.round(maxC*g/4).toLocaleString()}</text>`;}
     daily.forEach((d,i)=>{const v=Number(d.views)||0,c=Number(d.clicks)||0,cx=L+step*i+step/2,bh=ih*v/maxV;bars+=`<rect x="${cx-bw/2}" y="${T+ih-bh}" width="${bw}" height="${Math.max(bh,1)}" rx="2" fill="#bcd9f0"><title>${esc(d.d)}: ${fmt(v)} views, ${fmt(c)} vendor clicks</title></rect>`;pts.push(`${cx},${T+ih-ih*c/maxC}`);if(i%5===0||i===daily.length-1)labels+=`<text x="${cx}" y="${H-6}" text-anchor="middle" font-size="10" fill="#999">${esc(String(d.d).slice(5))}</text>`;});
-    $('event-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Event views and vendor clicks" style="display:block;width:100%;height:auto">${grid}${bars}<polyline points="${pts.join(' ')}" fill="none" stroke="#0077CC" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
+    $('event-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Event views and vendor clicks" style="display:block;width:100%;height:auto"><text x="${L}" y="10" font-size="10" fill="#777">VIEWS</text><text x="${W-R}" y="10" text-anchor="end" font-size="10" fill="#777">VENDOR CLICKS</text>${grid}${bars}<polyline points="${pts.join(' ')}" fill="none" stroke="#0878c9" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
   }
 
   const who = (id,name) => id ? `<button class="events-who" data-user-id="${esc(id)}">${esc(name || 'Unknown user')}</button>` : esc(name || 'Unknown user');

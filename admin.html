@@ -271,6 +271,7 @@
     .sidebar, .drawer-backdrop { transition: none; }
   }
 </style>
+<link href="/css/admin-data-viz.css" rel="stylesheet" />
 </head>
 <body>
 
@@ -715,7 +716,7 @@
       $('ov-chart').innerHTML = '<div class="overview-row"><span class="name">No activity recorded in this period.</span></div>';
       return;
     }
-    const W = 1200, H = 260, padL = 44, padR = 10, padT = 12, padB = 30;
+    const W = 1200, H = 260, padL = 48, padR = 48, padT = 18, padB = 30;
     const iw = W - padL - padR, ih = H - padT - padB;
     const maxE = Math.max(1, ...daily.map((d) => Number(d.events) || 0));
     const maxU = Math.max(1, ...daily.map((d) => Number(d.users) || 0));
@@ -726,7 +727,8 @@
     for (let g = 0; g <= 4; g++) {
       const y = padT + ih - (ih * g / 4);
       grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#f0f0f0"/>`
-        + `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${Math.round(maxE * g / 4).toLocaleString()}</text>`;
+        + `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#777">${Math.round(maxE * g / 4).toLocaleString()}</text>`
+        + `<text x="${W - padR + 8}" y="${y + 4}" text-anchor="start" font-size="10" fill="#777">${Math.round(maxU * g / 4).toLocaleString()}</text>`;
     }
     daily.forEach((d, i) => {
       const cx = padL + step * i + step / 2;
@@ -737,7 +739,7 @@
       points.push(`${cx},${padT + ih - ih * users / maxU}`);
       if (i % 5 === 0 || i === daily.length - 1) labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#999">${esc(String(d.d).slice(5))}</text>`;
     });
-    $('ov-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Events tracked and active users over the last 30 days">${grid}${bars}<polyline points="${points.join(' ')}" fill="none" stroke="#0077CC" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
+    $('ov-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Events tracked and active users over the last 30 days"><text x="${padL}" y="10" font-size="10" fill="#777">EVENTS</text><text x="${W-padR}" y="10" text-anchor="end" font-size="10" fill="#777">USERS</text>${grid}${bars}<polyline points="${points.join(' ')}" fill="none" stroke="#0878c9" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
   }
 
   function renderOverview(data) {
@@ -816,7 +818,7 @@
       $('an-chart').innerHTML = '<div class="analytics-empty">No activity recorded in this period.</div>';
       return;
     }
-    const W = 1200, H = 260, padL = 44, padR = 10, padT = 12, padB = 30;
+    const W = 1200, H = 260, padL = 48, padR = 48, padT = 18, padB = 30;
     const iw = W - padL - padR, ih = H - padT - padB;
     const maxE = Math.max(1, ...daily.map((d) => Number(d.events) || 0));
     const maxU = Math.max(1, ...daily.map((d) => Number(d.users) || 0));
@@ -827,7 +829,7 @@
     const points = [];
     for (let g = 0; g <= 4; g++) {
       const y = padT + ih - ih * g / 4;
-      grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#f0f0f0"/><text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${Math.round(maxE * g / 4).toLocaleString()}</text>`;
+      grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#f0f0f0"/><text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#777">${Math.round(maxE * g / 4).toLocaleString()}</text><text x="${W-padR+8}" y="${y+4}" text-anchor="start" font-size="10" fill="#777">${Math.round(maxU*g/4).toLocaleString()}</text>`;
     }
     daily.forEach((d, i) => {
       const events = Number(d.events) || 0, users = Number(d.users) || 0;
@@ -837,7 +839,7 @@
       points.push(`${cx},${padT + ih - ih * users / maxU}`);
       if (i % labelEvery === 0 || i === daily.length - 1) labels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#999">${esc(String(d.d).slice(5))}</text>`;
     });
-    $('an-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Events tracked and active users over ${analyticsDays} days" style="display:block;width:100%;height:auto">${grid}${bars}<polyline points="${points.join(' ')}" fill="none" stroke="#0077CC" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
+    $('an-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Events tracked and active users over ${analyticsDays} days" style="display:block;width:100%;height:auto"><text x="${padL}" y="10" font-size="10" fill="#777">EVENTS</text><text x="${W-padR}" y="10" text-anchor="end" font-size="10" fill="#777">USERS</text>${grid}${bars}<polyline points="${points.join(' ')}" fill="none" stroke="#0878c9" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
   }
 
   function renderRankList(id, rows, options) {
