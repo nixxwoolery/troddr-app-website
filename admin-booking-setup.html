@@ -818,6 +818,7 @@ async function searchPlaces(query) {
 
 async function selectPlace(placeId) {
   state.placeId = placeId;
+  syncBookingRoute();
   state.selectedDates = new Set();
   showLoading();
   const { data, error } = await db.rpc('admin_get_place_booking_config', {
@@ -825,6 +826,8 @@ async function selectPlace(placeId) {
     p_place_id: placeId
   });
   if (error || data?.error) {
+    state.placeId = null;
+    syncBookingRoute();
     alert('Failed to load property: ' + (data?.error || error?.message));
     showOnly('prop-picker-wrap');
     return;
@@ -846,7 +849,7 @@ function renderDashboard() {
   renderRatesTab();
   renderAvailabilityTab();
   renderPoliciesTab();
-  switchBookingTab(location.hash.slice(1) || 'setup', false);
+  switchBookingTab(routeState().tab, false);
 }
 
 // ── Setup tab ─────────────────────────────────────────────────────────────────
@@ -1522,15 +1525,24 @@ async function refreshConfig() {
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 const BOOKING_TABS = ['setup','rooms','rates','availability','policies'];
+function routeState() {
+  const raw = location.hash.slice(1);
+  const [tab, query = ''] = raw.split('?');
+  return { tab: BOOKING_TABS.includes(tab) ? tab : 'setup', place: new URLSearchParams(query).get('place') || null };
+}
+function syncBookingRoute(tab = routeState().tab) {
+  const hash = `#${tab}${state.placeId ? `?place=${encodeURIComponent(state.placeId)}` : ''}`;
+  if (location.hash !== hash) history.replaceState(null, '', hash);
+  try { window.parent.postMessage({ troddrBookingTab: tab, troddrBookingPlace: state.placeId }, window.location.origin); } catch (e) {}
+}
 function switchBookingTab(name, updateHash = true) {
   if (!BOOKING_TABS.includes(name)) name = 'setup';
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
-  if (updateHash && location.hash !== `#${name}`) location.hash = name;
-  try { window.parent.postMessage({ troddrBookingTab: name }, window.location.origin); } catch (e) {}
+  if (updateHash) syncBookingRoute(name);
 }
 document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => switchBookingTab(tab.dataset.tab)));
-window.addEventListener('hashchange', () => switchBookingTab(location.hash.slice(1), false));
+window.addEventListener('hashchange', () => switchBookingTab(routeState().tab, false));
 
 // ── Event listeners ───────────────────────────────────────────────────────────
 $('gate-go').addEventListener('click', async () => {
@@ -1552,6 +1564,7 @@ $('place-search').addEventListener('keydown', e => {
 
 $('change-place-btn').addEventListener('click', () => {
   state.placeId = null; state.config = null;
+  syncBookingRoute();
   $('navbar-place-name').classList.add('hidden');
   showOnly('prop-picker-wrap');
   searchPlaces(null);
@@ -1597,6 +1610,8 @@ $('bulk-save-btn').addEventListener('click', saveBulkAvailability);
   const saved = urlToken || sessionStorage.getItem('troddr_admin_token');
   if (saved) {
     const ok = await authenticate(saved);
+    const routed = routeState();
+    if (ok && routed.place) await selectPlace(routed.place);
     if (!ok) {
       try { sessionStorage.removeItem('troddr_admin_token'); } catch (e) {}
       showOnly('gate');
