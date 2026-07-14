@@ -58,6 +58,12 @@
 
   /* ── Event list sidebar ─────────────────────────────────── */
   .event-list { display: flex; flex-direction: column; gap: 8px; }
+  .list-divider {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--grey-light);
+    padding: 8px 4px 0;
+  }
   .event-card {
     background: #fff;
     border: 1px solid var(--border);
@@ -444,12 +450,21 @@
 
   /* ── Event list ────────────────────────────────────────── */
   function renderEventList(events) {
-    $('event-list').innerHTML = events.map(e => `
+    // list arrives live → upcoming (soonest first) → past; label the past block
+    const today = new Date().toISOString().slice(0, 10);
+    const isPast = (e) => (e.end_date || e.start_date) < today;
+    let pastLabelDone = false;
+    $('event-list').innerHTML = events.map(e => {
+      const divider = !pastLabelDone && isPast(e)
+        ? (pastLabelDone = true, '<div class="list-divider">Past events</div>')
+        : '';
+      return `${divider}
       <div class="event-card ${e.id === currentEventId ? 'active' : ''}" data-id="${e.id}">
         <div class="ec-title">${e.is_live ? '<span class="live-dot"></span>' : ''}${esc(e.title)}</div>
         <div class="ec-meta">${when(e.start_date)}${e.end_date && e.end_date !== e.start_date ? ' – ' + when(e.end_date) : ''}${e.town ? ' · ' + esc(e.town) : ''}</div>
         <div class="ec-stats">${fmt(e.views_30d)} views 30d · ${fmt(e.interested)} interested · ${fmt(e.feedback)} feedback</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     $('event-list').querySelectorAll('.event-card').forEach(c =>
       c.addEventListener('click', () => openEvent(c.dataset.id)));
   }

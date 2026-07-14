@@ -50,7 +50,10 @@ begin
       'feedback',   (select count(*) from public.event_feedback ef where ef.event_id = e.id),
       'updates',    (select count(*) from public.event_updates eu where eu.event_id = e.id)
     ) order by
+        -- live first, then upcoming soonest-first, then past most-recent-first
         (e.start_date <= v_today and coalesce(e.end_date, e.start_date) >= v_today) desc,
+        (coalesce(e.end_date, e.start_date) >= v_today) desc,
+        case when coalesce(e.end_date, e.start_date) >= v_today then e.start_date end asc,
         e.start_date desc), '[]'::jsonb)
     from public.events e
     where e.deleted_at is null
