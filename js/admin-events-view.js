@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const state = { db:null, getToken:null, navigate:null, url:'', anon:'', events:[], currentId:null, current:null, filter:'all', query:'', loaded:false, lastFocus:null };
+  const state = { db:null, getToken:null, navigate:null, url:'', anon:'', events:[], currentId:null, current:null, tabs:[], tabsUseDefaults:false, filter:'all', query:'', loaded:false, lastFocus:null };
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = (n) => n == null ? '–' : Number(n).toLocaleString();
@@ -72,6 +72,29 @@
     ranks('event-saved-items',saved,(row)=>`${esc(row.item)}<small>${esc(row.vendor)}</small>`,(row)=>fmt(row.saves));
   }
 
+  const EVENT_TABS=[['home','Home'],['schedule','Schedule'],['map','Map'],['vendors','Vendors'],['my_plan','My Plan'],['tickets','Tickets'],['info','Info'],['sponsors','Sponsors'],['events','Events'],['concierge','Concierge']];
+  function renderEventTabs() {
+    const configured=new Map((state.tabs||[]).map(tab=>[tab.key,tab.label]));
+    $('event-tabs-status').innerHTML=state.tabsUseDefaults?'<div class="event-tabs-default-note"><strong>App defaults are active</strong><span>Choose the tabs below and save to create a custom configuration for this event.</span></div>':'<div class="event-tabs-custom-note">Custom tab configuration</div>';
+    $('event-tabs-grid').innerHTML=EVENT_TABS.map(([key,label])=>{const checked=configured.has(key)||key==='home';return `<label class="event-tab-toggle ${key==='home'?'required':''}"><span><strong>${esc(configured.get(key)||label)}</strong><small>${key==='home'?'Required primary tab':checked?'Visible in the event':'Hidden from the event'}</small></span><input type="checkbox" data-event-tab-key="${key}" data-event-tab-label="${esc(configured.get(key)||label)}" ${checked?'checked':''} ${key==='home'?'disabled':''}/><i aria-hidden="true"></i></label>`;}).join('');
+    $('event-tabs-defaults').disabled=state.tabsUseDefaults;
+  }
+  async function loadEventTabs() {
+    $('event-tabs-grid').innerHTML='<div class="spinner"></div>';$('event-tabs-status').innerHTML='';$('event-tabs-result').textContent='';
+    const {data,error}=await state.db.rpc('admin_get_event_tabs',{p_admin_token:state.getToken(),p_event_id:state.currentId});
+    if(error||!data){$('event-tabs-grid').innerHTML=empty('Tab settings could not be loaded'+(error?': '+error.message:'.'));return;}
+    state.tabs=data.tabs||[];state.tabsUseDefaults=Boolean(data.uses_defaults);renderEventTabs();
+  }
+  async function saveEventTabs(useDefaults=false) {
+    const result=$('event-tabs-result');result.className='events-result';result.textContent='';
+    const tabs=useDefaults?[]:EVENT_TABS.filter(([key])=>key==='home'||document.querySelector(`[data-event-tab-key="${key}"]`)?.checked).map(([key,label])=>({key,label:document.querySelector(`[data-event-tab-key="${key}"]`)?.dataset.eventTabLabel||label}));
+    $('event-tabs-save').disabled=true;$('event-tabs-defaults').disabled=true;
+    const {data,error}=await state.db.rpc('admin_update_event_tabs',{p_admin_token:state.getToken(),p_event_id:state.currentId,p_tabs:tabs,p_use_defaults:useDefaults});
+    $('event-tabs-save').disabled=false;
+    if(error||!data){result.className='events-result err';result.textContent=error?.message||'Tab settings could not be saved.';renderEventTabs();return;}
+    state.tabs=data.tabs||[];state.tabsUseDefaults=Boolean(data.uses_defaults);renderEventTabs();result.className='events-result ok';result.textContent=useDefaults?'App defaults restored ✓':'Tab visibility saved ✓';
+  }
+
   async function openEvent(id, updateRoute=true) {
     if(!id)return; state.currentId=id; renderList();
     if(updateRoute) state.navigate(id);
@@ -79,7 +102,7 @@
     const {data,error}=await state.db.rpc('admin_get_event_console',{p_admin_token:state.getToken(),p_event_id:id});
     $('event-detail-loading').classList.add('hidden');
     if(error||!data){$('event-detail-error-message').textContent=error?.message||'The event returned no data.';$('event-detail-error').classList.remove('hidden');return;}
-    renderDetail(data); $('event-detail').classList.remove('hidden');
+    renderDetail(data); $('event-detail').classList.remove('hidden'); await loadEventTabs();
   }
 
   async function load(routeId, force=false) {
@@ -121,8 +144,9 @@
     $('events-content').addEventListener('click',(e)=>{const button=e.target.closest('[data-user-id]');if(button)openProfile(button.dataset.userId,button);});
     $('events-retry').addEventListener('click',()=>load(null,true));$('event-detail-retry').addEventListener('click',()=>openEvent(state.currentId,false));
     $('event-update-post').addEventListener('click',postUpdate);$('events-profile-close').addEventListener('click',closeProfile);$('events-profile-modal').addEventListener('click',(e)=>{if(e.target===$('events-profile-modal'))closeProfile();});
+    $('event-tabs-save').addEventListener('click',()=>saveEventTabs(false));$('event-tabs-defaults').addEventListener('click',()=>{if(confirm('Restore the app default tabs for this event?'))saveEventTabs(true);});$('event-tabs-grid').addEventListener('change',(e)=>{const input=e.target.closest('[data-event-tab-key]');if(input){const note=input.closest('.event-tab-toggle').querySelector('small');note.textContent=input.checked?'Visible in the event':'Hidden from the event';}});
     document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&!$('events-profile-modal').classList.contains('hidden'))closeProfile();});
   }
 
-  window.AdminEventsView={init,load,refresh:(routeId)=>load(routeId,true),reset:()=>{state.loaded=false;state.events=[];state.currentId=null;state.current=null;}};
+  window.AdminEventsView={init,load,refresh:(routeId)=>load(routeId,true),reset:()=>{state.loaded=false;state.events=[];state.currentId=null;state.current=null;state.tabs=[];state.tabsUseDefaults=false;}};
 }());
