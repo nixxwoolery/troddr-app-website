@@ -214,6 +214,45 @@ begin
       ) order by l.sort_order nulls last, l.name), '[]'::jsonb)
       from public.event_parking_lots l
       where l.event_id = p_event_id
+    ),
+
+    -- who's interested / going (names, clickable to profiles in the UI)
+    'interest_users', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'user_id', ei.user_id,
+        'status',  ei.status,
+        'name',    coalesce(u.username, u.email, 'unknown'),
+        'at',      ei.updated_at
+      ) order by ei.updated_at desc), '[]'::jsonb)
+      from (select * from public.event_interests
+             where event_id = p_event_id
+             order by updated_at desc limit 300) ei
+      left join public."user" u on u.id = ei.user_id
+    ),
+
+    'savers', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'user_id', se.user_id,
+        'name',    coalesce(u.username, u.email, 'unknown')
+      )), '[]'::jsonb)
+      from public.saved_events se
+      left join public."user" u on u.id = se.user_id
+      where se.event_id = p_event_id
+    ),
+
+    -- most-saved vendor menu items at this event
+    'saved_items', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'vendor', t.vendor_name, 'item', t.menu_item_name, 'saves', t.n
+      ) order by t.n desc), '[]'::jsonb)
+      from (
+        select vendor_name, menu_item_name, count(*) as n
+          from public.user_saved_menu_items
+         where event_id = p_event_id
+         group by vendor_name, menu_item_name
+         order by count(*) desc
+         limit 40
+      ) t
     )
 
   );

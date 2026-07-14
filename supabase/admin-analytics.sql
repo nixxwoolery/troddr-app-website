@@ -113,6 +113,43 @@ begin
                         where created_at >= now() - interval '7 days'),
       'app_open',     (select count(*) from public.feedback
                         where coalesce(status, 'open') not in ('resolved','closed','done'))
+    ),
+
+    'partners', jsonb_build_object(
+      'loyalty', (
+        select coalesce(jsonb_agg(jsonb_build_object(
+          'place',            p.name,
+          'reward',           lp.reward,
+          'required_stamps',  lp.required_stamps,
+          'is_active',        lp.is_active,
+          'linked_locations', lp.link_locations,
+          'cards',            (select count(*) from public.user_loyalty_cards c
+                                where c.program_id = lp.id),
+          'redeemed_cycles',  (select coalesce(sum(c.completed_cycles), 0) from public.user_loyalty_cards c
+                                where c.program_id = lp.id),
+          'stamps_30d',       (select count(*) from public.loyalty_visits v
+                                where v.place_id = lp.place_id
+                                  and v.stamped_at >= now() - interval '30 days')
+        ) order by lp.created_at), '[]'::jsonb)
+        from public.loyalty_programs lp
+        left join public.places p on p.id = lp.place_id
+      ),
+      'checkin_places', (
+        select coalesce(jsonb_agg(jsonb_build_object(
+          'place',   p.name,
+          'checkin', s.checkin_enabled,
+          'loyalty', s.loyalty_enabled,
+          'nfc',     s.nfc_enabled,
+          'insider', (select jsonb_build_object(
+                        'guest', i.guest_min, 'familiar', i.familiar_face_min,
+                        'regular', i.regular_min, 'favourite', i.house_favourite_min)
+                       from public.insider_status_settings i
+                      where i.place_id = s.place_id)
+        ) order by p.name), '[]'::jsonb)
+        from public.place_checkin_settings s
+        left join public.places p on p.id = s.place_id
+      ),
+      'active_perks', (select count(*) from public.partner_perks where active = true)
     )
 
   );
@@ -319,6 +356,63 @@ begin
          group by lower(trim(ae.source_context->>'query'))
          order by count(*) desc
          limit 25
+      ) t
+    ),
+
+    -- outbound traffic: taps that leave the app (website, socials,
+    -- directions, tickets, bookings, shares)
+    'outbound', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'type', t.event_name, 'n', t.n
+      ) order by t.n desc), '[]'::jsonb)
+      from (
+        select event_name, count(*) as n
+          from public.analytics_events
+         where created_at >= v_from
+           and event_name in ('website_clicked','instagram_clicked','directions_clicked',
+                              'ticket_clicked','booking_clicked','share_clicked')
+         group by event_name
+      ) t
+    ),
+
+    'outbound_targets', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'name', t.name, 'n', t.n
+      ) order by t.n desc), '[]'::jsonb)
+      from (
+        select coalesce(max(p.name), max(e.title), ae.entity_id) as name,
+               count(*) as n
+          from public.analytics_events ae
+          left join public.places p on p.id::text = ae.entity_id
+          left join public.events e on e.id::text = ae.entity_id
+         where ae.created_at >= v_from
+           and ae.event_name in ('website_clicked','instagram_clicked','directions_clicked',
+                                 'ticket_clicked','booking_clicked','share_clicked')
+           and ae.entity_id is not null
+         group by ae.entity_id
+         order by count(*) desc
+         limit 15
+      ) t
+    ),
+
+    -- per-place views for the current calendar month (Jamaica time)
+    'place_views_month', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'name', t.name, 'slug', t.slug, 'views', t.n
+      ) order by t.n desc), '[]'::jsonb)
+      from (
+        select coalesce(max(p.name), max(ae.source_context->>'slug'), ae.entity_id) as name,
+               max(coalesce(p.slug, ae.source_context->>'slug')) as slug,
+               count(*) as n
+          from public.analytics_events ae
+          left join public.places p on p.id::text = ae.entity_id
+         where ae.event_name = 'place_viewed'
+           and ae.entity_id is not null
+           and ae.created_at >= date_trunc('month', now() at time zone 'America/Jamaica')
+                                  at time zone 'America/Jamaica'
+         group by ae.entity_id
+         order by count(*) desc
+         limit 50
       ) t
     )
 

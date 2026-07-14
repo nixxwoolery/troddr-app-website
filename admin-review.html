@@ -329,12 +329,14 @@
     <button class="tab" data-tab="submissions">Event Submissions <span class="badge" id="badge-submissions">0</span></button>
     <button class="tab" data-tab="messages">Messages <span class="badge" id="badge-messages">0</span></button>
     <button class="tab" data-tab="updates">Recent Event Updates <span class="badge" id="badge-updates">0</span></button>
+    <button class="tab" data-tab="lowscores">Low Scores <span class="badge" id="badge-lowscores">0</span></button>
   </div>
 
   <div class="panel active" id="panel-specials"></div>
   <div class="panel" id="panel-submissions"></div>
   <div class="panel" id="panel-messages"></div>
   <div class="panel" id="panel-updates"></div>
+  <div class="panel" id="panel-lowscores"></div>
 
 </div>
 
@@ -424,6 +426,32 @@
     renderMessages(data.new_messages || []);
     renderUpdates(data.recent_event_updates || []);
     showDashboard();
+    loadLowScores(); // separate RPC; fills its tab when ready
+  }
+
+  // ── Low-rated places (avg review score < 3) ─────────────
+  async function loadLowScores() {
+    const { data } = await db.rpc('admin_get_low_rated_places', { p_admin_token: adminToken });
+    const rows = data || [];
+    $('badge-lowscores').textContent = rows.length;
+    document.querySelector('[data-tab="lowscores"]').classList.toggle('urgent', rows.length > 0);
+    $('panel-lowscores').innerHTML = rows.length === 0
+      ? '<div class="empty">No places below a 3.0 average. 🎉</div>'
+      : rows.map(r => `
+        <div class="item">
+          <div class="item-head">
+            <div class="item-head-body">
+              <div class="item-title">${escapeHtml(r.name)}
+                <span class="item-status-pill rejected">${Number(r.avg_score).toFixed(1)} avg</span>
+              </div>
+              <div class="item-meta">
+                <span><strong>${r.n_reviews}</strong> review${r.n_reviews === 1 ? '' : 's'}</span>
+                <span>last ${new Date(r.last_at).toLocaleDateString()}</span>
+                <span>${escapeHtml(r.slug || '')}</span>
+              </div>
+            </div>
+          </div>
+        </div>`).join('');
   }
 
   // ── Counts strip ────────────────────────────────────────

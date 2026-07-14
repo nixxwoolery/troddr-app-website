@@ -86,7 +86,8 @@ begin
                            'value',        ef.rating_value,
                            'food',         ef.rating_food)),
           'quick_tags',  coalesce(to_jsonb(ef.quick_tags), '[]'::jsonb),
-          'username',    coalesce(u.username, 'anonymous'),
+          'user_id',     ef.user_id,
+          'username',    coalesce(u.username, u.email, 'anonymous'),
           'event_title', e.title,
           'event_slug',  e.slug
         ) order by ef.created_at desc), '[]'::jsonb)
@@ -150,9 +151,11 @@ begin
         select coalesce(jsonb_agg(jsonb_build_object(
           'id',           vf.id,
           'created_at',   vf.created_at,
+          'place_id',     vf.place_id,
           'place_name',   p.name,
           'place_slug',   p.slug,
-          'username',     coalesce(u.username, 'anonymous'),
+          'user_id',      vf.user_id,
+          'username',     coalesce(u.username, u.email, 'anonymous'),
           'would_return', vf.would_return,
           'context',      vf.context,
           'ratings',      jsonb_strip_nulls(jsonb_build_object(
@@ -183,7 +186,8 @@ begin
         select coalesce(jsonb_agg(jsonb_build_object(
           'id',            f.id,
           'created_at',    f.created_at,
-          'username',      coalesce(f.username, u.username, 'anonymous'),
+          'user_id',       f.user_id,
+          'username',      coalesce(f.username, u.username, u.email, 'anonymous'),
           'category',      f.category,
           'feedback',      f.feedback,
           'status',        coalesce(f.status, 'submitted'),
@@ -239,7 +243,8 @@ begin
           'rating',      r.rating,
           'vendor',      coalesce(v.name, 'Unknown vendor'),
           'event_title', e.title,
-          'username',    coalesce(u.username, 'anonymous')
+          'user_id',     r.user_id,
+          'username',    coalesce(u.username, u.email, 'anonymous')
         ) order by r.created_at desc), '[]'::jsonb)
         from (select * from public.user_vendor_item_ratings
                where created_at >= v_from

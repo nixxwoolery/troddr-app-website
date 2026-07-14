@@ -245,6 +245,17 @@
     </div>
   </div>
 
+  <div class="two-col" style="margin-top:26px;">
+    <div>
+      <div class="section-label" style="margin-top:0;">Loyalty programs</div>
+      <div class="card" id="loyalty-partners"></div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-top:0;">Check-in &amp; Insider partners</div>
+      <div class="card" id="checkin-partners"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -344,6 +355,40 @@
         <span class="v">${fmt(fb.app_open)}</span></div>`;
   }
 
+  /* ── Partners (loyalty + check-in/insider) ─────────────── */
+  function renderPartners(pt) {
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+    const lp = pt?.loyalty || [];
+    $('loyalty-partners').innerHTML = lp.length === 0
+      ? '<div class="kv-row"><span class="k" style="color:var(--grey-light);font-weight:500;">No loyalty programs yet.</span></div>'
+      : lp.map(l => `
+        <div class="kv-row" style="align-items:flex-start;">
+          <span class="k">${esc(l.place)}
+            <span style="display:block; font-weight:500; font-size:11px; color:var(--grey-light);">
+              ${esc(l.reward)} · ${l.required_stamps} stamps${l.linked_locations ? ' · linked locations' : ''}
+            </span>
+          </span>
+          <span class="v" style="text-align:right;">
+            <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:2px 8px; border-radius:4px; ${l.is_active ? 'background:var(--green-light); color:var(--green);' : 'background:var(--bg-soft); color:var(--grey-mid);'}">${l.is_active ? 'active' : 'inactive'}</span>
+            <small style="display:block;">${fmt(l.cards)} cards · ${fmt(l.stamps_30d)} stamps 30d · ${fmt(l.redeemed_cycles)} redeemed</small>
+          </span>
+        </div>`).join('');
+
+    const cp = pt?.checkin_places || [];
+    $('checkin-partners').innerHTML = (cp.length === 0
+      ? '<div class="kv-row"><span class="k" style="color:var(--grey-light);font-weight:500;">No check-in partners yet.</span></div>'
+      : cp.map(c => `
+        <div class="kv-row">
+          <span class="k">${esc(c.place)}</span>
+          <span class="v"><small>
+            ${c.checkin ? 'check-in' : ''}${c.nfc ? ' · NFC' : ''}${c.loyalty ? ' · loyalty' : ''}${c.insider ? ' · insider ' + c.insider.guest + '/' + c.insider.familiar + '/' + c.insider.regular + '/' + c.insider.favourite : ''}
+          </small></span>
+        </div>`).join(''))
+      + `<div class="kv-row"><span class="k">Active perks</span><span class="v">${fmt(pt?.active_perks)}</span></div>`;
+  }
+
   function renderSnapshot(ev, cat) {
     $('snapshot').innerHTML = `
       <div class="kv-row"><span class="k">Events live today</span><span class="v">${fmt(ev.live_today)}</span></div>
@@ -378,6 +423,7 @@
     renderAttention(data.pending, data.feedback);
     renderFeedback(data.feedback);
     renderSnapshot(data.events, data.catalog);
+    renderPartners(data.partners);
     show('main');
   }
 

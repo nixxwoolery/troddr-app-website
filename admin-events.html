@@ -204,6 +204,45 @@
 
   .empty-note { font-size: 12px; color: var(--grey-light); padding: 12px 4px; }
 
+  /* Clickable user names + profile modal */
+  .who {
+    background: none; border: none; padding: 0;
+    font: inherit; font-size: inherit; font-weight: 600;
+    color: var(--primary); cursor: pointer;
+  }
+  .who:hover { text-decoration: underline; }
+  .pm-backdrop {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .pm-card {
+    background: #fff; border-radius: var(--radius-lg);
+    padding: 24px 26px; max-width: 400px; width: 100%;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+  }
+  .pm-card h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 2px; }
+  .pm-card .pm-email { font-size: 12px; color: var(--grey-mid); margin-bottom: 12px; word-break: break-all; }
+  .pm-card .pm-meta { font-size: 11px; color: var(--grey-light); margin-bottom: 14px; }
+  .pm-kv {
+    display: flex; justify-content: space-between;
+    font-size: 13px; padding: 7px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .pm-kv:last-child { border-bottom: none; }
+  .pm-kv .k { color: var(--grey-dark); font-weight: 600; }
+  .pm-kv .v { font-weight: 800; }
+
+  .scroll-list { max-height: 420px; overflow-y: auto; }
+  .vendor-group-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; margin-top: 6px;
+    background: var(--bg-soft); border-radius: 8px;
+    font-size: 12px; font-weight: 800;
+  }
+  .vendor-group-head small { color: var(--grey-light); font-weight: 500; }
+
   /* Gate + loading */
   .gate {
     max-width: 420px; margin: 80px auto;
@@ -317,10 +356,14 @@
           <div class="card" id="updates"></div>
           <div class="section-label">Feedback</div>
           <div class="card" id="feedback"></div>
+          <div class="section-label">Most-saved items <span id="si-count" style="color:var(--grey-light);"></span></div>
+          <div class="card scroll-list" id="saved-items"></div>
         </div>
         <div>
           <div class="section-label" style="margin-top:0;">Top vendors</div>
           <div class="card" id="top-vendors"></div>
+          <div class="section-label">Interested &amp; going <span id="ig-count" style="color:var(--grey-light);"></span></div>
+          <div class="card scroll-list" id="interest-users"></div>
           <div class="section-label">Notifications sent</div>
           <div class="card" id="deliveries"></div>
           <div class="section-label">Parking lots</div>
@@ -331,6 +374,8 @@
     </div>
   </section>
 </div>
+
+<div id="pm" class="pm-backdrop hidden"><div class="pm-card" id="pm-card"></div></div>
 
 <script>
   const { createClient } = supabase;
@@ -362,6 +407,40 @@
   const when = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const whenTime = (iso) => iso ? new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
   const nice = (s) => String(s ?? '').replace(/_/g, ' ');
+
+  /* ── User profiles ─────────────────────────────────────── */
+  const who = (userId, name) => userId
+    ? `<button class="who" data-uid="${esc(userId)}">${esc(name)}</button>`
+    : esc(name);
+
+  async function openProfile(userId) {
+    $('pm').classList.remove('hidden');
+    $('pm-card').innerHTML = '<div class="spinner" style="margin:24px auto;"></div>';
+    const { data, error } = await db.rpc('admin_get_user_profile', {
+      p_admin_token: adminToken, p_user_id: userId,
+    });
+    if (error || !data) {
+      $('pm-card').innerHTML = '<p style="font-size:13px;color:var(--grey-mid);">Could not load this profile.</p>';
+      return;
+    }
+    const c = data.counts || {};
+    $('pm-card').innerHTML = `
+      <h3>${esc(data.username || 'No username set')}</h3>
+      <div class="pm-email">${esc(data.email || '')}</div>
+      <div class="pm-meta">Joined ${when(data.created_at)}${data.last_active_at ? ' · last active ' + when(data.last_active_at) : ''} · push ${data.push_opt_in ? 'on' : 'off'}</div>
+      <div class="pm-kv"><span class="k">Places visited</span><span class="v">${fmt(c.visited)}</span></div>
+      <div class="pm-kv"><span class="k">Place feedback</span><span class="v">${fmt(c.place_feedback)}</span></div>
+      <div class="pm-kv"><span class="k">Event feedback</span><span class="v">${fmt(c.event_feedback)}</span></div>
+      <div class="pm-kv"><span class="k">Item ratings</span><span class="v">${fmt(c.item_ratings)}</span></div>
+      <div class="pm-kv"><span class="k">Saved events</span><span class="v">${fmt(c.saved_events)}</span></div>
+      <div class="pm-kv"><span class="k">Loyalty cards</span><span class="v">${fmt(c.loyalty_cards)}</span></div>
+      <div class="pm-kv"><span class="k">Check-ins</span><span class="v">${fmt(c.checkins)}</span></div>`;
+  }
+  document.addEventListener('click', (e) => {
+    if (e.target === $('pm')) { $('pm').classList.add('hidden'); return; }
+    const b = e.target.closest('.who');
+    if (b) openProfile(b.dataset.uid);
+  });
 
   /* ── Event list ────────────────────────────────────────── */
   function renderEventList(events) {
@@ -443,7 +522,7 @@
       ? '<div class="empty-note">No feedback yet.</div>'
       : data.feedback.map(f => `
         <div class="entry">
-          <div class="e-title">${esc(f.username)}
+          <div class="e-title">${who(f.user_id, f.username)}
             ${f.vote ? `<span class="pill ${esc(f.vote)}">${f.vote === 'up' ? '👍 up' : '👎 down'}</span>` : ''}
           </div>
           <div class="e-meta">${when(f.created_at)}</div>
@@ -479,6 +558,42 @@
           <span class="rr-name">${esc(l.name)}<small>${l.tier ? esc(l.tier) + ' · ' : ''}${l.capacity ? 'cap ' + fmt(l.capacity) + ' · ' : ''}${fmt(l.reports_24h)} reports 24h</small></span>
           <span class="rr-n">${l.status_override ? `<span class="chip">${esc(nice(l.status_override))}</span>` : ''}</span>
         </div>`).join('');
+
+    // interested & going — savers listed first, then by recency
+    const audience = [
+      ...(data.savers || []).map(u => ({ ...u, status: 'saved' })),
+      ...(data.interest_users || []),
+    ];
+    $('ig-count').textContent = audience.length ? `(${fmt(audience.length)})` : '';
+    $('interest-users').innerHTML = audience.length === 0
+      ? '<div class="empty-note">No one has saved or marked interest yet.</div>'
+      : audience.map(u => `
+        <div class="rank-row">
+          <span class="rr-name">${who(u.user_id, u.name)}<small>${u.at ? whenTime(u.at) : ''}</small></span>
+          <span class="rr-n"><span class="pill ${u.status === 'going' ? 'live' : u.status === 'saved' ? 'featured' : 'published'}">${esc(u.status)}</span></span>
+        </div>`).join('');
+
+    // most-saved menu items, grouped by vendor
+    const si = data.saved_items || [];
+    const totalSaves = si.reduce((a, r) => a + r.saves, 0);
+    $('si-count').textContent = si.length ? `(${fmt(totalSaves)} saves)` : '';
+    const byVendor = new Map();
+    for (const r of si) {
+      if (!byVendor.has(r.vendor)) byVendor.set(r.vendor, { vendor: r.vendor, items: [], total: 0 });
+      const g = byVendor.get(r.vendor);
+      g.items.push(r);
+      g.total += r.saves;
+    }
+    const vs = [...byVendor.values()].sort((a, b) => b.total - a.total);
+    $('saved-items').innerHTML = vs.length === 0
+      ? '<div class="empty-note">No saved menu items for this event.</div>'
+      : vs.map(g => `
+        <div class="vendor-group-head">${esc(g.vendor)} <small>· ${fmt(g.total)} save${g.total === 1 ? '' : 's'}</small></div>
+        ${g.items.map(r => `
+          <div class="rank-row" style="padding-left:10px;">
+            <span class="rr-name">${esc(r.item)}</span>
+            <span class="rr-n">${fmt(r.saves)}</span>
+          </div>`).join('')}`).join('');
   }
 
   /* ── Data flow ─────────────────────────────────────────── */

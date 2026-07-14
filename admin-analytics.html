@@ -259,6 +259,10 @@
       <div class="card" id="top-vendors"></div>
       <div class="section-label">Top guides</div>
       <div class="card" id="top-guides"></div>
+      <div class="section-label">Outbound traffic</div>
+      <div class="card" id="outbound"></div>
+      <div class="section-label">Top outbound targets</div>
+      <div class="card" id="outbound-targets"></div>
     </div>
     <div>
       <div class="section-label" style="margin-top:0;">Searches <span class="pill" id="zero-pill" style="display:none;">has zero-result queries</span></div>
@@ -269,6 +273,8 @@
       <div class="card" id="top-specials"></div>
       <div class="section-label">Platform</div>
       <div class="card" id="by-platform"></div>
+      <div class="section-label">Place views — this month</div>
+      <div class="card" id="place-views-month" style="max-height:520px; overflow-y:auto;"></div>
     </div>
   </div>
 
@@ -407,6 +413,19 @@
 
     rankList('by-platform', data.by_platform, {
       name: r => r.platform, sub: null, value: r => r.n,
+    });
+
+    rankList('outbound', data.outbound, {
+      name: r => r.type.replace('_clicked', '').replace(/_/g, ' '),
+      sub: null, value: r => r.n,
+    });
+
+    rankList('outbound-targets', data.outbound_targets, {
+      name: r => r.name, sub: null, value: r => r.n,
+    });
+
+    rankList('place-views-month', data.place_views_month, {
+      name: r => r.name, sub: null, value: r => r.views,
     });
   }
 
