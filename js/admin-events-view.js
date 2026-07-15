@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const state = { db:null, getToken:null, navigate:null, url:'', anon:'', events:[], currentId:null, current:null, tabs:[], tabsUseDefaults:false, filter:'all', query:'', loaded:false, lastFocus:null };
+  const state = { db:null, getToken:null, navigate:null, url:'', anon:'', events:[], currentId:null, current:null, tabs:[], tabsUseDefaults:false, tabsLoaded:false, eventView:'overview', filter:'all', query:'', loaded:false, lastFocus:null };
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = (n) => n == null ? '–' : Number(n).toLocaleString();
@@ -58,6 +58,7 @@
     $('event-title').innerHTML=`${esc(event.title)} ${event.is_live?'<span class="events-pill live">● live</span>':''}${event.status?`<span class="events-pill ${esc(event.status)}">${esc(event.status)}</span>`:''}${event.is_featured?'<span class="events-pill featured">featured</span>':''}`;
     $('event-subtitle').textContent=[`${when(event.start_date)}${event.end_date&&event.end_date!==event.start_date?' – '+when(event.end_date):''}`,event.venue_name,event.town,event.parish].filter(Boolean).join(' · ');
     $('event-kpis').innerHTML=[['Views',k.views],['Saves',k.saves],['Interested',k.interested],['Going',k.going],['Vendor clicks',k.vendor_clicks],['Ticket clicks',k.ticket_clicks]].map(([label,value])=>`<div class="events-kpi"><strong>${fmt(value)}</strong><span>${label}</span></div>`).join('');
+    $('event-overview-summary').innerHTML=[['Status',nice(event.status||'draft')],['Dates',`${when(event.start_date)}${event.end_date&&event.end_date!==event.start_date?' – '+when(event.end_date):''}`],['Venue',event.venue_name||'Not set'],['Location',[event.town,event.parish].filter(Boolean).join(', ')||'Not set']].map(([label,value])=>`<div class="event-overview-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('');
     $('event-push-audience').textContent=fmt(k.push_audience); chart(data.daily||[]);
     $('event-updates').innerHTML=(data.updates||[]).length?(data.updates||[]).map((u)=>`<div class="events-entry"><strong>${esc(u.title)}</strong><br><small>${whenTime(u.created_at)}</small><p>${esc(u.message)}</p></div>`).join(''):empty('No updates posted yet.');
     $('event-feedback').innerHTML=(data.feedback||[]).length?(data.feedback||[]).map((f)=>`<div class="events-entry"><strong>${who(f.user_id,f.username)}</strong> ${f.vote?`<span class="events-pill ${esc(f.vote)}">${f.vote==='up'?'👍 up':'👎 down'}</span>`:''}<br><small>${when(f.created_at)}</small><p>${Object.entries(f.ratings||{}).map(([key,v])=>`${esc(nice(key))}: ${fmt(v)}`).join(' · ')}${(f.quick_tags||[]).length?' · '+f.quick_tags.map(nice).map(esc).join(', '):''}</p></div>`).join(''):empty('No feedback yet.');
@@ -73,6 +74,12 @@
   }
 
   const EVENT_TABS=[['home','Home'],['schedule','Schedule'],['map','Map'],['vendors','Vendors'],['my_plan','My Plan'],['tickets','Tickets'],['info','Info'],['sponsors','Sponsors'],['events','Events'],['concierge','Concierge']];
+  function switchEventView(view) {
+    state.eventView=['overview','insights','tabs','updates','audience','operations'].includes(view)?view:'overview';
+    document.querySelectorAll('.event-console-tab').forEach(button=>{const active=button.dataset.eventView===state.eventView;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));});
+    document.querySelectorAll('[data-event-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.eventPanel===state.eventView));
+    if(state.eventView==='tabs'&&!state.tabsLoaded)loadEventTabs();
+  }
   function renderEventTabs() {
     const configured=new Map((state.tabs||[]).map(tab=>[tab.key,tab.label]));
     $('event-tabs-status').innerHTML=state.tabsUseDefaults?'<div class="event-tabs-default-note"><strong>App defaults are active</strong><span>Choose the tabs below and save to create a custom configuration for this event.</span></div>':'<div class="event-tabs-custom-note">Custom tab configuration</div>';
@@ -82,8 +89,8 @@
   async function loadEventTabs() {
     $('event-tabs-grid').innerHTML='<div class="spinner"></div>';$('event-tabs-status').innerHTML='';$('event-tabs-result').textContent='';
     const {data,error}=await state.db.rpc('admin_get_event_tabs',{p_admin_token:state.getToken(),p_event_id:state.currentId});
-    if(error||!data){$('event-tabs-grid').innerHTML=empty('Tab settings could not be loaded'+(error?': '+error.message:'.'));return;}
-    state.tabs=data.tabs||[];state.tabsUseDefaults=Boolean(data.uses_defaults);renderEventTabs();
+    if(error||!data){const missing=error&&/schema cache|could not find the function/i.test(error.message||'');$('event-tabs-grid').innerHTML=empty(missing?'Event tab controls need the latest database migration.':'Tab settings could not be loaded'+(error?': '+error.message:'.'));return;}
+    state.tabs=data.tabs||[];state.tabsUseDefaults=Boolean(data.uses_defaults);state.tabsLoaded=true;renderEventTabs();
   }
   async function saveEventTabs(useDefaults=false) {
     const result=$('event-tabs-result');result.className='events-result';result.textContent='';
@@ -102,7 +109,7 @@
     const {data,error}=await state.db.rpc('admin_get_event_console',{p_admin_token:state.getToken(),p_event_id:id});
     $('event-detail-loading').classList.add('hidden');
     if(error||!data){$('event-detail-error-message').textContent=error?.message||'The event returned no data.';$('event-detail-error').classList.remove('hidden');return;}
-    renderDetail(data); $('event-detail').classList.remove('hidden'); await loadEventTabs();
+    state.tabsLoaded=false;state.eventView='overview';renderDetail(data); $('event-detail').classList.remove('hidden');switchEventView('overview');
   }
 
   async function load(routeId, force=false) {
@@ -122,6 +129,27 @@
     const c=data.counts||{};$('events-profile-body').innerHTML=`<h3 id="events-profile-title">${esc(data.username||'No username set')}</h3><p>${esc(data.email||'')}</p><div class="events-profile-meta">Joined ${when(data.created_at)}${data.last_active_at?' · last active '+when(data.last_active_at):''} · push ${data.push_opt_in?'on':'off'}</div>${[['Places visited',c.visited],['Place feedback',c.place_feedback],['Event feedback',c.event_feedback],['Item ratings',c.item_ratings],['Saved events',c.saved_events],['Loyalty cards',c.loyalty_cards],['Check-ins',c.checkins]].map(([k,v])=>`<div class="events-profile-row"><strong>${k}</strong><span>${fmt(v)}</span></div>`).join('')}`;
   }
   function closeProfile(){ $('events-profile-modal').classList.add('hidden'); state.lastFocus?.focus(); }
+
+  function renderCreateTabs() {
+    $('event-create-tabs').innerHTML=EVENT_TABS.map(([key,label])=>`<button type="button" class="event-create-tab ${['home','schedule','info'].includes(key)?'active':''} ${key==='home'?'required':''}" data-create-tab="${key}" data-label="${label}" aria-pressed="${['home','schedule','info'].includes(key)}">${label}</button>`).join('');
+  }
+  function openCreateEvent() {
+    $('event-create-form').reset();$('event-create-result').textContent='';renderCreateTabs();
+    const today=new Date().toISOString().slice(0,10), start=$('event-create-form').elements.start_date,end=$('event-create-form').elements.end_date;start.value=today;end.value=today;
+    $('event-create-modal').classList.remove('hidden');$('event-create-form').elements.title.focus();
+  }
+  function closeCreateEvent(){ $('event-create-modal').classList.add('hidden');$('events-add').focus(); }
+  async function createEvent(e) {
+    e.preventDefault();const form=e.currentTarget,result=$('event-create-result'),button=form.querySelector('[type="submit"]'),values=Object.fromEntries(new FormData(form));
+    result.className='events-result';result.textContent='';
+    if(values.end_date<values.start_date){result.className='events-result err';result.textContent='End date cannot be before start date.';return;}
+    const tabs=EVENT_TABS.filter(([key])=>key==='home'||document.querySelector(`[data-create-tab="${key}"]`)?.classList.contains('active')).map(([key,label])=>({key,label}));
+    button.disabled=true;
+    const {data,error}=await state.db.rpc('admin_create_event',{p_admin_token:state.getToken(),p_title:values.title,p_start_date:values.start_date,p_end_date:values.end_date,p_start_time:values.start_time||null,p_end_time:values.end_time||null,p_event_type:values.event_type,p_status:values.status,p_venue_name:values.venue_name||null,p_town:values.town||null,p_parish:values.parish||null,p_description:values.description||null,p_ticket_url:values.ticket_url||null,p_tabs:tabs});
+    button.disabled=false;
+    if(error||!data){result.className='events-result err';result.textContent=error?.message||'The event could not be created.';return;}
+    result.className='events-result ok';result.textContent='Event created ✓';closeCreateEvent();state.loaded=false;await load(data.id,true);
+  }
 
   async function postUpdate() {
     const title=$('event-update-title').value.trim(),message=$('event-update-message').value.trim(),sendPush=$('event-update-push').checked,note=$('event-update-result');
@@ -145,8 +173,10 @@
     $('events-retry').addEventListener('click',()=>load(null,true));$('event-detail-retry').addEventListener('click',()=>openEvent(state.currentId,false));
     $('event-update-post').addEventListener('click',postUpdate);$('events-profile-close').addEventListener('click',closeProfile);$('events-profile-modal').addEventListener('click',(e)=>{if(e.target===$('events-profile-modal'))closeProfile();});
     $('event-tabs-save').addEventListener('click',()=>saveEventTabs(false));$('event-tabs-defaults').addEventListener('click',()=>{if(confirm('Restore the app default tabs for this event?'))saveEventTabs(true);});$('event-tabs-grid').addEventListener('change',(e)=>{const input=e.target.closest('[data-event-tab-key]');if(input){const note=input.closest('.event-tab-toggle').querySelector('small');note.textContent=input.checked?'Visible in the event':'Hidden from the event';}});
-    document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&!$('events-profile-modal').classList.contains('hidden'))closeProfile();});
+    document.querySelectorAll('.event-console-tab').forEach(button=>button.addEventListener('click',()=>switchEventView(button.dataset.eventView)));
+    $('events-add').addEventListener('click',openCreateEvent);$('event-create-close').addEventListener('click',closeCreateEvent);$('event-create-cancel').addEventListener('click',closeCreateEvent);$('event-create-modal').addEventListener('click',e=>{if(e.target===$('event-create-modal'))closeCreateEvent();});$('event-create-form').addEventListener('submit',createEvent);$('event-create-tabs').addEventListener('click',e=>{const button=e.target.closest('[data-create-tab]');if(!button||button.classList.contains('required'))return;const active=!button.classList.contains('active');button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+    document.addEventListener('keydown',(e)=>{if(e.key!=='Escape')return;if(!$('event-create-modal').classList.contains('hidden'))closeCreateEvent();else if(!$('events-profile-modal').classList.contains('hidden'))closeProfile();});
   }
 
-  window.AdminEventsView={init,load,refresh:(routeId)=>load(routeId,true),reset:()=>{state.loaded=false;state.events=[];state.currentId=null;state.current=null;state.tabs=[];state.tabsUseDefaults=false;}};
+  window.AdminEventsView={init,load,refresh:(routeId)=>load(routeId,true),reset:()=>{state.loaded=false;state.events=[];state.currentId=null;state.current=null;state.tabs=[];state.tabsUseDefaults=false;state.tabsLoaded=false;state.eventView='overview';}};
 }());
