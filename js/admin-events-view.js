@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const state = { db:null, getToken:null, navigate:null, url:'', anon:'', events:[], currentId:null, current:null, tabs:[], tabsUseDefaults:false, tabsLoaded:false, eventView:'overview', filter:'all', query:'', loaded:false, lastFocus:null };
+  const state = { db:null, getToken:null, navigate:null, url:'', anon:'', events:[], currentId:null, current:null, editor:null, tabs:[], tabsUseDefaults:false, tabsLoaded:false, eventView:'overview', filter:'all', query:'', loaded:false, lastFocus:null };
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = (n) => n == null ? '–' : Number(n).toLocaleString();
@@ -73,12 +73,37 @@
     ranks('event-saved-items',saved,(row)=>`${esc(row.item)}<small>${esc(row.vendor)}</small>`,(row)=>fmt(row.saves));
   }
 
-  const EVENT_TABS=[['home','Home'],['schedule','Schedule'],['map','Map'],['vendors','Vendors'],['my_plan','My Plan'],['tickets','Tickets'],['info','Info'],['sponsors','Sponsors'],['events','Events'],['concierge','Concierge']];
+  const EVENT_TABS=[['home','Home'],['schedule','Schedule'],['map','Map'],['parking','Parking'],['vendors','Vendors'],['my_plan','My Plan'],['tickets','Tickets'],['info','Info'],['sponsors','Sponsors'],['events','Events'],['concierge','Concierge']];
   function switchEventView(view) {
-    state.eventView=['overview','insights','tabs','updates','audience','operations'].includes(view)?view:'overview';
+    state.eventView=['overview','details','content','vendors','sponsors','tickets','map','audience','insights','updates','settings'].includes(view)?view:'overview';
     document.querySelectorAll('.event-console-tab').forEach(button=>{const active=button.dataset.eventView===state.eventView;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));});
     document.querySelectorAll('[data-event-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.eventPanel===state.eventView));
-    if(state.eventView==='tabs'&&!state.tabsLoaded)loadEventTabs();
+    if(state.eventView==='settings'&&!state.tabsLoaded)loadEventTabs();
+  }
+  const readinessLabels={details:'Core details',media:'Featured image',schedule:'Schedule content',tabs:'Event tabs',support:'Support contact',tickets:'Ticket information',map:'Map or coordinates'};
+  function managementCard(title,value,description,view='') { return `<button class="event-management-card" ${view?`data-management-view="${view}"`:''}><strong>${fmt(value)}</strong><span>${esc(title)}</span><small>${esc(description)}</small></button>`; }
+  function setupRow(label,value){return `<div class="overview-row"><span class="name">${esc(label)}</span><span class="value">${esc(value)}</span></div>`;}
+  function renderEditor(data) {
+    state.editor=data;const event=data.event||{},counts=data.counts||{},ready=data.readiness||{},form=$('event-details-form');
+    Object.entries(event).forEach(([key,value])=>{const field=form.elements[key];if(!field)return;if(field.type==='checkbox')field.checked=Boolean(value);else field.value=value??'';});
+    const checks=Object.entries(readinessLabels);$('event-readiness').innerHTML=`<div class="event-readiness-score"><strong>${checks.filter(([key])=>ready[key]).length}/${checks.length}</strong><span>ready</span></div>`+checks.map(([key,label])=>`<button class="event-readiness-row ${ready[key]?'complete':''}" data-readiness-view="${key==='details'||key==='media'?'details':key==='tabs'?'settings':key==='schedule'?'content':key==='tickets'?'tickets':key==='map'?'map':'details'}"><i>${ready[key]?'✓':'!'}</i><span>${label}</span><small>${ready[key]?'Complete':'Needs attention'}</small></button>`).join('');
+    $('event-content-summary').innerHTML=managementCard('Schedule items',counts.schedule,'Build the event programme and lineup','content')+managementCard('Information sections',(event.description?1:0),'About, FAQ and attendee information','details');
+    $('event-sponsors-summary').innerHTML=managementCard('Sponsors',counts.sponsors,'Sponsor profiles, tiers and activations','sponsors');
+    $('event-tickets-summary').innerHTML=managementCard('Passes',counts.passes,'Ticket types and event passes','tickets')+managementCard('Ticket link',event.ticket_url?1:0,event.ticket_url?'Ticket destination configured':'No ticket link configured','details');
+    $('event-map-summary').innerHTML=setupRow('Floor plan',ready.map?'Configured':'Not configured')+setupRow('Parking lots',fmt(counts.parking));
+    $('event-settings-summary').innerHTML=setupRow('Visibility',event.visibility||'public')+setupRow('Publishing status',nice(event.status||'draft'))+setupRow('Event slug',event.slug||'—');
+  }
+  async function loadEventEditor() {
+    const {data,error}=await state.db.rpc('admin_get_event_editor',{p_admin_token:state.getToken(),p_event_id:state.currentId});
+    if(error||!data){$('event-readiness').innerHTML=empty(/schema cache|could not find the function/i.test(error?.message||'')?'Event editing needs the latest database migration.':'Event setup data could not be loaded.');return;}
+    renderEditor(data);
+  }
+  async function saveEventDetails(e) {
+    e.preventDefault();const form=e.currentTarget,result=$('event-details-result'),button=form.querySelector('[type="submit"]'),values=Object.fromEntries(new FormData(form));values.is_featured=form.elements.is_featured.checked;
+    result.className='events-result';result.textContent='';button.disabled=true;
+    const {data,error}=await state.db.rpc('admin_update_event_details',{p_admin_token:state.getToken(),p_event_id:state.currentId,p_details:values});button.disabled=false;
+    if(error||!data){result.className='events-result err';result.textContent=error?.message||'Event details could not be saved.';return;}
+    state.current.event={...(state.current.event||{}),...(data.event||{})};renderDetail(state.current);renderEditor(data);result.className='events-result ok';result.textContent='Event details saved ✓';state.loaded=false;switchEventView('details');
   }
   function renderEventTabs() {
     const configured=new Map((state.tabs||[]).map(tab=>[tab.key,tab.label]));
@@ -109,7 +134,7 @@
     const {data,error}=await state.db.rpc('admin_get_event_console',{p_admin_token:state.getToken(),p_event_id:id});
     $('event-detail-loading').classList.add('hidden');
     if(error||!data){$('event-detail-error-message').textContent=error?.message||'The event returned no data.';$('event-detail-error').classList.remove('hidden');return;}
-    state.tabsLoaded=false;state.eventView='overview';renderDetail(data); $('event-detail').classList.remove('hidden');switchEventView('overview');
+    state.tabsLoaded=false;state.eventView='overview';renderDetail(data); $('event-detail').classList.remove('hidden');switchEventView('overview');await loadEventEditor();
   }
 
   async function load(routeId, force=false) {
@@ -174,9 +199,10 @@
     $('event-update-post').addEventListener('click',postUpdate);$('events-profile-close').addEventListener('click',closeProfile);$('events-profile-modal').addEventListener('click',(e)=>{if(e.target===$('events-profile-modal'))closeProfile();});
     $('event-tabs-save').addEventListener('click',()=>saveEventTabs(false));$('event-tabs-defaults').addEventListener('click',()=>{if(confirm('Restore the app default tabs for this event?'))saveEventTabs(true);});$('event-tabs-grid').addEventListener('change',(e)=>{const input=e.target.closest('[data-event-tab-key]');if(input){const note=input.closest('.event-tab-toggle').querySelector('small');note.textContent=input.checked?'Visible in the event':'Hidden from the event';}});
     document.querySelectorAll('.event-console-tab').forEach(button=>button.addEventListener('click',()=>switchEventView(button.dataset.eventView)));
+    $('event-details-form').addEventListener('submit',saveEventDetails);$('event-readiness').addEventListener('click',e=>{const button=e.target.closest('[data-readiness-view]');if(button)switchEventView(button.dataset.readinessView);});$('events-console').addEventListener('click',e=>{const button=e.target.closest('[data-management-view]');if(button.dataset.managementView)switchEventView(button.dataset.managementView);});
     $('events-add').addEventListener('click',openCreateEvent);$('event-create-close').addEventListener('click',closeCreateEvent);$('event-create-cancel').addEventListener('click',closeCreateEvent);$('event-create-modal').addEventListener('click',e=>{if(e.target===$('event-create-modal'))closeCreateEvent();});$('event-create-form').addEventListener('submit',createEvent);$('event-create-tabs').addEventListener('click',e=>{const button=e.target.closest('[data-create-tab]');if(!button||button.classList.contains('required'))return;const active=!button.classList.contains('active');button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
     document.addEventListener('keydown',(e)=>{if(e.key!=='Escape')return;if(!$('event-create-modal').classList.contains('hidden'))closeCreateEvent();else if(!$('events-profile-modal').classList.contains('hidden'))closeProfile();});
   }
 
-  window.AdminEventsView={init,load,refresh:(routeId)=>load(routeId,true),reset:()=>{state.loaded=false;state.events=[];state.currentId=null;state.current=null;state.tabs=[];state.tabsUseDefaults=false;state.tabsLoaded=false;state.eventView='overview';}};
+  window.AdminEventsView={init,load,refresh:(routeId)=>load(routeId,true),reset:()=>{state.loaded=false;state.events=[];state.currentId=null;state.current=null;state.editor=null;state.tabs=[];state.tabsUseDefaults=false;state.tabsLoaded=false;state.eventView='overview';}};
 }());
