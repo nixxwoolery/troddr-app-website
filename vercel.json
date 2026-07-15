@@ -84,6 +84,10 @@
         "source": "/checkin/:tag",
         "destination": "/checkin.html"
       },
+      {
+        "source": "/park/:lot",
+        "destination": "/park.html"
+      },
       { "source": "/dashboard", "destination": "/dashboard.html" },
       { "source": "/dashboard-prototype", "destination": "/dashboard-prototype.html" },
       { "source": "/event-onboarding", "destination": "/event-onboarding.html" },

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Parking check-in · TRODDR</title>
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root { --ink:#111827; --muted:#6b7280; --accent:#0077cc; --bg:#f8fafb; }
+      * { box-sizing: border-box; }
+      html, body { margin:0; height:100%; }
+      body {
+        font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+        background:var(--bg); color:var(--ink);
+        display:flex; align-items:center; justify-content:center; padding:24px;
+      }
+      .card {
+        width:100%; max-width:420px; background:#fff; border-radius:20px;
+        box-shadow:0 10px 40px rgba(17,24,39,.08); overflow:hidden;
+      }
+      /* Event hero — the branding the user sees so they know it's still their event */
+      .hero { position:relative; height:150px; background:#e5e7eb; display:block; }
+      .hero img { width:100%; height:100%; object-fit:cover; display:block; }
+      .hero::after {
+        content:""; position:absolute; inset:0;
+        background:linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,.55) 100%);
+      }
+      /* TRODDR wordmark — matches the site header (.logo): lowercase "troddr",
+         Poppins 700, brand blue, tight tracking. Sits in a white pill on the hero. */
+      .hero .brand {
+        position:absolute; left:20px; bottom:-20px; padding:8px 16px; border-radius:14px;
+        background:#fff; box-shadow:0 2px 10px rgba(17,24,39,.18);
+      }
+      .wordmark {
+        font-family:'Poppins',-apple-system,"Segoe UI",Roboto,sans-serif;
+        font-weight:700; font-size:26px; line-height:1; letter-spacing:-1px;
+        color:var(--accent); text-transform:lowercase;
+      }
+      /* Inline wordmark for running text (e.g. the button) — same shape,
+         inherits the surrounding colour/size (white on the blue button). */
+      .wordmark-inline {
+        font-family:'Poppins',-apple-system,"Segoe UI",Roboto,sans-serif;
+        font-weight:700; letter-spacing:-1px; text-transform:lowercase;
+      }
+      .body { padding:38px 28px 30px; text-align:center; }
+      .eyebrow { font-size:12px; font-weight:800; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:6px; }
+      h1 { font-size:21px; font-weight:800; letter-spacing:-.3px; margin:0 0 4px; }
+      h1:empty { display:none; }
+      .venue { color:var(--muted); font-size:14px; margin:0 0 18px; }
+      p.status { color:var(--muted); font-size:15px; line-height:1.5; margin:0 0 22px; }
+      .btn {
+        display:inline-flex; align-items:center; justify-content:center; gap:8px;
+        width:100%; padding:14px 18px; border-radius:14px; font-size:16px; font-weight:700;
+        text-decoration:none; border:0; cursor:pointer; background:var(--accent); color:#fff;
+      }
+      .stores { display:flex; gap:12px; justify-content:center; margin-top:4px; }
+      .stores a { flex:1; } .stores img { height:46px; width:auto; max-width:100%; }
+      .divider { display:flex; align-items:center; gap:12px; color:#c4c4c8; font-size:12px; margin:18px 0; }
+      .divider::before, .divider::after { content:""; flex:1; height:1px; background:#ececef; }
+      .foot { margin-top:18px; font-size:12.5px; color:var(--muted); line-height:1.5; }
+      .code { font-weight:800; letter-spacing:.5px; color:var(--ink); }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="hero" id="hero">
+        <img id="hero-img" alt="" style="display:none" />
+        <div class="brand">
+          <span class="wordmark">troddr</span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="eyebrow" id="eyebrow">Parking check-in</div>
+        <h1 id="event-title"></h1>
+        <p class="venue" id="event-venue"></p>
+        <p class="status" id="status">Opening the app to check you in&hellip;</p>
+
+        <a class="btn" id="open-in-app" href="#">Open in the <span class="wordmark-inline">troddr</span> app</a>
+
+        <div class="divider">Don't have the app?</div>
+        <div class="stores">
+          <a id="ios-store" href="https://apps.apple.com/app/troddr/id6751852075">
+            <img alt="Download on the App Store"
+                 src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" />
+          </a>
+          <a id="android-store" href="https://play.google.com/store/apps/details?id=com.troddr.app">
+            <img alt="Get it on Google Play"
+                 src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" />
+          </a>
+        </div>
+
+        <p class="foot">
+          Once installed, open the event's <b>Parking</b> tab, tap <b>Scan</b> and point at the
+          sign &mdash; or enter the lot's <span class="code">code</span> shown on the sign.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var APP_STORE_URL = 'https://apps.apple.com/app/troddr/id6751852075';
+        var PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.troddr.app';
+        var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+
+        var ua = navigator.userAgent || navigator.vendor || window.opera || '';
+        var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var isAndroid = /Android/i.test(ua);
+
+        // Lot id is the last path segment: /park/<lotId>. Require a real UUID
+        // so a bare /park/ (segment === "park") isn't treated as a lot.
+        var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        var lastSeg = (window.location.pathname || '').replace(/\/+$/, '').split('/').pop() || '';
+        var lotId = UUID_RE.test(lastSeg) ? lastSeg.toLowerCase() : '';
+        var deepLink = 'troddrapp://park/' + encodeURIComponent(lotId);
+        var storeUrl = isIOS ? APP_STORE_URL : isAndroid ? PLAY_STORE_URL : '';
+
+        if (isIOS) { document.getElementById('android-store').style.display = 'none'; }
+        else if (isAndroid) { document.getElementById('ios-store').style.display = 'none'; }
+
+        function openApp() {
+          var a = document.createElement('a');
+          a.href = deepLink; a.style.display = 'none';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        var openBtn = document.getElementById('open-in-app');
+        openBtn.href = storeUrl || deepLink;
+        openBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          openApp();
+          if (storeUrl) { setTimeout(function () { window.location.href = storeUrl; }, 1500); }
+        });
+
+        // Brand the page from the lot's event, so the user knows it's still
+        // *their* event and not a generic app page. Best-effort: if the fetch
+        // fails we keep the neutral "Parking check-in / TRODDR" copy.
+        function brand() {
+          if (!lotId) return;
+          var base = window.location.origin + '/api/sb';
+          var q = base + '/rest/v1/event_parking_lots?id=eq.' + lotId +
+                  '&select=name,events(title,venue_name,featured_image_url)';
+          fetch(q, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (rows) {
+              var row = rows && rows[0]; if (!row) return;
+              var ev = row.events || {};
+              if (ev.title) { document.getElementById('event-title').textContent = ev.title; document.title = ev.title + ' · Parking'; }
+              var sub = [ev.venue_name, row.name ? row.name + ' parking' : ''].filter(Boolean).join(' · ');
+              if (sub) document.getElementById('event-venue').textContent = sub;
+              if (ev.featured_image_url) {
+                var img = document.getElementById('hero-img');
+                img.onload = function () { img.style.display = 'block'; };
+                img.src = ev.featured_image_url;
+              }
+            })
+            .catch(function () { /* keep neutral branding */ });
+        }
+        brand();
+
+        // Auto-attempt on load — a scan is explicit intent to open the app.
+        if (lotId) {
+          openApp();
+          if (storeUrl) {
+            setTimeout(function () {
+              document.getElementById('status').textContent = 'Taking you to the store to get TRODDR…';
+              window.location.href = storeUrl;
+            }, 2000);
+          }
+        } else {
+          document.getElementById('status').textContent =
+            'This parking link looks incomplete. Please rescan the sign.';
+        }
+      })();
+    </script>
+  </body>
+</html>

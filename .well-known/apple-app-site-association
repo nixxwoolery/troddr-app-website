@@ -11,6 +11,7 @@
           { "/": "/guides/*" },
           { "/": "/trip_view/*" },
           { "/": "/checkin/*" },
+          { "/": "/park/*" },
           { "/": "/reset-password" }
         ]
       }
