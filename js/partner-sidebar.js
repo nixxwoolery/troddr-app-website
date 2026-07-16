@@ -134,6 +134,7 @@
   // (dispatched on click) to switch to the right pane before scrolling.
   const NAV_EVENT = [
     { group: 'Event Details', icon: 'ic-info', page: '/partner/event', section: 'info', children: [
+      { label: 'Edit Event Details', section: 'edit' },
       { label: 'Info',           section: 'info' },
       { label: 'Sponsors',       section: 'sponsors' },
       { label: 'Vendors',        section: 'vendors-lineup' },

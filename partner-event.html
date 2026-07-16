@@ -12,7 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
-<script src="/js/partner-sidebar.js"></script>
+<script src="/js/partner-sidebar.js?v=3"></script>
 <script src="/js/partner-errors.js"></script>
 <!-- Pan/zoom for the floor-plan canvas. Must load before floorplan-builder.js?v=8. -->
 <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js" defer></script>
@@ -3056,12 +3056,11 @@
       </div>
 
       <section class="section" id="info">
-        <div class="section-head section-head-with-edit">
+        <div class="section-head">
           <div>
             <h2 class="section-title">Info</h2>
             <div class="section-sub">Organizer, dress code, age restriction, amenities, parking notes, and other public facts.</div>
           </div>
-          <button type="button" class="section-edit-btn" data-edit-target="edit" title="Edit core event details">Edit</button>
         </div>
         <div class="info-card" id="info-card"></div>
       </section>
