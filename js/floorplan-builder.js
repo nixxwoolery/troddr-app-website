@@ -342,10 +342,11 @@
         ['booth', 'fpb-square', 'Booth', 'B'],
         ['object', 'fpb-shapes', 'Object', 'O'],
         ['zone', 'fpb-zone-ic', 'Zone', 'Z'],
+        ['freezone', 'fpb-edit', 'Trace zone', ''],
         ['text', 'fpb-type', 'Text', 'T'],
         ['pin', 'fpb-pin', 'Pin', 'P'],
         ['measure', 'fpb-measure', 'Measure', 'M'],
-      ].map(([id, ic, lb, k]) => `<button type="button" class="fpb-tool-btn" data-tool="${id}" title="${lb} (${k})"><svg><use href="#${ic}"/></svg>${lb}<span class="kbd">${k}</span></button>`).join('');
+      ].map(([id, ic, lb, k]) => `<button type="button" class="fpb-tool-btn" data-tool="${id}" title="${lb}${k ? ` (${k})` : ''}"><svg><use href="#${ic}"/></svg>${lb}${k ? `<span class="kbd">${k}</span>` : ''}</button>`).join('');
 
       const extra = (o.actions || []).map((a, i) =>
         `<button type="button" class="fpb-btn ${a.primary ? 'primary' : ''}" data-action="${i}">${a.icon ? `<svg><use href="#${a.icon}"/></svg>` : ''}${esc(a.label)}</button>`).join('');
@@ -480,11 +481,14 @@
     }
 
     setTool(tool) {
+      const activeTool = tool;
+      if (tool === 'freezone') { this.zoneMode = 'freeform'; tool = 'zone'; }
+      else if (tool === 'zone') this.zoneMode = 'rect';
       // Switching to a placement tool clears the selection so its palette shows.
       if (tool !== 'select' && this.selectedId) this.selectedId = null;
       this.tool = tool;
       const $ = this.$;
-      $.tools.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
+      $.tools.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === activeTool));
       $.viewport.className = 'fpb-viewport tool-' + tool;
       if (this.panzoom) this.panzoom.setOptions({ disablePan: tool !== 'select' });
       const hints = {
@@ -1919,7 +1923,7 @@
       }
       if (this.tool === 'zone') {
         side.innerHTML = `<h3>Zone shape</h3><div class="fpb-helper">Use a rectangle for clean boundaries, or trace an irregular area to match the figure on the plan.</div><div class="fpb-segmented"><button type="button" class="fpb-btn${this.zoneMode === 'rect' ? ' active' : ''}" data-zone-mode="rect">Rectangle</button><button type="button" class="fpb-btn${this.zoneMode === 'freeform' ? ' active' : ''}" data-zone-mode="freeform">Freeform trace</button></div>`;
-        side.querySelectorAll('[data-zone-mode]').forEach(b => b.addEventListener('click', () => { this.zoneMode = b.dataset.zoneMode; this.setTool('zone'); }));
+        side.querySelectorAll('[data-zone-mode]').forEach(b => b.addEventListener('click', () => this.setTool(b.dataset.zoneMode === 'freeform' ? 'freezone' : 'zone')));
         return;
       }
       side.innerHTML = `${this.unplacedVendorsHtml()}<h3>Layout</h3>${this.listHtml()}`;
@@ -2172,6 +2176,7 @@
       if (el.type === 'text') {
         const cur = TEXT_SIZES.reduce((best, s) => Math.abs(s.v - (el.fontSize || 0.016)) < Math.abs(best.v - (el.fontSize || 0.016)) ? s : best, TEXT_SIZES[1]);
         return `<h3>Text label</h3>
+          <div class="fpb-helper">Drag a corner handle to resize. Use the round handle above the label—or the controls below—to rotate it.</div>
           ${f('Text', `<input data-f="label" type="text" maxlength="120" placeholder="e.g. SECURITY" value="${esc(el.label || '')}"/>`)}
           <div class="fpb-field-row">
             ${f('Size', `<select data-f="tsize">${TEXT_SIZES.map(s => `<option value="${s.v}"${s.id === cur.id ? ' selected' : ''}>${s.label}</option>`).join('')}</select>`)}
