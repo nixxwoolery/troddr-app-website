@@ -18,7 +18,7 @@
    discriminated by `type`; legacy entries with no type are pins:
      pin   {id, type?:'pin', x, y, label, icon, color, vendor_id, booth, size, description}
      booth {id, type:'booth', x, y, w, h, number, label, icon, color, vendor_id, size, description}
-     zone  {id, type:'zone',  x, y, w, h, label, color, description}
+     zone  {id, type:'zone',  x, y, w, h, label, color, description, points?}
      table {id, type:'table', x, y, w, h, color, shape:'round'|'rect'}
      text  {id, type:'text',  x, y, label, color, fontSize}
    x/y are CENTER fractions (0-1) of the canvas; w/h are fractions of
@@ -189,7 +189,7 @@
       el.icon = CAT_BY_ID[el.icon] ? el.icon : (LEGACY_ICONS[el.icon] || DEFAULT_CAT);
       el.color = el.color || CAT_BY_ID[el.icon].color;
     }
-    if (el.type === 'text') el.fontSize = num(el.fontSize, 0.016);
+    if (el.type === 'text') { el.fontSize = num(el.fontSize, 0.016); el.rot = num(el.rot, 0); }
     if (el.type === 'shape') {
       const o = OBJ_BY_KIND[el.kind] || OBJ_BY_KIND[DEFAULT_OBJ];
       el.kind = o.kind;
@@ -197,6 +197,9 @@
       el.color = el.color || o.color;
       if (o.connect) el.groupId = el.groupId || null;
     }
+    if (el.type === 'zone' && Array.isArray(el.points) && el.points.length >= 3) {
+      el.points = el.points.map(p => [clamp(num(p && p[0]), 0, 1), clamp(num(p && p[1]), 0, 1)]);
+    } else if (el.type === 'zone') delete el.points;
     if (el.type === 'booth' || el.type === 'zone' || el.type === 'shape') el.rot = num(el.rot, 0);
     return el;
   }
@@ -267,6 +270,7 @@
       this.pinCategory = 'info';
       this.boothCategory = DEFAULT_CAT;
       this.objKind = DEFAULT_OBJ;                 // active object-library item
+      this.zoneMode = 'rect';                     // rectangle or traced freeform zone
       this.lastBoothFt = { w: 10, h: 10 };      // default booth footprint (feet)
       this.snap = true;
       this.dirty = false;
@@ -486,7 +490,7 @@
       const hints = {
         booth: 'Click to stamp a booth, or drag to draw one. Set its real size (ft) on the right — the box scales to match.',
         object: 'Pick an object on the right (table, chair, bar, barrier, ticket booth…), then click or drag to place it. Connectable pieces snap into runs.',
-        zone: 'Drag to draw a zone (stage area, VIP, emporium…). Click for a default size.',
+        zone: this.zoneMode === 'freeform' ? 'Press and drag around the actual edge of the zone, then release to close the shape.' : 'Drag to draw a rectangular zone. Choose Freeform on the right for irregular areas.',
         text: 'Click anywhere to add a text label.',
         pin: 'Pick a category on the right, then click the map to drop a pin.',
         measure: 'Drag to measure a distance in feet. Nothing is placed.',
@@ -1286,11 +1290,18 @@
       const dx = (o.x - z.x) * W, dy = (o.y - z.y) * H;
       const th = -(z.rot || 0) * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
       const lx = dx * cos - dy * sin, ly = dx * sin + dy * cos;   // into zone's local frame
-      return Math.abs(lx) <= z.w * W / 2 && Math.abs(ly) <= z.h * H / 2;
+      if (!z.points || z.points.length < 3) return Math.abs(lx) <= z.w * W / 2 && Math.abs(ly) <= z.h * H / 2;
+      const px = lx / (z.w * W) + 0.5, py = ly / (z.h * H) + 0.5;
+      let inside = false;
+      for (let i = 0, j = z.points.length - 1; i < z.points.length; j = i++) {
+        const a = z.points[i], b = z.points[j];
+        if (((a[1] > py) !== (b[1] > py)) && px < (b[0] - a[0]) * (py - a[1]) / ((b[1] - a[1]) || 1e-9) + a[0]) inside = !inside;
+      }
+      return inside;
     }
 
     // Rotate the selected element by dragging the rotation handle.
-    isRotatable(el) { return el && (el.type === 'booth' || el.type === 'zone' || el.type === 'shape'); }
+    isRotatable(el) { return el && (el.type === 'booth' || el.type === 'zone' || el.type === 'shape' || el.type === 'text'); }
     isConnect(el) { return el && el.type === 'shape' && OBJ_BY_KIND[el.kind] && OBJ_BY_KIND[el.kind].connect; }
     startRotate(e) {
       const el = this.byId(this.selectedId);
@@ -1367,7 +1378,8 @@
     // Resize via handles.
     startResize(e, dir) {
       const el = this.byId(this.selectedId);
-      if (!el || el.type === 'pin' || el.type === 'text') return;
+      if (!el || el.type === 'pin') return;
+      if (el.type === 'text') { this.startTextResize(e); return; }
       e.preventDefault(); e.stopPropagation();
       this.panzoom.setOptions({ disablePan: true });
       this.pushUndo();
@@ -1422,10 +1434,32 @@
       window.addEventListener('pointerup', onUp);
     }
 
+    startTextResize(e) {
+      const el = this.byId(this.selectedId);
+      if (!el || el.type !== 'text') return;
+      e.preventDefault(); e.stopPropagation();
+      this.panzoom.setOptions({ disablePan: true }); this.pushUndo();
+      const div = this.$.els.querySelector(`.fpb-el[data-id="${el.id}"]`), r = div.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const d0 = Math.max(12, Math.hypot(e.clientX - cx, e.clientY - cy)), fs0 = el.fontSize || 0.016;
+      const onMove = ev => {
+        const factor = Math.hypot(ev.clientX - cx, ev.clientY - cy) / d0;
+        el.fontSize = clamp(fs0 * factor, 0.006, 0.12);
+        div.style.fontSize = Math.max(7, el.fontSize * this.world.w) + 'px';
+        this.showDimText(`${Math.round(el.fontSize * this.world.w)} px`, ev);
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp);
+        this.panzoom.setOptions({ disablePan: this.tool !== 'select' }); this.hideDim(); this.setDirty(true); this.renderAll();
+      };
+      window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+    }
+
     // Draw / stamp new elements.
     startDraw(e) {
       e.preventDefault(); e.stopPropagation();
       const tool = this.tool;
+      if (tool === 'zone' && this.zoneMode === 'freeform') { this.startFreeformZone(e); return; }
       const start = this.worldPoint(e);
       let dragging = false;
       const rubber = this.$.rubber;
@@ -1477,6 +1511,33 @@
       };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
+    }
+
+    startFreeformZone(e) {
+      e.preventDefault(); e.stopPropagation();
+      const raw = [this.worldPoint(e)], rubber = this.$.rubber;
+      rubber.hidden = false; rubber.classList.add('freeform');
+      const draw = () => {
+        const xs = raw.map(p => p.x), ys = raw.map(p => p.y), l = Math.min(...xs), t = Math.min(...ys);
+        const w = Math.max(...xs) - l, h = Math.max(...ys) - t;
+        rubber.style.left = l / this.world.w * 100 + '%'; rubber.style.top = t / this.world.h * 100 + '%';
+        rubber.style.width = w / this.world.w * 100 + '%'; rubber.style.height = h / this.world.h * 100 + '%';
+        rubber.style.clipPath = `polygon(${raw.map(p => `${w ? (p.x-l)/w*100 : 0}% ${h ? (p.y-t)/h*100 : 0}%`).join(',')})`;
+      };
+      const onMove = ev => { const p = this.worldPoint(ev), last = raw[raw.length - 1]; if (Math.hypot(p.x-last.x,p.y-last.y)*this.scale() >= 7) { raw.push(p); draw(); } };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp);
+        rubber.hidden = true; rubber.classList.remove('freeform'); rubber.style.removeProperty('clip-path');
+        if (raw.length < 3) { this.status('Trace a larger area to create a freeform zone.', 'error'); return; }
+        const pts = raw.filter((p, i) => i === 0 || i === raw.length - 1 || i % 2 === 0);
+        const xs = pts.map(p => p.x), ys = pts.map(p => p.y), l = Math.min(...xs), t = Math.min(...ys);
+        const w = Math.max(...xs)-l, h = Math.max(...ys)-t;
+        if (w < MIN_FT*this.ppf || h < MIN_FT*this.ppf) return;
+        this.pushUndo();
+        const el = normalizeElement({ id:uid(), type:'zone', x:(l+w/2)/this.world.w, y:(t+h/2)/this.world.h, w:w/this.world.w, h:h/this.world.h, rot:0, label:'Zone', color:ZONE_COLORS[0], description:'', points:pts.map(p=>[(p.x-l)/w,(p.y-t)/h]) });
+        this.elements.push(el); this.setDirty(true); this.select(el.id);
+      };
+      window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
     }
 
     nextBoothNumber() {
@@ -1743,6 +1804,7 @@
       if (el.type === 'pin' || el.type === 'text') {
         div.style.left = (el.x * 100) + '%';
         div.style.top = (el.y * 100) + '%';
+        if (el.type === 'text') div.style.transform = `translate(-50%, -50%) rotate(${el.rot || 0}deg)`;
       } else {
         div.style.left = ((el.x - el.w / 2) * 100) + '%';
         div.style.top = ((el.y - el.h / 2) * 100) + '%';
@@ -1786,7 +1848,9 @@
         if (el.type === 'zone') {
           const wpx = el.w * W;
           const fs = clamp(wpx * 0.06, 12, 22);
-          return `<div class="fpb-el fpb-zone${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};${tf(el)}">
+          const poly = el.points ? `<svg class="fpb-zone-poly" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="${el.points.map(p => `${p[0]*100},${p[1]*100}`).join(' ')}"/></svg>` : '';
+          return `<div class="fpb-el fpb-zone${el.points ? ' polygon' : ''}${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};${tf(el)}">
+            ${poly}
             ${el.label ? `<span class="zlabel" style="font-size:${fs}px">${esc(el.label)}</span>` : ''}
             ${handles(el)}</div>`;
         }
@@ -1807,7 +1871,7 @@
         }
         if (el.type === 'text') {
           const fs = Math.max(11, (el.fontSize || 0.016) * W);
-          return `<div class="fpb-el fpb-text${sel}${el.label ? '' : ' empty'}" data-id="${el.id}" style="left:${el.x * 100}%;top:${el.y * 100}%;font-size:${fs}px;--c:${esc(el.color || '#111')}">${esc(el.label || 'Text')}</div>`;
+          return `<div class="fpb-el fpb-text${sel}${el.label ? '' : ' empty'}" data-id="${el.id}" style="left:${el.x * 100}%;top:${el.y * 100}%;font-size:${fs}px;--c:${esc(el.color || '#111')};transform:translate(-50%, -50%) rotate(${el.rot || 0}deg)">${esc(el.label || 'Text')}${handles(el, true)}</div>`;
         }
         const cat = CAT_BY_ID[el.icon] || CAT_BY_ID[DEFAULT_CAT];
         return `<div class="fpb-el fpb-pin${sel}" data-id="${el.id}" style="left:${el.x * 100}%;top:${el.y * 100}%;">
@@ -1851,6 +1915,11 @@
           if (isPin) this.pinCategory = b.dataset.cat; else this.boothCategory = b.dataset.cat;
           this.renderSide();
         }));
+        return;
+      }
+      if (this.tool === 'zone') {
+        side.innerHTML = `<h3>Zone shape</h3><div class="fpb-helper">Use a rectangle for clean boundaries, or trace an irregular area to match the figure on the plan.</div><div class="fpb-segmented"><button type="button" class="fpb-btn${this.zoneMode === 'rect' ? ' active' : ''}" data-zone-mode="rect">Rectangle</button><button type="button" class="fpb-btn${this.zoneMode === 'freeform' ? ' active' : ''}" data-zone-mode="freeform">Freeform trace</button></div>`;
+        side.querySelectorAll('[data-zone-mode]').forEach(b => b.addEventListener('click', () => { this.zoneMode = b.dataset.zoneMode; this.setTool('zone'); }));
         return;
       }
       side.innerHTML = `${this.unplacedVendorsHtml()}<h3>Layout</h3>${this.listHtml()}`;
@@ -2108,6 +2177,7 @@
             ${f('Size', `<select data-f="tsize">${TEXT_SIZES.map(s => `<option value="${s.v}"${s.id === cur.id ? ' selected' : ''}>${s.label}</option>`).join('')}</select>`)}
             ${f('Colour', `<input data-f="colorPick" type="color" value="${esc(/^#[0-9a-f]{6}$/i.test(el.color || '') ? el.color : '#111111')}"/>`)}
           </div>
+          ${rotControl()}
           ${actions()}`;
       }
       // pin
@@ -2286,8 +2356,8 @@
           label: el.label || '', color: el.color, size: el.size || '',
           groupId: el.groupId || null,
         });
-        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', color: el.color || ZONE_COLORS[0], description: el.description || '' });
-        return Object.assign(base, { label: el.label || '', color: el.color || '#111111', fontSize: el.fontSize || 0.016 });
+        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', color: el.color || ZONE_COLORS[0], description: el.description || '', ...(el.points ? { points: el.points } : {}) });
+        return Object.assign(base, { label: el.label || '', color: el.color || '#111111', fontSize: el.fontSize || 0.016, rot: el.rot || 0 });
       });
       // Persist scale as the first entry so the layout round-trips to-scale.
       return [this.scaleMeta()].concat(els);
@@ -2345,7 +2415,10 @@
           if (el.type === 'zone') ctx.globalAlpha = 0.22;
           ctx.strokeStyle = el.type === 'zone' ? (el.color || '#b03a2e') : 'rgba(0,0,0,0.3)';
           ctx.lineWidth = el.type === 'zone' ? 2 : 1.5;
-          if (round) {
+          if (el.type === 'zone' && el.points) {
+            ctx.beginPath(); el.points.forEach((p,i) => { const x=(p[0]-.5)*w, y=(p[1]-.5)*h; i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); });
+            ctx.closePath(); ctx.fill(); ctx.globalAlpha=1; ctx.stroke();
+          } else if (round) {
             ctx.beginPath(); ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1; ctx.stroke();
           } else {
@@ -2392,10 +2465,11 @@
           ctx.restore();
         } else if (el.type === 'text') {
           ctx.save();
+          ctx.translate(cx, cy); if (el.rot) ctx.rotate(el.rot * Math.PI / 180);
           ctx.fillStyle = el.color || '#111';
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.font = `700 ${Math.max(11, (el.fontSize || 0.016) * W)}px Poppins, sans-serif`;
-          ctx.fillText(el.label || '', cx, cy);
+          ctx.fillText(el.label || '', 0, 0);
           ctx.restore();
         } else {
           ctx.save();
