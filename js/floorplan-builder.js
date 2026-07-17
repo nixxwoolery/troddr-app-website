@@ -208,6 +208,8 @@
     if (el.type === 'zone') {
       el.showLabel = el.showLabel !== false;
       el.opacity = clamp(num(el.opacity, 20), 0, 100);
+      el.labelX = clamp(num(el.labelX, 0.5), 0, 1);
+      el.labelY = clamp(num(el.labelY, 0.12), 0, 1);
     }
     return el;
   }
@@ -1215,11 +1217,18 @@
         if (this.spacePan || e.button === 2) return;     // let panzoom pan / right-click → context menu
         this._lpFired = false;
         // Touch: in select mode a long-press opens the context menu (no right-click).
-        if (e.pointerType === 'touch' && this.tool === 'select' && !e.target.closest('.fpb-h, .fpb-rot-h')) this.armLongPress(e);
+        if (e.pointerType === 'touch' && this.tool === 'select' && !e.target.closest('.fpb-h, .fpb-rot-h, .zlabel')) this.armLongPress(e);
         const rotH = e.target.closest('.fpb-rot-h');
         if (rotH) { this.startRotate(e); return; }
         const handle = e.target.closest('.fpb-h');
         if (handle) { this.startResize(e, handle.dataset.h); return; }
+        const zoneLabel = e.target.closest('.fpb-zone .zlabel');
+        if (zoneLabel) {
+          const elDiv = zoneLabel.closest('.fpb-el');
+          if (!this.isSelected(elDiv.dataset.id)) this.select(elDiv.dataset.id);
+          this.startZoneLabelMove(e, elDiv.dataset.id);
+          return;
+        }
         const elDiv = e.target.closest('.fpb-el');
         if (elDiv) {
           e.stopPropagation();
@@ -1350,6 +1359,42 @@
         this.clearGuides();
         this.panzoom.setOptions({ disablePan: this.tool !== 'select' });
         if (moved) { if (single && this.isConnect(el)) this.connectShape(el); this.setDirty(true); this.renderAll(); }
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    }
+
+    // Move a zone's title chip independently of its boundary and contents.
+    startZoneLabelMove(e, zoneId) {
+      const el = this.byId(zoneId);
+      if (!el || el.type !== 'zone') return;
+      e.preventDefault(); e.stopPropagation();
+      this.panzoom.setOptions({ disablePan: true });
+      const start = { cx: e.clientX, cy: e.clientY, x: num(el.labelX, 0.5), y: num(el.labelY, 0.12) };
+      let moved = false, pushed = false;
+      const onMove = (ev) => {
+        if (!moved && Math.hypot(ev.clientX - start.cx, ev.clientY - start.cy) < 3) return;
+        if (!pushed) { this.pushUndo(); pushed = true; }
+        moved = true;
+        const scale = this.scale();
+        const dx = (ev.clientX - start.cx) / scale;
+        const dy = (ev.clientY - start.cy) / scale;
+        const th = -(el.rot || 0) * Math.PI / 180;
+        const localX = dx * Math.cos(th) - dy * Math.sin(th);
+        const localY = dx * Math.sin(th) + dy * Math.cos(th);
+        el.labelX = clamp(start.x + localX / (el.w * this.world.w), 0, 1);
+        el.labelY = clamp(start.y + localY / (el.h * this.world.h), 0, 1);
+        const label = this.$.els.querySelector(`.fpb-el[data-id="${el.id}"] .zlabel`);
+        if (label) {
+          label.style.left = (el.labelX * 100) + '%';
+          label.style.top = (el.labelY * 100) + '%';
+        }
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        this.panzoom.setOptions({ disablePan: this.tool !== 'select' });
+        if (moved) { this.setDirty(true); this.renderAll(); }
       };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
@@ -1927,7 +1972,7 @@
           const poly = el.points ? `<svg class="fpb-zone-poly" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="${el.points.map(p => `${p[0]*100},${p[1]*100}`).join(' ')}"/></svg>` : '';
           return `<div class="fpb-el fpb-zone${el.points ? ' polygon' : ''}${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};--zone-opacity:${clamp(num(el.opacity, 20), 0, 100)}%;${tf(el)}">
             ${poly}
-            ${el.showLabel !== false && el.label ? `<span class="zlabel" style="font-size:${fs}px;transform:rotate(${num(el.labelRot)}deg) scale(${num(el.labelScale, 1)})">${esc(el.label)}</span>` : ''}
+            ${el.showLabel !== false && el.label ? `<span class="zlabel" style="left:${clamp(num(el.labelX, 0.5), 0, 1) * 100}%;top:${clamp(num(el.labelY, 0.12), 0, 1) * 100}%;font-size:${fs}px;transform:translate(-50%,-50%) rotate(${num(el.labelRot)}deg) scale(${num(el.labelScale, 1)})">${esc(el.label)}</span>` : ''}
             ${handles(el)}</div>`;
         }
         if (el.type === 'shape') {
@@ -2230,6 +2275,7 @@
             ${f('Show label', `<select data-f="showLabel"><option value="yes"${el.showLabel !== false ? ' selected' : ''}>Show</option><option value="no"${el.showLabel === false ? ' selected' : ''}>Hide</option></select>`)}
             ${f('Fill opacity', `<div class="fpb-range-field"><input data-f="zoneOpacity" type="range" min="0" max="100" step="5" value="${opacity}"/><output data-f="zoneOpacityValue">${Math.round(opacity)}%</output></div>`)}
           </div>
+          <div class="fpb-helper">Drag the label directly on the map to reposition it.</div>
           <div class="fpb-field-row">
             ${f('Label scale (%)', `<input data-f="labelScale" type="number" min="50" max="300" step="5" value="${Math.round(num(el.labelScale, 1) * 100)}"/>`)}
             ${f('Label rotation (°)', `<input data-f="labelRot" type="number" min="-180" max="180" step="1" value="${num(el.labelRot)}"/>`)}
@@ -2467,7 +2513,7 @@
           label: el.label || '', color: el.color, size: el.size || '',
           groupId: el.groupId || null,
         });
-        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', showLabel: el.showLabel !== false, opacity: clamp(num(el.opacity, 20), 0, 100), labelScale: num(el.labelScale, 1), labelRot: num(el.labelRot), color: el.color || ZONE_COLORS[0], description: el.description || '', ...(el.points ? { points: el.points } : {}) });
+        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', showLabel: el.showLabel !== false, opacity: clamp(num(el.opacity, 20), 0, 100), labelX: clamp(num(el.labelX, 0.5), 0, 1), labelY: clamp(num(el.labelY, 0.12), 0, 1), labelScale: num(el.labelScale, 1), labelRot: num(el.labelRot), color: el.color || ZONE_COLORS[0], description: el.description || '', ...(el.points ? { points: el.points } : {}) });
         return Object.assign(base, { label: el.label || '', color: el.color || '#111111', fontSize: el.fontSize || 0.016, rot: el.rot || 0 });
       });
       // Persist scale as the first entry so the layout round-trips to-scale.
@@ -2565,8 +2611,10 @@
           if (el.type === 'zone' && el.showLabel !== false && el.label) {
             const fs = clamp(w * 0.06, 12, 22), txt = el.label.toUpperCase();
             ctx.font = `700 ${fs}px Poppins, sans-serif`;
-            const tw = Math.min(ctx.measureText(txt).width, w - 16), cy2 = -h / 2 + fs * 0.9 + 6;
-            ctx.save(); ctx.translate(0, cy2); ctx.rotate(num(el.labelRot) * Math.PI / 180); ctx.scale(num(el.labelScale, 1), num(el.labelScale, 1));
+            const tw = Math.min(ctx.measureText(txt).width, w - 16);
+            const labelX = (clamp(num(el.labelX, 0.5), 0, 1) - 0.5) * w;
+            const labelY = (clamp(num(el.labelY, 0.12), 0, 1) - 0.5) * h;
+            ctx.save(); ctx.translate(labelX, labelY); ctx.rotate(num(el.labelRot) * Math.PI / 180); ctx.scale(num(el.labelScale, 1), num(el.labelScale, 1));
             ctx.fillStyle = el.color || '#b03a2e';
             ctx.fillRect(-tw / 2 - 9, -fs / 2 - 3, tw + 18, fs + 6);   // title chip
             ctx.fillStyle = '#fff'; ctx.fillText(txt, 0, 0, w - 18); ctx.restore();
