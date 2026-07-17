@@ -1306,14 +1306,12 @@
       e.preventDefault();
       this.panzoom.setOptions({ disablePan: true });
       const start = { cx: e.clientX, cy: e.clientY, x: el.x, y: el.y };
-      // Followers: every other selected element, plus members of a connected run,
-      // plus — when dragging a zone — everything sitting inside that zone.
+      // Followers are only explicitly selected elements or connected shape runs.
+      // A zone is a visual boundary, never a parent container: moving or
+      // reshaping it must not move booths, labels, or objects inside it.
       const followerSet = new Set(this._sel.filter(id => id !== el.id));
       if (el.type === 'shape' && el.groupId) {
         this.elements.forEach(o => { if (o.type === 'shape' && o.groupId === el.groupId && o !== el) followerSet.add(o.id); });
-      }
-      if (el.type === 'zone') {
-        this.elements.forEach(o => { if (o !== el && o.type !== 'zone' && this.zoneContains(el, o)) followerSet.add(o.id); });
       }
       const single = followerSet.size === 0;
       const group = [...followerSet].map(id => this.byId(id)).filter(Boolean).map(o => ({ o, dx: o.x - el.x, dy: o.y - el.y }));
@@ -1461,12 +1459,6 @@
       const sx = dir.includes('e') ? 1 : dir.includes('w') ? -1 : 0;
       const sy = dir.includes('s') ? 1 : dir.includes('n') ? -1 : 0;
       const start = { cx: e.clientX, cy: e.clientY, x0: el.x * W, y0: el.y * H, w0: el.w * W, h0: el.h * H };
-      // Resizing a zone reflows its contents — each item keeps its position as a
-      // fraction of the zone, so they spread out / draw in with the zone.
-      const reflow = (el.type === 'zone' && !el.rot)
-        ? this.elements.filter(o => o !== el && o.type !== 'zone' && this.zoneContains(el, o))
-            .map(o => ({ o, fx: (o.x - (el.x - el.w / 2)) / el.w, fy: (o.y - (el.y - el.h / 2)) / el.h }))
-        : [];
       const onMove = (ev) => {
         const s = this.scale();
         const dx = (ev.clientX - start.cx) / s, dy = (ev.clientY - start.cy) / s;
@@ -1482,7 +1474,6 @@
         const C = { x: A.x + sx * nw / 2 * ux.x + sy * nh / 2 * uy.x, y: A.y + sx * nw / 2 * ux.y + sy * nh / 2 * uy.y };
         el.x = C.x / W; el.y = C.y / H; el.w = nw / W; el.h = nh / H;
         this.positionElementDiv(el);
-        reflow.forEach(({ o, fx, fy }) => { o.x = clamp((el.x - el.w / 2) + fx * el.w, 0, 1); o.y = clamp((el.y - el.h / 2) + fy * el.h, 0, 1); this.positionElementDiv(o); });
         this.showDim(el, ev);
       };
       const onUp = () => {
