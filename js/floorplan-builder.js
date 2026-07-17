@@ -195,6 +195,7 @@
       el.kind = o.kind;
       el.shape = o.shape;
       el.color = el.color || o.color;
+      el.showLabel = el.showLabel !== false;
       if (o.connect) el.groupId = el.groupId || null;
     }
     if (el.type === 'zone' && Array.isArray(el.points) && el.points.length >= 3) {
@@ -1984,10 +1985,11 @@
           const deco = o.deco ? ` fpb-deco-${o.deco}` : '';
           const ink = this.textOn(el.color);
           const icSize = clamp(Math.min(wpx, hpx) * 0.5, 12, 40);
-          const showIc = o.ic && !el.label && Math.min(wpx, hpx) > 22;
+          const visibleLabel = el.showLabel !== false && el.label;
+          const showIc = o.ic && !visibleLabel && Math.min(wpx, hpx) > 22;
           return `<div class="fpb-el fpb-shape${round}${sel}${grp}${deco}" data-id="${el.id}" data-kind="${esc(el.kind)}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};--ink:${ink};${tf(el)}">
             ${showIc ? `<svg class="sicon" style="width:${icSize}px;height:${icSize}px;${up(el)}"><use href="#${o.icon}"/></svg>` : ''}
-            ${el.label ? `<span class="slabel" style="font-size:${fs}px;color:${ink};${up(el)}">${esc(el.label)}</span>` : ''}
+            ${visibleLabel ? `<span class="slabel" style="font-size:${fs}px;color:${ink};${up(el)}">${esc(el.label)}</span>` : ''}
             ${handles(el, o.shape === 'round')}</div>`;
         }
         if (el.type === 'text') {
@@ -2295,7 +2297,10 @@
         const kindOptions = OBJECTS.map(k => `<option value="${k.kind}"${k.kind === el.kind ? ' selected' : ''}>${esc(k.label)}</option>`).join('');
         return `<h3>${esc(o.label)}</h3>
           ${f('Type', `<select data-f="kind">${kindOptions}</select>`)}
-          ${f('Label (optional)', `<input data-f="label" type="text" maxlength="60" placeholder="${o.connect ? 'e.g. Main Bar' : 'e.g. Stage'}" value="${esc(el.label || '')}"/>`)}
+          <div class="fpb-field-row">
+            ${f('Label (optional)', `<input data-f="label" type="text" maxlength="60" placeholder="${o.connect ? 'e.g. Main Bar' : 'e.g. Stage'}" value="${esc(el.label || '')}"/>`)}
+            ${f('Show label', `<select data-f="showLabel"><option value="yes"${el.showLabel !== false ? ' selected' : ''}>Show</option><option value="no"${el.showLabel === false ? ' selected' : ''}>Hide</option></select>`)}
+          </div>
           ${sizeControl(o.connect ? 'Length × depth' : 'Size', presets)}
           ${rotControl()}
           ${colorRow(palette, o.color)}
@@ -2510,7 +2515,7 @@
         });
         if (el.type === 'shape') return Object.assign(base, {
           w: el.w, h: el.h, rot: el.rot || 0, kind: el.kind, shape: el.shape,
-          label: el.label || '', color: el.color, size: el.size || '',
+          label: el.label || '', showLabel: el.showLabel !== false, color: el.color, size: el.size || '',
           groupId: el.groupId || null,
         });
         if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', showLabel: el.showLabel !== false, opacity: clamp(num(el.opacity, 20), 0, 100), labelX: clamp(num(el.labelX, 0.5), 0, 1), labelY: clamp(num(el.labelY, 0.12), 0, 1), labelScale: num(el.labelScale, 1), labelRot: num(el.labelRot), color: el.color || ZONE_COLORS[0], description: el.description || '', ...(el.points ? { points: el.points } : {}) });
@@ -2619,7 +2624,7 @@
             ctx.fillRect(-tw / 2 - 9, -fs / 2 - 3, tw + 18, fs + 6);   // title chip
             ctx.fillStyle = '#fff'; ctx.fillText(txt, 0, 0, w - 18); ctx.restore();
           }
-          if (el.type === 'shape' && el.label) {
+          if (el.type === 'shape' && el.showLabel !== false && el.label) {
             ctx.font = `700 ${clamp(Math.min(w, h) * 0.34, 11, 22)}px Poppins, sans-serif`;
             ctx.fillText(el.label, 0, 0, w - 6);
           }
