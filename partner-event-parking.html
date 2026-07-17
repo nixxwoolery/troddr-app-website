@@ -66,6 +66,7 @@
   .panel-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border-soft); }
   .panel-head h2 { font-size: 14px; font-weight: 700; }
   .panel-head .hint { font-size: 12px; color: var(--grey-mid); margin-left: auto; }
+  .panel-head .btn { padding: 7px 14px; }
   .panel-body { padding: 14px 16px; }
   .map-tools { display: grid; gap: 10px; margin-bottom: 12px; }
   .map-tool-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -87,8 +88,13 @@
 
   /* List */
   .lot-row { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
+  .lot-row:not(.sel) { cursor: pointer; }
+  .lot-row:not(.sel):hover { border-color: #cfd5dc; background: #fcfcfd; }
   .lot-row.sel { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10,122,255,0.12); }
   .lot-row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .lot-row-summary { display: flex; align-items: center; gap: 9px; min-height: 30px; }
+  .lot-summary-name { min-width: 0; flex: 1; font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lot-summary-meta { font-size: 11px; color: var(--grey-mid); white-space: nowrap; }
   .lot-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
   .lot-row input, .lot-row select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; color: var(--black); background: #fff; }
   .lot-row input[type="text"] { font-weight: 600; }
@@ -105,6 +111,7 @@
   .placed-tag.no { color: var(--amber); }
   .link-btn { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; margin-left: auto; font-family: inherit; }
   .link-btn.blue { color: var(--blue); margin-left: 0; }
+  .placement-note { margin-bottom: 10px; padding: 9px 11px; border-radius: 8px; background: #eef6ff; color: #075ea8; font-size: 12px; font-weight: 600; }
 
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--black); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
   .btn.primary { background: var(--brand-primary); color: var(--brand-text); border-color: var(--brand-primary); }
@@ -177,7 +184,7 @@
       <div class="panel">
         <div class="panel-head">
           <h2>Place lots on the parking map</h2>
-          <span class="hint">Tap the map to add · drag to move</span>
+          <span class="hint">Choose a lot, then place it · drag to fine-tune</span>
         </div>
         <div class="panel-body">
           <div class="map-tools">
@@ -201,6 +208,7 @@
         <div class="panel-head">
           <h2>Parking lots</h2>
           <span class="hint" id="lot-count"></span>
+          <button class="btn primary" id="save-btn-top" disabled>Save</button>
         </div>
         <div class="panel-body">
           <div id="lot-list"></div>
@@ -220,6 +228,9 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_ANON);
   const $ = (id) => document.getElementById(id);
+  const escapeHtml = (value) => String(value == null ? '' : value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[char]));
 
   // Status override → label + marker colour. '' = Auto (crowd estimate).
   const STATUS = [
@@ -240,6 +251,7 @@
   // Canonical QR payload for a lot — must match lib/parking/qr.ts in the app.
   const parkingLotUrl = (lotId) => `https://troddr.com/park/${lotId}`;
   let selectedId = null;
+  let placementTargetId = null;
   let dirty = false;
   let mapDirty = false;
   let mapUploading = false;
@@ -256,6 +268,7 @@
     dirty = true;
     const msg = $('save-msg'); msg.textContent = 'Unsaved changes'; msg.className = 'msg dirty';
     $('save-btn').disabled = false;
+    $('save-btn-top').disabled = false;
   }
   function safeStorageName(s) {
     return String(s || 'map').trim().replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^_+|_+$/g, '') || 'map';
@@ -301,15 +314,26 @@
     const img = $('fp-img');
     img.onload = renderMarkers;
     img.src = parkingMapUrl;
-    // Click on empty map → drop a new lot at those fractional coords.
+    // Map clicks only place the lot explicitly chosen by the user.
     wrap.onclick = (e) => {
       if (e.target.closest('.lot-marker')) return;
+      if (!placementTargetId) {
+        setMapStatus('Choose “Place on map” or “Move” on a parking lot first.');
+        return;
+      }
       const rect = img.getBoundingClientRect();
       if (!rect.width) return;
       const x = (e.clientX - rect.left) / rect.width;
       const y = (e.clientY - rect.top) / rect.height;
       if (x < 0 || x > 1 || y < 0 || y > 1) return;
-      addLot(x, y);
+      const lot = lots.find((item) => item.id === placementTargetId);
+      if (!lot) return;
+      lot.x = x; lot.y = y;
+      selectedId = lot.id;
+      placementTargetId = null;
+      markDirty();
+      setMapStatus(`${lot.name || 'Parking lot'} placed. Save to publish it.`, 'success');
+      renderList(); renderMarkers();
     };
   }
 
@@ -432,18 +456,20 @@
     const list = $('lot-list');
     $('lot-count').textContent = lots.length ? `${lots.length} lot${lots.length === 1 ? '' : 's'}` : '';
     if (!lots.length) {
-      list.innerHTML = '<div style="color:var(--grey-mid);font-size:13px;padding:8px 2px 14px;">No lots yet. Tap the map or use “Add a lot”.</div>';
+      list.innerHTML = '<div style="color:var(--grey-mid);font-size:13px;padding:8px 2px 14px;">No lots yet. Select “Add a lot” to get started.</div>';
       return;
     }
     list.innerHTML = '';
     lots.forEach((lot, i) => {
       const placed = lot.x != null && lot.y != null;
+      const expanded = lot.id === selectedId;
       const row = document.createElement('div');
       row.className = 'lot-row' + (lot.id === selectedId ? ' sel' : '');
-      row.innerHTML = `
+      row.innerHTML = expanded ? `
+        ${placementTargetId === lot.id ? '<div class="placement-note">Click the parking map to choose this lot’s position.</div>' : ''}
         <div class="lot-row-top">
           <span class="lot-swatch" style="background:${statusColor(lot.status_override)}"></span>
-          <input type="text" data-f="name" placeholder="Lot name (e.g. North Lot)" value="${(lot.name || '').replace(/"/g, '&quot;')}" />
+          <input type="text" data-f="name" placeholder="Lot name (e.g. North Lot)" value="${escapeHtml(lot.name || '')}" />
         </div>
         <div class="lot-fields">
           <div class="lot-field">
@@ -479,10 +505,21 @@
         </div>
         <div class="lot-row-actions">
           <span class="placed-tag ${placed ? 'ok' : 'no'}">${placed ? '● Placed on parking map' : '○ Not placed'}</span>
+          <button class="link-btn blue" data-a="place">${placed ? 'Move' : 'Place on map'}</button>
           ${placed ? `<button class="link-btn blue" data-a="locate">Show</button>` : ''}
           <button class="link-btn blue" data-a="qr">QR code</button>
           <button class="link-btn" data-a="delete">Remove</button>
+        </div>` : `
+        <div class="lot-row-summary">
+          <span class="lot-swatch" style="background:${statusColor(lot.status_override)}"></span>
+          <span class="lot-summary-name">${escapeHtml(lot.name || `Parking lot ${i + 1}`)}</span>
+          <span class="lot-summary-meta">${placed ? 'Placed' : 'Not placed'} · Edit ›</span>
         </div>`;
+      if (!expanded) {
+        row.addEventListener('click', () => selectLot(lot.id));
+        list.appendChild(row);
+        return;
+      }
       row.querySelector('[data-f="name"]').addEventListener('input', (e) => { lot.name = e.target.value; markDirty(); renderMarkers(); });
       row.querySelector('[data-f="price"]').addEventListener('input', (e) => { lot.price = e.target.value === '' ? null : Math.max(0, parseFloat(e.target.value) || 0); markDirty(); });
       row.querySelector('[data-f="currency"]').addEventListener('change', (e) => { lot.currency = e.target.value; markDirty(); });
@@ -492,6 +529,7 @@
       row.querySelector('[data-f="show_vehicle_count"]').addEventListener('change', (e) => { lot.show_vehicle_count = !!e.target.checked; markDirty(); });
       row.querySelector('[data-f="show_capacity"]').addEventListener('change', (e) => { lot.show_capacity = !!e.target.checked; markDirty(); });
       row.querySelector('[data-f="show_price"]').addEventListener('change', (e) => { lot.show_price = !!e.target.checked; markDirty(); });
+      row.querySelector('[data-a="place"]').addEventListener('click', () => beginPlacement(lot.id));
       const locate = row.querySelector('[data-a="locate"]');
       if (locate) locate.addEventListener('click', () => selectLot(lot.id, true));
       row.querySelector('[data-a="qr"]').addEventListener('click', () => showQR(lot));
@@ -505,6 +543,20 @@
     selectedId = id;
     renderList(); renderMarkers();
     if (scrollCanvas) $('canvas-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function beginPlacement(id) {
+    const lot = lots.find((item) => item.id === id);
+    if (!lot) return;
+    if (!parkingMapUrl) {
+      setMapStatus('Upload a parking map image before placing lots.', 'error');
+      return;
+    }
+    selectedId = id;
+    placementTargetId = id;
+    setMapStatus(`Click the map to place ${lot.name || 'this parking lot'}.`, 'success');
+    renderList(); renderMarkers();
+    $('canvas-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   function addLot(x, y) {
@@ -525,12 +577,21 @@
       show_price: true,
     });
     selectedId = lots[lots.length - 1].id;
+    placementTargetId = selectedId;
     markDirty(); renderList(); renderMarkers();
+    setMapStatus(parkingMapUrl ? 'New lot added. Click the map to place it.' : 'New lot added. Upload a parking map when you are ready to place it.');
+    requestAnimationFrame(() => {
+      const name = $('lot-list')?.querySelector('.lot-row.sel [data-f="name"]');
+      if (name) { name.focus(); name.select(); }
+    });
   }
 
   function removeLot(id) {
+    const lot = lots.find((item) => item.id === id);
+    if (lot && !window.confirm(`Remove ${lot.name || 'this parking lot'}?`)) return;
     lots = lots.filter((l) => l.id !== id);
     if (selectedId === id) selectedId = null;
+    if (placementTargetId === id) placementTargetId = null;
     markDirty(); renderList(); renderMarkers();
   }
 
@@ -573,6 +634,7 @@
       return;
     }
     $('save-btn').disabled = true;
+    $('save-btn-top').disabled = true;
     const msg = $('save-msg'); msg.textContent = 'Saving…'; msg.className = 'msg';
     const payload = lots.map((l, i) => ({
       id: l.id,
@@ -602,6 +664,7 @@
           msg.textContent = 'Save failed: ' + ((mapError && (mapError.message || mapError.code)) || (mapData && mapData.error) || 'parking map could not be saved');
           msg.className = 'msg dirty';
           $('save-btn').disabled = false;
+          $('save-btn-top').disabled = false;
           return;
         }
       }
@@ -609,6 +672,7 @@
       if (error || !data || !data.ok) {
         msg.textContent = 'Save failed: ' + ((error && (error.message || error.code)) || (data && data.error) || 'unknown'); msg.className = 'msg dirty';
         $('save-btn').disabled = false;
+        $('save-btn-top').disabled = false;
         return;
       }
       dirty = false;
@@ -617,6 +681,7 @@
     } catch (err) {
       msg.textContent = 'Network error — try again'; msg.className = 'msg dirty';
       $('save-btn').disabled = false;
+      $('save-btn-top').disabled = false;
     }
   }
 
@@ -707,6 +772,7 @@
     renderCanvas(); renderList(); wireMapTools();
     $('add-lot').addEventListener('click', () => addLot());
     $('save-btn').addEventListener('click', save);
+    $('save-btn-top').addEventListener('click', save);
     window.addEventListener('beforeunload', (ev) => { if (dirty) { ev.preventDefault(); ev.returnValue = ''; } });
   }
 
