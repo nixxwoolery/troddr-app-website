@@ -205,6 +205,10 @@
       el.labelScale = clamp(num(el.labelScale, 1), 0.5, 3);
       el.labelRot = num(el.labelRot, 0);
     }
+    if (el.type === 'zone') {
+      el.showLabel = el.showLabel !== false;
+      el.opacity = clamp(num(el.opacity, 20), 0, 100);
+    }
     return el;
   }
 
@@ -1921,9 +1925,9 @@
           const wpx = el.w * W;
           const fs = clamp(wpx * 0.06, 12, 22);
           const poly = el.points ? `<svg class="fpb-zone-poly" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="${el.points.map(p => `${p[0]*100},${p[1]*100}`).join(' ')}"/></svg>` : '';
-          return `<div class="fpb-el fpb-zone${el.points ? ' polygon' : ''}${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};${tf(el)}">
+          return `<div class="fpb-el fpb-zone${el.points ? ' polygon' : ''}${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};--zone-opacity:${clamp(num(el.opacity, 20), 0, 100)}%;${tf(el)}">
             ${poly}
-            ${el.label ? `<span class="zlabel" style="font-size:${fs}px;transform:rotate(${num(el.labelRot)}deg) scale(${num(el.labelScale, 1)})">${esc(el.label)}</span>` : ''}
+            ${el.showLabel !== false && el.label ? `<span class="zlabel" style="font-size:${fs}px;transform:rotate(${num(el.labelRot)}deg) scale(${num(el.labelScale, 1)})">${esc(el.label)}</span>` : ''}
             ${handles(el)}</div>`;
         }
         if (el.type === 'shape') {
@@ -2219,8 +2223,13 @@
           ${actions()}`;
       }
       if (el.type === 'zone') {
+        const opacity = clamp(num(el.opacity, 20), 0, 100);
         return `<h3>Zone</h3>
           ${f('Label', `<input data-f="label" type="text" maxlength="60" placeholder="e.g. Stage area / VIP / Emporium" value="${esc(el.label || '')}"/>`)}
+          <div class="fpb-field-row">
+            ${f('Show label', `<select data-f="showLabel"><option value="yes"${el.showLabel !== false ? ' selected' : ''}>Show</option><option value="no"${el.showLabel === false ? ' selected' : ''}>Hide</option></select>`)}
+            ${f('Fill opacity', `<div class="fpb-range-field"><input data-f="zoneOpacity" type="range" min="0" max="100" step="5" value="${opacity}"/><output data-f="zoneOpacityValue">${Math.round(opacity)}%</output></div>`)}
+          </div>
           <div class="fpb-field-row">
             ${f('Label scale (%)', `<input data-f="labelScale" type="number" min="50" max="300" step="5" value="${Math.round(num(el.labelScale, 1) * 100)}"/>`)}
             ${f('Label rotation (°)', `<input data-f="labelRot" type="number" min="-180" max="180" step="1" value="${num(el.labelRot)}"/>`)}
@@ -2287,6 +2296,11 @@
         if (q('labelSize')) el.labelSize = q('labelSize').value;
         if (q('labelScale')) el.labelScale = clamp(num(q('labelScale').value, 100) / 100, 0.5, 3);
         if (q('labelRot')) el.labelRot = clamp(num(q('labelRot').value), -180, 180);
+        if (q('showLabel')) el.showLabel = q('showLabel').value === 'yes';
+        if (q('zoneOpacity')) {
+          el.opacity = clamp(num(q('zoneOpacity').value, 20), 0, 100);
+          if (q('zoneOpacityValue')) q('zoneOpacityValue').textContent = `${Math.round(el.opacity)}%`;
+        }
         if (q('booth')) el.booth = q('booth').value.trim();
         if (q('desc')) el.description = q('desc').value.trim();
         if (q('tsize')) el.fontSize = Number(q('tsize').value) || 0.016;
@@ -2453,7 +2467,7 @@
           label: el.label || '', color: el.color, size: el.size || '',
           groupId: el.groupId || null,
         });
-        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', labelScale: num(el.labelScale, 1), labelRot: num(el.labelRot), color: el.color || ZONE_COLORS[0], description: el.description || '', ...(el.points ? { points: el.points } : {}) });
+        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', showLabel: el.showLabel !== false, opacity: clamp(num(el.opacity, 20), 0, 100), labelScale: num(el.labelScale, 1), labelRot: num(el.labelRot), color: el.color || ZONE_COLORS[0], description: el.description || '', ...(el.points ? { points: el.points } : {}) });
         return Object.assign(base, { label: el.label || '', color: el.color || '#111111', fontSize: el.fontSize || 0.016, rot: el.rot || 0 });
       });
       // Persist scale as the first entry so the layout round-trips to-scale.
@@ -2510,7 +2524,7 @@
           ctx.translate(cx, cy);
           if (el.rot) ctx.rotate(el.rot * Math.PI / 180);   // draw in the element's own frame
           ctx.fillStyle = el.color || '#1a7f4e';
-          if (el.type === 'zone') ctx.globalAlpha = 0.22;
+          if (el.type === 'zone') ctx.globalAlpha = clamp(num(el.opacity, 20), 0, 100) / 100;
           ctx.strokeStyle = el.type === 'zone' ? (el.color || '#b03a2e') : 'rgba(0,0,0,0.3)';
           ctx.lineWidth = el.type === 'zone' ? 2 : 1.5;
           if (el.type === 'zone' && el.points) {
@@ -2548,7 +2562,7 @@
               ctx.fillStyle = '#111'; ctx.fillText(bname, 0, 0); ctx.restore();
             }
           }
-          if (el.type === 'zone' && el.label) {
+          if (el.type === 'zone' && el.showLabel !== false && el.label) {
             const fs = clamp(w * 0.06, 12, 22), txt = el.label.toUpperCase();
             ctx.font = `700 ${fs}px Poppins, sans-serif`;
             const tw = Math.min(ctx.measureText(txt).width, w - 16), cy2 = -h / 2 + fs * 0.9 + 6;
