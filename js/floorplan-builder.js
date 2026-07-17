@@ -1855,7 +1855,7 @@
         if (el.type === 'booth') {
           const wpx = el.w * W, hpx = el.h * H;
           const name = el.label || this.vendorName(el.vendor_id) || '';   // fall back to linked vendor
-          const num = el.number != null && el.number !== '' ? el.number : '';
+          const boothNumber = el.number != null && el.number !== '' ? el.number : '';
           const mult = LBL_SIZES[el.labelSize] || 1;
           const inBox = name && (el.labelPos || 'in') === 'in';
           // Number shrinks when a name shares the box; both sit inside, upright.
@@ -1864,7 +1864,7 @@
           const ink = this.textOn(el.color);
           return `<div class="fpb-el fpb-booth${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};${tf(el)}">
             <div class="fpb-booth-in" style="color:${ink};${up(el)}">
-              ${num !== '' ? `<span class="num" style="font-size:${numSize}px">${esc(num)}</span>` : ''}
+              ${boothNumber !== '' ? `<span class="num" style="font-size:${numSize}px">${esc(boothNumber)}</span>` : ''}
               ${inBox ? `<span class="bname" style="font-size:${nameSize}px;transform:rotate(${num(el.labelRot)}deg) scale(${num(el.labelScale, 1)})">${esc(name)}</span>` : ''}
             </div>
             ${name && !inBox ? `<span class="fpb-el-label" style="font-size:${clamp(wpx * 0.2 * mult, 11, 30)}px;transform:translateX(-50%) rotate(${num(el.labelRot) - num(el.rot)}deg) scale(${num(el.labelScale, 1)});">${esc(name)}</span>` : ''}
@@ -2480,15 +2480,15 @@
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           if (el.type === 'booth') {
             const bname = el.label || this.vendorName(el.vendor_id) || '';
-            const num = el.number != null && el.number !== '' ? String(el.number) : '';
+            const boothNumber = el.number != null && el.number !== '' ? String(el.number) : '';
             const mult = LBL_SIZES[el.labelSize] || 1, inBox = bname && (el.labelPos || 'in') === 'in';
             ctx.fillStyle = this.textOn(el.color);
-            if (num) {
+            if (boothNumber) {
               ctx.font = `800 ${clamp(Math.min(w, h) * (inBox ? 0.3 : 0.46), 10, inBox ? 22 : 30)}px Poppins, sans-serif`;
-              ctx.fillText(num, 0, inBox ? -h * 0.13 : 0);
+              ctx.fillText(boothNumber, 0, inBox ? -h * 0.13 : 0);
             }
             if (inBox) {
-              const ly = num ? h * 0.16 : 0;
+              const ly = boothNumber ? h * 0.16 : 0;
               ctx.save(); ctx.translate(0, ly); ctx.rotate(num(el.labelRot) * Math.PI / 180); ctx.scale(num(el.labelScale, 1), num(el.labelScale, 1));
               ctx.font = `600 ${clamp(w * 0.14 * mult, 8, 44)}px Poppins, sans-serif`;
               ctx.fillText(bname, 0, 0, w - 6); ctx.restore();
