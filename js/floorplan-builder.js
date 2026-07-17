@@ -288,6 +288,7 @@
       this.boothCategory = DEFAULT_CAT;
       this.objKind = DEFAULT_OBJ;                 // active object-library item
       this.zoneMode = 'rect';                     // rectangle or traced freeform zone
+      this.zonePoints = [];                       // click-by-click polygon vertices
       this.lastBoothFt = { w: 10, h: 10 };      // default booth footprint (feet)
       this.snap = true;
       this.dirty = false;
@@ -363,7 +364,7 @@
         ['booth', 'fpb-square', 'Booth', 'B'],
         ['object', 'fpb-shapes', 'Object', 'O'],
         ['zone', 'fpb-zone-ic', 'Zone', 'Z'],
-        ['freezone', 'fpb-edit', 'Trace zone', ''],
+        ['freezone', 'fpb-edit', 'Polygon zone', ''],
         ['text', 'fpb-type', 'Text', 'T'],
         ['pin', 'fpb-pin', 'Pin', 'P'],
         ['measure', 'fpb-measure', 'Measure', 'M'],
@@ -545,6 +546,7 @@
 
     setTool(tool) {
       const activeTool = tool;
+      if (this.zonePoints.length && tool !== 'freezone') this.cancelPolygonZone();
       if (tool === 'freezone') { this.zoneMode = 'freeform'; tool = 'zone'; }
       else if (tool === 'zone') this.zoneMode = 'rect';
       // Switching to a placement tool clears the selection so its palette shows.
@@ -557,7 +559,7 @@
       const hints = {
         booth: 'Click to stamp a booth, or drag to draw one. Set its real size (ft) on the right — the box scales to match.',
         object: 'Pick an object on the right (table, chair, bar, barrier, ticket booth…), then click or drag to place it. Connectable pieces snap into runs.',
-        zone: this.zoneMode === 'freeform' ? 'Press and drag around the actual edge of the zone, then release to close the shape.' : 'Drag to draw a rectangular zone. Choose Freeform on the right for irregular areas.',
+        zone: this.zoneMode === 'freeform' ? 'Click each corner of the zone. Double-click the final point—or press Enter—to finish. Escape cancels.' : 'Drag to draw a rectangular zone. Choose Polygon on the right for irregular areas.',
         text: 'Click anywhere to add a text label.',
         pin: 'Pick a category on the right, then click the map to drop a pin.',
         measure: 'Drag to measure a distance in feet. Nothing is placed.',
@@ -1582,29 +1584,39 @@
 
     startFreeformZone(e) {
       e.preventDefault(); e.stopPropagation();
-      const raw = [this.worldPoint(e)], rubber = this.$.rubber;
+      const p = this.worldPoint(e), last = this.zonePoints[this.zonePoints.length - 1];
+      if (!last || Math.hypot(p.x - last.x, p.y - last.y) * this.scale() > 4) this.zonePoints.push(p);
+      this.drawPolygonDraft();
+      if (e.detail >= 2 && this.zonePoints.length >= 3) this.finishPolygonZone();
+    }
+
+    drawPolygonDraft() {
+      const pts = this.zonePoints, rubber = this.$.rubber;
+      if (!pts.length) { rubber.hidden = true; return; }
+      const xs = pts.map(p => p.x), ys = pts.map(p => p.y), l = Math.min(...xs), t = Math.min(...ys);
+      const w = Math.max(2, Math.max(...xs) - l), h = Math.max(2, Math.max(...ys) - t);
       rubber.hidden = false; rubber.classList.add('freeform');
-      const draw = () => {
-        const xs = raw.map(p => p.x), ys = raw.map(p => p.y), l = Math.min(...xs), t = Math.min(...ys);
-        const w = Math.max(...xs) - l, h = Math.max(...ys) - t;
-        rubber.style.left = l / this.world.w * 100 + '%'; rubber.style.top = t / this.world.h * 100 + '%';
-        rubber.style.width = w / this.world.w * 100 + '%'; rubber.style.height = h / this.world.h * 100 + '%';
-        rubber.style.clipPath = `polygon(${raw.map(p => `${w ? (p.x-l)/w*100 : 0}% ${h ? (p.y-t)/h*100 : 0}%`).join(',')})`;
-      };
-      const onMove = ev => { const p = this.worldPoint(ev), last = raw[raw.length - 1]; if (Math.hypot(p.x-last.x,p.y-last.y)*this.scale() >= 7) { raw.push(p); draw(); } };
-      const onUp = () => {
-        window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp);
-        rubber.hidden = true; rubber.classList.remove('freeform'); rubber.style.removeProperty('clip-path');
-        if (raw.length < 3) { this.status('Trace a larger area to create a freeform zone.', 'error'); return; }
-        const pts = raw.filter((p, i) => i === 0 || i === raw.length - 1 || i % 2 === 0);
-        const xs = pts.map(p => p.x), ys = pts.map(p => p.y), l = Math.min(...xs), t = Math.min(...ys);
-        const w = Math.max(...xs)-l, h = Math.max(...ys)-t;
-        if (w < MIN_FT*this.ppf || h < MIN_FT*this.ppf) return;
-        this.pushUndo();
-        const el = normalizeElement({ id:uid(), type:'zone', x:(l+w/2)/this.world.w, y:(t+h/2)/this.world.h, w:w/this.world.w, h:h/this.world.h, rot:0, label:'Zone', color:ZONE_COLORS[0], description:'', points:pts.map(p=>[(p.x-l)/w,(p.y-t)/h]) });
-        this.elements.push(el); this.setDirty(true); this.select(el.id);
-      };
-      window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+      rubber.style.left = l / this.world.w * 100 + '%'; rubber.style.top = t / this.world.h * 100 + '%';
+      rubber.style.width = w / this.world.w * 100 + '%'; rubber.style.height = h / this.world.h * 100 + '%';
+      rubber.style.clipPath = `polygon(${pts.map(p => `${(p.x-l)/w*100}% ${(p.y-t)/h*100}%`).join(',')})`;
+      this.status(`${pts.length} point${pts.length === 1 ? '' : 's'} added. Double-click the final point to finish.`);
+    }
+
+    cancelPolygonZone() {
+      this.zonePoints = [];
+      const rubber = this.$.rubber;
+      rubber.hidden = true; rubber.classList.remove('freeform'); rubber.style.removeProperty('clip-path');
+    }
+
+    finishPolygonZone() {
+      const pts = this.zonePoints.slice();
+      if (pts.length < 3) { this.status('Add at least 3 points to make a polygon zone.', 'error'); return; }
+      const xs = pts.map(p => p.x), ys = pts.map(p => p.y), l = Math.min(...xs), t = Math.min(...ys);
+      const w = Math.max(...xs)-l, h = Math.max(...ys)-t;
+      if (w < MIN_FT*this.ppf || h < MIN_FT*this.ppf) { this.status('Make the zone a little larger.', 'error'); return; }
+      this.cancelPolygonZone(); this.pushUndo();
+      const el = normalizeElement({ id:uid(), type:'zone', x:(l+w/2)/this.world.w, y:(t+h/2)/this.world.h, w:w/this.world.w, h:h/this.world.h, rot:0, label:'Zone', color:ZONE_COLORS[0], description:'', points:pts.map(p=>[(p.x-l)/w,(p.y-t)/h]) });
+      this.elements.push(el); this.setDirty(true); this.select(el.id);
     }
 
     nextBoothNumber() {
@@ -1770,11 +1782,13 @@
         if (meta && e.key.toLowerCase() === 'd') { e.preventDefault(); this.duplicateSelected(); return; }
         if (e.key === ' ') { e.preventDefault(); if (!this.spacePan) { this.spacePan = true; this.$.viewport.classList.add('space-pan'); this.panzoom.setOptions({ disablePan: false }); } return; }
         if (e.key === 'Escape') {
+          if (this.zonePoints.length) { this.cancelPolygonZone(); this.status('Polygon cancelled.'); return; }
           this.closeContextMenu();
           if (this.tool !== 'select') this.setTool('select');
           else if (this._sel.length) { this._sel = []; this.renderAll(); }
           return;
         }
+        if (e.key === 'Enter' && this.zonePoints.length) { e.preventDefault(); this.finishPolygonZone(); return; }
         if (meta && e.key.toLowerCase() === 'a') { e.preventDefault(); this._sel = this.elements.map(x => x.id); this.renderAll(); return; }
         if ((e.key === 'Delete' || e.key === 'Backspace') && this._sel.length) { e.preventDefault(); this.deleteSelected(); return; }
         const toolKeys = { v: 'select', b: 'booth', o: 'object', z: 'zone', t: 'text', p: 'pin', m: 'measure' };
@@ -1985,7 +1999,7 @@
         return;
       }
       if (this.tool === 'zone') {
-        side.innerHTML = `<h3>Zone shape</h3><div class="fpb-helper">Use a rectangle for clean boundaries, or trace an irregular area to match the figure on the plan.</div><div class="fpb-segmented"><button type="button" class="fpb-btn${this.zoneMode === 'rect' ? ' active' : ''}" data-zone-mode="rect">Rectangle</button><button type="button" class="fpb-btn${this.zoneMode === 'freeform' ? ' active' : ''}" data-zone-mode="freeform">Freeform trace</button></div>`;
+        side.innerHTML = `<h3>Zone shape</h3><div class="fpb-helper">Use a rectangle for clean boundaries, or click points around an irregular area. Double-click the final point to finish.</div><div class="fpb-segmented"><button type="button" class="fpb-btn${this.zoneMode === 'rect' ? ' active' : ''}" data-zone-mode="rect">Rectangle</button><button type="button" class="fpb-btn${this.zoneMode === 'freeform' ? ' active' : ''}" data-zone-mode="freeform">Polygon</button></div>`;
         side.querySelectorAll('[data-zone-mode]').forEach(b => b.addEventListener('click', () => this.setTool(b.dataset.zoneMode === 'freeform' ? 'freezone' : 'zone')));
         return;
       }
