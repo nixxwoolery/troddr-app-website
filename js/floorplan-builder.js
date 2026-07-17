@@ -394,6 +394,7 @@
     ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="traceOnlyBtn" title="Hide the uploaded image from the saved guest map while keeping your traced layout"><svg><use href="#fpb-grid-ic"/></svg>Trace only</button>' : ''}
     <button type="button" class="fpb-btn" data-ref="exportBtn" title="Download the floor plan as a PNG image"><svg><use href="#fpb-download"/></svg>Export</button>
     ${extra}
+    ${o.onListVersions ? '<button type="button" class="fpb-btn" data-ref="historyBtn"><svg><use href="#fpb-undo"/></svg>Version history</button>' : ''}
     <button type="button" class="fpb-btn primary" data-ref="saveBtn"><svg><use href="#fpb-save"/></svg>${esc(o.saveLabel || 'Save')}</button>
   </div>
 
@@ -473,6 +474,7 @@
       if ($.cropApplyBtn) $.cropApplyBtn.addEventListener('click', () => this.applyCrop());
       if ($.cropBox) $.cropBox.addEventListener('pointerdown', (e) => this.startCropDrag(e));
       if ($.traceOnlyBtn) $.traceOnlyBtn.addEventListener('click', () => this.useBackgroundAsTraceOnly());
+      if ($.historyBtn) $.historyBtn.addEventListener('click', () => this.openVersionHistory());
       $.saveBtn.addEventListener('click', () => this.save());
       $.zoomIn.addEventListener('click', () => this.panzoom && this.panzoom.zoomIn());
       $.zoomOut.addEventListener('click', () => this.panzoom && this.panzoom.zoomOut());
@@ -499,6 +501,46 @@
         const btn = this.container.querySelector(`[data-action="${i}"]`);
         if (btn) btn.addEventListener('click', () => a.onClick());
       });
+    }
+
+    async openVersionHistory() {
+      if (!this.opts.onListVersions) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'fpb-modal';
+      wrap.innerHTML = `<div class="fpb-modal-card fpb-history-card"><h3>Floor plan version history</h3><p>Every successful save creates a recoverable version.</p><div class="fpb-history-list"><div class="fpb-helper">Loading versions…</div></div><div class="fpb-modal-actions"><button type="button" class="fpb-btn" data-close>Close</button></div></div>`;
+      document.body.appendChild(wrap);
+      const close = () => wrap.remove();
+      wrap.querySelector('[data-close]').addEventListener('click', close);
+      wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+      const list = wrap.querySelector('.fpb-history-list');
+      try {
+        const versions = await this.opts.onListVersions();
+        if (!Array.isArray(versions) || !versions.length) {
+          list.innerHTML = '<div class="fpb-helper">No saved versions yet. Your next save will create one.</div>';
+          return;
+        }
+        list.innerHTML = versions.map((v, i) => {
+          const when = v.created_at ? new Date(v.created_at).toLocaleString() : 'Unknown time';
+          const restored = v.restored_from_version ? ` · restored from v${esc(v.restored_from_version)}` : '';
+          return `<div class="fpb-history-row"><div><strong>Version ${esc(v.version_number)}</strong>${i === 0 ? '<span class="fpb-current">Current</span>' : ''}<small>${esc(when)} · ${esc(v.marker_count || 0)} items · ${esc(v.source || 'save')}${restored}</small></div>${i ? `<button type="button" class="fpb-btn" data-restore="${esc(v.version_number)}">Restore</button>` : ''}</div>`;
+        }).join('');
+        list.querySelectorAll('[data-restore]').forEach(btn => btn.addEventListener('click', async () => {
+          const version = Number(btn.dataset.restore);
+          if (!confirm(`Restore version ${version}? The current map will remain in version history.`)) return;
+          btn.disabled = true; btn.textContent = 'Restoring…';
+          try {
+            const result = await this.opts.onRestoreVersion(version);
+            if (result && result.ok === false) throw new Error(result.error || 'Restore failed.');
+            this.clearDraft();
+            location.reload();
+          } catch (err) {
+            btn.disabled = false; btn.textContent = 'Restore';
+            this.status((err && err.message) || 'Restore failed.', 'error');
+          }
+        }));
+      } catch (err) {
+        list.innerHTML = `<div class="fpb-helper">${esc((err && err.message) || 'Could not load version history.')}</div>`;
+      }
     }
 
     setTool(tool) {

@@ -541,6 +541,12 @@
   padding: 8px 10px; border: 1px solid var(--fpb-border); border-radius: 8px;
 }
 .fpb-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.fpb-history-card { width: min(560px, calc(100vw - 32px)); }
+.fpb-history-list { max-height: 55vh; overflow: auto; border-top: 1px solid var(--fpb-border); }
+.fpb-history-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 2px; border-bottom: 1px solid var(--fpb-border); }
+.fpb-history-row strong { font-size: 13px; }
+.fpb-history-row small { display: block; margin-top: 3px; color: var(--fpb-grey-mid); font-size: 10px; }
+.fpb-current { margin-left: 7px; padding: 2px 6px; border-radius: 999px; background: #e8f5ee; color: #167047; font-size: 9px; font-weight: 700; text-transform: uppercase; }
 
 /* Footprint (W × D ft) control in the edit panel */
 .fpb-size-row { align-items: center; }

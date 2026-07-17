@@ -7,16 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/partner-shared.css">
-<link rel="stylesheet" href="/css/floorplan-builder.css?v=12">
+<link rel="stylesheet" href="/css/floorplan-builder.css?v=13">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
 <script src="/js/partner-sidebar.js?v=3"></script>
 <script src="/js/partner-errors.js"></script>
-<!-- Pan/zoom for the floor-plan canvas. Must load before floorplan-builder.js?v=12. -->
+<!-- Pan/zoom for the floor-plan canvas. Must load before floorplan-builder.js?v=13. -->
 <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js" defer></script>
-<script src="/js/floorplan-builder.js?v=12" defer></script>
+<script src="/js/floorplan-builder.js?v=13" defer></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -6908,7 +6908,7 @@
 
   // ── Map / Floor Plan ───────────────────────────────────
   // The floor plan itself is built in the dedicated editor page
-  // (/partner/event-floorplan, powered by js/floorplan-builder.js?v=12).
+  // (/partner/event-floorplan, powered by js/floorplan-builder.js?v=13).
   // This section only shows a status card that links to it.
   function renderMap(event) {
     if (!event) return;
@@ -8532,6 +8532,15 @@
       vendors: Array.isArray(d.vendors) ? d.vendors : [],
       saveLabel: 'Save',
       onSave: _floorSave,
+      onListVersions: async () => {
+        const { data: v, error } = await db.rpc('get_event_floor_plan_versions', { p_token: _getToken() });
+        if (error || !v || !v.ok) throw new Error((error && error.message) || (v && v.error) || 'Could not load versions.');
+        return v.versions || [];
+      },
+      onRestoreVersion: async (version) => {
+        const { data: v, error } = await db.rpc('restore_event_floor_plan_version', { p_token: _getToken(), p_version_number: version });
+        return error || !v || !v.ok ? { ok: false, error: (error && error.message) || (v && v.error) || 'Restore failed.' } : { ok: true };
+      },
       onUploadBackground: _floorUploadBackground,
       actions: [
         { label: 'Designer link', icon: 'fpb-copy', onClick: _floorCreateInvite },

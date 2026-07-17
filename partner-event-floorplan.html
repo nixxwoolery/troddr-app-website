@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/partner-shared.css">
-<link rel="stylesheet" href="/css/floorplan-builder.css?v=12">
+<link rel="stylesheet" href="/css/floorplan-builder.css?v=13">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Pan/zoom for the canvas. ~5KB gzipped, touch-ready. -->
@@ -16,7 +16,7 @@
 <script src="/js/partner-auth.js"></script>
 <script src="/js/partner-sidebar.js"></script>
 <script src="/js/partner-errors.js"></script>
-<script src="/js/floorplan-builder.js?v=12"></script>
+<script src="/js/floorplan-builder.js?v=13"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -408,6 +408,15 @@
       vendors: Array.isArray(data.vendors) ? data.vendors : [],
       saveLabel: 'Save',
       onSave: saveFloorPlan,
+      onListVersions: async () => {
+        const { data: v, error } = await db.rpc('get_event_floor_plan_versions', { p_token: getToken() });
+        if (error || !v || !v.ok) throw new Error((error && error.message) || (v && v.error) || 'Could not load versions.');
+        return v.versions || [];
+      },
+      onRestoreVersion: async (version) => {
+        const { data: v, error } = await db.rpc('restore_event_floor_plan_version', { p_token: getToken(), p_version_number: version });
+        return error || !v || !v.ok ? { ok: false, error: (error && error.message) || (v && v.error) || 'Restore failed.' } : { ok: true };
+      },
       onUploadBackground: uploadBackground,
       actions: [
         { label: 'Designer link', icon: 'fpb-copy', onClick: createInvite },
