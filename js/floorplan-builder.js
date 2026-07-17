@@ -201,6 +201,10 @@
       el.points = el.points.map(p => [clamp(num(p && p[0]), 0, 1), clamp(num(p && p[1]), 0, 1)]);
     } else if (el.type === 'zone') delete el.points;
     if (el.type === 'booth' || el.type === 'zone' || el.type === 'shape') el.rot = num(el.rot, 0);
+    if (el.type === 'booth' || el.type === 'zone') {
+      el.labelScale = clamp(num(el.labelScale, 1), 0.5, 3);
+      el.labelRot = num(el.labelRot, 0);
+    }
     return el;
   }
 
@@ -245,12 +249,20 @@
       this.container = opts.container;
       this.readOnly = !!opts.readOnly;
       this.vendors = Array.isArray(opts.vendors) ? opts.vendors : [];
-      const raw = (Array.isArray(opts.elements) ? opts.elements : []).slice();
+      this.draftKey = !this.readOnly && opts.draftKey ? String(opts.draftKey) : null;
+      this.recoveredDraft = false;
+      let draft = null;
+      if (this.draftKey) {
+        try { draft = JSON.parse(localStorage.getItem(this.draftKey) || 'null'); } catch (e) { draft = null; }
+      }
+      const raw = (draft && Array.isArray(draft.elements) ? draft.elements : (Array.isArray(opts.elements) ? opts.elements : [])).slice();
+      if (draft && Array.isArray(draft.elements)) this.recoveredDraft = true;
       // Pull the scale meta entry (if any) out of the markers array.
       const metaIdx = raw.findIndex(m => m && m.type === 'meta');
       const meta = metaIdx >= 0 ? raw.splice(metaIdx, 1)[0] : null;
       this.elements = raw.filter(m => m && m.type !== 'meta').map(normalizeElement);
-      this.bgUrl = (opts.backgroundUrl && !isBlankUri(opts.backgroundUrl)) ? opts.backgroundUrl : null;
+      const initialBg = this.recoveredDraft ? draft.backgroundUrl : opts.backgroundUrl;
+      this.bgUrl = (initialBg && !isBlankUri(initialBg)) ? initialBg : null;
       // Scale: ppf (px per foot) is the single source of truth. siteFt is the
       // blank-canvas extent in feet. For image backgrounds the world comes from
       // the image's natural pixels and only ppf (calibration) is meaningful.
@@ -303,6 +315,10 @@
       if (!this.readOnly) {
         this.setTool('select');
         if (!this.bgUrl && !this.elements.length) this.showEmpty(true);
+        if (this.recoveredDraft) {
+          this.setDirty(true);
+          this.status('Recovered your unsaved map from this browser. Save when ready.', 'success');
+        }
         window.addEventListener('beforeunload', this._beforeUnload = (e) => {
           if (!this.dirty) return;
           e.preventDefault(); e.returnValue = '';
@@ -1844,9 +1860,9 @@
           return `<div class="fpb-el fpb-booth${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};${tf(el)}">
             <div class="fpb-booth-in" style="color:${ink};${up(el)}">
               ${num !== '' ? `<span class="num" style="font-size:${numSize}px">${esc(num)}</span>` : ''}
-              ${inBox ? `<span class="bname" style="font-size:${nameSize}px">${esc(name)}</span>` : ''}
+              ${inBox ? `<span class="bname" style="font-size:${nameSize}px;transform:rotate(${num(el.labelRot)}deg) scale(${num(el.labelScale, 1)})">${esc(name)}</span>` : ''}
             </div>
-            ${name && !inBox ? `<span class="fpb-el-label" style="font-size:${clamp(wpx * 0.2 * mult, 11, 30)}px;${el.rot ? `transform:translateX(-50%) rotate(${-el.rot}deg);` : ''}">${esc(name)}</span>` : ''}
+            ${name && !inBox ? `<span class="fpb-el-label" style="font-size:${clamp(wpx * 0.2 * mult, 11, 30)}px;transform:translateX(-50%) rotate(${num(el.labelRot) - num(el.rot)}deg) scale(${num(el.labelScale, 1)});">${esc(name)}</span>` : ''}
             ${handles(el)}</div>`;
         }
         if (el.type === 'zone') {
@@ -1855,7 +1871,7 @@
           const poly = el.points ? `<svg class="fpb-zone-poly" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="${el.points.map(p => `${p[0]*100},${p[1]*100}`).join(' ')}"/></svg>` : '';
           return `<div class="fpb-el fpb-zone${el.points ? ' polygon' : ''}${sel}" data-id="${el.id}" style="left:${(el.x - el.w / 2) * 100}%;top:${(el.y - el.h / 2) * 100}%;width:${el.w * 100}%;height:${el.h * 100}%;--c:${esc(el.color)};${tf(el)}">
             ${poly}
-            ${el.label ? `<span class="zlabel" style="font-size:${fs}px">${esc(el.label)}</span>` : ''}
+            ${el.label ? `<span class="zlabel" style="font-size:${fs}px;transform:rotate(${num(el.labelRot)}deg) scale(${num(el.labelScale, 1)})">${esc(el.label)}</span>` : ''}
             ${handles(el)}</div>`;
         }
         if (el.type === 'shape') {
@@ -2141,6 +2157,10 @@
             ${f('Name shows', `<select data-f="labelPos"><option value="in"${(el.labelPos || 'in') === 'in' ? ' selected' : ''}>Inside booth</option><option value="below"${el.labelPos === 'below' ? ' selected' : ''}>Below booth</option></select>`)}
             ${f('Name size', `<select data-f="labelSize">${[['s', 'Small'], ['m', 'Medium'], ['l', 'Large'], ['xl', 'X-Large']].map(([v, l]) => `<option value="${v}"${(el.labelSize || 'm') === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`)}
           </div>
+          <div class="fpb-field-row">
+            ${f('Label scale (%)', `<input data-f="labelScale" type="number" min="50" max="300" step="5" value="${Math.round(num(el.labelScale, 1) * 100)}"/>`)}
+            ${f('Label rotation (°)', `<input data-f="labelRot" type="number" min="-180" max="180" step="1" value="${num(el.labelRot)}"/>`)}
+          </div>
           ${sizeFields}
           ${rotControl()}
           ${f('Notes (optional)', `<textarea data-f="desc" rows="2" maxlength="240">${esc(el.description || '')}</textarea>`)}
@@ -2149,6 +2169,10 @@
       if (el.type === 'zone') {
         return `<h3>Zone</h3>
           ${f('Label', `<input data-f="label" type="text" maxlength="60" placeholder="e.g. Stage area / VIP / Emporium" value="${esc(el.label || '')}"/>`)}
+          <div class="fpb-field-row">
+            ${f('Label scale (%)', `<input data-f="labelScale" type="number" min="50" max="300" step="5" value="${Math.round(num(el.labelScale, 1) * 100)}"/>`)}
+            ${f('Label rotation (°)', `<input data-f="labelRot" type="number" min="-180" max="180" step="1" value="${num(el.labelRot)}"/>`)}
+          </div>
           ${colorRow(ZONE_COLORS, '#b03a2e')}
           ${rotControl()}
           ${f('Notes (optional)', `<textarea data-f="desc" rows="2" maxlength="240">${esc(el.description || '')}</textarea>`)}
@@ -2209,6 +2233,8 @@
         if (q('vendor')) el.vendor_id = q('vendor').value || null;
         if (q('labelPos')) el.labelPos = q('labelPos').value;
         if (q('labelSize')) el.labelSize = q('labelSize').value;
+        if (q('labelScale')) el.labelScale = clamp(num(q('labelScale').value, 100) / 100, 0.5, 3);
+        if (q('labelRot')) el.labelRot = clamp(num(q('labelRot').value), -180, 180);
         if (q('booth')) el.booth = q('booth').value.trim();
         if (q('desc')) el.description = q('desc').value.trim();
         if (q('tsize')) el.fontSize = Number(q('tsize').value) || 0.016;
@@ -2308,6 +2334,20 @@
         el.classList.toggle('clean', !yes);
       }
       if (this.opts.onDirtyChange) this.opts.onDirtyChange(this.dirty);
+      if (yes) this.persistDraft();
+    }
+    persistDraft() {
+      if (!this.draftKey) return;
+      try {
+        localStorage.setItem(this.draftKey, JSON.stringify({
+          updatedAt: Date.now(), backgroundUrl: this.bgUrl, elements: this.serialize(),
+        }));
+      } catch (e) { /* private mode / quota: server Save still works */ }
+    }
+    clearDraft() {
+      if (!this.draftKey) return;
+      try { localStorage.removeItem(this.draftKey); } catch (e) {}
+      this.recoveredDraft = false;
     }
     status(msg, kind, node) {
       const el = node || this.$.status;
@@ -2354,14 +2394,14 @@
           w: el.w, h: el.h, rot: el.rot || 0, number: el.number != null ? el.number : '',
           label: el.label || '', icon: el.icon || DEFAULT_CAT, color: el.color || CAT_BY_ID[DEFAULT_CAT].color,
           vendor_id: el.vendor_id || null, size: el.size || '', description: el.description || '',
-          labelPos: el.labelPos || 'in', labelSize: el.labelSize || 'm',
+          labelPos: el.labelPos || 'in', labelSize: el.labelSize || 'm', labelScale: num(el.labelScale, 1), labelRot: num(el.labelRot),
         });
         if (el.type === 'shape') return Object.assign(base, {
           w: el.w, h: el.h, rot: el.rot || 0, kind: el.kind, shape: el.shape,
           label: el.label || '', color: el.color, size: el.size || '',
           groupId: el.groupId || null,
         });
-        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', color: el.color || ZONE_COLORS[0], description: el.description || '', ...(el.points ? { points: el.points } : {}) });
+        if (el.type === 'zone') return Object.assign(base, { w: el.w, h: el.h, rot: el.rot || 0, label: el.label || '', labelScale: num(el.labelScale, 1), labelRot: num(el.labelRot), color: el.color || ZONE_COLORS[0], description: el.description || '', ...(el.points ? { points: el.points } : {}) });
         return Object.assign(base, { label: el.label || '', color: el.color || '#111111', fontSize: el.fontSize || 0.016, rot: el.rot || 0 });
       });
       // Persist scale as the first entry so the layout round-trips to-scale.
@@ -2379,6 +2419,7 @@
           elements: this.serialize(),
         });
         if (res && res.ok === false) { this.status(res.error || 'Save failed.', 'error'); return; }
+        this.clearDraft();
         this.setDirty(false);
         this.status('Saved.', 'success');
       } catch (err) {
@@ -2442,26 +2483,27 @@
               ctx.fillText(num, 0, inBox ? -h * 0.13 : 0);
             }
             if (inBox) {
+              const ly = num ? h * 0.16 : 0;
+              ctx.save(); ctx.translate(0, ly); ctx.rotate(num(el.labelRot) * Math.PI / 180); ctx.scale(num(el.labelScale, 1), num(el.labelScale, 1));
               ctx.font = `600 ${clamp(w * 0.14 * mult, 8, 44)}px Poppins, sans-serif`;
-              ctx.fillText(bname, 0, num ? h * 0.16 : 0, w - 6);
+              ctx.fillText(bname, 0, 0, w - 6); ctx.restore();
             } else if (bname) {   // label below the booth
               const fs = clamp(w * 0.2 * mult, 11, 30);
               ctx.font = `600 ${fs}px Poppins, sans-serif`;
               const tw = ctx.measureText(bname).width + 10;
-              ctx.fillStyle = 'rgba(255,255,255,0.95)';
-              ctx.fillRect(-tw / 2, h / 2 + 3, tw, fs + 6);
-              ctx.fillStyle = '#111';
-              ctx.fillText(bname, 0, h / 2 + 3 + (fs + 6) / 2);
+              ctx.save(); ctx.translate(0, h / 2 + 3 + (fs + 6) / 2); ctx.rotate(num(el.labelRot) * Math.PI / 180); ctx.scale(num(el.labelScale, 1), num(el.labelScale, 1));
+              ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillRect(-tw / 2, -(fs + 6) / 2, tw, fs + 6);
+              ctx.fillStyle = '#111'; ctx.fillText(bname, 0, 0); ctx.restore();
             }
           }
           if (el.type === 'zone' && el.label) {
             const fs = clamp(w * 0.06, 12, 22), txt = el.label.toUpperCase();
             ctx.font = `700 ${fs}px Poppins, sans-serif`;
             const tw = Math.min(ctx.measureText(txt).width, w - 16), cy2 = -h / 2 + fs * 0.9 + 6;
+            ctx.save(); ctx.translate(0, cy2); ctx.rotate(num(el.labelRot) * Math.PI / 180); ctx.scale(num(el.labelScale, 1), num(el.labelScale, 1));
             ctx.fillStyle = el.color || '#b03a2e';
-            ctx.fillRect(-tw / 2 - 9, cy2 - fs / 2 - 3, tw + 18, fs + 6);   // title chip
-            ctx.fillStyle = '#fff';
-            ctx.fillText(txt, 0, cy2, w - 18);
+            ctx.fillRect(-tw / 2 - 9, -fs / 2 - 3, tw + 18, fs + 6);   // title chip
+            ctx.fillStyle = '#fff'; ctx.fillText(txt, 0, 0, w - 18); ctx.restore();
           }
           if (el.type === 'shape' && el.label) {
             ctx.font = `700 ${clamp(Math.min(w, h) * 0.34, 11, 22)}px Poppins, sans-serif`;

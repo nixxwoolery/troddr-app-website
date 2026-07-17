@@ -6,13 +6,13 @@
 <title>TRODDR · Floor Plan Editor</title>
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/partner-shared.css">
-<link rel="stylesheet" href="/css/floorplan-builder.css?v=10">
+<link rel="stylesheet" href="/css/floorplan-builder.css?v=11">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-errors.js"></script>
-<script src="/js/floorplan-builder.js?v=10"></script>
+<script src="/js/floorplan-builder.js?v=11"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -118,6 +118,7 @@
     // builder but no background upload; layout elements all live in markers.
     FloorplanBuilder.mount({
       container: $('builder-root'),
+      draftKey: `troddr-floorplan-invite-draft:${inviteToken}`,
       elements: Array.isArray(ev.floor_plan_markers) ? ev.floor_plan_markers : [],
       backgroundUrl: ev.floor_plan_url || null,
       vendors: Array.isArray(data.vendors) ? data.vendors : [],
@@ -129,6 +130,11 @@
         });
         if (error || !saveData || !saveData.ok) {
           return { ok: false, error: (error && error.message) || (saveData && saveData.error) || 'Save failed.' };
+        }
+        const verify = await db.rpc('resolve_event_map_invite', { p_invite_token: inviteToken });
+        const saved = verify && verify.data && verify.data.event && verify.data.event.floor_plan_markers;
+        if (verify.error || !Array.isArray(saved) || saved.length !== elements.length) {
+          return { ok: false, error: 'The server did not return the complete saved map. Your browser draft has been kept—please submit again.' };
         }
         return { ok: true };
       },

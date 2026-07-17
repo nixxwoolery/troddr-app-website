@@ -7,16 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/partner-shared.css">
-<link rel="stylesheet" href="/css/floorplan-builder.css?v=10">
+<link rel="stylesheet" href="/css/floorplan-builder.css?v=11">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
 <script src="/js/partner-sidebar.js?v=3"></script>
 <script src="/js/partner-errors.js"></script>
-<!-- Pan/zoom for the floor-plan canvas. Must load before floorplan-builder.js?v=10. -->
+<!-- Pan/zoom for the floor-plan canvas. Must load before floorplan-builder.js?v=11. -->
 <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js" defer></script>
-<script src="/js/floorplan-builder.js?v=10" defer></script>
+<script src="/js/floorplan-builder.js?v=11" defer></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -6908,7 +6908,7 @@
 
   // ── Map / Floor Plan ───────────────────────────────────
   // The floor plan itself is built in the dedicated editor page
-  // (/partner/event-floorplan, powered by js/floorplan-builder.js?v=10).
+  // (/partner/event-floorplan, powered by js/floorplan-builder.js?v=11).
   // This section only shows a status card that links to it.
   function renderMap(event) {
     if (!event) return;
@@ -8482,6 +8482,12 @@
     if (error || !data || !data.ok) {
       return { ok: false, error: (error && (error.message || error.code)) || (data && data.error) || 'Save failed' };
     }
+    const verify = await db.rpc('get_partner_event_by_token', { p_token: _getToken() });
+    const saved = verify && verify.data && verify.data.event && verify.data.event.floor_plan_markers;
+    if (verify.error || !Array.isArray(saved) || saved.length !== elements.length) {
+      return { ok: false, error: 'The server did not return the complete saved map. Your browser draft has been kept—please try Save again.' };
+    }
+    if (window.__eventData && window.__eventData.event) window.__eventData.event.floor_plan_markers = saved;
     return { ok: true };
   }
 
@@ -8519,6 +8525,7 @@
     const e = d.event || {};
     _floorBuilder = FloorplanBuilder.mount({
       container: root,
+      draftKey: `troddr-floorplan-draft:${e.id || e.slug || 'event'}`,
       elements: Array.isArray(e.floor_plan_markers) ? e.floor_plan_markers : [],
       backgroundUrl: e.floor_plan_url || null,
       vendors: Array.isArray(d.vendors) ? d.vendors : [],
