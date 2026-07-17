@@ -8456,6 +8456,7 @@
 
   // ── Floor plan (merged from the standalone floor-plan page) ──────
   let _floorBuilder = null;
+  let _floorInitPending = null;
 
   async function _floorUploadBackground(file) {
     const ev   = (window.__eventData && window.__eventData.event) || {};
@@ -8518,12 +8519,31 @@
   // Lazy-init on first activation of the Planning pane (the canvas must be
   // visible to measure itself).
   function initFloorPlan() {
-    if (_floorBuilder) return;
+    if (_floorBuilder) return Promise.resolve(_floorBuilder);
+    if (_floorInitPending) return _floorInitPending;
     const root = document.getElementById('builder-root');
-    if (!root || typeof FloorplanBuilder === 'undefined') return;
-    const d = window.__eventData || {};
-    const e = d.event || {};
-    _floorBuilder = FloorplanBuilder.mount({
+    if (!root || typeof FloorplanBuilder === 'undefined') return Promise.resolve(null);
+
+    _floorInitPending = (async () => {
+      let d = window.__eventData || {};
+      let e = d.event || {};
+      // A stale/partial dashboard payload must never mount an empty builder over
+      // a map that is already saved. Re-read the authoritative event once before
+      // showing the empty-state choices.
+      if (!Array.isArray(e.floor_plan_markers) || (!e.floor_plan_markers.length && !e.floor_plan_url)) {
+        try {
+          const fresh = await db.rpc('get_partner_event_by_token', { p_token: _getToken() });
+          if (!fresh.error && fresh.data && fresh.data.event) {
+            d = Object.assign({}, d, fresh.data);
+            e = d.event;
+            window.__eventData = d;
+          }
+        } catch (err) {
+          console.warn('[floor-plan] Could not refresh saved map before mount:', err);
+        }
+      }
+
+      _floorBuilder = FloorplanBuilder.mount({
       container: root,
       draftKey: `troddr-floorplan-draft:${e.id || e.slug || 'event'}`,
       serverUpdatedAt: e.updated_at,
@@ -8546,7 +8566,10 @@
         { label: 'Designer link', icon: 'fpb-copy', onClick: _floorCreateInvite },
         { label: 'Public link',   icon: 'fpb-link', onClick: _floorCopyPublicLink },
       ],
-    });
+      });
+      return _floorBuilder;
+    })().finally(() => { _floorInitPending = null; });
+    return _floorInitPending;
   }
   window.initFloorPlan = initFloorPlan;
 
