@@ -255,6 +255,11 @@
       if (this.draftKey) {
         try { draft = JSON.parse(localStorage.getItem(this.draftKey) || 'null'); } catch (e) { draft = null; }
       }
+      // A browser draft is only authoritative when it is newer than the event
+      // record. This prevents an old/empty local draft from hiding a map that
+      // was successfully saved from another tab or device.
+      const serverUpdatedAt = opts.serverUpdatedAt ? Date.parse(opts.serverUpdatedAt) : 0;
+      if (draft && serverUpdatedAt && num(draft.updatedAt) <= serverUpdatedAt) draft = null;
       const raw = (draft && Array.isArray(draft.elements) ? draft.elements : (Array.isArray(opts.elements) ? opts.elements : [])).slice();
       if (draft && Array.isArray(draft.elements)) this.recoveredDraft = true;
       // Pull the scale meta entry (if any) out of the markers array.

@@ -402,6 +402,7 @@
     builder = FloorplanBuilder.mount({
       container: $('builder-root'),
       draftKey: `troddr-floorplan-draft:${e.id || e.slug || 'event'}`,
+      serverUpdatedAt: e.updated_at,
       elements: Array.isArray(e.floor_plan_markers) ? e.floor_plan_markers : [],
       backgroundUrl: e.floor_plan_url || null,
       vendors: Array.isArray(data.vendors) ? data.vendors : [],
