@@ -1396,6 +1396,13 @@
   .ve-field.checkbox { flex-direction: row; align-items: center; gap: 8px; }
   .ve-field.checkbox input { width: auto; }
   .ve-field.checkbox label { letter-spacing: 0; text-transform: none; font-weight: 500; font-size: 13px; color: var(--grey-dark); }
+  .ve-advanced { margin: 4px 0 14px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; }
+  .ve-advanced summary { cursor: pointer; padding: 11px 0; font-size: 12px; font-weight: 700; color: var(--grey-dark); }
+  .ve-coordinate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ve-coordinate-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+  .ve-coordinate-status { min-height: 18px; margin-bottom: 10px; font-size: 11px; color: var(--grey-mid); }
+  .ve-coordinate-status.error { color: var(--red); font-weight: 600; }
+  .ve-coordinate-status.success { color: var(--green); font-weight: 600; }
   .vmi-editor {
     margin-top: 18px;
     padding-top: 16px;
@@ -3356,6 +3363,20 @@
             <input id="ve-booth" type="text" maxlength="40" placeholder="e.g. A-12" /></div>
           <div class="ve-field"><label for="ve-zone">Zone / section</label>
             <input id="ve-zone" type="text" maxlength="80" placeholder="e.g. Food Truck Row" /></div>
+          <details class="ve-advanced" id="ve-coordinates">
+            <summary>Precise GPS location (optional)</summary>
+            <div class="ve-coordinate-grid">
+              <div class="ve-field"><label for="ve-latitude">Latitude</label>
+                <input id="ve-latitude" type="number" min="-90" max="90" step="any" placeholder="18.0179" /></div>
+              <div class="ve-field"><label for="ve-longitude">Longitude</label>
+                <input id="ve-longitude" type="number" min="-180" max="180" step="any" placeholder="-76.8099" /></div>
+            </div>
+            <div class="ve-coordinate-actions">
+              <button type="button" class="ve-btn" id="ve-use-location">Use current location</button>
+              <button type="button" class="ve-btn" id="ve-clear-location">Clear</button>
+            </div>
+            <div class="ve-coordinate-status" id="ve-coordinate-status">Use this for outdoor navigation when the illustrated map is not precise enough.</div>
+          </details>
           <div class="ve-field"><label for="ve-type">Type</label>
             <select id="ve-type">
               <option value="">— Select —</option>
@@ -4488,6 +4509,11 @@
     setVendorLogoStatus('', '');
     $('ve-booth').value    = v.booth_number || '';
     $('ve-zone').value     = v.zone || '';
+    $('ve-latitude').value = v.latitude != null ? v.latitude : '';
+    $('ve-longitude').value = v.longitude != null ? v.longitude : '';
+    $('ve-coordinate-status').className = 've-coordinate-status';
+    $('ve-coordinate-status').textContent = 'Use this for outdoor navigation when the illustrated map is not precise enough.';
+    $('ve-coordinates').open = v.latitude != null || v.longitude != null;
     $('ve-type').value     = v.vendor_type || '';
     $('ve-filter-tags').value = filterTagsText(v);
     $('ve-desc').value     = v.vendor_description || v.description || '';
@@ -4514,6 +4540,15 @@
     }
     $('ve-modal-backdrop').classList.add('open');
     setTimeout(() => $('ve-name').focus(), 30);
+    if (v.event_vendor_id) {
+      const editingId = v.event_vendor_id;
+      db.rpc('get_event_vendor_coordinates', { p_token: _getToken(), p_event_vendor_id: editingId }).then(({ data, error }) => {
+        if (error || !_editingVendor || _editingVendor.event_vendor_id !== editingId || !data || !data.ok) return;
+        $('ve-latitude').value = data.latitude != null ? data.latitude : '';
+        $('ve-longitude').value = data.longitude != null ? data.longitude : '';
+        if (data.latitude != null || data.longitude != null) $('ve-coordinates').open = true;
+      }).catch(() => {});
+    }
   }
   function closeVendorEditor() {
     $('ve-modal-backdrop').classList.remove('open');
@@ -4529,6 +4564,8 @@
     const logoInput = document.getElementById('ve-logo');
     const logoFile = document.getElementById('ve-logo-file');
     const logoClear = document.getElementById('ve-logo-clear');
+    const useLocation = document.getElementById('ve-use-location');
+    const clearLocation = document.getElementById('ve-clear-location');
     if (addItem) addItem.addEventListener('click', () => addVendorMenuRow());
     if (logoInput) logoInput.addEventListener('input', () => {
       setVendorLogoPreview(logoInput.value.trim());
@@ -4542,6 +4579,34 @@
       $('ve-logo').value = '';
       setVendorLogoPreview('');
       setVendorLogoStatus('');
+    });
+    if (useLocation) useLocation.addEventListener('click', () => {
+      const status = $('ve-coordinate-status');
+      if (!navigator.geolocation) {
+        status.className = 've-coordinate-status error';
+        status.textContent = 'Location is not available in this browser. Enter the coordinates manually.';
+        return;
+      }
+      useLocation.disabled = true;
+      status.className = 've-coordinate-status';
+      status.textContent = 'Getting your current location…';
+      navigator.geolocation.getCurrentPosition((position) => {
+        $('ve-latitude').value = position.coords.latitude.toFixed(7);
+        $('ve-longitude').value = position.coords.longitude.toFixed(7);
+        status.className = 've-coordinate-status success';
+        status.textContent = 'Current location added. Check that you are standing at the vendor’s position.';
+        useLocation.disabled = false;
+      }, () => {
+        status.className = 've-coordinate-status error';
+        status.textContent = 'Could not access your location. Allow location access or enter coordinates manually.';
+        useLocation.disabled = false;
+      }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+    });
+    if (clearLocation) clearLocation.addEventListener('click', () => {
+      $('ve-latitude').value = '';
+      $('ve-longitude').value = '';
+      $('ve-coordinate-status').className = 've-coordinate-status';
+      $('ve-coordinate-status').textContent = 'Precise location cleared. Save to apply.';
     });
     if (pick) pick.addEventListener('change', () => {
       const opt = pick.selectedOptions[0];
@@ -4587,6 +4652,10 @@
     const status = $('ve-status');
     const saveBtn = $('ve-save');
     const menuItems = collectVendorMenuItems();
+    const latitudeRaw = $('ve-latitude').value.trim();
+    const longitudeRaw = $('ve-longitude').value.trim();
+    const latitude = latitudeRaw === '' ? null : Number(latitudeRaw);
+    const longitude = longitudeRaw === '' ? null : Number(longitudeRaw);
     if (_vendorLogoUploading) {
       status.className = 've-status error';
       status.textContent = 'The vendor logo is still uploading. Wait for the uploaded message, then save.';
@@ -4604,6 +4673,19 @@
       status.textContent = 'Menu prices must be zero or greater.';
       return;
     }
+    if ((latitudeRaw === '') !== (longitudeRaw === '')) {
+      status.className = 've-status error';
+      status.textContent = 'Enter both latitude and longitude, or leave both blank.';
+      $('ve-coordinates').open = true;
+      return;
+    }
+    if ((latitude != null && (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)) ||
+        (longitude != null && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180))) {
+      status.className = 've-status error';
+      status.textContent = 'Enter a valid latitude from −90 to 90 and longitude from −180 to 180.';
+      $('ve-coordinates').open = true;
+      return;
+    }
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving...';
     try {
@@ -4618,6 +4700,20 @@
       }
       const savedEventVendorId = data.event_vendor_id || payload.p_event_vendor_id;
       if (savedEventVendorId) {
+        const coordinateRes = await db.rpc('set_event_vendor_coordinates', {
+          p_token: token,
+          p_event_vendor_id: savedEventVendorId,
+          p_latitude: latitude,
+          p_longitude: longitude,
+        });
+        if (coordinateRes.error || !coordinateRes.data || coordinateRes.data.ok === false) {
+          status.className = 've-status error';
+          status.textContent = (coordinateRes.error && (coordinateRes.error.message || coordinateRes.error.code))
+            || (coordinateRes.data && coordinateRes.data.error)
+            || 'Vendor saved, but the precise location could not be saved. Press Save to retry.';
+          _editingVendor.event_vendor_id = savedEventVendorId;
+          return;
+        }
         const menuRes = await db.rpc('set_event_vendor_menu_items', {
           p_token: token,
           p_event_vendor_id: savedEventVendorId,
