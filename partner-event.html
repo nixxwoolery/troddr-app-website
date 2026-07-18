@@ -1490,6 +1490,8 @@
     border-color: var(--brand-primary);
     color: var(--brand-text);
   }
+  .ve-btn.danger { color: var(--red); border-color: rgba(192,57,43,0.28); }
+  .ve-btn.danger:hover { background: #fff5f4; border-color: var(--red); }
   .ve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .ve-status { font-size: 12px; margin-top: 8px; display: none; }
   .ve-status.error   { color: var(--red); display: block; }
@@ -4881,6 +4883,7 @@
         </div>
         <div class="actions">
           <button type="button" class="ve-btn" data-action="edit">Edit</button>
+          <button type="button" class="ve-btn danger" data-action="remove">Remove</button>
         </div>
       </div>`).join('');
     wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
@@ -4888,6 +4891,34 @@
         const id = btn.closest('[data-event-vendor-id]').dataset.eventVendorId;
         const v = vendors.find(x => x.event_vendor_id === id);
         if (v) openVendorEditor(v);
+      });
+    });
+    wrap.querySelectorAll('[data-action="remove"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const row = btn.closest('[data-event-vendor-id]');
+        const id = row.dataset.eventVendorId;
+        const v = vendors.find(x => x.event_vendor_id === id);
+        if (!v) return;
+        const name = v.vendor_name || v.name || 'this vendor';
+        if (!confirm(`Remove ${name} from this event?\n\nTheir event menu and map assignment will be removed. The shared vendor-directory record will not be deleted.`)) return;
+        row.querySelectorAll('button').forEach(button => { button.disabled = true; });
+        btn.textContent = 'Removing…';
+        try {
+          const { data: removed, error } = await db.rpc('remove_event_vendor', {
+            p_token: _getToken(),
+            p_event_vendor_id: id,
+          });
+          if (error || !removed || !removed.ok) throw new Error((error && (error.message || error.code)) || (removed && removed.error) || 'Could not remove vendor.');
+          row.remove();
+          const remaining = wrap.querySelectorAll('[data-event-vendor-id]').length;
+          lead.textContent = remaining ? `${remaining} vendor${remaining === 1 ? '' : 's'} in the lineup.` : 'No vendors yet.';
+          if (!remaining) wrap.innerHTML = '<div class="edit-list-empty">Click + Add vendor to add the first one.</div>';
+          setTimeout(() => location.reload(), 350);
+        } catch (err) {
+          row.querySelectorAll('button').forEach(button => { button.disabled = false; });
+          btn.textContent = 'Remove';
+          alert((err && err.message) || 'Could not remove vendor.');
+        }
       });
     });
   }
