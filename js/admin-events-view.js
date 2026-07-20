@@ -74,6 +74,20 @@
   }
 
   const EVENT_TABS=[['home','Home'],['schedule','Schedule'],['map','Map'],['parking','Parking'],['vendors','Vendors'],['my_plan','My Plan'],['tickets','Tickets'],['info','Info'],['sponsors','Sponsors'],['events','Events'],['concierge','Concierge']];
+  const FEATURE_LABELS={home:'Home',schedule:'Schedule',map:'Map',parking:'Parking',vendors:'Vendors & menus',my_plan:'Favourites / My Plan',tickets:'Tickets & passes',info:'Event info',sponsors:'Sponsors',events:'More events',concierge:'Concierge'};
+  function renderFeatureUsage(data) {
+    const rows=data?.tabs||[],total=Number(data?.total_clicks)||0,visitors=Number(data?.unique_visitors)||0,days=Number(data?.days)||30,max=Math.max(1,...rows.map(row=>Number(row.clicks)||0));
+    $('event-feature-usage-period').textContent=`Last ${days} days`;
+    if(!rows.length){$('event-feature-usage').innerHTML=empty('No event tab clicks have been recorded in this period.');return;}
+    $('event-feature-usage').innerHTML=`<div class="event-feature-summary"><div><strong>${fmt(total)}</strong><span>tab clicks</span></div><div><strong>${fmt(visitors)}</strong><span>unique visitors</span></div></div><div class="event-feature-list">${rows.map(row=>{const clicks=Number(row.clicks)||0,share=Number(row.share)||0;return `<div class="event-feature-row"><div class="event-feature-name"><strong>${esc(FEATURE_LABELS[row.key]||nice(row.key))}</strong><small>${fmt(row.unique_visitors)} unique · last used ${esc(whenTime(row.last_clicked_at)||'—')}</small></div><div class="event-feature-meter" aria-label="${esc(FEATURE_LABELS[row.key]||nice(row.key))}: ${fmt(clicks)} clicks"><i style="width:${Math.max(2,clicks/max*100)}%"></i></div><div class="event-feature-value"><strong>${fmt(clicks)}</strong><small>${share}%</small></div></div>`;}).join('')}</div>`;
+  }
+  async function loadFeatureUsage(eventId) {
+    $('event-feature-usage').innerHTML='<div class="spinner"></div>';
+    const {data,error}=await state.db.rpc('admin_get_event_feature_usage',{p_admin_token:state.getToken(),p_event_id:eventId,p_days:30});
+    if(eventId!==state.currentId)return;
+    if(error||!data){const missing=/schema cache|could not find the function/i.test(error?.message||'');$('event-feature-usage').innerHTML=empty(missing?'Feature usage needs the latest database migration.':'Feature usage could not be loaded.');return;}
+    renderFeatureUsage(data);
+  }
   function switchEventView(view) {
     state.eventView=['overview','details','content','vendors','sponsors','tickets','map','audience','insights','updates','settings'].includes(view)?view:'overview';
     document.querySelectorAll('.event-console-tab').forEach(button=>{const active=button.dataset.eventView===state.eventView;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));});
@@ -134,7 +148,7 @@
     const {data,error}=await state.db.rpc('admin_get_event_console',{p_admin_token:state.getToken(),p_event_id:id});
     $('event-detail-loading').classList.add('hidden');
     if(error||!data){$('event-detail-error-message').textContent=error?.message||'The event returned no data.';$('event-detail-error').classList.remove('hidden');return;}
-    state.tabsLoaded=false;state.eventView='overview';renderDetail(data); $('event-detail').classList.remove('hidden');switchEventView('overview');await loadEventEditor();
+    state.tabsLoaded=false;state.eventView='overview';renderDetail(data); $('event-detail').classList.remove('hidden');switchEventView('overview');await Promise.all([loadEventEditor(),loadFeatureUsage(id)]);
   }
 
   async function load(routeId, force=false) {

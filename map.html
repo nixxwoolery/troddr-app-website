@@ -100,6 +100,30 @@
     document.getElementById('state-msg').textContent = msg || '';
   }
 
+  function analyticsId(storage, key) {
+    try {
+      let value = storage.getItem(key);
+      if (!value) {
+        value = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        storage.setItem(key, value);
+      }
+      return value;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function trackMapTab(eventId) {
+    // Fire-and-forget: analytics should never delay or break the public map.
+    db.rpc('track_event_tab_click', {
+      p_event_id: eventId,
+      p_tab_key: 'map',
+      p_anon_device_id: analyticsId(localStorage, 'troddr_analytics_device_id'),
+      p_session_id: analyticsId(sessionStorage, 'troddr_analytics_session_id'),
+      p_source: 'public_web'
+    }).catch(() => {});
+  }
+
   async function init() {
     const slug = getSlug();
     if (!slug) { showState('Map not found', 'This link is missing an event.'); return; }
@@ -137,6 +161,7 @@
       backgroundUrl: ev.floor_plan_url || null,
       vendors: Array.isArray(data.vendors) ? data.vendors : [],
     });
+    trackMapTab(ev.id);
   }
 
   init();
