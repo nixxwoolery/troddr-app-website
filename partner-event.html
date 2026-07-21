@@ -711,6 +711,9 @@
     font-size: 10px;
     line-height: 1.55;
   }
+  .main-event-image-upload {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
   .main-event-image-upload .image-preview {
     width: 180px;
     height: 102px;
@@ -788,7 +791,7 @@
   }
   @media (max-width: 520px) {
     .multi-image-add-url { grid-template-columns: 1fr; }
-    .main-event-image-upload { grid-template-columns: 1fr; }
+    .main-event-image-upload { grid-template-columns: minmax(0, 1fr); }
     .main-event-image-upload .image-preview { width: 100%; height: auto; aspect-ratio: 16 / 9; }
   }
   .upload-progress {
