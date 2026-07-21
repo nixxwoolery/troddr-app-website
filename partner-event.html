@@ -705,6 +705,16 @@
   .image-status {
     font-size: 11px; color: var(--grey-mid);
   }
+  .image-guidance {
+    margin: 0;
+    color: var(--grey-mid);
+    font-size: 10px;
+    line-height: 1.55;
+  }
+  .main-event-image-upload .image-preview {
+    width: 180px;
+    height: 102px;
+  }
   .image-status.error { color: var(--red); }
   .image-status.success { color: var(--green); }
   .multi-image-upload {
@@ -778,6 +788,8 @@
   }
   @media (max-width: 520px) {
     .multi-image-add-url { grid-template-columns: 1fr; }
+    .main-event-image-upload { grid-template-columns: 1fr; }
+    .main-event-image-upload .image-preview { width: 100%; height: auto; aspect-ratio: 16 / 9; }
   }
   .upload-progress {
     display: none;
@@ -7575,6 +7587,26 @@
       <div class="edit-pane active" data-edit-pane="basics">
       <div class="edit-grid">
         <div class="edit-field full">
+          <label>Main event image</label>
+          <div class="image-upload main-event-image-upload">
+            <div class="image-preview" id="ed-image-preview" ${e.featured_image_url ? `style="background-image:url('${escapeHtml(e.featured_image_url)}'); color:transparent;"` : ''}>
+              ${e.featured_image_url ? '' : 'No image'}
+            </div>
+            <div class="image-upload-body">
+              <div class="image-upload-actions">
+                <label class="image-pick-btn">
+                  Upload main image
+                  <input id="ed-image-file" type="file" accept="image/*" />
+                </label>
+                <button type="button" class="image-pick-btn" id="ed-image-clear" style="border-color:var(--border); color:var(--grey-dark);">Remove</button>
+              </div>
+              <p class="image-guidance">This is the featured image guests see first. Use a clear landscape image; 1600 × 900 px or larger works best. Maximum 10MB.</p>
+              <input id="ed-image" class="image-url-input" type="url" value="${escapeHtml(e.featured_image_url || '')}" placeholder="Or paste a direct image URL" />
+              <div class="image-status" id="ed-image-status" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+        <div class="edit-field full">
           <label for="ed-title">Title</label>
           <input id="ed-title" type="text" maxlength="200" value="${escapeHtml(e.title || '')}" />
         </div>
@@ -7600,25 +7632,6 @@
 
       <div class="edit-pane" data-edit-pane="media">
       <div class="edit-grid">
-        <div class="edit-field full">
-          <label>Featured image</label>
-          <div class="image-upload">
-            <div class="image-preview" id="ed-image-preview" ${e.featured_image_url ? `style="background-image:url('${escapeHtml(e.featured_image_url)}'); color:transparent;"` : ''}>
-              ${e.featured_image_url ? '' : 'No image'}
-            </div>
-            <div class="image-upload-body">
-              <div class="image-upload-actions">
-                <label class="image-pick-btn">
-                  Upload new image
-                  <input id="ed-image-file" type="file" accept="image/*" />
-                </label>
-                <button type="button" class="image-pick-btn" id="ed-image-clear" style="border-color:var(--border); color:var(--grey-dark);">Clear</button>
-              </div>
-              <input id="ed-image" class="image-url-input" type="url" value="${escapeHtml(e.featured_image_url || '')}" placeholder="https://... (or upload above)" />
-              <div class="image-status" id="ed-image-status"></div>
-            </div>
-          </div>
-        </div>
         <div class="edit-field full">
           <label for="ed-media-url">Event media URL</label>
           <div class="image-upload-body">
@@ -7991,6 +8004,15 @@
       }
     }
 
+    let featuredImageUploading = false;
+    const setFeaturedImageBusy = (busy) => {
+      featuredImageUploading = !!busy;
+      imgFile.disabled = featuredImageUploading;
+      $('ed-image-clear').disabled = featuredImageUploading;
+      const picker = imgFile.closest('.image-pick-btn');
+      if (picker) picker.classList.toggle('is-disabled', featuredImageUploading);
+    };
+
     imgUrlIn.addEventListener('input', () => setPreview(imgUrlIn.value.trim()));
 
     $('ed-image-clear').addEventListener('click', () => {
@@ -8014,15 +8036,16 @@
         imgStatus.className = 'image-status error';
         return;
       }
-      const slug = (event && event.slug) || 'event';
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const path = `${slug}/${Date.now()}_${safeName}`;
-      imgStatus.textContent = 'Uploading...';
+      const slug = safeStorageName((event && event.slug) || 'event');
+      const safeName = safeStorageName(file.name || 'event-image');
+      const path = `featured-images/${slug}/${Date.now()}-${safeName}`;
+      setFeaturedImageBusy(true);
+      imgStatus.textContent = 'Uploading main event image...';
       imgStatus.className = 'image-status';
       try {
         const { data, error } = await db.storage
           .from('partner-intake-assets')
-          .upload(path, file, { cacheControl: '3600', upsert: false });
+          .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
         if (error) throw error;
         const pub = db.storage
           .from('partner-intake-assets')
@@ -8031,7 +8054,7 @@
         if (!url) throw new Error('No public URL returned');
         imgUrlIn.value = url;
         setPreview(url);
-        imgStatus.textContent = 'Uploaded. Click "Save changes" to apply.';
+        imgStatus.textContent = 'Main image uploaded. Click “Save changes” to publish it.';
         imgStatus.className = 'image-status success';
       } catch (err) {
         console.error('image upload failed', err);
@@ -8039,6 +8062,7 @@
           "Upload didn't go through. Try a smaller image, or paste a URL instead.");
         imgStatus.className = 'image-status error';
       } finally {
+        setFeaturedImageBusy(false);
         imgFile.value = '';
       }
     });
@@ -8312,6 +8336,10 @@
 
     $('edit-save').addEventListener('click', async () => {
       hideStatus();
+      if (featuredImageUploading) {
+        showStatus('Please wait for the main event image to finish uploading.', 'error');
+        return;
+      }
       const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
       if (!token) { showStatus("We couldn't find your account from this link. Open the dashboard from your bookmarked URL.", 'error'); return; }
       if (mediaUploading) {
@@ -8438,7 +8466,8 @@
         p_website_url:        str(val('ed-website')),
         p_media_url:          str(val('ed-media-url')),
         p_instagram_url:      str(val('ed-instagram')),
-        p_featured_image_url: str(val('ed-image')),
+        // Send an empty string when removed so the RPC clears the existing image.
+        p_featured_image_url: val('ed-image').trim(),
         p_event_type:         str(val('ed-type')),
         p_know_before_you_go: lineItems('ed-kbyg'),
         p_parking_info:       parkingInfo,
