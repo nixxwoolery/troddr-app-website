@@ -98,6 +98,7 @@
       { "source": "/partner/perks",    "destination": "/partner-perks.html" },
       { "source": "/partner/feedback", "destination": "/partner-feedback.html" },
       { "source": "/partner/event",    "destination": "/partner-event.html" },
+      { "source": "/partner/demand",   "destination": "/partner-demand.html" },
       { "source": "/partner/event-floorplan", "destination": "/partner-event-floorplan.html" },
       { "source": "/partner/event-parking", "destination": "/partner-event-parking.html" },
       { "source": "/partner/specials", "destination": "/partner-specials.html" },
@@ -219,6 +220,11 @@
     {
       "source": "/partner-event.html",
       "destination": "/partner/event",
+      "permanent": true
+    },
+    {
+      "source": "/partner-demand.html",
+      "destination": "/partner/demand",
       "permanent": true
     },
     {

@@ -144,6 +144,7 @@
       { label: 'Edit Event Details', section: 'edit' },
     ] },
     { group: 'Event Insights', icon: 'ic-chart', page: '/partner/event', section: 'engagement', children: [
+      { label: 'Demand & Audience',   section: '', page: '/partner/demand' },
       { label: 'Guest Engagement',   section: 'engagement' },
       { label: 'Ticket Performance', section: 'ticket-performance' },
       { label: 'Vendor Insights',    section: 'vendors' },
@@ -223,6 +224,7 @@
       ? partnerEntities.filter((e) => e && e.type === 'place').length : 0;
 
     const isEvent = active === '/partner/event'
+      || active === '/partner/demand'
       || active === '/partner/event-floorplan'
       || active === '/partner/event-parking';
     const tree = (active === '/partner/group') ? NAV_GROUP

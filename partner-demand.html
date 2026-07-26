@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#071b22">
+  <title>TRODDR · Demand & Audience</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #10262d;
+      --muted: #6c7d82;
+      --line: #e2e9e8;
+      --paper: #fff;
+      --wash: #f5f8f7;
+      --nav: #071b22;
+      --nav-2: #0c2931;
+      --lime: #c7ef5b;
+      --lime-dark: #577b00;
+      --teal: #148c86;
+      --teal-soft: #e5f5f2;
+      --orange: #f5a45d;
+      --red: #d96962;
+      --blue: #4c88c8;
+      --purple: #836fc2;
+      --shadow: 0 12px 36px rgba(18, 45, 51, .07);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--wash); color: var(--ink);
+      font: 14px/1.45 "DM Sans", sans-serif; -webkit-font-smoothing: antialiased;
+    }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+    .shell { min-height: 100vh; display: grid; grid-template-columns: 238px minmax(0, 1fr); }
+    .sidebar {
+      background: var(--nav); color: #d9e5e7; padding: 22px 16px 18px;
+      position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 24px; }
+    .brand img { width: 34px; height: 34px; object-fit: contain; filter: brightness(0) invert(1); }
+    .brand-name { font: 800 20px/1 "Manrope"; letter-spacing: -.6px; color: #fff; }
+    .brand-cap { font-size: 9px; color: #82a1a8; text-transform: uppercase; letter-spacing: .13em; margin-top: 4px; }
+    .event-mini {
+      padding: 13px; background: var(--nav-2); border: 1px solid #19404a; border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .event-mini-label, .nav-label { font-size: 9px; text-transform: uppercase; letter-spacing: .12em; color: #7d9ba2; font-weight: 700; }
+    .event-mini-name { color: #fff; font-weight: 700; margin-top: 6px; }
+    .event-mini-meta { color: #90abb1; font-size: 11px; margin-top: 3px; }
+    .nav-label { padding: 4px 10px 8px; }
+    .nav { display: grid; gap: 3px; }
+    .nav-item {
+      width: 100%; border: 0; color: #9eb3b7; background: transparent; padding: 10px;
+      border-radius: 9px; text-align: left; display: flex; align-items: center; gap: 10px; font-weight: 600;
+    }
+    .nav-item:hover { background: #0d2b33; color: #fff; }
+    .nav-item.active { background: var(--lime); color: #193219; }
+    .nav-icon {
+      width: 21px; height: 21px; border-radius: 6px; border: 1px solid currentColor;
+      display: grid; place-items: center; font-size: 10px; font-weight: 800; opacity: .9;
+    }
+    .nav-divider { height: 1px; background: #183740; margin: 15px 8px; }
+    .sidebar-foot { margin-top: auto; }
+    .profile { border-top: 1px solid #183740; padding: 16px 8px 0; display: flex; gap: 10px; align-items: center; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: #264b54; display: grid; place-items: center; color: #fff; font-weight: 800; }
+    .profile strong { display: block; color: #fff; font-size: 12px; }
+    .profile span { color: #82a1a8; font-size: 10px; }
+    .main { min-width: 0; }
+    .topbar {
+      height: 68px; padding: 0 28px; background: rgba(255,255,255,.9); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 20;
+    }
+    .crumb { color: var(--muted); font-size: 12px; }
+    .crumb strong { color: var(--ink); }
+    .top-actions { display: flex; gap: 8px; align-items: center; }
+    .date-select, .icon-btn, .ghost-btn, .primary-btn {
+      border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 9px 12px; color: var(--ink); font-weight: 700;
+    }
+    .date-select { padding-right: 30px; }
+    .icon-btn { width: 38px; padding: 9px; }
+    .primary-btn { background: var(--nav); color: #fff; border-color: var(--nav); }
+    .primary-btn.lime { background: var(--lime); color: #1d3517; border-color: var(--lime); }
+    .content { max-width: 1440px; padding: 28px; margin: 0 auto; }
+    .hero { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 22px; }
+    .eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .14em; color: var(--teal); font-weight: 800; margin-bottom: 7px; }
+    h1 { margin: 0; font: 800 clamp(25px, 3vw, 35px)/1.1 "Manrope"; letter-spacing: -1.2px; }
+    .hero p { margin: 8px 0 0; color: var(--muted); max-width: 690px; }
+    .live { background: #e7f7ed; color: #277244; font-weight: 800; font-size: 10px; border-radius: 99px; padding: 5px 9px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+    .live::before { content: ""; width: 6px; height: 6px; background: #38a865; border-radius: 50%; box-shadow: 0 0 0 4px #d2f0de; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+    .tab { background: transparent; border: 0; padding: 11px 14px; color: var(--muted); font-weight: 700; border-bottom: 2px solid transparent; }
+    .tab.active { color: var(--ink); border-bottom-color: var(--teal); }
+    .pane { display: none; }
+    .pane.active { display: block; }
+    .grid { display: grid; gap: 14px; }
+    .kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+    .kpi { padding: 16px; min-width: 0; }
+    .kpi-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+    .kpi-label { color: var(--muted); font-size: 11px; font-weight: 700; min-height: 31px; }
+    .kpi-num { font: 800 24px/1.15 "Manrope"; letter-spacing: -.7px; margin: 5px 0; }
+    .delta { font-size: 10px; font-weight: 800; color: #378460; }
+    .delta.down { color: var(--red); }
+    .microbar { display: flex; height: 5px; border-radius: 4px; overflow: hidden; background: #edf1f0; margin-top: 10px; }
+    .microbar span { height: 100%; }
+    .section-title-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 28px 0 12px; }
+    h2 { font: 800 18px/1.2 "Manrope"; letter-spacing: -.35px; margin: 0; }
+    .section-note { color: var(--muted); font-size: 11px; margin-top: 4px; }
+    .two-col { grid-template-columns: 1.55fr 1fr; }
+    .three-col { grid-template-columns: repeat(3, 1fr); }
+    .card-head { padding: 17px 18px 13px; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; border-bottom: 1px solid #edf1f0; }
+    .card-title { font-weight: 800; font-family: "Manrope"; }
+    .card-sub { color: var(--muted); font-size: 10px; margin-top: 3px; }
+    .card-body { padding: 18px; }
+    .trend-wrap { height: 176px; display: flex; flex-direction: column; }
+    .trend-chart { flex: 1; position: relative; border-bottom: 1px solid var(--line); background: repeating-linear-gradient(to bottom, transparent 0, transparent 38px, #edf1f0 39px); }
+    .trend-line {
+      position: absolute; inset: 12px 0 0; clip-path: polygon(0 78%, 8% 72%, 16% 75%, 25% 54%, 34% 58%, 43% 36%, 51% 41%, 60% 23%, 69% 32%, 78% 16%, 87% 21%, 100% 5%, 100% 100%, 0 100%);
+      background: linear-gradient(180deg, rgba(20,140,134,.28), rgba(20,140,134,.015));
+    }
+    .trend-line::after { content: ""; position: absolute; inset: 0; border-top: 3px solid var(--teal); clip-path: inherit; }
+    .chart-labels { display: flex; justify-content: space-between; color: #94a3a6; font-size: 9px; padding-top: 8px; }
+    .funnel { display: grid; gap: 12px; }
+    .funnel-row { display: grid; grid-template-columns: 92px 1fr 46px; gap: 9px; align-items: center; font-size: 11px; }
+    .funnel-name { color: var(--muted); }
+    .track { background: #edf1f0; height: 10px; border-radius: 3px; overflow: hidden; }
+    .fill { height: 100%; background: var(--teal); border-radius: 3px; }
+    .funnel-row:nth-child(2) .fill { background: #46aca0; }
+    .funnel-row:nth-child(3) .fill { background: var(--lime-dark); }
+    .funnel-row:nth-child(4) .fill { background: var(--orange); }
+    .funnel-row:nth-child(5) .fill { background: var(--purple); }
+    .funnel-val { text-align: right; font-weight: 800; }
+    .conversion-callout { margin-top: 14px; border-radius: 10px; background: #eff8f6; padding: 11px 12px; display: flex; justify-content: space-between; color: #315e58; font-size: 11px; }
+    .conversion-callout strong { color: var(--teal); }
+    .source-row, .place-row { display: grid; grid-template-columns: minmax(90px, 1fr) 2fr 44px; align-items: center; gap: 9px; padding: 7px 0; font-size: 11px; }
+    .source-row strong, .place-row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .thin-track { height: 6px; background: #edf1f0; border-radius: 5px; overflow: hidden; }
+    .thin-track span { height: 100%; display: block; background: var(--blue); border-radius: 5px; }
+    .place-row .thin-track span { background: var(--orange); }
+    .ops-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .ops-item { background: var(--wash); border-radius: 10px; padding: 12px; }
+    .ops-item small { color: var(--muted); display: block; min-height: 30px; }
+    .ops-item strong { font: 800 19px "Manrope"; }
+    .ops-item em { font-style: normal; font-size: 9px; color: var(--teal); font-weight: 800; margin-left: 3px; }
+    .split-stat { display: flex; gap: 12px; margin-bottom: 14px; }
+    .split-stat > div { flex: 1; border-right: 1px solid var(--line); }
+    .split-stat > div:last-child { border: 0; }
+    .split-stat b { font: 800 23px "Manrope"; display: block; }
+    .split-stat span { color: var(--muted); font-size: 10px; }
+    .sentiment { display: flex; gap: 4px; height: 10px; margin: 12px 0 8px; }
+    .sentiment span { border-radius: 4px; }
+    .quote { font-size: 11px; color: #53676c; background: #f7f9f9; padding: 10px; border-radius: 9px; }
+    .segment-toolbar { display: flex; gap: 8px; align-items: center; }
+    .search { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 9px 11px; min-width: 220px; }
+    .segment-grid { grid-template-columns: repeat(2, 1fr); }
+    .segment {
+      padding: 17px; display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 13px;
+      align-items: center; transition: transform .15s, border-color .15s;
+    }
+    .segment:hover { transform: translateY(-2px); border-color: #bfd6d2; }
+    .segment-icon { width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; background: var(--teal-soft); color: var(--teal); font: 800 17px "Manrope"; }
+    .segment:nth-child(2) .segment-icon { background: #fff1e6; color: #bd671b; }
+    .segment:nth-child(3) .segment-icon { background: #feecea; color: #b64d47; }
+    .segment:nth-child(4) .segment-icon { background: #eeeafb; color: #6753a3; }
+    .segment:nth-child(5) .segment-icon { background: #ecf3fb; color: #3f76af; }
+    .segment:nth-child(6) .segment-icon { background: #f3f9df; color: #608100; }
+    .segment:nth-child(7) .segment-icon { background: #e6f4f7; color: #3a7985; }
+    .segment-name { font-weight: 800; }
+    .segment-desc { color: var(--muted); font-size: 10px; margin-top: 2px; }
+    .segment-count { font: 800 22px "Manrope"; text-align: right; }
+    .segment-action { color: var(--teal); border: 0; background: transparent; padding: 4px 0; font-size: 10px; font-weight: 800; }
+    .radius-card { padding: 18px; margin-bottom: 14px; display: grid; grid-template-columns: minmax(0,1fr) 270px auto; gap: 20px; align-items: center; }
+    .range-wrap { display: flex; align-items: center; gap: 10px; }
+    input[type="range"] { width: 100%; accent-color: var(--teal); }
+    .range-value { font-weight: 800; white-space: nowrap; }
+    .island-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .island-card { padding: 14px; }
+    .island-card .tag { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 800; }
+    .island-card b { font: 800 19px "Manrope"; display: block; margin-top: 5px; }
+    .island-card span { font-size: 10px; color: var(--muted); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    th { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 9px; text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+    td { padding: 13px 14px; border-bottom: 1px solid #edf1f0; font-size: 11px; }
+    tr:last-child td { border: 0; }
+    .status { padding: 4px 7px; border-radius: 99px; background: #eaf5ee; color: #37724d; font-size: 9px; font-weight: 800; }
+    .status.warn { background: #fff1e3; color: #a65e1c; }
+    .drawer-backdrop { position: fixed; inset: 0; background: rgba(7,27,34,.34); z-index: 40; display: none; }
+    .drawer-backdrop.open { display: block; }
+    .drawer {
+      position: absolute; right: 0; top: 0; bottom: 0; width: min(470px, 92vw); background: #fff; padding: 24px;
+      box-shadow: -20px 0 50px rgba(0,0,0,.15); overflow-y: auto;
+    }
+    .drawer-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+    .close { border: 1px solid var(--line); width: 34px; height: 34px; border-radius: 9px; background: #fff; font-size: 18px; }
+    .drawer h3 { font: 800 23px "Manrope"; margin: 3px 0; }
+    .drawer-count { font: 800 42px "Manrope"; margin: 24px 0 0; }
+    .drawer p { color: var(--muted); }
+    .drawer-actions { display: flex; gap: 8px; margin: 20px 0; }
+    .person { padding: 11px 0; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+    .person-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--teal-soft); display: grid; place-items: center; font-weight: 800; color: var(--teal); }
+    .person strong { display: block; font-size: 11px; }
+    .person span { color: var(--muted); font-size: 9px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; background: var(--nav); color: #fff; padding: 12px 16px; border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.2); opacity: 0; transform: translateY(14px); pointer-events: none; transition: .2s; z-index: 60; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .mobile-menu { display: none; }
+    @media (max-width: 1180px) {
+      .kpis { grid-template-columns: repeat(3, 1fr); }
+      .island-strip { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; position: fixed; z-index: 50; width: 245px; }
+      .sidebar.open { display: flex; }
+      .mobile-menu { display: inline-block; }
+      .two-col, .three-col, .segment-grid { grid-template-columns: 1fr; }
+      .radius-card { grid-template-columns: 1fr; }
+      .topbar { padding: 0 16px; }
+      .content { padding: 20px 16px; }
+    }
+    @media (max-width: 580px) {
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .ops-kpis, .island-strip { grid-template-columns: repeat(2, 1fr); }
+      .hero { flex-direction: column; }
+      .top-actions .date-select { display: none; }
+      .segment { grid-template-columns: 40px minmax(0,1fr); }
+      .segment > div:last-child { grid-column: 2; text-align: left; display: flex; gap: 8px; align-items: baseline; }
+      .search { min-width: 0; width: 100%; }
+      .segment-toolbar { width: 100%; }
+      .section-title-row { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img src="/images/troddr_logo.png" alt="Troddr">
+        <div><div class="brand-name">TRODDR</div><div class="brand-cap">Organizer studio</div></div>
+      </div>
+      <div class="event-mini">
+        <div class="event-mini-label">Active event</div>
+        <div class="event-mini-name">Kingston Night Market</div>
+        <div class="event-mini-meta">Aug 29 · Kingston, Jamaica</div>
+      </div>
+      <div class="nav-label">Event workspace</div>
+      <nav class="nav">
+        <button class="nav-item"><span class="nav-icon">O</span>Overview</button>
+        <button class="nav-item"><span class="nav-icon">E</span>Event details</button>
+        <button class="nav-item active"><span class="nav-icon">D</span>Demand & Audience</button>
+        <button class="nav-item"><span class="nav-icon">V</span>Vendors & lineup</button>
+        <button class="nav-item"><span class="nav-icon">P</span>Planning</button>
+      </nav>
+      <div class="nav-divider"></div>
+      <div class="nav-label">Organizer</div>
+      <nav class="nav">
+        <button class="nav-item"><span class="nav-icon">N</span>Notifications</button>
+        <button class="nav-item"><span class="nav-icon">B</span>Billing</button>
+        <button class="nav-item"><span class="nav-icon">?</span>Help centre</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="profile"><div class="avatar">NW</div><div><strong>Nicolette W.</strong><span>Event organizer</span></div></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Open menu">☰</button>
+          <div class="crumb">Events&nbsp; / &nbsp;<strong>Kingston Night Market</strong></div>
+        </div>
+        <div class="top-actions">
+          <select class="date-select" id="dateRange" aria-label="Date range">
+            <option value="30">Last 30 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="7">Last 7 days</option>
+            <option value="all">All time</option>
+          </select>
+          <button class="icon-btn" id="refreshBtn" title="Refresh data" aria-label="Refresh data">↻</button>
+          <button class="primary-btn" data-action="export">Export report</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="hero">
+          <div>
+            <div class="eyebrow">Event intelligence</div>
+            <h1>Demand & Audience</h1>
+            <p>See who wants to come, what they need to get there, and the clearest next move to convert interest into attendance.</p>
+          </div>
+          <span class="live">Live data · updated 2 min ago</span>
+        </section>
+
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="overview">Overview</button>
+          <button class="tab" data-tab="segments">Actionable segments</button>
+          <button class="tab" data-tab="operations">Caribbean operations</button>
+        </div>
+
+        <section class="pane active" id="overview">
+          <div class="grid kpis">
+            <article class="card kpi"><div class="kpi-top"><span class="kpi-label">Event views</span><span class="delta">+18%</span></div><div class="kpi-num">24.8K</div><small>16,420 unique viewers</small><div class="microbar"><span style="width:66%;background:var(--teal)"></span></div></article>
+            <article class="card kpi"><div class="kpi-top"><span class="kpi-label">Saves · Interested · Going</span><span class="delta">+241</span></div><div class="kpi-num">3,842</div><small>1,908 · 1,347 · 587</small><div class="microbar"><span style="width:50%;background:var(--blue)"></span><span style="width:35%;background:var(--orange)"></span><span style="width:15%;background:var(--teal)"></span></div></article>
+            <article class="card kpi"><div class="kpi-top"><span class="kpi-label">Demand list</span><span class="delta">+12%</span></div><div class="kpi-num">684</div><small>1,126 tickets requested</small><div class="microbar"><span style="width:72%;background:var(--red)"></span></div></article>
+            <article class="card kpi"><div class="kpi-top"><span class="kpi-label">Ticket-link clicks</span><span class="delta">+9%</span></div><div class="kpi-num">2,941</div><small>1,824 unique clickers</small><div class="microbar"><span style="width:58%;background:var(--purple)"></span></div></article>
+            <article class="card kpi"><div class="kpi-top"><span class="kpi-label">Purchase confirmations</span><span class="delta">+6.2%</span></div><div class="kpi-num">742</div><small>25.2% click conversion</small><div class="microbar"><span style="width:25%;background:var(--lime-dark)"></span></div></article>
+            <article class="card kpi"><div class="kpi-top"><span class="kpi-label">Repeat attendees</span><span class="delta">+4.1%</span></div><div class="kpi-num">31%</div><small>183 from last edition</small><div class="microbar"><span style="width:31%;background:var(--orange)"></span></div></article>
+          </div>
+
+          <div class="section-title-row"><div><h2>Demand journey</h2><div class="section-note">From discovery to confirmed purchase</div></div><button class="ghost-btn" data-tab-jump="segments">View people to follow up →</button></div>
+          <div class="grid two-col">
+            <article class="card">
+              <div class="card-head"><div><div class="card-title">Interest over time</div><div class="card-sub">Daily unique viewers, saves and ticket activity</div></div><span class="delta">Peak: Fri 8 PM</span></div>
+              <div class="card-body trend-wrap"><div class="trend-chart"><div class="trend-line"></div></div><div class="chart-labels"><span>Jul 31</span><span>Aug 7</span><span>Aug 14</span><span>Aug 21</span><span>Today</span></div></div>
+            </article>
+            <article class="card">
+              <div class="card-head"><div><div class="card-title">Conversion funnel</div><div class="card-sub">Unique people at each step</div></div></div>
+              <div class="card-body">
+                <div class="funnel">
+                  <div class="funnel-row"><span class="funnel-name">Viewed</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="funnel-val">16.4K</span></div>
+                  <div class="funnel-row"><span class="funnel-name">Engaged</span><div class="track"><div class="fill" style="width:23%"></div></div><span class="funnel-val">3,842</span></div>
+                  <div class="funnel-row"><span class="funnel-name">Clicked</span><div class="track"><div class="fill" style="width:11%"></div></div><span class="funnel-val">1,824</span></div>
+                  <div class="funnel-row"><span class="funnel-name">Confirmed</span><div class="track"><div class="fill" style="width:4.5%"></div></div><span class="funnel-val">742</span></div>
+                  <div class="funnel-row"><span class="funnel-name">Going</span><div class="track"><div class="fill" style="width:3.6%"></div></div><span class="funnel-val">587</span></div>
+                </div>
+                <div class="conversion-callout"><span>Largest opportunity</span><strong>1,082 clicked, not confirmed</strong></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="section-title-row"><div><h2>Discovery & audience</h2><div class="section-note">Where attention comes from—and where your crowd lives</div></div></div>
+          <div class="grid three-col">
+            <article class="card"><div class="card-head"><div><div class="card-title">Top discovery sources</div><div class="card-sub">Attributed unique viewers</div></div></div><div class="card-body">
+              <div class="source-row"><strong>Troddr Explore</strong><div class="thin-track"><span style="width:100%"></span></div><b>42%</b></div>
+              <div class="source-row"><strong>Instagram</strong><div class="thin-track"><span style="width:68%"></span></div><b>29%</b></div>
+              <div class="source-row"><strong>Shared links</strong><div class="thin-track"><span style="width:38%"></span></div><b>16%</b></div>
+              <div class="source-row"><strong>Performer pages</strong><div class="thin-track"><span style="width:21%"></span></div><b>9%</b></div>
+              <div class="source-row"><strong>Other</strong><div class="thin-track"><span style="width:10%"></span></div><b>4%</b></div>
+            </div></article>
+            <article class="card"><div class="card-head"><div><div class="card-title">Audience location</div><div class="card-sub">Town and parish · Jamaica</div></div><button class="segment-action">Country view</button></div><div class="card-body">
+              <div class="place-row"><strong>Kingston</strong><div class="thin-track"><span style="width:100%"></span></div><b>46%</b></div>
+              <div class="place-row"><strong>St. Andrew</strong><div class="thin-track"><span style="width:70%"></span></div><b>32%</b></div>
+              <div class="place-row"><strong>St. Catherine</strong><div class="thin-track"><span style="width:28%"></span></div><b>13%</b></div>
+              <div class="place-row"><strong>St. James</strong><div class="thin-track"><span style="width:13%"></span></div><b>6%</b></div>
+              <div class="place-row"><strong>Other parishes</strong><div class="thin-track"><span style="width:7%"></span></div><b>3%</b></div>
+            </div></article>
+            <article class="card"><div class="card-head"><div><div class="card-title">Notification performance</div><div class="card-sub">Last 4 event campaigns</div></div></div><div class="card-body">
+              <div class="split-stat"><div><b>92.4%</b><span>Delivered</span></div><div><b>38.7%</b><span>Opened</span></div><div><b>12.6%</b><span>Acted</span></div></div>
+              <div class="conversion-callout"><span>Best action</span><strong>Save schedule · 216 taps</strong></div>
+              <button class="primary-btn lime" data-action="notify" style="width:100%;margin-top:10px">Create notification</button>
+            </div></article>
+          </div>
+
+          <div class="section-title-row"><div><h2>Event experience</h2><div class="section-note">Planning behaviours before the event and loyalty after it</div></div></div>
+          <div class="grid three-col">
+            <article class="card"><div class="card-head"><div><div class="card-title">Planning engagement</div><div class="card-sub">Signals that shape on-the-ground operations</div></div></div><div class="card-body"><div class="ops-kpis">
+              <div class="ops-item"><small>Schedule saves</small><strong>1,284</strong><em>+16%</em></div>
+              <div class="ops-item"><small>Vendor views</small><strong>7,932</strong><em>+22%</em></div>
+              <div class="ops-item"><small>Menu opens</small><strong>3,416</strong><em>43%</em></div>
+              <div class="ops-item"><small>Transport interest</small><strong>938</strong><em>+11%</em></div>
+            </div></div></article>
+            <article class="card"><div class="card-head"><div><div class="card-title">Mobility intent</div><div class="card-sub">How attendees plan to arrive</div></div></div><div class="card-body">
+              <div class="source-row"><strong>Driving</strong><div class="thin-track"><span style="width:100%;background:var(--teal)"></span></div><b>48%</b></div>
+              <div class="source-row"><strong>Event shuttle</strong><div class="thin-track"><span style="width:59%;background:var(--teal)"></span></div><b>28%</b></div>
+              <div class="source-row"><strong>Taxi / ride</strong><div class="thin-track"><span style="width:36%;background:var(--teal)"></span></div><b>17%</b></div>
+              <div class="source-row"><strong>Public route</strong><div class="thin-track"><span style="width:15%;background:var(--teal)"></span></div><b>7%</b></div>
+              <div class="conversion-callout"><span>Parking interest</span><strong>612 people · 431 cars</strong></div>
+            </div></article>
+            <article class="card"><div class="card-head"><div><div class="card-title">Post-event pulse</div><div class="card-sub">Previous edition · 416 responses</div></div></div><div class="card-body">
+              <div class="split-stat"><div><b>4.6</b><span>Avg. sentiment / 5</span></div><div><b>84%</b><span>Would return</span></div></div>
+              <div class="sentiment"><span style="width:78%;background:#52a974"></span><span style="width:15%;background:#e3b34d"></span><span style="width:7%;background:#d96962"></span></div>
+              <div class="quote">“Loved the food village. More shuttle pickup points would make next year perfect.”</div>
+            </div></article>
+          </div>
+        </section>
+
+        <section class="pane" id="segments">
+          <div class="radius-card card">
+            <div><div class="card-title">Build a local audience</div><div class="card-sub">Find engaged people around the event venue</div></div>
+            <div class="range-wrap"><input type="range" min="5" max="100" value="25" id="radius"><span class="range-value"><span id="radiusValue">25</span> km</span></div>
+            <button class="primary-btn lime segment-open" data-name="Lives within 25 km" data-count="2,406">View 2,406 people</button>
+          </div>
+          <div class="section-title-row">
+            <div><h2>Ready-to-use segments</h2><div class="section-note">Prioritized by likely impact · click any segment to inspect or act</div></div>
+            <div class="segment-toolbar"><input class="search" id="segmentSearch" placeholder="Search segments…" aria-label="Search segments"><button class="ghost-btn" data-action="export">Export CSV</button></div>
+          </div>
+          <div class="grid segment-grid" id="segmentGrid">
+            <article class="card segment" data-search="interested tickets click"><div class="segment-icon">I</div><div><div class="segment-name">Interested, hasn’t clicked tickets</div><div class="segment-desc">High intent · no ticket-link activity</div></div><div><div class="segment-count">1,347</div><button class="segment-action segment-open" data-name="Interested, hasn’t clicked tickets" data-count="1,347">View & notify →</button></div></article>
+            <article class="card segment" data-search="clicked tickets confirm purchase"><div class="segment-icon">C</div><div><div class="segment-name">Clicked, hasn’t confirmed purchase</div><div class="segment-desc">Highest-conversion opportunity</div></div><div><div class="segment-count">1,082</div><button class="segment-action segment-open" data-name="Clicked, hasn’t confirmed purchase" data-count="1,082">View & retarget →</button></div></article>
+            <article class="card segment" data-search="sold out demand wants tickets"><div class="segment-icon">!</div><div><div class="segment-name">Wants tickets for sold-out event</div><div class="segment-desc">Demand-list members · 1,126 tickets requested</div></div><div><div class="segment-count">684</div><button class="segment-action segment-open" data-name="Wants tickets for sold-out event" data-count="684">View demand →</button></div></article>
+            <article class="card segment" data-search="attended previous edition repeat"><div class="segment-icon">R</div><div><div class="segment-name">Attended the previous edition</div><div class="segment-desc">Known guests with repeat-attendance potential</div></div><div><div class="segment-count">1,426</div><button class="segment-action segment-open" data-name="Attended the previous edition" data-count="1,426">Invite back →</button></div></article>
+            <article class="card segment" data-search="nearby radius lives local"><div class="segment-icon">◎</div><div><div class="segment-name">Lives within 25 km</div><div class="segment-desc">Engaged audience near the event venue</div></div><div><div class="segment-count">2,406</div><button class="segment-action segment-open" data-name="Lives within 25 km" data-count="2,406">Adjust radius →</button></div></article>
+            <article class="card segment" data-search="follows performer lineup artist"><div class="segment-icon">♪</div><div><div class="segment-name">Follows a performer on the lineup</div><div class="segment-desc">Affinity audience across 7 booked performers</div></div><div><div class="segment-count">3,118</div><button class="segment-action segment-open" data-name="Follows a performer on the lineup" data-count="3,118">View by artist →</button></div></article>
+            <article class="card segment" data-search="travelling tourism hotel accommodation trip"><div class="segment-icon">T</div><div><div class="segment-name">Travelling to the event area</div><div class="segment-desc">Trip, accommodation or inter-parish travel signals</div></div><div><div class="segment-count">792</div><button class="segment-action segment-open" data-name="Travelling to the event area" data-count="792">View travellers →</button></div></article>
+          </div>
+        </section>
+
+        <section class="pane" id="operations">
+          <div class="section-title-row"><div><h2>Caribbean operations intelligence</h2><div class="section-note">Convert audience behaviour into transport, sales, tourism and vendor decisions</div></div><button class="primary-btn" data-action="export">Download ops brief</button></div>
+          <div class="island-strip">
+            <article class="card island-card"><div class="tag">Off-island / abroad</div><b>14%</b><span>of engaged audience</span></article>
+            <article class="card island-card"><div class="tag">Multi-day trips</div><b>388</b><span>2.4 nights average</span></article>
+            <article class="card island-card"><div class="tag">Accommodation intent</div><b>524</b><span>people browsing stays</span></article>
+            <article class="card island-card"><div class="tag">Cash ticket demand</div><b>286</b><span>requested outlet info</span></article>
+            <article class="card island-card"><div class="tag">Parking demand</div><b>431</b><span>estimated vehicles</span></article>
+          </div>
+          <div class="grid two-col" style="margin-top:14px">
+            <article class="card"><div class="card-head"><div><div class="card-title">Transport & parking readiness</div><div class="card-sub">Predicted demand versus current published capacity</div></div><span class="status warn">Action needed</span></div><div class="table-wrap"><table>
+              <thead><tr><th>Mode</th><th>Interest</th><th>Capacity / supply</th><th>Gap</th><th>Next move</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Event shuttle</strong></td><td>263</td><td>160 seats</td><td><span class="status warn">–103</span></td><td>Add 2 runs</td></tr>
+                <tr><td><strong>Parking</strong></td><td>431 cars</td><td>360 spaces</td><td><span class="status warn">–71</span></td><td>Open overflow lot</td></tr>
+                <tr><td><strong>Montego Bay route</strong></td><td>88</td><td>45 seats</td><td><span class="status warn">–43</span></td><td>Confirm 2nd coach</td></tr>
+                <tr><td><strong>Kingston pickup</strong></td><td>176</td><td>180 seats</td><td><span class="status">+4</span></td><td>On track</td></tr>
+              </tbody>
+            </table></div></article>
+            <article class="card"><div class="card-head"><div><div class="card-title">Ticket access channels</div><div class="card-sub">Digital and physical purchase preferences</div></div></div><div class="card-body">
+              <div class="source-row"><strong>Online card</strong><div class="thin-track"><span style="width:100%;background:var(--purple)"></span></div><b>61%</b></div>
+              <div class="source-row"><strong>Cash outlet</strong><div class="thin-track"><span style="width:41%;background:var(--purple)"></span></div><b>25%</b></div>
+              <div class="source-row"><strong>Bank transfer</strong><div class="thin-track"><span style="width:15%;background:var(--purple)"></span></div><b>9%</b></div>
+              <div class="source-row"><strong>Pay at gate</strong><div class="thin-track"><span style="width:8%;background:var(--purple)"></span></div><b>5%</b></div>
+              <div class="conversion-callout"><span>Outlet opportunity</span><strong>Portmore · 94 requests</strong></div>
+            </div></article>
+          </div>
+          <div class="grid three-col" style="margin-top:14px">
+            <article class="card"><div class="card-head"><div><div class="card-title">Tourism & stays</div><div class="card-sub">Where travel planning is happening</div></div></div><div class="card-body">
+              <div class="place-row"><strong>Kingston hotels</strong><div class="thin-track"><span style="width:100%"></span></div><b>232</b></div>
+              <div class="place-row"><strong>Airbnb / villas</strong><div class="thin-track"><span style="width:72%"></span></div><b>168</b></div>
+              <div class="place-row"><strong>Friends / family</strong><div class="thin-track"><span style="width:53%"></span></div><b>124</b></div>
+              <button class="primary-btn lime" data-action="partner" style="width:100%;margin-top:12px">Build stay package</button>
+            </div></article>
+            <article class="card"><div class="card-head"><div><div class="card-title">Food vendor demand</div><div class="card-sub">Menu engagement and dietary interest</div></div></div><div class="card-body">
+              <div class="split-stat"><div><b>7.9K</b><span>Vendor views</span></div><div><b>3.4K</b><span>Menu opens</span></div></div>
+              <div class="source-row"><strong>Jerk & grill</strong><div class="thin-track"><span style="width:100%;background:var(--red)"></span></div><b>31%</b></div>
+              <div class="source-row"><strong>Vegan</strong><div class="thin-track"><span style="width:55%;background:var(--red)"></span></div><b>17%</b></div>
+              <div class="source-row"><strong>Seafood</strong><div class="thin-track"><span style="width:48%;background:var(--red)"></span></div><b>15%</b></div>
+            </div></article>
+            <article class="card"><div class="card-head"><div><div class="card-title">Multi-day behaviour</div><div class="card-sub">Activity around the event window</div></div></div><div class="card-body">
+              <div class="source-row"><strong>Arrive day before</strong><div class="thin-track"><span style="width:100%;background:var(--teal)"></span></div><b>42%</b></div>
+              <div class="source-row"><strong>Stay 2–3 nights</strong><div class="thin-track"><span style="width:74%;background:var(--teal)"></span></div><b>31%</b></div>
+              <div class="source-row"><strong>Add local activity</strong><div class="thin-track"><span style="width:57%;background:var(--teal)"></span></div><b>24%</b></div>
+              <div class="source-row"><strong>Other events saved</strong><div class="thin-track"><span style="width:39%;background:var(--teal)"></span></div><b>16%</b></div>
+            </div></article>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <div class="drawer-head"><div><div class="eyebrow">Audience segment</div><h3 id="drawerTitle">Segment</h3></div><button class="close" id="drawerClose" aria-label="Close">×</button></div>
+      <div class="drawer-count" id="drawerCount">0</div>
+      <p>People currently match this segment. Counts update as Troddr receives new intent, ticket and trip signals.</p>
+      <div class="drawer-actions"><button class="primary-btn lime" data-action="notify">Send notification</button><button class="ghost-btn" data-action="export">Export list</button></div>
+      <div class="card-title">Recent matches</div>
+      <div class="person"><div class="person-avatar">AM</div><div><strong>Alicia M.</strong><span>Kingston · saved 2 days ago</span></div></div>
+      <div class="person"><div class="person-avatar">DJ</div><div><strong>Devon J.</strong><span>Portmore · clicked ticket link</span></div></div>
+      <div class="person"><div class="person-avatar">KS</div><div><strong>Keisha S.</strong><span>Montego Bay · planning a 3-night trip</span></div></div>
+      <div class="person"><div class="person-avatar">OB</div><div><strong>Omar B.</strong><span>St. Andrew · follows Jaz Elise</span></div></div>
+    </aside>
+  </div>
+  <div class="toast" id="toast">Done</div>
+  <script>
+    const tabs = document.querySelectorAll(".tab");
+    const panes = document.querySelectorAll(".pane");
+    function openTab(id) {
+      tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.tab === id));
+      panes.forEach(pane => pane.classList.toggle("active", pane.id === id));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    tabs.forEach(tab => tab.addEventListener("click", () => openTab(tab.dataset.tab)));
+    document.querySelectorAll("[data-tab-jump]").forEach(button => button.addEventListener("click", () => openTab(button.dataset.tabJump)));
+
+    const toast = document.getElementById("toast");
+    let toastTimer;
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2300);
+    }
+    document.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => {
+      const messages = { export: "Report prepared for download", notify: "Notification draft created", partner: "Stay package workspace opened" };
+      showToast(messages[button.dataset.action] || "Action complete");
+    }));
+    document.getElementById("refreshBtn").addEventListener("click", event => {
+      event.currentTarget.textContent = "✓";
+      showToast("Demand data is up to date");
+      setTimeout(() => event.currentTarget.textContent = "↻", 1200);
+    });
+    document.getElementById("dateRange").addEventListener("change", event => showToast(`Showing ${event.target.options[event.target.selectedIndex].text.toLowerCase()}`));
+
+    const drawer = document.getElementById("drawerBackdrop");
+    document.querySelectorAll(".segment-open").forEach(button => button.addEventListener("click", () => {
+      document.getElementById("drawerTitle").textContent = button.dataset.name;
+      document.getElementById("drawerCount").textContent = button.dataset.count;
+      drawer.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }));
+    function closeDrawer() { drawer.classList.remove("open"); document.body.style.overflow = ""; }
+    document.getElementById("drawerClose").addEventListener("click", closeDrawer);
+    drawer.addEventListener("click", event => { if (event.target === drawer) closeDrawer(); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape") closeDrawer(); });
+
+    const radius = document.getElementById("radius");
+    radius.addEventListener("input", () => {
+      document.getElementById("radiusValue").textContent = radius.value;
+      const count = Math.round(890 + Number(radius.value) * 60.64).toLocaleString();
+      const button = document.querySelector(".radius-card .segment-open");
+      button.textContent = `View ${count} people`;
+      button.dataset.count = count;
+      button.dataset.name = `Lives within ${radius.value} km`;
+      document.querySelectorAll(".segment-name")[4].textContent = `Lives within ${radius.value} km`;
+    });
+    document.getElementById("segmentSearch").addEventListener("input", event => {
+      const query = event.target.value.toLowerCase().trim();
+      document.querySelectorAll("#segmentGrid .segment").forEach(card => {
+        card.style.display = card.dataset.search.includes(query) || card.textContent.toLowerCase().includes(query) ? "" : "none";
+      });
+    });
+    document.getElementById("menuBtn").addEventListener("click", () => document.getElementById("sidebar").classList.toggle("open"));
+  </script>
+</body>
+</html>
