@@ -37,7 +37,7 @@
 
     <main class="legal-container">
         <h1 class="legal-h1">Privacy Policy</h1>
-        <p class="legal-muted">Effective Date: September 2, 2025 <span class="badge-updated">Last Updated: November 17, 2025</span></p>
+        <p class="legal-muted">Effective Date: September 2, 2025 <span class="badge-updated">Last Updated: July 31, 2026</span></p>
 
         <div class="legal-toc">
             <strong>In this policy</strong>
@@ -74,6 +74,8 @@
                 <li><strong>Account Information:</strong> Name, email address, password (encrypted), date of birth, profile information</li>
                 <li><strong>Preferences:</strong> Travel interests, dietary restrictions, accessibility needs, language preferences, notification settings</li>
                 <li><strong>Travel Plans:</strong> Saved places, bookmarks, custom itineraries, trip dates, travel companions</li>
+                <li><strong>Check-ins &amp; Visits:</strong> Venue check-ins (including NFC tap and QR scan), verified visit history, and loyalty/rewards activity</li>
+                <li><strong>Social Connections:</strong> Invitations you send or accept, RSVP responses, and the connections formed when you and another user meet in person or share a trip</li>
                 <li><strong>User Feedback:</strong> Upvotes, downvotes, "would visit again" votes, interaction signals</li>
                 <li><strong>Communication:</strong> Support requests, messages, survey responses, feedback submissions</li>
                 <li><strong>Payment Information:</strong> Processed securely by third-party payment processors (we do not store full credit card details)</li>
@@ -83,17 +85,27 @@
             <ul>
                 <li><strong>Usage Data:</strong> Features used, screens viewed, session duration, search queries, engagement metrics, content interactions</li>
                 <li><strong>Device Information:</strong> Device model, operating system, network information, device identifiers (IDFA, Android ID), app version, screen size</li>
-                <li><strong>Location Data:</strong> Precise GPS location (when enabled), IP-based location, saved locations, location history</li>
+                <li><strong>Location Data:</strong> Precise GPS location (when enabled), including background ("Always") location used to notify you when you're near saved places or places in your active guide; IP-based location, saved locations, and location history</li>
                 <li><strong>Technical Data:</strong> IP address, browser settings, cookies, server logs, crash reports, performance data</li>
                 <li><strong>Offline Data:</strong> Cached listings, maps, images, and itineraries for offline access</li>
             </ul>
 
             <h3>2.3 Information from Third-Party Sources</h3>
             <ul>
-                <li>Social login data from Apple, Google, or Facebook (name, email, profile picture)</li>
+                <li>Social login data from Apple or Google (name, email, profile picture)</li>
                 <li>Booking or reservation confirmations from integrated partners</li>
                 <li>Aggregated demographic information from analytics providers</li>
                 <li>Map usage data from Google Maps and Apple Maps</li>
+            </ul>
+
+            <h3>2.4 Device Permissions</h3>
+            <p>With your permission, TRODDR accesses certain device features. You can change these anytime in your device settings:</p>
+            <ul>
+                <li><strong>Location:</strong> Foreground and, if you allow "Always" access, background location — to show nearby places and notify you when you're near saved places or places in your active guide</li>
+                <li><strong>Camera:</strong> To scan QR codes for event access, check-ins, loyalty rewards, and interactive experiences</li>
+                <li><strong>NFC:</strong> To check you in when you tap a tag at a venue or event</li>
+                <li><strong>Calendar &amp; Reminders:</strong> To add saved events or bookings to your device calendar or reminders when you choose to</li>
+                <li><strong>Notifications:</strong> To send push notifications you've enabled</li>
             </ul>
         </section>
 
@@ -163,7 +175,7 @@
             <p>We share information with trusted third-party providers who help us operate the Service:</p>
             <ul>
                 <li>Cloud hosting providers (AWS, Google Cloud)</li>
-                <li>Analytics services (Google Analytics, Firebase, Mixpanel)</li>
+                <li>Analytics services (PostHog), alongside TRODDR's own first-party analytics</li>
                 <li>Customer support, email, and notification services</li>
                 <li>Security and fraud prevention tools</li>
                 <li>Payment processors</li>
@@ -176,13 +188,24 @@
                 <li>Apple Maps (subject to <a href="https://www.apple.com/legal/privacy/" target="_blank">Apple's Privacy Policy</a>)</li>
             </ul>
 
-            <h3>4.3 Business Partners</h3>
+            <h3>4.3 Other Users and Connections</h3>
+            <p>Some features share information with other people using TRODDR:</p>
+            <ul>
+                <li>Your display name and profile photo are visible to users you connect with</li>
+                <li>Connections are formed only through mutual actions (for example, you and another user invite each other to a place and both attend, or you accept a trip invite) — there is no "add friend" button, and your saved favourites are never shared</li>
+                <li><strong>Invitations &amp; RSVPs:</strong> People you invite can see your name and whether you're attending; you can see the same about them</li>
+                <li><strong>Social signals:</strong> Connections may see places you've visited and marked "would visit again," and that you're attending or interested in an event</li>
+                <li><strong>Live location at events:</strong> If you opt in per event, your approximate live location is shown on that event's map to your connections until you turn it off; turning it off deletes the shared location</li>
+            </ul>
+
+            <h3>4.4 Business Partners</h3>
             <ul>
                 <li>Aggregated, anonymized feedback shared with featured businesses</li>
+                <li>When you check in, book, or join a business's loyalty or Insider program, that business may see your identity and the visit associated with that action</li>
                 <li>Booking and reservation partners for confirmed transactions</li>
             </ul>
 
-            <h3>4.4 Legal Disclosure</h3>
+            <h3>4.5 Legal Disclosure</h3>
             <p>We may disclose information when required by law or to:</p>
             <ul>
                 <li>Comply with legal process, court orders, or government requests</li>
@@ -191,13 +214,13 @@
                 <li>Respond to emergencies involving danger of death or serious injury</li>
             </ul>
 
-            <h3>4.5 Business Transfers</h3>
+            <h3>4.6 Business Transfers</h3>
             <p>In the event of a merger, acquisition, reorganization, or sale of assets, your information may be transferred. You will be notified of any such change.</p>
 
-            <h3>4.6 With Your Consent</h3>
+            <h3>4.7 With Your Consent</h3>
             <p>We may share information for purposes you explicitly approve or direct.</p>
 
-            <h3>4.7 Aggregated or De-Identified Data</h3>
+            <h3>4.8 Aggregated or De-Identified Data</h3>
             <p>We may share aggregated or de-identified data that cannot reasonably be used to identify you for research, analytics, or product development.</p>
         </section>
 
@@ -214,6 +237,7 @@
             <h3>5.2 Location Services</h3>
             <ul>
                 <li>Control location access via device settings (iOS: Settings > Privacy > Location Services)</li>
+                <li>Choose "While Using the App" instead of "Always" to stop background location and geofenced arrival notifications</li>
                 <li>Manage location preferences within TRODDR app settings</li>
                 <li>Disable location services anytime (may limit location-based features)</li>
             </ul>
@@ -397,9 +421,9 @@
             <p>We integrate with third-party platforms to provide enhanced functionality:</p>
             <ul>
                 <li><strong>Google Maps & Apple Maps:</strong> Location services and navigation</li>
-                <li><strong>Social Platforms:</strong> Apple, Google, and Facebook for authentication and sharing</li>
+                <li><strong>Social Platforms:</strong> Apple and Google for authentication</li>
                 <li><strong>Cloud Providers:</strong> AWS and Google Cloud for hosting and storage</li>
-                <li><strong>Analytics:</strong> Google Analytics, Firebase, Mixpanel for usage insights</li>
+                <li><strong>Analytics:</strong> PostHog for usage insights</li>
             </ul>
 
             <h3>12.2 Third-Party Privacy Policies</h3>
@@ -407,7 +431,7 @@
             <ul>
                 <li>Google: <a href="https://policies.google.com/privacy" target="_blank">https://policies.google.com/privacy</a></li>
                 <li>Apple: <a href="https://www.apple.com/legal/privacy/" target="_blank">https://www.apple.com/legal/privacy/</a></li>
-                <li>Facebook: <a href="https://www.facebook.com/privacy/policy/" target="_blank">https://www.facebook.com/privacy/policy/</a></li>
+                <li>PostHog: <a href="https://posthog.com/privacy" target="_blank">https://posthog.com/privacy</a></li>
             </ul>
 
             <h3>12.3 Disclaimer</h3>
