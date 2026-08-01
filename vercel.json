@@ -81,6 +81,10 @@
         "destination": "/api/og/invites/:id"
       },
       {
+        "source": "/trips/:id",
+        "destination": "/api/og/trips/:id"
+      },
+      {
         "source": "/checkin/:tag",
         "destination": "/checkin.html"
       },
