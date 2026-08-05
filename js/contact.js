@@ -41,56 +41,37 @@ async function handleFormSubmission(e) {
         return;
     }
     
-    // Show loading state
     setSubmitButtonLoading(submitBtn, true);
-    
-    try {
-        // Simulate form submission (replace with actual endpoint)
-        await submitForm(form);
-        showFormMessage('success');
-        resetForm(form);
-    } catch (error) {
-        console.error('Form submission error:', error);
-        showFormMessage('error');
-    } finally {
-        setSubmitButtonLoading(submitBtn, false);
-    }
+    openContactEmail(form);
+    setSubmitButtonLoading(submitBtn, false);
 }
 
 /**
- * Submit form data (replace with your actual API endpoint)
+ * Open the visitor's email app with the form details pre-filled.
  */
-async function submitForm(form) {
+function openContactEmail(form) {
     const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-    
-    // Simulate API call
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            // Simulate success/failure randomly for demo
-            if (Math.random() > 0.1) { // 90% success rate
-                resolve(data);
-            } else {
-                reject(new Error('Submission failed'));
-            }
-        }, 2000);
-    });
-    
-    /* Replace the above simulation with actual API call:
-    const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    });
-    
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
-    
-    return response.json();
-    */
+    const firstName = String(formData.get('firstName') || '').trim();
+    const lastName = String(formData.get('lastName') || '').trim();
+    const email = String(formData.get('email') || '').trim();
+    const company = String(formData.get('company') || '').trim();
+    const topicField = form.querySelector('[name="subject"]');
+    const topic = topicField && topicField.selectedIndex >= 0
+        ? topicField.options[topicField.selectedIndex].text
+        : 'Website enquiry';
+    const message = String(formData.get('message') || '').trim();
+    const newsletter = formData.get('newsletter') ? 'Yes' : 'No';
+    const subject = `TRODDR website: ${topic}`;
+    const body = [
+        `Name: ${firstName} ${lastName}`.trim(),
+        `Email: ${email}`,
+        company ? `Company: ${company}` : null,
+        `Newsletter updates: ${newsletter}`,
+        '',
+        message
+    ].filter((line) => line !== null).join('\n');
+
+    window.location.href = `mailto:hello@troddr.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 /**
