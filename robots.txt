@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /partner/
+Disallow: /company/
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /event-onboarding
+Disallow: /booking
+Disallow: /reset-password
+Disallow: /m/
+Disallow: /map/
+Disallow: /park/
+Disallow: /checkin/
+Disallow: /api/sb/
+
+Sitemap: https://www.troddr.com/sitemap.xml

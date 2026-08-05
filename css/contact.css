@@ -395,13 +395,28 @@ html, body {
 }
 
 .checkbox-group input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
     margin: 0;
-    accent-color: var(--primary);
+    padding: 0;
+    border: 2px solid #cbd5df;
+    border-radius: 6px;
+    background: #fff;
     cursor: pointer;
     flex-shrink: 0;
     margin-top: 2px;
+}
+.checkbox-group input[type="checkbox"]:checked {
+    border-color: var(--primary);
+    background: var(--primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='m5 10 3 3 7-7'/%3E%3C/svg%3E") center/16px no-repeat;
+}
+.checkbox-group input[type="checkbox"]:focus-visible {
+    outline: 3px solid rgba(0,119,204,.22);
+    outline-offset: 3px;
 }
 
 .checkbox-group label {
