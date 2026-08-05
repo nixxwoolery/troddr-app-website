@@ -7,7 +7,7 @@
     <meta name="description" content="Get in touch with TRODDR. Questions, partnerships, press inquiries, or feedback - we'd love to hear from you.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/contact.css?v=2">
+    <link rel="stylesheet" href="css/contact.css?v=5">
     <link rel="stylesheet" href="css/home-refresh.css">
 
     <!-- Favicon -->
@@ -42,7 +42,7 @@
                     aria-label="Open menu">
                     <span aria-hidden="true">☰</span>
             </button>
-            <div class="nav-links" id="primary-navigation" role="navigation">
+            <div class="nav-links" id="primary-navigation" role="navigation" aria-label="Primary navigation">
                 <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
                 <a href="about.html" class="nav-item">About</a>
                 <a href="index.html#features" class="nav-item">Features</a>
@@ -65,21 +65,21 @@
         <div class="section-container">
             <div class="quick-contact-grid">
                 <div class="quick-contact-card">
-                    <div class="quick-contact-icon">📧</div>
+                    <div class="quick-contact-icon" aria-hidden="true">📧</div>
                     <h3>General Inquiries</h3>
                     <p>Questions about TRODDR or need help?</p>
                     <a href="mailto:hello@troddr.com" class="quick-contact-link">hello@troddr.com</a>
                 </div>
                 
                 <div class="quick-contact-card">
-                    <div class="quick-contact-icon">🤝</div>
+                    <div class="quick-contact-icon" aria-hidden="true">🤝</div>
                     <h3>Partnerships</h3>
                     <p>Interested in collaborating with us?</p>
                     <a href="mailto:partnerships@troddr.com" class="quick-contact-link">partnerships@troddr.com</a>
                 </div>
                 
                 <div class="quick-contact-card">
-                    <div class="quick-contact-icon">📰</div>
+                    <div class="quick-contact-icon" aria-hidden="true">📰</div>
                     <h3>Press & Media</h3>
                     <p>Media inquiries and press kit requests</p>
                     <a href="mailto:press@troddr.com" class="quick-contact-link">press@troddr.com</a>
@@ -162,7 +162,7 @@
                     <h3>Other Ways to Reach Us</h3>
                     
                     <div class="contact-method">
-                        <div class="contact-method-icon">🏢</div>
+                        <div class="contact-method-icon" aria-hidden="true">🏢</div>
                         <div class="contact-method-content">
                             <h4>Office</h4>
                             <p>TRODDR Ltd.<br>Negril, Jamaica</p>
@@ -170,12 +170,12 @@
                     </div>
 
                     <div class="contact-method">
-                        <div class="contact-method-icon">📱</div>
+                        <div class="contact-method-icon" aria-hidden="true">📱</div>
                         <div class="contact-method-content">
                             <h4>Social Media</h4>
                             <div class="social-links">
                                 <a href="https://www.instagram.com/troddr/" target="_blank" rel="noopener" class="social-link">
-                                    <span class="social-icon">📸</span>
+                                    <span class="social-icon" aria-hidden="true">📸</span>
                                     Instagram
                                 </a>
                                 <!-- <a href="#" class="social-link">
@@ -191,7 +191,7 @@
                     </div>
 
                     <div class="contact-method">
-                        <div class="contact-method-icon">⏰</div>
+                        <div class="contact-method-icon" aria-hidden="true">⏰</div>
                         <div class="contact-method-content">
                             <h4>Response Time</h4>
                             <p>We typically respond within 24 hours during business days (Monday-Friday, 9am-5pm Jamaica time).</p>
@@ -199,7 +199,7 @@
                     </div>
 
                     <div class="contact-method">
-                        <div class="contact-method-icon">🌴</div>
+                        <div class="contact-method-icon" aria-hidden="true">🌴</div>
                         <div class="contact-method-content">
                             <h4>Visit Jamaica</h4>
                             <p>Planning a trip? Download TRODDR to discover the best local spots and hidden gems across the island.</p>
@@ -332,6 +332,14 @@
           const closeBtn = document.querySelector('.nav-close-btn');
       
           if (!menuBtn || !navLinks) return;
+
+          function closeMenu(restoreFocus){
+            navLinks.classList.remove('mobile-open');
+            menuBtn.classList.remove('active');
+            menuBtn.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('menu-open');
+            if (restoreFocus) menuBtn.focus();
+          }
       
           // Toggle menu open/close
           menuBtn.addEventListener('click', function(){
@@ -339,35 +347,25 @@
             this.classList.toggle('active', isOpen);
             this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             document.body.classList.toggle('menu-open', isOpen);
+            if (isOpen && closeBtn) closeBtn.focus();
           });
       
           // Close when a nav link is clicked
           navLinks.addEventListener('click', function(e){
             const link = e.target.closest('a');
             if (!link) return;
-            navLinks.classList.remove('mobile-open');
-            menuBtn.classList.remove('active');
-            menuBtn.setAttribute('aria-expanded', 'false');
-            document.body.classList.remove('menu-open');
+            closeMenu(false);
           });
       
           // ✅ Close when the explicit close button is clicked
           if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-              navLinks.classList.remove('mobile-open');
-              menuBtn.classList.remove('active');
-              menuBtn.setAttribute('aria-expanded', 'false');
-              document.body.classList.remove('menu-open');
-            });
+            closeBtn.addEventListener('click', () => closeMenu(true));
           }
       
           // Close on Escape key
           document.addEventListener('keydown', function(e){
             if (e.key === 'Escape') {
-              navLinks.classList.remove('mobile-open');
-              menuBtn.classList.remove('active');
-              menuBtn.setAttribute('aria-expanded', 'false');
-              document.body.classList.remove('menu-open');
+              closeMenu(true);
             }
           });
         })();

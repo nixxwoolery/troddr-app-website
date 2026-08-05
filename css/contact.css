@@ -252,7 +252,7 @@ html, body {
 }
 
 .quick-contact-link {
-    color: var(--primary);
+    color: #075c9a;
     text-decoration: none;
     font-weight: 600;
     font-size: 1rem;
@@ -426,6 +426,26 @@ html, body {
     line-height: 1.5;
     cursor: pointer;
     font-size: 0.9rem;
+}
+
+.contact-method-content a:not(.cta-link),
+.faq-item a {
+    color: #075c9a;
+    font-weight: 600;
+}
+
+.contact-method-content .cta-link {
+    color: #fff;
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(0, 119, 204, 0.32) !important;
+    outline-offset: 3px;
 }
 
 /* Error messages */
@@ -661,7 +681,7 @@ html, body {
 }
 
 .faq-item a {
-    color: var(--primary);
+    color: #075c9a;
     text-decoration: none;
     font-weight: 500;
 }

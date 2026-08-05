@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/home-refresh.css?v=4">
+    <link rel="stylesheet" href="css/home-refresh.css?v=5">
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-N0L5H68MFR"></script>
@@ -146,7 +146,7 @@
                     aria-label="Open menu">
                     <span aria-hidden="true">☰</span>
             </button>
-            <div class="nav-links" id="primary-navigation" role="navigation">
+            <div class="nav-links" id="primary-navigation" role="navigation" aria-label="Primary navigation">
                 <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
                 <a href="about.html" class="nav-item">About</a>
                 <!-- <a href="/business" class="nav-item">For Business</a> -->
@@ -183,8 +183,12 @@
                     </div>
                 </div>
                 <div class="phone-stage">
+                    <div class="phone-preview-label" aria-hidden="true">
+                        <span>Explore the app</span>
+                        <span class="phone-preview-arrow">↓</span>
+                    </div>
                     <div class="phone-device">
-                        <div class="phone-screen">
+                        <div class="phone-screen" tabindex="0" role="region" aria-label="Interactive preview of the TRODDR app. Scroll to explore the Discover screen.">
                             <img src="images/troddr-app-home.webp"
                                  alt="TRODDR app Discover screen showing Kingston recommendations, events and dining picks"
                                  width="800" height="1739" fetchpriority="high">
@@ -195,7 +199,7 @@
         </section>
 
         <!-- Animated Ticker -->
-        <section class="ticker-section" aria-label="Join our community" role="banner">
+        <section class="ticker-section" aria-label="Join our community">
             <div class="ticker-row">
                 <div class="section-container">
                     <div class="ticker-inner">
@@ -611,37 +615,35 @@
 
             if (!menuBtn || !navLinks) return;
 
+            function closeMenu(restoreFocus){
+                navLinks.classList.remove('mobile-open');
+                menuBtn.classList.remove('active');
+                menuBtn.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('menu-open');
+                if (restoreFocus) menuBtn.focus();
+            }
+
             menuBtn.addEventListener('click', function(){
                 const isOpen = navLinks.classList.toggle('mobile-open');
                 this.classList.toggle('active', isOpen);
                 this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 document.body.classList.toggle('menu-open', isOpen);
+                if (isOpen && closeBtn) closeBtn.focus();
             });
 
             navLinks.addEventListener('click', function(e){
                 const link = e.target.closest('a');
                 if (!link) return;
-                navLinks.classList.remove('mobile-open');
-                menuBtn.classList.remove('active');
-                menuBtn.setAttribute('aria-expanded', 'false');
-                document.body.classList.remove('menu-open');
+                closeMenu(false);
             });
 
             if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                    navLinks.classList.remove('mobile-open');
-                    menuBtn.classList.remove('active');
-                    menuBtn.setAttribute('aria-expanded', 'false');
-                    document.body.classList.remove('menu-open');
-                });
+                closeBtn.addEventListener('click', () => closeMenu(true));
             }
 
             document.addEventListener('keydown', function(e){
                 if (e.key === 'Escape') {
-                    navLinks.classList.remove('mobile-open');
-                    menuBtn.classList.remove('active');
-                    menuBtn.setAttribute('aria-expanded', 'false');
-                    document.body.classList.remove('menu-open');
+                    closeMenu(true);
                 }
             });
         })();
@@ -693,6 +695,80 @@
             renderHeroTransform();
             window.addEventListener('scroll', requestHeroTransform, { passive: true });
             window.addEventListener('resize', requestHeroTransform, { passive: true });
+        })();
+
+        (function(){
+            const screen = document.querySelector('.phone-screen');
+            const stage = document.querySelector('.phone-stage');
+            if (!screen || !stage) return;
+
+            let animationFrame = 0;
+            let hasInteracted = false;
+            let hasPreviewed = false;
+
+            function stopPreview(){
+                hasInteracted = true;
+                if (animationFrame) cancelAnimationFrame(animationFrame);
+                animationFrame = 0;
+                stage.classList.add('is-explored');
+            }
+
+            ['wheel', 'touchstart', 'pointerdown'].forEach((eventName) => {
+                screen.addEventListener(eventName, stopPreview, { passive: true, once: true });
+            });
+            screen.addEventListener('keydown', stopPreview, { once: true });
+            screen.addEventListener('keydown', (event) => {
+                const keyMoves = {
+                    ArrowDown: 64,
+                    ArrowUp: -64,
+                    PageDown: screen.clientHeight * .8,
+                    PageUp: -screen.clientHeight * .8
+                };
+
+                if (event.key === 'Home' || event.key === 'End') {
+                    event.preventDefault();
+                    screen.scrollTop = event.key === 'Home' ? 0 : screen.scrollHeight;
+                    return;
+                }
+                if (!(event.key in keyMoves)) return;
+                event.preventDefault();
+                screen.scrollTop += keyMoves[event.key];
+            });
+            screen.addEventListener('scroll', () => {
+                if (screen.scrollTop > 8) stage.classList.add('is-explored');
+            }, { passive: true });
+
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+
+            function playPreview(){
+                const maxScroll = screen.scrollHeight - screen.clientHeight;
+                if (maxScroll < 24 || hasInteracted) return;
+
+                const start = performance.now();
+                const duration = 1500;
+                const target = Math.min(maxScroll, 118);
+
+                function animate(now){
+                    if (hasInteracted) return;
+                    const progress = Math.min(1, (now - start) / duration);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    screen.scrollTop = target * eased;
+                    if (progress < 1) animationFrame = requestAnimationFrame(animate);
+                    else animationFrame = 0;
+                }
+
+                animationFrame = requestAnimationFrame(animate);
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                const entry = entries[0];
+                if (!entry.isIntersecting || hasPreviewed) return;
+                hasPreviewed = true;
+                window.setTimeout(playPreview, 550);
+                observer.disconnect();
+            }, { threshold: .62 });
+
+            observer.observe(screen);
         })();
 
         (function(){
