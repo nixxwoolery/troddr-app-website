@@ -14,7 +14,7 @@
 
 .workspace-header { box-shadow:0 1px 0 rgba(17,17,17,.03); }
 .workspace-heading h1 { font-size:20px; }
-.native-overview,.native-analytics,.native-performance,.native-events,.native-feedback,.native-review,.native-engagement {
+.native-overview,.native-analytics,.native-bookings,.native-performance,.native-events,.native-feedback,.native-review,.native-engagement {
   background:
     radial-gradient(circle at 8% -10%, rgba(8,120,201,.055), transparent 28%),
     var(--bg-soft);
@@ -87,11 +87,11 @@
 .overview-chart-legend { justify-content:flex-end; }
 .overview-chart-legend i { border-radius:50%; }
 
-#ov-chart,#an-chart,#event-chart { position:relative; min-height:180px; }
-#ov-chart svg,#an-chart svg,#event-chart svg { overflow:visible; }
-#ov-chart svg text,#an-chart svg text,#event-chart svg text { font-size:11px; }
-#ov-chart svg rect,#an-chart svg rect,#event-chart svg rect { fill:#cfe7f6; }
-#ov-chart svg polyline,#an-chart svg polyline,#event-chart svg polyline { stroke:var(--viz-blue); filter:drop-shadow(0 1px 1px rgba(8,120,201,.16)); }
+#ov-chart,#an-chart,#bk-chart,#event-chart { position:relative; min-height:180px; }
+#ov-chart svg,#an-chart svg,#bk-chart svg,#event-chart svg { overflow:visible; }
+#ov-chart svg text,#an-chart svg text,#bk-chart svg text,#event-chart svg text { font-size:11px; }
+#ov-chart svg rect,#an-chart svg rect,#bk-chart svg rect,#event-chart svg rect { fill:#cfe7f6; }
+#ov-chart svg polyline,#an-chart svg polyline,#bk-chart svg polyline,#event-chart svg polyline { stroke:var(--viz-blue); filter:drop-shadow(0 1px 1px rgba(8,120,201,.16)); }
 
 .analytics-toolbar {
   position:sticky; top:0; z-index:5; padding:10px 0 14px;

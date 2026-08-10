@@ -916,8 +916,8 @@
       [pending.submissions, 'Event submissions to review', 'review', 'submissions'],
       [pending.specials, 'Specials pending approval', 'review', 'specials'],
       [pending.messages, 'New partner messages', 'review', 'messages'],
-      [pending.bookings, 'Bookings awaiting response', 'bookings'],
-      [pending.bookings_attention, 'Bookings flagged for TRODDR', 'bookings'],
+      [pending.bookings, 'Bookings awaiting response', 'booking-metrics'],
+      [pending.bookings_attention, 'Bookings flagged for TRODDR', 'booking-metrics'],
       [pending.suggested_places, 'Unmatched place suggestions', 'review', 'suggestions'],
       [feedback.app_open, 'Open app feedback', 'feedback', 'app'],
     ];
@@ -966,6 +966,107 @@
     const button = e.target.closest('[data-engagement-link]');
     if (button) showSection('engagement', { tab: button.dataset.engagementLink });
   });
+
+  /* ── Booking intent and conversion ───────────────────── */
+  const BOOKING_OPEN = new Set(['pending','held','counter_proposed','counter_accepted','counter_rejected']);
+  const BOOKING_WON = new Set(['confirmed','counter_accepted','checked_in','checked_out','completed']);
+
+  function bookingStatusBucket(status) {
+    status = String(status || '');
+    if (BOOKING_WON.has(status)) return 'won';
+    if (BOOKING_OPEN.has(status)) return 'open';
+    return 'lost';
+  }
+
+  function updateBookingsRangeControls() {
+    document.querySelectorAll('[data-bookings-days]').forEach((button) => {
+      const active = Number(button.dataset.bookingsDays) === bookingsDays;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function renderBookingsChart(daily) {
+    if (!daily.length) {
+      $('bk-chart').innerHTML = '<div class="analytics-empty">No booking activity in this window.</div>';
+      return;
+    }
+    const W = 1200, H = 260, padL = 48, padR = 48, padT = 18, padB = 30;
+    const iw = W - padL - padR, ih = H - padT - padB;
+    const maxClicks = Math.max(1, ...daily.map((d) => Number(d.clicks) || 0));
+    const maxBookings = Math.max(1, ...daily.map((d) => Number(d.bookings) || 0));
+    const step = iw / daily.length, bw = Math.max(4, step * .62);
+    const labelEvery = Math.max(1, Math.ceil(daily.length / 7));
+    let bars = '', labels = '', grid = '';
+    const points = [];
+    for (let g = 0; g <= 4; g++) {
+      const y = padT + ih - ih * g / 4;
+      grid += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#f0f0f0"/>`
+        + `<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#777">${Math.round(maxClicks*g/4).toLocaleString()}</text>`
+        + `<text x="${W-padR+8}" y="${y+4}" text-anchor="start" font-size="10" fill="#777">${Math.round(maxBookings*g/4).toLocaleString()}</text>`;
+    }
+    daily.forEach((d, i) => {
+      const cx = padL + step * i + step / 2;
+      const clicks = Number(d.clicks) || 0, bookings = Number(d.bookings) || 0;
+      const bh = ih * clicks / maxClicks;
+      bars += `<rect x="${cx-bw/2}" y="${padT+ih-bh}" width="${bw}" height="${Math.max(bh,1)}" rx="2" fill="#bcd9f0"><title>${esc(d.d)}: ${fmt(clicks)} clicks, ${fmt(bookings)} bookings</title></rect>`;
+      points.push(`${cx},${padT+ih-ih*bookings/maxBookings}`);
+      if (i % labelEvery === 0 || i === daily.length - 1) labels += `<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" fill="#999">${esc(String(d.d).slice(0,10).slice(5))}</text>`;
+    });
+    $('bk-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Reserve clicks and bookings over ${bookingsDays} days"><text x="${padL}" y="10" font-size="10" fill="#777">CLICKS</text><text x="${W-padR}" y="10" text-anchor="end" font-size="10" fill="#777">BOOKINGS</text>${grid}${bars}<polyline points="${points.join(' ')}" fill="none" stroke="#0878c9" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${labels}</svg>`;
+  }
+
+  function renderRecentBookings(rows) {
+    if (!rows.length) {
+      $('bk-recent').innerHTML = '<div class="analytics-empty">No bookings yet.</div>';
+      return;
+    }
+    $('bk-recent').innerHTML = `<table class="bookings-table"><thead><tr><th>Place</th><th>Activity</th><th>Guest</th><th>Party</th><th>Visit</th><th>Status</th></tr></thead><tbody>${rows.map((row) => {
+      const bucket = bookingStatusBucket(row.status);
+      const activity = row.special_title || String(row.booking_type || '').replace(/_/g, ' ');
+      return `<tr class="${row.needs_attention ? 'needs-attention' : ''}"><td class="booking-place">${esc(row.place_name || 'Unknown place')}<small>${esc(String(row.booking_type || '').replace(/_/g, ' '))}</small></td><td>${esc(activity || 'Not specified')}</td><td class="booking-guest">${esc(row.guest_name || 'Guest')}${row.needs_attention ? '<small>Needs TRODDR attention</small>' : ''}</td><td>${fmt(row.party_size)}</td><td>${row.visit_date ? esc(new Date(`${row.visit_date}T12:00:00`).toLocaleDateString([], { month:'short', day:'numeric', year:'numeric' })) : '–'}</td><td><span class="booking-status ${bucket}">${esc(String(row.status || 'unknown').replace(/_/g, ' '))}</span></td></tr>`;
+    }).join('')}</tbody></table>`;
+  }
+
+  function renderBookings(data) {
+    const summary = data.summary || {}, intent = data.intent || {};
+    $('bk-total').textContent = fmt(summary.bookings_in_window);
+    $('bk-total-sub').textContent = `${fmt(summary.total_bookings)} all time · ${fmt(summary.won)} won · ${fmt(summary.open)} open`;
+    $('bk-clicks').textContent = fmt(intent.clicks_in_window);
+    $('bk-clicks-sub').textContent = `${fmt(intent.special_clicks_in_window)} from specials`;
+    const conversion = Number(intent.conversion);
+    $('bk-conversion').textContent = Number.isFinite(conversion) ? `${(conversion * 100).toFixed(1)}%` : '–';
+    $('bk-attention').textContent = fmt(summary.needs_attention);
+    const generated = data.generated_at ? new Date(data.generated_at) : new Date();
+    $('bk-updated').textContent = `Updated ${generated.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })}`;
+    renderBookingsChart(data.daily || []);
+    renderRecentBookings(data.recent || []);
+  }
+
+  async function loadBookings(days) {
+    $('bookings-loading').classList.remove('hidden');
+    $('bookings-error').classList.add('hidden');
+    $('bookings-content').classList.add('hidden');
+    const { data, error } = await db.rpc('admin_get_bookings', { p_admin_token: adminToken, p_days: days });
+    $('bookings-loading').classList.add('hidden');
+    if (error || !data) {
+      $('bookings-error-message').textContent = error?.message || 'Bookings returned no data.';
+      $('bookings-error').classList.remove('hidden');
+      return;
+    }
+    bookingsLoaded = true;
+    renderBookings(data);
+    $('bookings-content').classList.remove('hidden');
+  }
+
+  document.querySelectorAll('[data-bookings-days]').forEach((button) => button.addEventListener('click', () => {
+    bookingsDays = Number(button.dataset.bookingsDays);
+    bookingsLoaded = false;
+    updateBookingsRangeControls();
+    history.replaceState({ section:'booking-metrics' }, '', `#/booking-metrics?days=${bookingsDays}`);
+    loadBookings(bookingsDays);
+  }));
+  $('bookings-retry').addEventListener('click', () => loadBookings(bookingsDays));
 
   /* ── Content Performance ─────────────────────────────── */
   const performanceLabels = { eat:'Eat', stay:'Stay', play:'Play', guides:'Guides', events:'Events', trips:'Trip Places' };
@@ -1241,6 +1342,7 @@
   document.querySelectorAll('#analytics-view .range-btn').forEach((button) => button.addEventListener('click', () => {
     analyticsDays = Number(button.dataset.days);
     analyticsLoaded = false;
+    bookingsLoaded = false;
     AdminEventsView.reset();
     AdminFeedbackView.reset();
     AdminReviewView.reset();
