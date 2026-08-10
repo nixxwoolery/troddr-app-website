@@ -1,4 +1,4 @@
-// api/og/specials/[slug].js — Open Graph card for /specials/{special_slug}
+// api/og/specials/[slug].js - Open Graph card for /specials/{special_slug}
 
 import {
   BASE_URL, isBot, lastPathSegment, sbSelect,
@@ -32,7 +32,7 @@ export default async function handler(request) {
     special?.title || special?.name ||
     slug.replace(/-/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase());
   const placeName = special?.place_name || special?.restaurant_name || '';
-  const title = `${name}${placeName ? ` at ${placeName}` : ''} — TRODDR`;
+  const title = `${name}${placeName ? ` at ${placeName}` : ''} - TRODDR`;
   const description = special?.description
     ? special.description.slice(0, 200)
     : `Check out this special${placeName ? ` at ${placeName}` : ''} on TRODDR.`;

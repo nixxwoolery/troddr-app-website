@@ -128,11 +128,11 @@
   <div class="card hidden" id="step-welcome">
     <div class="eyebrow">You're invited</div>
     <h1 id="welcome-title">Welcome to TRODDR</h1>
-    <p class="lead" id="welcome-lead">Let's get your business set up on TRODDR — the app helping Jamaicans discover where to go, eat, and play.</p>
+    <p class="lead" id="welcome-lead">Let's get your business set up on TRODDR - the app helping Jamaicans discover where to go, eat, and play.</p>
     <div class="offer-grid" style="margin-bottom: 8px;">
       <div class="offer"><div class="o-title">Get discovered</div><div class="o-desc">Your listing in front of locals and visitors searching the island.</div></div>
       <div class="offer"><div class="o-title">Reward regulars</div><div class="o-desc">Run a loyalty program and post specials right in the app.</div></div>
-      <div class="offer"><div class="o-title">Run events</div><div class="o-desc">A full event experience — schedule, vendors, tickets, sponsors.</div></div>
+      <div class="offer"><div class="o-title">Run events</div><div class="o-desc">A full event experience - schedule, vendors, tickets, sponsors.</div></div>
     </div>
     <div class="actions"><div class="spacer"></div><button class="btn btn-primary" id="welcome-next">Create your account →</button></div>
   </div>
@@ -156,7 +156,7 @@
     <h2>Confirm your business</h2>
     <p class="lead">TRODDR has these set up for your account. Confirm they're yours.</p>
     <div id="confirm-list"></div>
-    <p class="muted" id="confirm-empty" style="display:none;">No businesses were pre-attached. You can tell us about them next — TRODDR will add them for you.</p>
+    <p class="muted" id="confirm-empty" style="display:none;">No businesses were pre-attached. You can tell us about them next - TRODDR will add them for you.</p>
     <div class="actions">
       <button class="btn btn-ghost" data-back>← Back</button>
       <div class="spacer"></div>
@@ -267,7 +267,7 @@
   <div class="card hidden" id="step-value">
     <div class="eyebrow">Built for you</div>
     <h2 id="value-title">Here's what TRODDR can do for you</h2>
-    <p class="lead">Based on what you told us — your tailored toolkit.</p>
+    <p class="lead">Based on what you told us - your tailored toolkit.</p>
     <div class="offer-grid" id="value-grid"></div>
     <div class="actions">
       <button class="btn btn-ghost" data-back>← Back</button>
@@ -280,14 +280,14 @@
   <div class="card hidden" id="step-quote">
     <div class="eyebrow">Your personalized plan</div>
     <h2 id="quote-title">Here's what we recommend</h2>
-    <p class="lead">Tailored to your footprint. Toggle add-ons to fit your budget — TRODDR confirms final pricing before you pay.</p>
+    <p class="lead">Tailored to your footprint. Toggle add-ons to fit your budget - TRODDR confirms final pricing before you pay.</p>
     <div class="quote-card">
       <div id="quote-lines"></div>
       <div class="quote-total">
         <div><strong>Estimated total</strong><div class="ql-sub" id="quote-total-sub"></div></div>
-        <div class="t-amount" id="quote-total-amount">—</div>
+        <div class="t-amount" id="quote-total-amount">-</div>
       </div>
-      <div class="est-note hidden" id="quote-est-note">Some items are ranged estimates — TRODDR will confirm exact pricing on your invoice.</div>
+      <div class="est-note hidden" id="quote-est-note">Some items are ranged estimates - TRODDR will confirm exact pricing on your invoice.</div>
     </div>
     <div class="field" style="margin-top:18px;"><label>Anything else we should know? (optional)</label><textarea id="quote-notes"></textarea></div>
     <div class="err" id="quote-err"></div>
@@ -302,7 +302,7 @@
   <div class="card center hidden" id="step-done">
     <div class="big-check">✓</div>
     <h2>You're all set!</h2>
-    <p class="lead" id="done-msg">Your dashboard is ready. TRODDR will review your selections and send your invoice shortly — your account activates once payment is verified.</p>
+    <p class="lead" id="done-msg">Your dashboard is ready. TRODDR will review your selections and send your invoice shortly - your account activates once payment is verified.</p>
     <button class="btn btn-primary" id="done-go">Go to my dashboard →</button>
   </div>
 
@@ -503,7 +503,7 @@
   /* ---------- Value screen (tailored) ---------- */
   function renderValue() {
     const offers = [];
-    offers.push({ t: 'Loyalty & specials', d: 'Reward regulars and post specials — included with your plan.' });
+    offers.push({ t: 'Loyalty & specials', d: 'Reward regulars and post specials - included with your plan.' });
     if ((profile.location_count || 1) >= 1) offers.push({ t: 'Get discovered', d: 'Your locations surfaced to locals and visitors across the app.' });
     if (profile.wants_insights && profile.wants_insights !== 'none')
       offers.push({ t: 'Insights', d: profile.wants_insights === 'company' ? 'Company-wide analytics rollup.' : 'Per-location analytics dashboards.' });
@@ -518,7 +518,7 @@
   let quoteToggles = {}; // code -> included bool
 
   function renderQuote() {
-    if (!catalog) { setErr('quote-err', 'Pricing is loading — try again in a moment.'); return; }
+    if (!catalog) { setErr('quote-err', 'Pricing is loading - try again in a moment.'); return; }
     recommendation = REC.recommend(
       Object.assign({}, profile, { billing_cycle: profile.billing_cycle || 'annual' }),
       profile._attached || { locations: 0, events: 0 },

@@ -340,10 +340,10 @@
         <div class="section-sub">Guest feedback rolled up across every location in your group.</div>
       </div>
       <div class="gi-stats" id="gi-stats">
-        <div class="gi-stat"><div class="lbl">Locations</div><div class="val" id="gi-locations">—</div><div class="sub">in this group</div></div>
-        <div class="gi-stat"><div class="lbl">Total Reviews</div><div class="val" id="gi-total">—</div><div class="sub" id="gi-total-sub">all time</div></div>
-        <div class="gi-stat"><div class="lbl">Avg Rating</div><div class="val brand" id="gi-rating">—</div><div class="sub">across the group</div></div>
-        <div class="gi-stat"><div class="lbl">Would Visit Again</div><div class="val" id="gi-return">—</div><div class="sub">of guests who answered</div></div>
+        <div class="gi-stat"><div class="lbl">Locations</div><div class="val" id="gi-locations">-</div><div class="sub">in this group</div></div>
+        <div class="gi-stat"><div class="lbl">Total Reviews</div><div class="val" id="gi-total">-</div><div class="sub" id="gi-total-sub">all time</div></div>
+        <div class="gi-stat"><div class="lbl">Avg Rating</div><div class="val brand" id="gi-rating">-</div><div class="sub">across the group</div></div>
+        <div class="gi-stat"><div class="lbl">Would Visit Again</div><div class="val" id="gi-return">-</div><div class="sub">of guests who answered</div></div>
       </div>
     </section>
 
@@ -463,17 +463,17 @@
   }
 
   function fmtRating(r) {
-    return (r == null) ? '<span class="gi-dash">—</span>'
+    return (r == null) ? '<span class="gi-dash">-</span>'
       : `<span class="gi-rating">${Number(r).toFixed(1)}<span class="star"> ★</span></span>`;
   }
   function fmtPct(rate) {
-    return (rate == null) ? '<span class="gi-dash">—</span>' : Math.round(rate * 100) + '%';
+    return (rate == null) ? '<span class="gi-dash">-</span>' : Math.round(rate * 100) + '%';
   }
 
   function renderGroupInsights(gi) {
     if (!gi || !gi.ok) return;
     const t = gi.totals || {};
-    $('gi-locations').textContent = t.locations ?? '—';
+    $('gi-locations').textContent = t.locations ?? '-';
     $('gi-total').textContent     = t.total ?? '0';
     $('gi-total-sub').textContent = `${t.count_30d ?? 0} in last 30 days`;
     $('gi-rating').innerHTML      = (t.overall_rating == null) ? 'N/A' : `${Number(t.overall_rating).toFixed(1)} ★`;
@@ -510,7 +510,7 @@
       if (data && data.ok) renderGroupInsights(data);
     } catch (e) {
       console.error('[partner-group] insights load failed:', e);
-      // Leave the section in its default "—" state; the page still works.
+      // Leave the section in its default "-" state; the page still works.
       $('gi-board-empty').classList.remove('hidden');
     }
   }
@@ -589,7 +589,7 @@
     window.PartnerAuth?.mountSessionControl('partner');
     mountSidebar(data.capabilities, partner);
 
-    // Group Insights is a multi-location feature — only for accounts that
+    // Group Insights is a multi-location feature - only for accounts that
     // own 2+ places (a restaurant chain, hotel group, etc.).
     const placeCount = entities.filter((e) => e.type === 'place').length;
     if (placeCount >= 2) {

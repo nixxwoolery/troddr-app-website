@@ -691,7 +691,7 @@
       const style = doc.createElement('style');
       style.textContent = 'header.header{display:none!important;}';
       doc.head.appendChild(style);
-    } catch (e) { /* cross-origin or not ready — child header just stays visible */ }
+    } catch (e) { /* cross-origin or not ready - child header just stays visible */ }
   }
 
   function loadSection(key) {
@@ -934,9 +934,9 @@
 
     const partners = data.partners || {};
     const loyalty = partners.loyalty || [];
-    $('ov-loyalty').innerHTML = loyalty.length ? loyalty.map((item) => `<div class="overview-row"><span class="name">${esc(item.place)}<small>${esc(item.reward)} · ${fmt(item.required_stamps)} stamps</small></span><span class="value">${item.is_active ? 'Active' : 'Inactive'}<small>${fmt(item.cards)} cards · ${fmt(item.stamps_30d)} stamps 30d</small></span></div>`).join('') : overviewRow('No loyalty programs yet', '—');
+    $('ov-loyalty').innerHTML = loyalty.length ? loyalty.map((item) => `<div class="overview-row"><span class="name">${esc(item.place)}<small>${esc(item.reward)} · ${fmt(item.required_stamps)} stamps</small></span><span class="value">${item.is_active ? 'Active' : 'Inactive'}<small>${fmt(item.cards)} cards · ${fmt(item.stamps_30d)} stamps 30d</small></span></div>`).join('') : overviewRow('No loyalty programs yet', '-');
     const checkins = partners.checkin_places || [];
-    $('ov-checkin').innerHTML = (checkins.length ? checkins.map((item) => `<div class="overview-row"><span class="name">${esc(item.place)}</span><span class="value"><small>${[item.checkin && 'check-in', item.nfc && 'NFC', item.loyalty && 'loyalty', item.insider && 'insider'].filter(Boolean).join(' · ')}</small></span></div>`).join('') : overviewRow('No check-in partners yet', '—'))
+    $('ov-checkin').innerHTML = (checkins.length ? checkins.map((item) => `<div class="overview-row"><span class="name">${esc(item.place)}</span><span class="value"><small>${[item.checkin && 'check-in', item.nfc && 'NFC', item.loyalty && 'loyalty', item.insider && 'insider'].filter(Boolean).join(' · ')}</small></span></div>`).join('') : overviewRow('No check-in partners yet', '-'))
       + overviewRow('Active perks', partners.active_perks);
   }
 
@@ -1092,7 +1092,7 @@
   }
   function performanceChange(current, previous) {
     current = Number(current)||0; previous = Number(previous)||0;
-    if (!previous) return current ? 'New' : '—';
+    if (!previous) return current ? 'New' : '-';
     const change = Math.round((current-previous)/previous*100);
     return `${change > 0 ? '+' : ''}${change}%`;
   }
@@ -1396,7 +1396,7 @@
   async function boot() {
     show('loading');
     // Verify the token against an always-deployed admin RPC. (We deliberately do
-    // NOT use admin_search_places_for_booking here — that lives in the Phase 2
+    // NOT use admin_search_places_for_booking here - that lives in the Phase 2
     // hotel-booking migration and may not be deployed yet; using it would block
     // sign-in entirely. get_admin_review_queue returns null for an invalid token.)
     const { data, error } = await db.rpc('get_admin_review_queue', {

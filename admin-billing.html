@@ -161,7 +161,7 @@
       </h2>
       <p class="muted" style="margin-bottom: 10px;">
         Maintenance marks past-due invoices overdue and moves lapsed subscriptions to read-only
-        (7-day grace). Renewal invoices are generated manually from here — review the draft before issuing.
+        (7-day grace). Renewal invoices are generated manually from here - review the draft before issuing.
       </p>
       <div id="renewals-due"></div>
     </div>
@@ -197,7 +197,7 @@
               <select class="f" id="nc-source-type">
                 <option value="manual">Manual (no source link)</option>
                 <option value="place_group">Hospitality group (link a partner)</option>
-                <option value="event_organizer">Event organizer (link an event — auto-attaches it)</option>
+                <option value="event_organizer">Event organizer (link an event - auto-attaches it)</option>
                 <option value="sponsor">Sponsor</option>
               </select></div>
           </div>
@@ -223,7 +223,7 @@
     <div id="company-detail-view" class="hidden">
       <span class="back-link" id="back-to-companies">← All companies</span>
       <div class="card">
-        <h2 id="cd-name">—</h2>
+        <h2 id="cd-name">-</h2>
         <div class="frow3">
           <div><label class="f">Name</label><input class="f" id="cd-edit-name" /></div>
           <div><label class="f">Billing email</label><input class="f" id="cd-edit-email" /></div>
@@ -411,7 +411,7 @@
   <section id="tab-requests" class="hidden">
     <div class="card">
       <h2>Company requests</h2>
-      <p class="muted" style="margin-bottom: 12px;">Extra admins, insights, event coverage, and sponsor products are request-only — quote them and issue an invoice from the generator.</p>
+      <p class="muted" style="margin-bottom: 12px;">Extra admins, insights, event coverage, and sponsor products are request-only - quote them and issue an invoice from the generator.</p>
       <div id="requests-list"></div>
     </div>
   </section>
@@ -429,7 +429,7 @@
   <section id="tab-notifications" class="hidden">
     <div class="card">
       <h2>Notification queue (pending)</h2>
-      <p class="muted" style="margin-bottom: 12px;">Email sending is not wired up yet — these records are what the mailer will drain. Mark items sent after handling them manually, or dismiss.</p>
+      <p class="muted" style="margin-bottom: 12px;">Email sending is not wired up yet - these records are what the mailer will drain. Mark items sent after handling them manually, or dismiss.</p>
       <div id="notifications-list"></div>
     </div>
   </section>
@@ -442,7 +442,7 @@
       </h2>
       <p class="muted" style="margin-bottom: 12px;">
         Shown on invoices by currency (USD invoices show USD accounts, JMD invoices show JMD accounts).
-        Account numbers are entered here only — never in source code.
+        Account numbers are entered here only - never in source code.
       </p>
       <div id="pi-list"></div>
       <div id="pi-form" class="hidden" style="border:1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-top: 12px;">
@@ -475,7 +475,7 @@
     </div>
     <div class="card">
       <h2>Invoice footer copy</h2>
-      <p class="muted" style="margin-bottom: 10px;">One line per row — printed under "How payment works" on every invoice.</p>
+      <p class="muted" style="margin-bottom: 10px;">One line per row - printed under "How payment works" on every invoice.</p>
       <textarea class="f" id="set-footer-copy" style="min-height: 110px;"></textarea>
       <div style="margin-top: 10px;"><button class="btn" id="set-footer-save">Save copy</button></div>
     </div>
@@ -662,10 +662,10 @@
           <div><b>Method</b>${esc(r.payment_method)}</div>
           <div><b>Paid on</b>${BS.fmtDate(r.paid_on)}</div>
           <div><b>Reference</b>${esc(r.reference_number)}</div>
-          <div><b>Submitted by</b>${esc(r.submitted_by || '—')}</div>
+          <div><b>Submitted by</b>${esc(r.submitted_by || '-')}</div>
           <div><b>Submitted</b>${BS.fmtDate(r.created_at)}</div>
           <div><b>Receipt</b>${r.receipt_path
-            ? `<a href="#" data-receipt="${esc(r.receipt_path)}">${esc(r.receipt_filename || 'View receipt')}</a>` : '—'}</div>
+            ? `<a href="#" data-receipt="${esc(r.receipt_path)}">${esc(r.receipt_filename || 'View receipt')}</a>` : '-'}</div>
         </div>
         ${r.notes ? `<div class="muted" style="margin-bottom:10px;">Note from company: ${esc(r.notes)}</div>` : ''}
         <div class="review-actions">
@@ -690,7 +690,7 @@
       const res = await action('admin_review_payment', {
         p_admin_token: adminToken, p_confirmation_id: b.dataset.id,
         p_decision: decision, p_note: note,
-      }, decision === 'approve' ? 'Payment approved — access activated.' : 'Saved.');
+      }, decision === 'approve' ? 'Payment approved - access activated.' : 'Saved.');
       if (res) await loadAll();
     }));
 
@@ -738,8 +738,8 @@
       <tbody>${renewals.map((r) => `
         <tr>
           <td><b>${esc(r.company_name)}</b></td>
-          <td>${esc(r.plan_key || '—')}</td>
-          <td>${esc(r.billing_cycle || '—')}</td>
+          <td>${esc(r.plan_key || '-')}</td>
+          <td>${esc(r.billing_cycle || '-')}</td>
           <td>${BS.fmtDate(r.paid_through)}</td>
           <td><button class="btn primary" data-renew="${r.company_id}">Generate renewal draft</button></td>
         </tr>`).join('')}</tbody></table>`
@@ -747,7 +747,7 @@
     document.querySelectorAll('[data-renew]').forEach((b) => b.addEventListener('click', async () => {
       const res = await action('admin_generate_renewal_invoice', {
         p_admin_token: adminToken, p_company_id: b.dataset.renew,
-      }, 'Renewal draft created — review and issue it.');
+      }, 'Renewal draft created - review and issue it.');
       if (res) { await loadAll(); openCompany(b.dataset.renew); }
     }));
 
@@ -799,10 +799,10 @@
         </div>
         <div class="review-kv">
           <div><b>Email</b>${esc(s.email)}</div>
-          <div><b>Contact</b>${esc(s.contact_name || '—')}</div>
-          <div><b>Country</b>${esc(s.country || '—')}</div>
+          <div><b>Contact</b>${esc(s.contact_name || '-')}</div>
+          <div><b>Country</b>${esc(s.country || '-')}</div>
           <div><b>Currency</b>${esc(s.preferred_currency)}</div>
-          <div><b>Role</b>${esc(s.role_title || '—')}</div>
+          <div><b>Role</b>${esc(s.role_title || '-')}</div>
           <div><b>Submitted</b>${BS.fmtDate(s.created_at)}</div>
         </div>
         ${s.message ? `<div class="muted" style="margin-bottom:10px;">${esc(s.message)}</div>` : ''}
@@ -836,8 +836,8 @@
         <tr>
           <td style="white-space:nowrap;">${new Date(n.created_at).toLocaleString()}</td>
           <td><b>${esc(n.notification_type.replace(/_/g, ' '))}</b></td>
-          <td>${esc(n.company || '—')}</td>
-          <td>${esc(n.recipient_email || '—')}</td>
+          <td>${esc(n.company || '-')}</td>
+          <td>${esc(n.recipient_email || '-')}</td>
           <td class="muted" style="max-width:280px;">${esc(n.subject)}</td>
           <td style="white-space:nowrap;">
             <button class="btn" data-notif="sent" data-id="${n.id}">Mark sent</button>
@@ -869,7 +869,7 @@
         <tr>
           <td><b>${esc(p.bank_name)}</b><div class="muted">${esc(p.account_name)}${p.branch_name ? ' · ' + esc(p.branch_name) : ''}</div></td>
           <td>${esc(p.currency)}</td>
-          <td>${esc(p.account_type || '—')}</td>
+          <td>${esc(p.account_type || '-')}</td>
           <td>${p.account_number ? '••••' + esc(String(p.account_number).slice(-4)) : '<span class="muted">not set</span>'}</td>
           <td>${p.active ? '<span class="pill good">Active</span>' : '<span class="pill neutral">Off</span>'}</td>
           <td><button class="btn" data-pi-edit="${idx}">Edit</button></td>
@@ -912,8 +912,8 @@
         <tr>
           <td style="white-space:nowrap;">${new Date(r.created_at).toLocaleString()}</td>
           <td><b>${esc(r.entity_name || '')}</b><div class="muted">${esc(r.entity_type || '')}${r.entity_slug ? ' · ' + esc(r.entity_slug) : ''}</div></td>
-          <td>${r.token_prefix ? '<code>' + esc(r.token_prefix) + '…</code>' : '<span class="muted">—</span>'}</td>
-          <td>${esc(r.actor_email || '—')}</td>
+          <td>${r.token_prefix ? '<code>' + esc(r.token_prefix) + '…</code>' : '<span class="muted">-</span>'}</td>
+          <td>${esc(r.actor_email || '-')}</td>
           <td class="muted" style="max-width:260px; word-break:break-word;">${esc(r.path || '')}</td>
         </tr>`).join('')}</tbody></table>`;
   }
@@ -931,7 +931,7 @@
     $('ig-add-product').innerHTML = products.map((p) => {
       const price = p.unit_amount != null ? BS.money(p.unit_amount, p.currency)
         : `${BS.money(p.min_amount, p.currency)}${p.max_amount ? '–' + BS.money(p.max_amount, p.currency) : '+'}`;
-      return `<option value="${esc(p.code)}">${esc(p.name)} — ${price}</option>`;
+      return `<option value="${esc(p.code)}">${esc(p.name)} - ${price}</option>`;
     }).join('');
     $('cd-sub-plan').innerHTML = plans.map((p) => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join('');
     $('cd-ent-key').innerHTML = ents.map((e) => `<option value="${esc(e.key)}">${esc(e.name)} (${esc(e.key)})</option>`).join('');
@@ -962,7 +962,7 @@
     $('cd-sub-pill').innerHTML = access.status ? pill(BS.subscriptionStatus(access.status)) : '<span class="pill neutral">No subscription</span>';
     const sub = d.subscription;
     $('cd-sub-summary').textContent = sub
-      ? `${sub.plan_key || 'no plan'} · ${sub.billing_cycle || '—'} · paid through ${sub.paid_through || '—'} · access: ${access.access}`
+      ? `${sub.plan_key || 'no plan'} · ${sub.billing_cycle || '-'} · paid through ${sub.paid_through || '-'} · access: ${access.access}`
       : 'No subscription yet. Activating manually or approving a subscription invoice creates one.';
     if (sub) {
       if (sub.plan_key) $('cd-sub-plan').value = sub.plan_key;
@@ -1085,7 +1085,7 @@
           <td class="num">${BS.money(i.total, i.currency)}</td>
           <td>${BS.fmtDate(i.issue_date)}</td>
           <td>${BS.fmtDate(i.due_date)}</td>
-          <td>${conf ? pill(BS.confirmationStatus(conf.status)) : '—'}</td>
+          <td>${conf ? pill(BS.confirmationStatus(conf.status)) : '-'}</td>
           <td style="white-space:nowrap;">
             <button class="btn" data-inv-pdf="${idx}">PDF</button>
             ${i.raw_status === 'draft' ? `<button class="btn" data-inv-edit="${idx}">Edit</button>
@@ -1113,7 +1113,7 @@
       const note = prompt('Internal note (how was this verified?)') || null;
       const res = await action('admin_set_invoice_status', {
         p_admin_token: adminToken, p_invoice_id: b.dataset.invPaid, p_status: 'paid', p_note: note,
-      }, 'Invoice paid — access activated.');
+      }, 'Invoice paid - access activated.');
       if (res) { await loadAll(); openCompany(co.id); }
     }));
     document.querySelectorAll('[data-inv-void]').forEach((b) => b.addEventListener('click', async () => {
@@ -1245,7 +1245,7 @@
 
   // Manual subscription overrides: activation (= comped access),
   // paid-through adjustments, and revokes all require a written
-  // reason — the server refuses without one.
+  // reason - the server refuses without one.
   document.querySelectorAll('[data-subaction]').forEach((b) => b.addEventListener('click', async () => {
     const act = b.dataset.subaction;
     const paidThrough = $('cd-sub-paidthrough').value || null;
@@ -1338,7 +1338,7 @@
     const res = await action('admin_upsert_company_user', {
       p_admin_token: adminToken, p_company_id: companyDetail.company.id,
       p_email: email, p_name: null, p_role: $('cd-user-role').value,
-    }, 'User added — they sign in with this email at /company/billing.');
+    }, 'User added - they sign in with this email at /company/billing.');
     if (res) { $('cd-user-email').value = ''; openCompany(companyDetail.company.id); }
   });
 
@@ -1476,7 +1476,7 @@
         <td><input type="date" value="${li.period_end || ''}" data-li="${idx}" data-k="period_end" /></td>
         <td class="num"><b>${BS.money((Number(li.quantity) || 0) * (Number(li.unit_amount) || 0), $('ig-currency').value)}</b></td>
         <td><button class="btn danger" data-li-rm="${idx}">×</button></td>
-      </tr>`).join('') || '<tr><td colspan="8"><div class="empty">No line items yet — add a plan, product, or custom line above.</div></td></tr>';
+      </tr>`).join('') || '<tr><td colspan="8"><div class="empty">No line items yet - add a plan, product, or custom line above.</div></td></tr>';
 
     document.querySelectorAll('[data-li]').forEach((inp) => inp.addEventListener('change', () => {
       const li = igLines[Number(inp.dataset.li)];

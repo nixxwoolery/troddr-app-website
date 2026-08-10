@@ -1880,7 +1880,7 @@
       </div>
       <div class="form-field">
         <label class="form-label">Description</label>
-        <textarea class="form-input form-textarea" id="event-desc" placeholder="Describe the event — what can attendees expect?"></textarea>
+        <textarea class="form-input form-textarea" id="event-desc" placeholder="Describe the event - what can attendees expect?"></textarea>
       </div>
       <div class="form-row">
         <div class="form-field">
@@ -2143,7 +2143,7 @@
           <div class="question-banner-icon">📊</div>
           <div>
             <h3>Is Troddr sending me customers?</h3>
-            <p>Last 7 days: <strong>64 direction clicks</strong> and <strong>21 call clicks</strong> — people are finding their way to you.</p>
+            <p>Last 7 days: <strong>64 direction clicks</strong> and <strong>21 call clicks</strong> - people are finding their way to you.</p>
           </div>
         </div>
 
@@ -2562,7 +2562,7 @@
               <div class="factor-status complete">✓</div>
               <div class="factor-content">
                 <div class="factor-name">Description</div>
-                <div class="factor-hint">350 characters — detailed and informative</div>
+                <div class="factor-hint">350 characters - detailed and informative</div>
               </div>
               <div class="factor-points earned">+20</div>
             </div>
@@ -2589,7 +2589,7 @@
               <div class="factor-status partial">!</div>
               <div class="factor-content">
                 <div class="factor-name">Active Special</div>
-                <div class="factor-hint">No active special — listings with specials get 40% more views</div>
+                <div class="factor-hint">No active special - listings with specials get 40% more views</div>
               </div>
               <div class="factor-points missing">+0 / 15</div>
             </div>
@@ -2670,9 +2670,9 @@
                 <td>Event</td>
                 <td>Mar 15, 2026</td>
                 <td><span class="status-badge pending">Pending</span></td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
               </tr>
             </tbody>
           </table>
@@ -3069,7 +3069,7 @@
                   <div style="font-size: 13px; color: var(--text-muted);">8:00 PM</div>
                 </td>
                 <td><strong>2</strong> guests</td>
-                <td><span style="font-size: 13px; color: var(--text-muted);">—</span></td>
+                <td><span style="font-size: 13px; color: var(--text-muted);">-</span></td>
                 <td><span class="status-badge pending">Pending</span></td>
                 <td>
                   <div class="booking-actions">
@@ -3344,7 +3344,7 @@
 
   <script>
   /* ================================================================
-     TRODDR BUSINESS PORTAL — COMPLETE JS
+     TRODDR BUSINESS PORTAL - COMPLETE JS
      ================================================================
      CONFIG: Replace these two values with your Supabase project keys.
      Find them at: supabase.com → Your Project → Settings → API
@@ -3393,7 +3393,7 @@
     btn.disabled = true;
 
     if (!SUPABASE_CONFIGURED) {
-      // Demo mode — skip auth, show dashboard with placeholder data
+      // Demo mode - skip auth, show dashboard with placeholder data
       setTimeout(() => enterDashboard({ email, user_metadata: { business_name: 'East Japanese HQ' } }), 800);
       return;
     }
@@ -3775,7 +3775,7 @@
       });
     });
 
-    // Notification action buttons — wire up cross-section navigation
+    // Notification action buttons - wire up cross-section navigation
     document.querySelectorAll('.notification-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -3874,7 +3874,7 @@
     row.innerHTML = `
       <td><div class="booking-name">${guestName}</div></td>
       <td><div style="font-weight:600;">${dateStr}</div></td>
-      <td>—</td>
+      <td>-</td>
       <td><span class="status-badge live">Confirmed</span></td>
       <td><div class="booking-actions"><button class="booking-action-btn contact">Contact</button></div></td>`;
     tbody.prepend(row);
@@ -3919,7 +3919,7 @@
           <div style="font-size:13px;color:var(--text-muted);">${b.booking_time}</div>
         </td>
         <td><strong>${b.party_size}</strong> guests</td>
-        <td><span style="font-size:13px;color:var(--text-muted);">${b.special_requests || '—'}</span></td>
+        <td><span style="font-size:13px;color:var(--text-muted);">${b.special_requests || '-'}</span></td>
         <td><span class="status-badge pending">Pending</span></td>
         <td>
           <div class="booking-actions">
@@ -3954,7 +3954,7 @@
           <div class="special-type">${sp.description || ''}</div>
         </td>
         <td>${sp.type || 'Deal'}</td>
-        <td>${sp.schedule || '—'}</td>
+        <td>${sp.schedule || '-'}</td>
         <td><span class="status-badge ${isLive ? 'live' : 'pending'}">${isLive ? 'Live' : 'Pending'}</span></td>
         <td><strong>${sp.views || 0}</strong></td>
         <td><strong>${sp.clicks || 0}</strong></td>
@@ -4025,9 +4025,9 @@
       row.innerHTML = `
         <td><div class="special-name">${name}</div><div class="special-type">${desc}</div></td>
         <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
-        <td>${schedule || '—'}</td>
+        <td>${schedule || '-'}</td>
         <td><span class="status-badge pending">Pending</span></td>
-        <td>—</td><td>—</td><td>—</td>`;
+        <td>-</td><td>-</td><td>-</td>`;
       tbody.appendChild(row);
     }
 
@@ -4102,7 +4102,7 @@
         <td>${dateRange}</td>
         <td><span class="status-badge pending">Pending Review</span></td>
         <td>${vendors || '0'}</td>
-        <td>—</td><td>—</td>`;
+        <td>-</td><td>-</td>`;
       tbody.appendChild(row);
     }
 
@@ -4144,7 +4144,7 @@
   }
 
   /* ----------------------------------------------------------------
-     FLOOR PLAN — ADD VENDOR
+     FLOOR PLAN - ADD VENDOR
   ---------------------------------------------------------------- */
   function initFloorplanActions() {
     // Add Vendor button
@@ -4199,7 +4199,7 @@
      BOOT
   ---------------------------------------------------------------- */
   window.addEventListener('DOMContentLoaded', () => {
-    // Login disabled for now — go straight to dashboard
+    // Login disabled for now - go straight to dashboard
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('dashboard-layout').style.display = 'flex';
     initDashboard();

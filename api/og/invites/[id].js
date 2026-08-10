@@ -1,11 +1,11 @@
-// api/og/invites/[id].js — Open Graph card for /invites/{token}
+// api/og/invites/[id].js - Open Graph card for /invites/{token}
 //
 // The /invites/{token} URL is overloaded: the same shape backs a PLACE invite
 // (dinner/drinks/coffee…), an EVENT invite, a multi-place POLL, and a trip
 // COLLABORATOR invite. Each token type has its own SECURITY DEFINER preview
 // RPC, all capability-gated, so we never leak a private plan.
 //
-// We probe in the app's order — place → event → trip — and render a card that
+// We probe in the app's order - place → event → trip - and render a card that
 // matches what the link actually is. (Poll tokens reuse the parent place_invite
 // row, so they resolve through get_place_invite_preview to the first option's
 // place, which is a fine preview.) Anything unrecognised gets a generic,
@@ -42,8 +42,8 @@ function cap(s) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
-// place_image / event_image arrive as a Postgres array TEXT literal — e.g.
-// "{https://a.jpg,https://b.jpg}" — because the RPC declares the column as
+// place_image / event_image arrive as a Postgres array TEXT literal - e.g.
+// "{https://a.jpg,https://b.jpg}" - because the RPC declares the column as
 // text. firstImage only understands real arrays / JSON strings, so unwrap the
 // {…} form into elements first. Falls through to firstImage for anything else.
 function coerceImage(field) {

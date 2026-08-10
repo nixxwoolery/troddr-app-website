@@ -79,7 +79,7 @@
     const rows=data?.tabs||[],total=Number(data?.total_clicks)||0,visitors=Number(data?.unique_visitors)||0,days=Number(data?.days)||30,max=Math.max(1,...rows.map(row=>Number(row.clicks)||0));
     $('event-feature-usage-period').textContent=`Last ${days} days`;
     if(!rows.length){$('event-feature-usage').innerHTML=empty('No event tab clicks have been recorded in this period.');return;}
-    $('event-feature-usage').innerHTML=`<div class="event-feature-summary"><div><strong>${fmt(total)}</strong><span>tab clicks</span></div><div><strong>${fmt(visitors)}</strong><span>unique visitors</span></div></div><div class="event-feature-list">${rows.map(row=>{const clicks=Number(row.clicks)||0,share=Number(row.share)||0;return `<div class="event-feature-row"><div class="event-feature-name"><strong>${esc(FEATURE_LABELS[row.key]||nice(row.key))}</strong><small>${fmt(row.unique_visitors)} unique · last used ${esc(whenTime(row.last_clicked_at)||'—')}</small></div><div class="event-feature-meter" aria-label="${esc(FEATURE_LABELS[row.key]||nice(row.key))}: ${fmt(clicks)} clicks"><i style="width:${Math.max(2,clicks/max*100)}%"></i></div><div class="event-feature-value"><strong>${fmt(clicks)}</strong><small>${share}%</small></div></div>`;}).join('')}</div>`;
+    $('event-feature-usage').innerHTML=`<div class="event-feature-summary"><div><strong>${fmt(total)}</strong><span>tab clicks</span></div><div><strong>${fmt(visitors)}</strong><span>unique visitors</span></div></div><div class="event-feature-list">${rows.map(row=>{const clicks=Number(row.clicks)||0,share=Number(row.share)||0;return `<div class="event-feature-row"><div class="event-feature-name"><strong>${esc(FEATURE_LABELS[row.key]||nice(row.key))}</strong><small>${fmt(row.unique_visitors)} unique · last used ${esc(whenTime(row.last_clicked_at)||'-')}</small></div><div class="event-feature-meter" aria-label="${esc(FEATURE_LABELS[row.key]||nice(row.key))}: ${fmt(clicks)} clicks"><i style="width:${Math.max(2,clicks/max*100)}%"></i></div><div class="event-feature-value"><strong>${fmt(clicks)}</strong><small>${share}%</small></div></div>`;}).join('')}</div>`;
   }
   async function loadFeatureUsage(eventId) {
     $('event-feature-usage').innerHTML='<div class="spinner"></div>';
@@ -105,7 +105,7 @@
     $('event-sponsors-summary').innerHTML=managementCard('Sponsors',counts.sponsors,'Sponsor profiles, tiers and activations','sponsors');
     $('event-tickets-summary').innerHTML=managementCard('Passes',counts.passes,'Ticket types and event passes','tickets')+managementCard('Ticket link',event.ticket_url?1:0,event.ticket_url?'Ticket destination configured':'No ticket link configured','details');
     $('event-map-summary').innerHTML=setupRow('Floor plan',ready.map?'Configured':'Not configured')+setupRow('Parking lots',fmt(counts.parking));
-    $('event-settings-summary').innerHTML=setupRow('Visibility',event.visibility||'public')+setupRow('Publishing status',nice(event.status||'draft'))+setupRow('Event slug',event.slug||'—');
+    $('event-settings-summary').innerHTML=setupRow('Visibility',event.visibility||'public')+setupRow('Publishing status',nice(event.status||'draft'))+setupRow('Event slug',event.slug||'-');
   }
   async function loadEventEditor() {
     const {data,error}=await state.db.rpc('admin_get_event_editor',{p_admin_token:state.getToken(),p_event_id:state.currentId});

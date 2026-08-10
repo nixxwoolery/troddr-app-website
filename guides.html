@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TRODDR — Guide</title>
+  <title>TRODDR - Guide</title>
   <link rel="canonical" href="https://www.troddr.com/guides" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -443,7 +443,9 @@
       <div class="nav-links" id="primary-navigation" role="navigation">
         <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
         <a href="/about.html" class="nav-item">About</a>
+        <a href="/guides" class="nav-item">Guides</a>
         <a href="/#features" class="nav-item">Features</a>
+        <a href="/#faq" class="nav-item">FAQ</a>
         <a href="/contact.html" class="nav-item">Contact</a>
         <a href="/#demo" class="nav-cta">Download the App</a>
       </div>
@@ -818,7 +820,7 @@
 
     function injectOG(guide, slug){
       try{
-        const title = `${guide.title} — TRODDR`;
+        const title = `${guide.title} - TRODDR`;
         const desc = guide.description || `Discover the best places in ${guide.title} on TRODDR.`;
         const img = guide.image || '/images/og-default.jpg';
         const url = `https://www.troddr.com/guides/${slug}`;
@@ -849,7 +851,7 @@
     async function main() {
       if (!slug) {
         set('guide-title', 'Guide');
-        document.title = 'Guide — TRODDR';
+        document.title = 'Guide - TRODDR';
         return;
       }
 

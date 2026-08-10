@@ -1,4 +1,4 @@
-// api/og/itinerary/[id].js — Open Graph card for /itinerary/{id}?token={token}
+// api/og/itinerary/[id].js - Open Graph card for /itinerary/{id}?token={token}
 //
 // TOKEN-GATED. Shares look like /itinerary/{uuid}?token={shareToken}. The
 // itinerary id is in the path; the share token is in the ?token= query. We
@@ -6,7 +6,7 @@
 // returns *shared* trips); with no valid token we show a generic card and never
 // leak a private trip.
 //
-// NOTE: the vercel.json route MUST name the path param :id (not :token) — a
+// NOTE: the vercel.json route MUST name the path param :id (not :token) - a
 // :token path param collides with the ?token= query and Vercel overwrites the
 // real share token with the itinerary id, breaking validation.
 
@@ -91,7 +91,7 @@ export default async function handler(request) {
   const dateRange = formatTripDateRange(trip.start_date, trip.end_date);
   const stopsLabel = stops ? `${stops} ${stops === 1 ? 'stop' : 'stops'}` : '';
 
-  // iMessage shows only og:title — stack the trip pitch so it all lands in the
+  // iMessage shows only og:title - stack the trip pitch so it all lands in the
   // card caption: "I'm going to St. Ann, July 18 – 19" / "Here's my itinerary".
   const ogTitle = [
     `I'm going to ${destination}${dateRange ? `, ${dateRange}` : ''}`,

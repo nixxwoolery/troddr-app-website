@@ -286,10 +286,10 @@
         Paid features are paused until the latest invoice is paid and verified by TRODDR.
       </div>
       <div class="billing-summary">
-        <div class="b-stat"><div class="lbl">Current Plan</div><div class="val" id="stat-plan">—</div><div class="sub" id="stat-plan-sub"></div></div>
-        <div class="b-stat"><div class="lbl">Subscription</div><div class="val" id="stat-status">—</div><div class="sub" id="stat-status-sub"></div></div>
-        <div class="b-stat"><div class="lbl">Paid Through</div><div class="val" id="stat-paidthrough">—</div><div class="sub" id="stat-paidthrough-sub"></div></div>
-        <div class="b-stat"><div class="lbl">Billing Cycle</div><div class="val" id="stat-cycle">—</div><div class="sub" id="stat-cycle-sub"></div></div>
+        <div class="b-stat"><div class="lbl">Current Plan</div><div class="val" id="stat-plan">-</div><div class="sub" id="stat-plan-sub"></div></div>
+        <div class="b-stat"><div class="lbl">Subscription</div><div class="val" id="stat-status">-</div><div class="sub" id="stat-status-sub"></div></div>
+        <div class="b-stat"><div class="lbl">Paid Through</div><div class="val" id="stat-paidthrough">-</div><div class="sub" id="stat-paidthrough-sub"></div></div>
+        <div class="b-stat"><div class="lbl">Billing Cycle</div><div class="val" id="stat-cycle">-</div><div class="sub" id="stat-cycle-sub"></div></div>
       </div>
     </section>
 
@@ -367,7 +367,7 @@
       <div class="billing-card" id="manage-edit" style="display:none;">
         <div class="lead">Billing details</div>
         <p class="bform-note">
-          Keep your business and billing contact information up to date — this is what appears on your
+          Keep your business and billing contact information up to date - this is what appears on your
           invoices and where we send billing notices. Payments, plan changes, and invoices stay secured to
           your company billing sign-in below.
         </p>
@@ -407,8 +407,8 @@
           <div class="field">
             <label for="bf-currency">Preferred currency</label>
             <select id="bf-currency" name="preferred_currency">
-              <option value="USD">USD — US Dollar</option>
-              <option value="JMD">JMD — Jamaican Dollar</option>
+              <option value="USD">USD - US Dollar</option>
+              <option value="JMD">JMD - Jamaican Dollar</option>
             </select>
           </div>
           <div class="field full bform-actions">
@@ -435,7 +435,7 @@
       <div class="billing-card" id="manage-setup" style="display:none;">
         <div class="lead" id="manage-lead">Set up your billing details</div>
         <div class="desc" id="manage-desc">
-          Add your business and billing contact information and save — we'll create your billing account from it.
+          Add your business and billing contact information and save - we'll create your billing account from it.
           Prefer us to set it up for you? Email billing@troddr.com or message us.
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -540,7 +540,7 @@
     $('readonly-banner').classList.toggle('visible', !!sub && access.access !== 'full');
 
     $('stat-plan').textContent = plan
-      ? plan.name.replace('Founding Partner — ', '')
+      ? plan.name.replace('Founding Partner - ', '')
       : (sub && sub.plan_key) || 'None yet';
     $('stat-plan-sub').textContent = plan
       ? `${plan.included_locations} location${plan.included_locations > 1 ? 's' : ''} · ${plan.included_admins} admin${plan.included_admins > 1 ? 's' : ''}` : '';
@@ -549,11 +549,11 @@
       : '<span class="pill neutral">No subscription</span>';
     $('stat-status-sub').textContent = access.access === 'full' ? 'Full access'
       : (sub ? 'Read-only access' : '');
-    $('stat-paidthrough').textContent = sub && sub.paid_through ? BS.fmtDate(sub.paid_through) : '—';
+    $('stat-paidthrough').textContent = sub && sub.paid_through ? BS.fmtDate(sub.paid_through) : '-';
     $('stat-paidthrough-sub').textContent = sub && sub.current_period_start
       ? 'Period started ' + BS.fmtDate(sub.current_period_start) : '';
     $('stat-cycle').textContent = sub && sub.billing_cycle
-      ? sub.billing_cycle.charAt(0).toUpperCase() + sub.billing_cycle.slice(1) : '—';
+      ? sub.billing_cycle.charAt(0).toUpperCase() + sub.billing_cycle.slice(1) : '-';
     const cyclePrice = plan && sub
       ? (sub.billing_cycle === 'monthly' ? plan.monthly_price : plan.annual_price) : null;
     $('stat-cycle-sub').textContent = !plan || !sub ? ''
@@ -749,7 +749,7 @@
           setFormMsg('Enter your billing details below and save to set up your account.', '');
         }
       } else if (data && data.error === 'no_company') {
-        // Events: billing is admin-attached — show the setup card.
+        // Events: billing is admin-attached - show the setup card.
         $('manage-edit').style.display = 'none';
         $('manage-setup').style.display = '';
       }

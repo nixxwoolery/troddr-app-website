@@ -1,4 +1,4 @@
-// api/og/trips/[id].js — Open Graph card for /trips/{token}
+// api/og/trips/[id].js - Open Graph card for /trips/{token}
 //
 // Trip COLLABORATOR invite shares. The uuid is the invite_token from
 // trip_collaborators; get_trip_invite_preview (SECURITY DEFINER) validates it

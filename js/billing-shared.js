@@ -1,5 +1,5 @@
 /* ============================================================
- * TRODDR Billing — shared helpers
+ * TRODDR Billing - shared helpers
  * Used by company-billing.html (company dashboard) and
  * admin-billing.html (Troddr admin console).
  * ============================================================ */
@@ -19,7 +19,7 @@
   }
 
   function fmtDate(value) {
-    if (!value) return '—';
+    if (!value) return '-';
     const d = new Date(value.length === 10 ? value + 'T12:00:00' : value);
     if (isNaN(d)) return value;
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -53,7 +53,7 @@
   };
 
   function statusMeta(map, status) {
-    return map[status] || { label: status || '—', cls: 'neutral' };
+    return map[status] || { label: status || '-', cls: 'neutral' };
   }
 
   function esc(s) {
@@ -81,7 +81,7 @@
     if (!list || !list.length) return '';
     return list.map((b) => `
       <div class="bank">
-        <div class="bank-name">${esc(b.bank_name)} — ${esc(b.currency)} ${esc(b.account_type || '')}</div>
+        <div class="bank-name">${esc(b.bank_name)} - ${esc(b.currency)} ${esc(b.account_type || '')}</div>
         <div class="bank-kv"><span>Account name</span><span>${esc(b.account_name)}</span></div>
         ${b.branch_name ? `<div class="bank-kv"><span>Branch</span><span>${esc(b.branch_name)}</span></div>` : ''}
         ${b.account_number
@@ -122,7 +122,7 @@
 
     const discountRow = Number(inv.discount_amount) > 0 ? `
       <tr class="totals">
-        <td colspan="3">Discount${inv.discount_note ? ' — ' + esc(inv.discount_note) : ''}</td>
+        <td colspan="3">Discount${inv.discount_note ? ' - ' + esc(inv.discount_note) : ''}</td>
         <td class="num">−${money(inv.discount_amount, inv.currency)}</td>
       </tr>` : '';
 

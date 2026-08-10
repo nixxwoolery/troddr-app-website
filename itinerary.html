@@ -400,7 +400,9 @@
           <div class="nav-links" id="primary-navigation" role="navigation">
               <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
               <a href="/about.html" class="nav-item">About</a>
+              <a href="/guides" class="nav-item">Guides</a>
               <a href="/index.html#features" class="nav-item">Features</a>
+              <a href="/index.html#faq" class="nav-item">FAQ</a>
               <a href="/contact.html" class="nav-item">Contact</a>
               <a href="/index.html#demo" class="nav-cta">Download the App</a>
           </div>
@@ -413,7 +415,7 @@
     <div class="hero-cover" id="hero-cover" aria-label="Trip cover">
       <div class="hero-overlay">
         <h1 class="trip-title" id="trip-title-ov">Loading…</h1>
-        <div class="trip-loc"><a id="trip-loc-ov" href="#" target="_blank" rel="noopener">—</a></div>
+        <div class="trip-loc"><a id="trip-loc-ov" href="#" target="_blank" rel="noopener">-</a></div>
         <p class="trip-sub" id="trip-sub-ov"></p>
         <div class="cat-pills" id="cat-pills-ov"></div>
       </div>
@@ -423,7 +425,7 @@
     <div class="hero-text">
       <h1 class="trip-title" id="trip-title">Loading…</h1>
       <p class="trip-sub" id="trip-sub"></p>
-      <div class="trip-loc"><a id="trip-loc" href="#" target="_blank" rel="noopener">—</a></div>
+      <div class="trip-loc"><a id="trip-loc" href="#" target="_blank" rel="noopener">-</a></div>
       <div class="trip-meta" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
         <span class="meta-pill" id="meta-destination"></span>
         <span class="meta-pill" id="meta-dates"></span>
@@ -942,17 +944,17 @@ function setupItineraryShare(ident, meta){
       const locA = document.getElementById('trip-loc');
       const q = meta.destination || '';
       if (locA){
-        locA.textContent = q || '—';
+        locA.textContent = q || '-';
         locA.href = q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : '#';
       }
       // Overlay duplicates for mobile
       const locAov = document.getElementById('trip-loc-ov');
       if (locAov){
-        locAov.textContent = q || '—';
+        locAov.textContent = q || '-';
         locAov.href = q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : '#';
       }
-      destMeta.textContent = meta.destination || '—';
-      if (destDetail) destDetail.textContent = meta.destination || '—';
+      destMeta.textContent = meta.destination || '-';
+      if (destDetail) destDetail.textContent = meta.destination || '-';
 
       datesMeta.textContent = range ? `${range}` : '';
 
@@ -1161,7 +1163,7 @@ function setupItineraryShare(ident, meta){
         if (errorBox) errorBox.classList.add('hidden');
         if (titleEl) titleEl.textContent = data.title || 'Itinerary';
 
-        // Bump views (ignore errors) — run via async IIFE so it doesn't throw synchronously
+        // Bump views (ignore errors) - run via async IIFE so it doesn't throw synchronously
         (async () => {
           try { await supa.rpc('bump_share_view', { _token: String(ident) }); } catch (e) {}
         })();

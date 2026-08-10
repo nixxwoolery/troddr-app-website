@@ -6,7 +6,7 @@
 // fallback image, same crawler-friendly redirect.
 //
 // This directory is prefixed with `_`, so Vercel does NOT turn it into a route
-// — it is only ever pulled in via `import`.
+// - it is only ever pulled in via `import`.
 
 export const BASE_URL = 'https://www.troddr.com';
 

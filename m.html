@@ -134,7 +134,7 @@
         const verify = await db.rpc('resolve_event_map_invite', { p_invite_token: inviteToken });
         const saved = verify && verify.data && verify.data.event && verify.data.event.floor_plan_markers;
         if (verify.error || !Array.isArray(saved) || saved.length !== elements.length) {
-          return { ok: false, error: 'The server did not return the complete saved map. Your browser draft has been kept—please submit again.' };
+          return { ok: false, error: 'The server did not return the complete saved map. Your browser draft has been kept. Please submit again.' };
         }
         return { ok: true };
       },

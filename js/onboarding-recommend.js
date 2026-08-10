@@ -1,10 +1,10 @@
 /* ============================================================
- * TRODDR Onboarding — recommendation engine
+ * TRODDR Onboarding - recommendation engine
  * ------------------------------------------------------------
  * Pure functions: map a profile (the wizard answers) + the
  * businesses already attached to the company, against the
  * billing catalog, into a recommended plan + add-on products
- * with an estimated total. No DOM, no network — easy to reason
+ * with an estimated total. No DOM, no network - easy to reason
  * about and verify. submit_onboarding_quote re-prices everything
  * server-side from the catalog, so this is purely advisory.
  * ============================================================ */
@@ -74,7 +74,7 @@
         estimate: false,
         currency: plan.currency,
         note: locCount > (plan.included_locations || 0)
-          ? `Covers ${plan.included_locations} locations — you mentioned ${locCount}; we'll confirm the right tier.`
+          ? `Covers ${plan.included_locations} locations - you mentioned ${locCount}; we'll confirm the right tier.`
           : null,
       });
     }

@@ -1,11 +1,11 @@
 /* ============================================================
- * TRODDR Event Dashboard — Billing widget
+ * TRODDR Event Dashboard - Billing widget
  * ------------------------------------------------------------
  * Renders a read-only billing summary inside the token-based
  * event dashboard (partner-event.html): host company, event
  * package (incl. comped founding-partner hubs), insights/map
  * status, sponsor products, push cap usage, open invoice, and
- * the access state — with a link back to /company/billing.
+ * the access state - with a link back to /company/billing.
  *
  * Free event access and paid insights/reporting are shown as
  * SEPARATE line states on purpose: a comped hub never implies
@@ -86,7 +86,7 @@
           <span style="color:#999; font-size:11px;"> (${esc(data.company.relationship_type)})</span>`)}
         ${row('Dashboard access', chip(state)
           + (access.dashboard_state === 'comped'
-             ? '<div style="font-size:11px; color:#999; margin-top:3px;">Free event hub — insights/reporting are billed separately.</div>' : ''))}
+             ? '<div style="font-size:11px; color:#999; margin-top:3px;">Free event hub - insights/reporting are billed separately.</div>' : ''))}
         ${row('Event package', pkg
           ? `<b>${esc(pkg.name)}</b> ${pkg.comped ? chip(STATE_META.comped) : `<span style="color:#999; font-size:11px;">(${esc(pkg.source)})</span>`}`
           : '<span style="color:#999;">None yet</span>')}

@@ -1620,7 +1620,7 @@
   }
   .vl-table {
     width: 100%;
-    /* Wider than most viewports on purpose — .vl-card scrolls horizontally. */
+    /* Wider than most viewports on purpose - .vl-card scrolls horizontally. */
     min-width: 1080px;
     border-collapse: collapse;
     table-layout: fixed;
@@ -1778,7 +1778,7 @@
   }
   @media (max-width: 1120px) {
     .vl-card { width: 100%; }
-    /* Keep the full 10-column width — the card scrolls horizontally. */
+    /* Keep the full 10-column width - the card scrolls horizontally. */
     .vl-table { min-width: 1080px; }
   }
   @media (max-width: 640px) {
@@ -3343,7 +3343,7 @@
           <div class="section-head">
             <div>
               <h2 class="section-title">Floor Plan</h2>
-              <div class="section-sub">Build the site map your guests will see — booths, stages, bars and more.</div>
+              <div class="section-sub">Build the site map your guests will see - booths, stages, bars and more.</div>
             </div>
           </div>
           <div id="builder-root"></div>
@@ -3394,7 +3394,7 @@
           </details>
           <div class="ve-field"><label for="ve-type">Type</label>
             <select id="ve-type">
-              <option value="">— Select —</option>
+              <option value="">- Select -</option>
               <option value="food">Food</option><option value="drink">Drink</option>
               <option value="merch">Merch</option><option value="info">Info</option>
               <option value="experience">Experience</option><option value="other">Other</option>
@@ -3433,7 +3433,7 @@
             <input id="sp-name" type="text" maxlength="200" required /></div>
           <div class="ve-field"><label for="sp-tier">Tier</label>
             <select id="sp-tier">
-              <option value="">— Select —</option>
+              <option value="">- Select -</option>
               <option value="presenting">Presenting</option>
               <option value="major">Major</option>
               <option value="gold">Gold</option>
@@ -3712,7 +3712,7 @@
             <input id="ps-name" type="text" maxlength="120" required placeholder="e.g. VIP Wristband" /></div>
           <div class="ve-field"><label for="ps-tier">Tier</label>
             <select id="ps-tier">
-              <option value="">— Select —</option>
+              <option value="">- Select -</option>
               <option value="general">General</option>
               <option value="vip">VIP</option>
               <option value="backstage">Backstage</option>
@@ -4005,7 +4005,7 @@
     $('stats-grid').innerHTML = cards.map(c => {
       const isLocked = !unlocked && !c.free;
       // On free cards, the conversion-rate sub-line and the weekly delta are
-      // themselves "depth" — strip them down to a neutral label when locked.
+      // themselves "depth" - strip them down to a neutral label when locked.
       const showDelta = (unlocked || c.free) && c.delta > 0;
       const sub = isLocked
         ? 'Premium insight'
@@ -4199,7 +4199,7 @@
   // ── Vendor Insights : new layout (Most Viewed / Most Saved / Peak / Table) ─
   function renderVendorInsights(data) {
     const vendors = data.vendors || [];
-    // Per-vendor engagement, degrading to 0 / "—" when a field is missing so
+    // Per-vendor engagement, degrading to 0 / "-" when a field is missing so
     // the layout stays correct against older RPC deployments.
     const withMetrics = vendors.map(v => ({
       ...v,
@@ -4207,7 +4207,7 @@
       _saves:      Number(v.save_count   || v.saves       || (v.menu_items || []).reduce((a, it) => a + Number(it.saved_count || 0), 0)),
       _menuClicks: Number(v.menu_clicks  || v.click_count || 0),
       // App "Interested" is stored as activity_type 'bookmarked', which is
-      // exactly what the older RPC exposed as save_count — so save_count is
+      // exactly what the older RPC exposed as save_count - so save_count is
       // the correct fallback when interested_count hasn't been deployed yet.
       _interested: Number(v.interested_count ?? v.save_count ?? v.saves ?? 0),
       _visited:    Number(v.visited_count || 0),
@@ -4266,7 +4266,7 @@
       $('vi-table-wrap').innerHTML = `
         <div class="empty-state-card" style="border:none;padding:20px;">
           <div class="empty-state-title">No vendors added yet</div>
-          <div class="empty-state-body">Add your lineup in the Editor tab under Manage Vendors — performance metrics appear here once the app starts logging activity.</div>
+          <div class="empty-state-body">Add your lineup in the Editor tab under Manage Vendors - performance metrics appear here once the app starts logging activity.</div>
         </div>`;
       return;
     }
@@ -4290,14 +4290,14 @@
           ${withMetrics.map(v => `
             <tr data-event-vendor-id="${escapeHtml(v.event_vendor_id || '')}">
               <td class="v-name">${escapeHtml(v.vendor_name || v.name || 'Unnamed vendor')}</td>
-              <td>${escapeHtml(v.booth_number || '—')}</td>
-              <td>${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}</td>
-              <td class="num ${v._views ? 'highlight' : ''}">${v._views || '—'}</td>
-              <td class="num ${v._interested ? 'highlight' : ''}">${v._interested || '—'}</td>
-              <td class="num">${v._visited || '—'}</td>
-              <td class="num">${v._favourites || '—'}</td>
-              <td class="num">${v._wantToTry || '—'}</td>
-              <td class="num">${v._menuClicks || '—'}</td>
+              <td>${escapeHtml(v.booth_number || '-')}</td>
+              <td>${escapeHtml(titleCaseSafe(v.vendor_type || '-'))}</td>
+              <td class="num ${v._views ? 'highlight' : ''}">${v._views || '-'}</td>
+              <td class="num ${v._interested ? 'highlight' : ''}">${v._interested || '-'}</td>
+              <td class="num">${v._visited || '-'}</td>
+              <td class="num">${v._favourites || '-'}</td>
+              <td class="num">${v._wantToTry || '-'}</td>
+              <td class="num">${v._menuClicks || '-'}</td>
               <td><button type="button" class="vi-edit-btn" data-edit-vendor>Edit</button></td>
             </tr>
           `).join('')}
@@ -4660,7 +4660,7 @@
       p_vendor_description:  $('ve-desc').value.trim() || null,
       p_filter_tags:         parseFilterTags($('ve-filter-tags').value),
       p_is_featured:         $('ve-featured').checked,
-      // Directory pick (create path only) — links the existing vendor
+      // Directory pick (create path only) - links the existing vendor
       // instead of creating a duplicate.
       p_vendor_id:           !_editingVendor.event_vendor_id ? ($('ve-pick').value || null) : null,
     };
@@ -4756,7 +4756,7 @@
     }
   }
 
-  // ── Vendors lineup (Details view) — table with click-to-expand menus ──
+  // ── Vendors lineup (Details view) - table with click-to-expand menus ──
   function renderVendorsLineup(data) {
     const card = $('vendors-lineup-card');
     if (!card) return;
@@ -4770,7 +4770,7 @@
       const logo = v.logo_url || (Array.isArray(v.place_image) && v.place_image[0]) || v.cover_image_url || '';
       const views = Number(v.view_count || v.views || 0);
       const saves = Number(v.save_count || v.saves || items.reduce((a, it) => a + Number(it.saved_count || 0), 0));
-      // App "Interested" is stored as activity_type 'bookmarked' — the same
+      // App "Interested" is stored as activity_type 'bookmarked' - the same
       // rows the older RPC exposed as save_count, hence the fallback.
       const interested = Number(v.interested_count ?? saves);
       const visited = Number(v.visited_count || 0);
@@ -4808,8 +4808,8 @@
               </div>
             </div>
           </td>
-          <td>${escapeHtml(v.booth_number || '—')}${v.zone ? `<div style="font-size:11px;color:var(--grey-mid);">${escapeHtml(v.zone)}</div>` : ''}</td>
-          <td>${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}</td>
+          <td>${escapeHtml(v.booth_number || '-')}${v.zone ? `<div style="font-size:11px;color:var(--grey-mid);">${escapeHtml(v.zone)}</div>` : ''}</td>
+          <td>${escapeHtml(titleCaseSafe(v.vendor_type || '-'))}</td>
           <td class="num">${views}</td>
           <td class="num">${interested}</td>
           <td class="num">${visited}</td>
@@ -4987,7 +4987,7 @@
           <div class="meta">
             ${v.booth_number ? 'Booth ' + escapeHtml(v.booth_number) + ' · ' : ''}
             ${v.zone ? escapeHtml(v.zone) + ' · ' : ''}
-            ${escapeHtml(titleCaseSafe(v.vendor_type || '—'))}
+            ${escapeHtml(titleCaseSafe(v.vendor_type || '-'))}
             ${filterTagsText(v) ? ' · ' + escapeHtml(filterTagsText(v)) : ''}
             ${(v.menu_items && v.menu_items.length) ? ' · ' + v.menu_items.length + ' menu item' + (v.menu_items.length === 1 ? '' : 's') : ''}
           </div>
@@ -5327,7 +5327,7 @@
         <div class="body">
           <div class="name">${escapeHtml(s.sponsor_name || s.name || 'Unnamed sponsor')}</div>
           <div class="meta">
-            ${escapeHtml(titleCaseSafe(s.display_tier_label || s.tier || '—'))}
+            ${escapeHtml(titleCaseSafe(s.display_tier_label || s.tier || '-'))}
             ${s.is_featured ? ' · Featured' : ''}
             ${(s.activations && s.activations.length) ? ' · ' + s.activations.length + ' activation' + (s.activations.length === 1 ? '' : 's') : ''}
             ${s.website ? ' · ' + escapeHtml(s.website.replace(/^https?:\/\//, '')) : ''}
@@ -6415,7 +6415,7 @@
             ${p.is_featured ? ' <span style="font-size:10px;color:var(--brand-primary);">· FEATURED</span>' : ''}
           </div>
           <div class="meta">
-            ${escapeHtml(titleCaseSafe(p.tier || '—'))}
+            ${escapeHtml(titleCaseSafe(p.tier || '-'))}
             ${p.price != null ? ' · ' + escapeHtml(p.currency || 'JMD') + ' ' + p.price : ''}
           </div>
         </div>
@@ -6666,7 +6666,7 @@
     document.getElementById('ps-modal-backdrop')?.addEventListener('click', (e) => {
       if (e.target.id === 'ps-modal-backdrop') _modalClose('ps-modal-backdrop');
     });
-    // Vendors (Add Vendor — Edit is wired per-row by renderers)
+    // Vendors (Add Vendor - Edit is wired per-row by renderers)
     document.getElementById('add-vendor-btn')?.addEventListener('click', () => openVendorEditor(null));
     // Bands
     document.getElementById('add-band-btn')?.addEventListener('click', () => openBandEditor(null));
@@ -7120,28 +7120,28 @@
     };
     const kbyg = Array.isArray(e.know_before_you_go) ? e.know_before_you_go : [];
     const rows = [
-      infoRow('Organizer',     escapeHtml(e.organizer_name || '—')),
-      infoRow('Event type',    escapeHtml(e.event_type || '—')),
-      infoRow('Description',   e.description ? escapeHtml(e.description).replace(/\n/g, '<br>') : '—'),
+      infoRow('Organizer',     escapeHtml(e.organizer_name || '-')),
+      infoRow('Event type',    escapeHtml(e.event_type || '-')),
+      infoRow('Description',   e.description ? escapeHtml(e.description).replace(/\n/g, '<br>') : '-'),
       kbyg.length ? infoRow('Know Before You Go', kbyg.map((item) => escapeHtml(item.text || '')).filter(Boolean).join('<br>')) : '',
       e.parking_info || parkingSection ? infoRow('Parking', escapeHtml(e.parking_info || parkingSection.body || '').replace(/\n/g, '<br>')) : '',
       parkingImages.length ? infoRow('Parking images', parkingImages.map((url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(compactUrl(url))}</a>`).join('<br>')) : '',
-      infoRow('Dress code',    escapeHtml(e.dress_code || '—')),
-      infoRow('Minimum age',   e.min_age != null ? `${e.min_age}+` : '—'),
+      infoRow('Dress code',    escapeHtml(e.dress_code || '-')),
+      infoRow('Minimum age',   e.min_age != null ? `${e.min_age}+` : '-'),
       e.accessibility_info ? infoRow('Accessibility', escapeHtml(e.accessibility_info).replace(/\n/g, '<br>')) : '',
       e.weather_contingency ? infoRow('Weather contingency', escapeHtml(e.weather_contingency).replace(/\n/g, '<br>')) : '',
       infoRow('Food',          e.food_available ? 'Available' : 'Not specified'),
       infoRow('Alcohol',       e.alcohol_served ? 'Served' : 'Not specified'),
       customSections.length ? infoRow('Additional sections', customSections.map((s) => `<strong>${escapeHtml(s.title || 'Info')}</strong>${s.body ? '<br>' + escapeHtml(s.body).replace(/\n/g, '<br>') : ''}${sectionImageLinks(s)}`).join('<br><br>')) : '',
       faq.length ? infoRow('FAQ', faq.map((item) => `<strong>${escapeHtml(item.question || '')}</strong>${item.answer ? '<br>' + escapeHtml(item.answer).replace(/\n/g, '<br>') : ''}`).join('<br><br>')) : '',
-      infoRow('Contact email', e.contact_email ? `<a href="mailto:${escapeHtml(e.contact_email)}">${escapeHtml(e.contact_email)}</a>` : '—'),
-      infoRow('Contact phone', escapeHtml(e.contact_phone || '—')),
-      infoRow('Support email', e.support_email ? `<a href="mailto:${escapeHtml(e.support_email)}">${escapeHtml(e.support_email)}</a>` : '—'),
-      infoRow('Support phone', escapeHtml(e.support_phone || '—')),
-      infoRow('Support URL',   e.support_url ? `<a href="${escapeHtml(e.support_url)}" target="_blank" rel="noopener">${escapeHtml(e.support_url)}</a>` : '—'),
-      infoRow('Event media',   e.media_url ? `<a href="${escapeHtml(e.media_url)}" target="_blank" rel="noopener">${escapeHtml(compactUrl(e.media_url))}</a>` : '—'),
-      infoRow('Website',       e.website_url ? `<a href="${escapeHtml(e.website_url)}" target="_blank" rel="noopener">${escapeHtml(e.website_url)}</a>` : '—'),
-      infoRow('Instagram',     e.instagram_url ? `<a href="${escapeHtml(e.instagram_url)}" target="_blank" rel="noopener">${escapeHtml(e.instagram_url)}</a>` : '—'),
+      infoRow('Contact email', e.contact_email ? `<a href="mailto:${escapeHtml(e.contact_email)}">${escapeHtml(e.contact_email)}</a>` : '-'),
+      infoRow('Contact phone', escapeHtml(e.contact_phone || '-')),
+      infoRow('Support email', e.support_email ? `<a href="mailto:${escapeHtml(e.support_email)}">${escapeHtml(e.support_email)}</a>` : '-'),
+      infoRow('Support phone', escapeHtml(e.support_phone || '-')),
+      infoRow('Support URL',   e.support_url ? `<a href="${escapeHtml(e.support_url)}" target="_blank" rel="noopener">${escapeHtml(e.support_url)}</a>` : '-'),
+      infoRow('Event media',   e.media_url ? `<a href="${escapeHtml(e.media_url)}" target="_blank" rel="noopener">${escapeHtml(compactUrl(e.media_url))}</a>` : '-'),
+      infoRow('Website',       e.website_url ? `<a href="${escapeHtml(e.website_url)}" target="_blank" rel="noopener">${escapeHtml(e.website_url)}</a>` : '-'),
+      infoRow('Instagram',     e.instagram_url ? `<a href="${escapeHtml(e.instagram_url)}" target="_blank" rel="noopener">${escapeHtml(e.instagram_url)}</a>` : '-'),
     ].filter(Boolean).join('');
     card.innerHTML = rows || `<div class="section-empty">No info set yet.</div>`;
   }
@@ -8645,7 +8645,7 @@
     const verify = await db.rpc('get_partner_event_by_token', { p_token: _getToken() });
     const saved = verify && verify.data && verify.data.event && verify.data.event.floor_plan_markers;
     if (verify.error || !Array.isArray(saved) || saved.length !== elements.length) {
-      return { ok: false, error: 'The server did not return the complete saved map. Your browser draft has been kept—please try Save again.' };
+      return { ok: false, error: 'The server did not return the complete saved map. Your browser draft has been kept. Please try Save again.' };
     }
     if (window.__eventData && window.__eventData.event) window.__eventData.event.floor_plan_markers = saved;
     return { ok: true };
@@ -8672,7 +8672,7 @@
     if (!ev.slug) { alert('This event has no public link yet.'); return; }
     const url = `${location.origin}/map/${ev.slug}`;
     navigator.clipboard?.writeText(url).catch(() => {});
-    alert('Public map link copied to clipboard:\n\n' + url + '\n\nGuests can open it on any phone — no app or login needed. Remember to Save so the link shows your latest layout.');
+    alert('Public map link copied to clipboard:\n\n' + url + '\n\nGuests can open it on any phone - no app or login needed. Remember to Save so the link shows your latest layout.');
   }
 
   // Lazy-init on first activation of the Planning pane (the canvas must be
@@ -8950,7 +8950,7 @@
         tab.setAttribute('aria-selected', match ? 'true' : 'false');
       });
       if (opts && opts.scrollTop) window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-      // Floor plan canvas must be visible to measure itself — init on first show.
+      // Floor plan canvas must be visible to measure itself - init on first show.
       if (view === 'planning' && typeof window.initFloorPlan === 'function') {
         requestAnimationFrame(() => window.initFloorPlan());
       }

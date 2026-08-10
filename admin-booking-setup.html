@@ -503,9 +503,9 @@
         <div class="form-group">
           <label>Booking Mode</label>
           <select id="cfg-booking-mode">
-            <option value="request_only">Request Only — manual review per booking</option>
-            <option value="manual_availability">Manual Availability — calendar-based, still confirm manually</option>
-            <option value="instant_manual_inventory">Instant + Inventory — auto-hold on checkout, you confirm</option>
+            <option value="request_only">Request Only - manual review per booking</option>
+            <option value="manual_availability">Manual Availability - calendar-based, still confirm manually</option>
+            <option value="instant_manual_inventory">Instant + Inventory - auto-hold on checkout, you confirm</option>
           </select>
         </div>
         <div class="form-group">
@@ -608,7 +608,7 @@
         </div>
         <div class="form-group">
           <label>Internal Booking Notes</label>
-          <textarea id="cfg-internal-notes" rows="2" placeholder="Troddr ops notes — not visible to partner or guest…"></textarea>
+          <textarea id="cfg-internal-notes" rows="2" placeholder="Troddr ops notes - not visible to partner or guest…"></textarea>
         </div>
       </div>
 
@@ -756,7 +756,7 @@ function escHtml(s) {
 }
 
 function fmtMoney(v, cur) {
-  if (v == null) return '—';
+  if (v == null) return '-';
   return (cur || 'USD') + ' ' + Number(v).toFixed(2);
 }
 
@@ -1328,8 +1328,8 @@ function renderCalendar() {
         <div class="${cls}" data-date="${ds}" onclick="toggleDate('${ds}')">
           <div class="avail-cell-date">${d.toLocaleString('en-US',{month:'short',day:'numeric'})}</div>
           <div class="avail-cell-day">${d.toLocaleString('en-US',{weekday:'short'})}</div>
-          ${av ? `<div class="avail-cell-rooms">${av.available_rooms ?? '—'}</div>
-            <div class="avail-cell-rate">${av.base_nightly_rate ? fmtMoney(av.base_nightly_rate, av.currency) : ''}</div>` : `<div class="avail-cell-rooms" style="color:var(--grey-light)">—</div>`}
+          ${av ? `<div class="avail-cell-rooms">${av.available_rooms ?? '-'}</div>
+            <div class="avail-cell-rate">${av.base_nightly_rate ? fmtMoney(av.base_nightly_rate, av.currency) : ''}</div>` : `<div class="avail-cell-rooms" style="color:var(--grey-light)">-</div>`}
           ${isBlackout ? `<span class="avail-cell-flag blackout">BLKOUT</span>` : ''}
           ${(!isBlackout && isClosed) ? `<span class="avail-cell-flag closed">CLOSED</span>` : ''}
         </div>`;

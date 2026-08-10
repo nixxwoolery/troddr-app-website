@@ -248,7 +248,7 @@
   let parkingExtraImageUrls = [];
   let lots = [];           // { id, name, capacity, status_override, x, y, lat, lng, price, currency, show_* }
 
-  // Canonical QR payload for a lot — must match lib/parking/qr.ts in the app.
+  // Canonical QR payload for a lot - must match lib/parking/qr.ts in the app.
   const parkingLotUrl = (lotId) => `https://troddr.com/park/${lotId}`;
   let selectedId = null;
   let placementTargetId = null;
@@ -307,7 +307,7 @@
   function renderCanvas() {
     const wrap = $('canvas-wrap');
     if (!parkingMapUrl) {
-      wrap.innerHTML = '<div class="canvas-empty">Upload a parking map image in Event Info first — then you can place lots exactly where guests will see them.</div>';
+      wrap.innerHTML = '<div class="canvas-empty">Upload a parking map image in Event Info first - then you can place lots exactly where guests will see them.</div>';
       return;
     }
     wrap.innerHTML = '<img id="fp-img" alt="Parking map" />';
@@ -608,7 +608,7 @@
         <div class="qr-title">${safeName}</div>
         <div class="qr-img" id="qr-img"></div>
         <div class="qr-url">${url}</div>
-        ${dirty ? '<div class="qr-warn">Save your changes first — this code only works once the lot is saved.</div>' : ''}
+        ${dirty ? '<div class="qr-warn">Save your changes first - this code only works once the lot is saved.</div>' : ''}
         <a class="btn primary block" id="qr-download" download="${fileName}">Download PNG</a>
         <div class="qr-hint">Print and post this at the lot entrance. Guests scan it in the TRODDR app to check in.</div>
       </div>`;
@@ -679,7 +679,7 @@
       mapDirty = false;
       msg.textContent = 'All changes saved'; msg.className = 'msg ok';
     } catch (err) {
-      msg.textContent = 'Network error — try again'; msg.className = 'msg dirty';
+      msg.textContent = 'Network error - try again'; msg.className = 'msg dirty';
       $('save-btn').disabled = false;
       $('save-btn-top').disabled = false;
     }

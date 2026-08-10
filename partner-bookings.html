@@ -575,10 +575,10 @@ body {
   <main class="main">
     <!-- Stats -->
     <div class="stats-strip" id="stats-strip">
-      <div class="stat-card"><div class="stat-label">Total Bookings</div><div class="stat-value" id="stat-total">—</div><div class="stat-sub">all time</div></div>
-      <div class="stat-card highlight-pending"><div class="stat-label">Awaiting Response</div><div class="stat-value" id="stat-pending">—</div><div class="stat-sub">pending + held</div></div>
-      <div class="stat-card highlight-confirm"><div class="stat-label">Confirmed</div><div class="stat-value" id="stat-confirmed">—</div><div class="stat-sub">active bookings</div></div>
-      <div class="stat-card highlight-attn"><div class="stat-label">This Month</div><div class="stat-value" id="stat-month">—</div><div class="stat-sub">new requests</div></div>
+      <div class="stat-card"><div class="stat-label">Total Bookings</div><div class="stat-value" id="stat-total">-</div><div class="stat-sub">all time</div></div>
+      <div class="stat-card highlight-pending"><div class="stat-label">Awaiting Response</div><div class="stat-value" id="stat-pending">-</div><div class="stat-sub">pending + held</div></div>
+      <div class="stat-card highlight-confirm"><div class="stat-label">Confirmed</div><div class="stat-value" id="stat-confirmed">-</div><div class="stat-sub">active bookings</div></div>
+      <div class="stat-card highlight-attn"><div class="stat-label">This Month</div><div class="stat-value" id="stat-month">-</div><div class="stat-sub">new requests</div></div>
     </div>
 
     <!-- Status chips -->
@@ -671,15 +671,15 @@ let drawerBooking = null;
 // ── Formatters ───────────────────────────────────────────────────
 
 function fmtDate(d) {
-  if (!d) return '—';
+  if (!d) return '-';
   return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 function fmtShortDate(d) {
-  if (!d) return '—';
+  if (!d) return '-';
   return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 function fmtMoney(n, cur) {
-  if (n == null) return '—';
+  if (n == null) return '-';
   try {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD', minimumFractionDigits: 0 }).format(n);
   } catch { return `$${n}`; }
@@ -766,7 +766,7 @@ async function load() {
   if (!intentional && entities.length > 1) { window.PartnerAuth?.navigate('/partner/group', partnerToken); return; }
   if (!intentional && caps.type === 'event') { window.PartnerAuth?.navigate('/partner/event', partnerToken); return; }
 
-  // Token is valid — always render the dashboard frame.
+  // Token is valid - always render the dashboard frame.
   hide('view-loading'); show('view-main');
   window.PartnerAuth?.mountSessionControl('partner');
   window.PartnerSidebar?.mount({ active: '/partner/bookings', capabilities: caps.capabilities, partner: caps.partner });
@@ -823,7 +823,7 @@ function renderBookingsUnavailable(err, payloadError) {
 
   $('hero-sub').textContent = setupPending ? 'Booking inbox is finishing setup' : 'Couldn’t load bookings';
 
-  ['stat-total','stat-pending','stat-confirmed','stat-month'].forEach((id) => { if ($(id)) $(id).textContent = '—'; });
+  ['stat-total','stat-pending','stat-confirmed','stat-month'].forEach((id) => { if ($(id)) $(id).textContent = '-'; });
   const chipRow = $('chip-row'); if (chipRow) chipRow.style.display = 'none';
   const filterBar = document.querySelector('.filter-bar'); if (filterBar) filterBar.style.display = 'none';
 
@@ -832,7 +832,7 @@ function renderBookingsUnavailable(err, payloadError) {
   const title = setupPending ? 'Booking inbox is being set up' : 'We couldn’t load your bookings';
   const body  = setupPending
     ? 'Your booking management workspace is finishing configuration for this property. This usually clears within a few minutes. Try again shortly, or email us if it persists.'
-    : 'Something went wrong loading your booking requests. Please try again — if it keeps happening, reach out and we’ll take a look.';
+    : 'Something went wrong loading your booking requests. Please try again - if it keeps happening, reach out and we’ll take a look.';
   wrap.innerHTML = `
     <div class="empty-state-card">
       <div class="empty-state-icon">
@@ -944,9 +944,9 @@ function renderTable() {
         <div class="dates-sub">${dateSub}</div>
       </td>
       <td><span class="type-badge">${typeLabel(b.booking_type)}</span></td>
-      <td class="col-room">${esc(b.room_type_name || b.room_preference || '—')}</td>
+      <td class="col-room">${esc(b.room_type_name || b.room_preference || '-')}</td>
       <td><span class="badge b-${b.status}">${statusLabel(b.status)}</span></td>
-      <td class="col-quoted">${quoted ? fmtMoney(quoted, b.quoted_currency) : '<span style="color:var(--grey-light)">—</span>'}</td>
+      <td class="col-quoted">${quoted ? fmtMoney(quoted, b.quoted_currency) : '<span style="color:var(--grey-light)">-</span>'}</td>
       <td class="col-payment"><span class="pay-badge pay-${b.manual_payment_status}">${payLabel(b.manual_payment_status)}</span></td>
       <td class="col-actions">${actionCells}</td>
     `;
@@ -1009,12 +1009,12 @@ function renderDrawer(b, openPanel) {
     <div class="drow"><span class="dlabel">Check-in</span><span class="dval">${fmtDate(b.visit_date)}${b.visit_time ? ' · ' + b.visit_time : ''}</span></div>
     ${b.checkout_date ? `<div class="drow"><span class="dlabel">Check-out</span><span class="dval">${fmtDate(b.checkout_date)}</span></div>` : ''}
     ${nights ? `<div class="drow"><span class="dlabel">Nights</span><span class="dval">${nights}</span></div>` : ''}
-    <div class="drow"><span class="dlabel">Party</span><span class="dval">${b.adults ? `${b.adults} adults${b.children ? ', ' + b.children + ' children' : ''}` : (b.party_size ? `${b.party_size} guests` : '—')}</span></div>
+    <div class="drow"><span class="dlabel">Party</span><span class="dval">${b.adults ? `${b.adults} adults${b.children ? ', ' + b.children + ' children' : ''}` : (b.party_size ? `${b.party_size} guests` : '-')}</span></div>
     ${b.rooms_requested > 1 ? `<div class="drow"><span class="dlabel">Rooms</span><span class="dval">${b.rooms_requested}</span></div>` : ''}
     ${b.room_type_name ? `<div class="drow"><span class="dlabel">Room Type</span><span class="dval">${esc(b.room_type_name)}</span></div>` : (b.room_preference ? `<div class="drow"><span class="dlabel">Room Pref.</span><span class="dval muted">${esc(b.room_preference)}</span></div>` : '')}
     ${b.rate_plan_name ? `<div class="drow"><span class="dlabel">Rate Plan</span><span class="dval">${esc(b.rate_plan_name)}</span></div>` : ''}
     <div class="drow"><span class="dlabel">Guest</span><span class="dval">${esc(b.guest_name)}</span></div>
-    <div class="drow"><span class="dlabel">Email</span><span class="dval">${b.guest_email ? `<a href="mailto:${esc(b.guest_email)}" style="color:var(--blue)">${esc(b.guest_email)}</a>` : '—'}</span></div>
+    <div class="drow"><span class="dlabel">Email</span><span class="dval">${b.guest_email ? `<a href="mailto:${esc(b.guest_email)}" style="color:var(--blue)">${esc(b.guest_email)}</a>` : '-'}</span></div>
     ${b.guest_phone ? `<div class="drow"><span class="dlabel">Phone</span><span class="dval">${esc(b.guest_phone)}</span></div>` : ''}
     ${b.notes ? `<div class="drow"><span class="dlabel">Guest Notes</span><span class="dval" style="font-style:italic; color:var(--grey-dark)">"${esc(b.notes)}"</span></div>` : ''}
     <div class="drow"><span class="dlabel">Submitted</span><span class="dval muted">${fmtTs(b.created_at)}</span></div>
@@ -1046,7 +1046,7 @@ function renderDrawer(b, openPanel) {
 
   <!-- PAYMENT TRACKING -->
   <div class="dsec">
-    <div class="dsec-title">Payment Tracking <span style="font-size:9px;color:var(--grey-light);font-weight:400;text-transform:none;letter-spacing:0">— no card capture</span></div>
+    <div class="dsec-title">Payment Tracking <span style="font-size:9px;color:var(--grey-light);font-weight:400;text-transform:none;letter-spacing:0">- no card capture</span></div>
     <div class="dfield"><label>Payment Status</label>
       <select id="f-pay-status">
         <option value="not_required"${b.manual_payment_status==='not_required'?' selected':''}>No deposit required</option>
@@ -1242,7 +1242,7 @@ function renderDrawer(b, openPanel) {
 // ── TRODDR Insider guest profile ───────────────────────────────────
 // Frozen snapshot captured at booking time. Returned by the
 // security-definer RPC get_booking_guest_profile(p_token) ONLY when the
-// guest opted into profile sharing — un-shared bookings return shared:false
+// guest opted into profile sharing - un-shared bookings return shared:false
 // and the panel stays hidden. Degrades silently if the RPC isn't deployed.
 
 const TIER_LABEL = { member: 'Member', regular: 'Regular', insider: 'Insider', inner_circle: 'Inner Circle' };
@@ -1286,7 +1286,7 @@ async function loadGuestProfile(b) {
   renderVisitBlock(b, b.occasion || null);
   loadOccasion(b);
 
-  // Staff perk redemption — only when we have the guest's user_id (shared).
+  // Staff perk redemption - only when we have the guest's user_id (shared).
   if (row.user_id) loadInsiderPerks(row.user_id, snap.tier || 'member');
 }
 

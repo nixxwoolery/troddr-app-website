@@ -1,4 +1,4 @@
-// api/og/events/[slug].js — Open Graph card for /events/{slug}
+// api/og/events/[slug].js - Open Graph card for /events/{slug}
 //
 // This route had a vercel.json rewrite but no function, so event shares
 // unfurled as bare text. This is the missing handler.
@@ -51,7 +51,7 @@ export default async function handler(request) {
   const venueDate = [venue, dateLabel].filter(Boolean).join(' · ');
 
   // iMessage (and several other clients) show ONLY og:title + the domain in the
-  // unfurl caption — never og:description. So stack the name, venue and date
+  // unfurl caption - never og:description. So stack the name, venue and date
   // into og:title so all three render in the card's bottom section:
   //   A taste of Reggae Sumfest
   //   Plantation Cove

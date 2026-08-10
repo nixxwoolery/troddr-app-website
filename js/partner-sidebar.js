@@ -1,5 +1,5 @@
 /* ============================================================
- * Unified partner sidebar  (v2 — nested, collapsible).
+ * Unified partner sidebar  (v2 - nested, collapsible).
  *
  * One shared component mounted on every partner page via
  *   PartnerSidebar.mount({ active, capabilities, partner })
@@ -7,11 +7,11 @@
  * The nav is a two-level tree defined centrally below, so the
  * structure is identical on every page. There are two trees:
  *
- *   • NAV_INDIVIDUAL — shown on every single-location page
+ *   • NAV_INDIVIDUAL - shown on every single-location page
  *     (Listing, Insights & Feedback, Booking, Promote,
  *      Specials & Promotions, Account, Event)
  *
- *   • NAV_GROUP — shown on the group landing (/partner/group)
+ *   • NAV_GROUP - shown on the group landing (/partner/group)
  *     (Group Insights, Listing, Specials & Promos, Billing)
  *
  * Sections are capability-driven: a section with a `cap` is only
@@ -62,10 +62,10 @@
 
   // ── Central nav trees ──────────────────────────────────────
   // section: { group, icon, page, cap, children:[ { label, section, page? } ] }
-  //   cap   — capability key; omit/null to always show.
-  //   page  — route this section's header navigates to.
-  //   child.section — anchor id on the child's target page.
-  //   child.page    — override target page (cross-page link); defaults to section.page.
+  //   cap   - capability key; omit/null to always show.
+  //   page  - route this section's header navigates to.
+  //   child.section - anchor id on the child's target page.
+  //   child.page    - override target page (cross-page link); defaults to section.page.
 
   const NAV_INDIVIDUAL = [
     { group: 'Listing', icon: 'ic-doc', page: '/partner/listing', cap: 'listing', children: [
@@ -110,7 +110,7 @@
   const NAV_GROUP = [
     // Group Insights is the account-wide overview (multi-location). Clicking it
     // in the group context shows GROUP analytics (/partner/group), not an
-    // individual location's feedback — per-location feedback is reached by
+    // individual location's feedback - per-location feedback is reached by
     // selecting a location from the Locations grid / entity picker.
     { group: 'Group Insights', icon: 'ic-grid', page: '/partner/group', minPlaces: 2, children: [
       { label: 'Overview',    section: 'group-health',   page: '/partner/group' },
@@ -307,7 +307,7 @@
     });
   }
 
-  // Wire one sidebar element's interactive parts. Idempotent — a
+  // Wire one sidebar element's interactive parts. Idempotent - a
   // re-mount or a second `.sidebar` element won't double-bind handlers.
   function wireSidebar(root, active) {
     const token = getToken();
@@ -331,7 +331,7 @@
       });
     });
 
-    // Chevron toggles — open/close without navigating.
+    // Chevron toggles - open/close without navigating.
     root.querySelectorAll('.psb-toggle').forEach((btn) => {
       if (btn.dataset.wired) return;
       btn.dataset.wired = '1';

@@ -229,13 +229,13 @@ let partnerToken = '';
 let perks = [];
 let editingId = null;
 
-// Canonical tiers — must match lib/insider/tiers.ts (app repo) and the
+// Canonical tiers - must match lib/insider/tiers.ts (app repo) and the
 // partner_perks.required_tier CHECK constraint.
 const TIERS = [
   { slug:'member',       label:'Member',       hint:'Open to everyone with the app.' },
   { slug:'regular',      label:'Regular',      hint:'Guests at level 3+ on TRODDR.' },
   { slug:'insider',      label:'Insider',      hint:'Guests at level 5+ on TRODDR.' },
-  { slug:'inner_circle', label:'Inner Circle', hint:'Your most loyal — level 8+ on TRODDR.' },
+  { slug:'inner_circle', label:'Inner Circle', hint:'Your most loyal - level 8+ on TRODDR.' },
 ];
 const TIER_LABEL = Object.fromEntries(TIERS.map(t => [t.slug, t.label]));
 
@@ -286,7 +286,7 @@ async function load() {
   window.PartnerAuth?.mountSessionControl('partner');
   mountSidebar(caps.capabilities, caps.partner);
 
-  // A 404 here means the partner_perks RPCs aren't deployed yet — show an
+  // A 404 here means the partner_perks RPCs aren't deployed yet - show an
   // empty state rather than an error so the page is still usable.
   perks = (perksRes && !perksRes.error && Array.isArray(perksRes.data)) ? perksRes.data : [];
   renderPerks();
@@ -303,7 +303,7 @@ function renderPerks() {
   if (!perks.length) {
     c.innerHTML = `<div class="empty">
       <h3>No perks yet</h3>
-      <p>Create your first Insider perk — a welcome drink, a priority table, a regular-only special — and reward the guests who keep coming back.</p>
+      <p>Create your first Insider perk - a welcome drink, a priority table, a regular-only special - and reward the guests who keep coming back.</p>
       <button class="btn btn-primary" onclick="openEditor()">+ Create your first perk</button>
     </div>`;
     return;

@@ -298,7 +298,7 @@
     const verify = await db.rpc('get_partner_event_by_token', { p_token: getToken() });
     const saved = verify && verify.data && verify.data.event && verify.data.event.floor_plan_markers;
     if (verify.error || !Array.isArray(saved) || saved.length !== elements.length) {
-      return { ok: false, error: 'The server did not return the complete saved map. Your browser draft has been kept—please try Save again.' };
+      return { ok: false, error: 'The server did not return the complete saved map. Your browser draft has been kept. Please try Save again.' };
     }
     return { ok: true };
   }
@@ -328,7 +328,7 @@
     if (!eventSlug) { alert('This event has no public link yet.'); return; }
     const url = `${location.origin}/map/${eventSlug}`;
     navigator.clipboard?.writeText(url).catch(() => {});
-    alert('Public map link copied to clipboard:\n\n' + url + '\n\nGuests can open it on any phone — no app or login needed. Remember to Save so the link shows your latest layout.');
+    alert('Public map link copied to clipboard:\n\n' + url + '\n\nGuests can open it on any phone - no app or login needed. Remember to Save so the link shows your latest layout.');
   }
 
   // ── Sidebar mount ──────────────────────────────────────────
@@ -388,7 +388,7 @@
 
     // Hero
     $('hero-title').textContent = e.title || 'Floor Plan';
-    $('hero-meta').textContent  = 'Build the site map your guests will see — booths, stages, bars and more.';
+    $('hero-meta').textContent  = 'Build the site map your guests will see - booths, stages, bars and more.';
 
     // Reveal editor view BEFORE mounting so the canvas can measure itself.
     $('view-loading').classList.add('hidden');

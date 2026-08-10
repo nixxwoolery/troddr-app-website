@@ -413,7 +413,7 @@
 }
 
 /* ============================================================
- * UNIFIED NESTED SIDEBAR  (v2 component — js/partner-sidebar.js)
+ * UNIFIED NESTED SIDEBAR  (v2 component - js/partner-sidebar.js)
  * These rules use !important to win over each page's own
  * `.sidebar a` styles, guaranteeing one identical sidebar on
  * every partner page regardless of page-level CSS.

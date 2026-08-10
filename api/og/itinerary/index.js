@@ -1,4 +1,4 @@
-// api/og/itinerary/index.js — Open Graph card for /itinerary and
+// api/og/itinerary/index.js - Open Graph card for /itinerary and
 // /itinerary?tripId=…&token=…  (query-string form). Token-gated exactly like
 // the path form in [id].js, with the same shared-only by-id fallback.
 

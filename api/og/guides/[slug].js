@@ -1,4 +1,4 @@
-// api/og/guides/[slug].js — Open Graph card for /guides/{slug}
+// api/og/guides/[slug].js - Open Graph card for /guides/{slug}
 
 import {
   BASE_URL, isBot, lastPathSegment, sbSelect,
@@ -28,10 +28,10 @@ export default async function handler(request) {
   const name =
     guide?.title || slug.replace(/-/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase());
   const location = guide?.location || guide?.destination || guide?.country || '';
-  const title = `${name}${location ? ` — ${location}` : ''} — TRODDR Guide`;
+  const title = `${name}${location ? ` - ${location}` : ''} - TRODDR Guide`;
   const description = guide?.description
     ? guide.description.slice(0, 200)
-    : `Explore ${name} on TRODDR — your guide to the best of Jamaica.`;
+    : `Explore ${name} on TRODDR - your guide to the best of Jamaica.`;
   const imageUrl = firstImage(guide?.image_url, guide?.image, guide?.cover_image);
   const canonicalUrl = `${BASE_URL}/guides/${encodeURIComponent(guide?.slug || slug)}`;
 

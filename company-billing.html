@@ -232,7 +232,7 @@
     <div class="auth-err" id="auth-err"></div>
     <div class="auth-help">
       Forgot your password? <a href="#" id="auth-reset">Send a reset link</a>.<br>
-      New to TRODDR? Company accounts are set up by our team — email <a href="mailto:billing@troddr.com">billing@troddr.com</a>.
+      New to TRODDR? Company accounts are set up by our team - email <a href="mailto:billing@troddr.com">billing@troddr.com</a>.
     </div>
   </div>
 </div>
@@ -284,7 +284,7 @@
   <div class="auth-card" style="max-width: 520px;">
     <div class="kicker">One-time setup</div>
     <h1>Confirm your billing details</h1>
-    <p>Before using billing, confirm your company's details. Approved locations and events are managed by TRODDR — this only updates billing information.</p>
+    <p>Before using billing, confirm your company's details. Approved locations and events are managed by TRODDR - this only updates billing information.</p>
     <div class="field"><label>Legal/business name *</label><input id="ob-legal" /></div>
     <div class="field"><label>Trading name</label><input id="ob-trading" /></div>
     <div class="field"><label>Billing contact name</label><input id="ob-contact" /></div>
@@ -314,7 +314,7 @@
   <section class="page-hero">
     <div class="hero-inner">
       <span class="hero-eyebrow">Billing</span>
-      <h1 id="company-name">—</h1>
+      <h1 id="company-name">-</h1>
       <p class="hero-sub" id="company-sub"></p>
     </div>
   </section>
@@ -337,13 +337,13 @@
       <div class="section-head"><h2 class="section-title">Billing Summary</h2></div>
       <div class="banner readonly" id="readonly-banner">
         <strong>Your account is in read-only mode</strong>
-        <span id="readonly-msg">Paid features are paused. You can still view your data and invoices. Pay your latest invoice and confirm payment below to restore full access — access resumes once TRODDR verifies your payment.</span>
+        <span id="readonly-msg">Paid features are paused. You can still view your data and invoices. Pay your latest invoice and confirm payment below to restore full access - access resumes once TRODDR verifies your payment.</span>
       </div>
       <div class="grid-4">
-        <div class="stat"><div class="lbl">Current Plan</div><div class="val" id="stat-plan">—</div><div class="sub" id="stat-plan-sub"></div></div>
-        <div class="stat"><div class="lbl">Billing Cycle</div><div class="val" id="stat-cycle">—</div><div class="sub" id="stat-cycle-sub"></div></div>
-        <div class="stat"><div class="lbl">Subscription</div><div class="val" id="stat-status">—</div><div class="sub" id="stat-status-sub"></div></div>
-        <div class="stat"><div class="lbl">Paid Through</div><div class="val" id="stat-paidthrough">—</div><div class="sub" id="stat-paidthrough-sub"></div></div>
+        <div class="stat"><div class="lbl">Current Plan</div><div class="val" id="stat-plan">-</div><div class="sub" id="stat-plan-sub"></div></div>
+        <div class="stat"><div class="lbl">Billing Cycle</div><div class="val" id="stat-cycle">-</div><div class="sub" id="stat-cycle-sub"></div></div>
+        <div class="stat"><div class="lbl">Subscription</div><div class="val" id="stat-status">-</div><div class="sub" id="stat-status-sub"></div></div>
+        <div class="stat"><div class="lbl">Paid Through</div><div class="val" id="stat-paidthrough">-</div><div class="sub" id="stat-paidthrough-sub"></div></div>
       </div>
     </section>
 
@@ -393,7 +393,7 @@
     <div class="section-title">Invoices</div>
     <div class="card">
       <div id="invoices-list"></div>
-      <div class="empty hidden" id="invoices-empty">No invoices yet. TRODDR issues invoices for your plan and any add-ons — they'll appear here.</div>
+      <div class="empty hidden" id="invoices-empty">No invoices yet. TRODDR issues invoices for your plan and any add-ons - they'll appear here.</div>
     </div>
   </div>
 
@@ -401,7 +401,7 @@
     <div class="section-title">Requests</div>
     <div class="card">
       <p style="font-size: 13px; color: var(--grey-mid); margin-bottom: 12px;">
-        These products are set up with the TRODDR team — send a request and we'll follow up with a quote and invoice.
+        These products are set up with the TRODDR team - send a request and we'll follow up with a quote and invoice.
       </p>
       <div class="req-actions">
         <button type="button" class="btn-sm" data-request="extra_admins">More admin users</button>
@@ -428,7 +428,7 @@
     <h2>Confirm payment</h2>
     <div class="modal-sub" id="pay-modal-sub"></div>
     <div class="notice">
-      Submitting this tells TRODDR you've paid — it does <strong>not</strong> activate your account by itself.
+      Submitting this tells TRODDR you've paid - it does <strong>not</strong> activate your account by itself.
       TRODDR verifies every payment before access is activated.
     </div>
     <div class="field">
@@ -563,18 +563,18 @@
 
     $('company-name').textContent = d.company.name + ' · Billing';
     $('company-sub').textContent = 'Plan, invoices, and payment confirmations for your company account. Billing email: '
-      + (d.company.billing_email || '—');
+      + (d.company.billing_email || '-');
 
     // Read-only banner
     const ro = access.access !== 'full';
     $('readonly-banner').classList.toggle('visible', ro && !!sub);
 
     // Summary stats
-    $('stat-plan').textContent = plan ? plan.name.replace('Founding Partner — ', '') : (sub ? (sub.plan_key || '—') : 'None');
+    $('stat-plan').textContent = plan ? plan.name.replace('Founding Partner - ', '') : (sub ? (sub.plan_key || '-') : 'None');
     $('stat-plan-sub').textContent = plan
       ? `${plan.included_locations} location${plan.included_locations > 1 ? 's' : ''} · ${plan.included_admins} admin${plan.included_admins > 1 ? 's' : ''}` : '';
     $('stat-cycle').textContent = sub && sub.billing_cycle
-      ? sub.billing_cycle.charAt(0).toUpperCase() + sub.billing_cycle.slice(1) : '—';
+      ? sub.billing_cycle.charAt(0).toUpperCase() + sub.billing_cycle.slice(1) : '-';
     const cyclePrice = plan && sub
       ? (sub.billing_cycle === 'monthly' ? plan.monthly_price : plan.annual_price) : null;
     $('stat-cycle-sub').textContent = !plan || !sub ? ''
@@ -583,7 +583,7 @@
     const sm = BS.subscriptionStatus(sub ? sub.status : null);
     $('stat-status').innerHTML = sub ? pill(sm) : '<span class="pill neutral">No subscription</span>';
     $('stat-status-sub').textContent = access.access === 'full' ? 'Full access' : (sub ? 'Read-only access' : '');
-    $('stat-paidthrough').textContent = sub && sub.paid_through ? BS.fmtDate(sub.paid_through) : '—';
+    $('stat-paidthrough').textContent = sub && sub.paid_through ? BS.fmtDate(sub.paid_through) : '-';
     $('stat-paidthrough-sub').textContent = sub && sub.current_period_start
       ? 'Period started ' + BS.fmtDate(sub.current_period_start) : '';
 
@@ -780,7 +780,7 @@
       if (error) throw error;
       if (!data.ok) { payError(data.error || 'Could not submit.'); return; }
       $('pay-modal').classList.remove('visible');
-      toast('Payment reported — TRODDR will verify and activate your account.');
+      toast('Payment reported - TRODDR will verify and activate your account.');
       await loadBilling();
     } catch (e) {
       payError(e.message || String(e));
@@ -844,7 +844,7 @@
         return;
       }
       $('req-modal').classList.remove('visible');
-      toast('Request sent — we\'ll follow up by email.');
+      toast('Request sent - we\'ll follow up by email.');
       await loadBilling();
     } catch (e) {
       $('req-err').textContent = e.message || String(e);
@@ -898,7 +898,7 @@
     }
     billing = data;
     // Onboarding gate: send unfinished accounts to the guided wizard
-    // (resume mode — no invite token needed once signed in).
+    // (resume mode - no invite token needed once signed in).
     if (data.onboarding && data.onboarding.status !== 'complete') {
       location.href = '/onboarding';
       return;

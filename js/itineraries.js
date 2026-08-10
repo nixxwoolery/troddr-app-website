@@ -40,7 +40,7 @@ async function loadItinerary() {
 
   titleEl.textContent = trip.title || 'Your Trip';
   subEl.textContent = trip.destination ? `Eat • Stay • Play around ${trip.destination}` : 'Eat • Stay • Play';
-  destEl.textContent = trip.destination || '—';
+  destEl.textContent = trip.destination || '-';
   datesEl.textContent = formatDateRange(trip.start_date, trip.end_date, stops);
 
   // 6) Build day tabs & sections

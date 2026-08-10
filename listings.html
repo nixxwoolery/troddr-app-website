@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TRODDR — Listing</title>
+  <title>TRODDR - Listing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@
     .cta{display:inline-flex;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
     /* #overview{max-width:65ch} */
     
-    /* HERO — 3-panel collage */
+    /* HERO - 3-panel collage */
     .hero{
       display:grid;
       grid-template-columns:repeat(3, minmax(0,1fr));
@@ -359,7 +359,9 @@
       <div class="nav-links" id="primary-navigation" role="navigation">
         <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
         <a href="/about.html" class="nav-item">About</a>
+        <a href="/guides" class="nav-item">Guides</a>
         <a href="/#features" class="nav-item">Features</a>
+        <a href="/#faq" class="nav-item">FAQ</a>
         <a href="/contact.html" class="nav-item">Contact</a>
         <a href="/#demo" class="nav-cta">Download the App</a>
       </div>
@@ -377,7 +379,7 @@
     <header class="page">
       <div class="titleBlock">
         <h1 class="title" id="listing-title">Loading…</h1>
-        <div class="sub" id="listing-sub">—</div>
+        <div class="sub" id="listing-sub">-</div>
       </div>
     
       <a
@@ -705,7 +707,7 @@
     }
     function injectOG(place, slug){
       try{
-        const title = `${place.name || titleCaseSlug(slug)} — TRODDR`;
+        const title = `${place.name || titleCaseSlug(slug)} - TRODDR`;
         const desc = place.description || `Discover ${place.name || titleCaseSlug(slug)} on TRODDR.`;
         const img = (place.image && place.image[0]) || '/images/og-default.jpg';
         const url = `${window.location.origin}/listings/${slug}`;
@@ -889,7 +891,7 @@
     function setupOverview(desc){
       const o = document.getElementById('overview');
       const b = document.getElementById('toggleOverview');
-      if (!desc){ o.textContent='—'; b.style.display='none'; return; }
+      if (!desc){ o.textContent='-'; b.style.display='none'; return; }
       const LIMIT = 420; // longer snippet on web before expand
       if (desc.length <= LIMIT){ o.textContent = desc; b.style.display='none'; return; }
       let expanded = false;
@@ -1386,7 +1388,7 @@
       if (!slug){
         set('listing-title','Listing');
         set('listing-sub','');
-        document.title = 'Listing — TRODDR';
+        document.title = 'Listing - TRODDR';
         return;
       }
 
@@ -1394,7 +1396,7 @@
       setOpenInApp(slug);
       set('listing-title', titleCaseSlug(slug));
       set('listing-sub','Web view');
-      document.title = `${titleCaseSlug(slug)} — TRODDR`;
+      document.title = `${titleCaseSlug(slug)} - TRODDR`;
 
       const { data: place, error } = await fetchPlaceBySlug(slug);
       if (error || !place){
@@ -1404,9 +1406,9 @@
 
       set('listing-title', place.name || titleCaseSlug(slug));
       set('listing-sub', [place.town, place.parish].filter(Boolean).join(', '));
-      document.title = `${place.name || titleCaseSlug(slug)} — TRODDR`;
+      document.title = `${place.name || titleCaseSlug(slug)} - TRODDR`;
 
-      setupOverview(place.description || '—');
+      setupOverview(place.description || '-');
       renderDetails(place);
       setImages(place);
       setupMobileCarousel();

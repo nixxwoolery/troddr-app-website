@@ -82,7 +82,7 @@
     (async function init() {
       // Hardcoded fallback URL/key so the page still works if troddr-config.js
       // is blocked by a content blocker or never loads. Other partner pages
-      // already have this fallback — dashboard.html was the outlier.
+      // already have this fallback - dashboard.html was the outlier.
       const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
       const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
       const { createClient } = supabase;
@@ -104,7 +104,7 @@
       }
 
       // Treat Safari's "Load failed", Chrome's "Failed to fetch", and ad-blocker
-      // errors as transient — retry once before giving up.
+      // errors as transient - retry once before giving up.
       const isNetErr = (e) => {
         const s = String((e && (e.message || e.code)) || e || '').toLowerCase();
         return /load failed|failed to fetch|networkerror|\bnetwork\b|err_blocked_by_client/.test(s);

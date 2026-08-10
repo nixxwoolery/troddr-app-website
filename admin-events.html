@@ -574,7 +574,7 @@
           <span class="rr-n">${l.status_override ? `<span class="chip">${esc(nice(l.status_override))}</span>` : ''}</span>
         </div>`).join('');
 
-    // interested & going — savers listed first, then by recency
+    // interested & going - savers listed first, then by recency
     const audience = [
       ...(data.savers || []).map(u => ({ ...u, status: 'saved' })),
       ...(data.interest_users || []),

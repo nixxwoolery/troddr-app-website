@@ -1,4 +1,4 @@
-// api/og/[slug].js — Open Graph card for /listings/{slug} and /listings/{id}
+// api/og/[slug].js - Open Graph card for /listings/{slug} and /listings/{id}
 //
 // The map screen shares /listings/{uuid}; every other listing share uses
 // /listings/{slug}. We resolve BOTH.
@@ -33,7 +33,7 @@ export default async function handler(request) {
   const name =
     place?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, (s) => s.toUpperCase());
   const location = [place?.town, place?.parish].filter(Boolean).join(', ');
-  const title = `${name}${location ? ` in ${location}` : ''} — TRODDR`;
+  const title = `${name}${location ? ` in ${location}` : ''} - TRODDR`;
   const description = place?.description
     ? place.description.slice(0, 200)
     : `Check out ${name}${location ? ` in ${location}` : ''} on TRODDR.`;

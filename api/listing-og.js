@@ -106,7 +106,7 @@ function generateMetaTags(place, slug, baseUrl) {
   const name = place?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, s => s.toUpperCase());
   const location = [place?.town, place?.parish].filter(Boolean).join(', ');
   
-  const title = `${name}${location ? ` in ${location}` : ''} — TRODDR`;
+  const title = `${name}${location ? ` in ${location}` : ''} - TRODDR`;
   const description = place?.description || `Check out ${name}${location ? ` in ${location}` : ''} on TRODDR!`;
   const image = getFirstImage(place?.image) || `${baseUrl}/images/og-default.jpg`;
   const url = `${baseUrl}/listings/${encodeURIComponent(slug)}`;

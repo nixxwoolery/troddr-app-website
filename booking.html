@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TRODDR — Booking Request</title>
+<title>TRODDR - Booking Request</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="css/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -319,7 +319,7 @@ body {
           <div class="price-label">Quoted total</div>
           <div class="price-note" id="price-note"></div>
         </div>
-        <div class="price-value" id="price-total">—</div>
+        <div class="price-value" id="price-total">-</div>
       </div>
 
       <div class="status-badge-row">
@@ -523,11 +523,11 @@ const hide = (id) => $(id).classList.add('hidden');
 let currentData = null; // full payload from get_booking_detail_by_token
 
 function fmtDate(d) {
-  if (!d) return '—';
+  if (!d) return '-';
   return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
 }
 function fmtMoney(n, cur) {
-  if (n == null) return '—';
+  if (n == null) return '-';
   try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD', minimumFractionDigits: 0 }).format(n); }
   catch { return `$${n}`; }
 }
@@ -610,7 +610,7 @@ function render(d) {
   const dateRange = b.checkout_date
     ? `${fmtDate(b.visit_date)} → ${fmtDate(b.checkout_date)}`
     : fmtDate(b.visit_date);
-  $('hero-title').textContent = `${tc} — ${pl.name || ''}`;
+  $('hero-title').textContent = `${tc} - ${pl.name || ''}`;
   $('hero-sub').textContent = dateRange;
 
   // Property
@@ -631,7 +631,7 @@ function render(d) {
   if (b.adults) partyParts.push(`${b.adults} adult${b.adults===1?'':'s'}`);
   if (b.children) partyParts.push(`${b.children} child${b.children===1?'':'ren'}`);
   if (!partyParts.length && b.party_size) partyParts.push(`${b.party_size} guest${b.party_size===1?'':'s'}`);
-  $('sum-party').textContent = partyParts.join(', ') || '—';
+  $('sum-party').textContent = partyParts.join(', ') || '-';
   if (b.rooms_requested > 1) { $('sum-rooms').textContent = b.rooms_requested; show('sum-rooms-row'); }
   $('sum-guest').textContent   = b.guest_name;
   $('sum-contact').textContent = [b.guest_email, b.guest_phone].filter(Boolean).join(' · ');
@@ -743,7 +743,7 @@ function buildActions(status, partnerToken) {
     `;
     $('btn-open-complete').onclick = () => togglePanel('complete');
   } else {
-    btnArea.innerHTML = `<p style="font-size:13px;color:var(--grey-mid);">This booking is in a final state (${statusLabel(status)}) — no further actions required.</p>`;
+    btnArea.innerHTML = `<p style="font-size:13px;color:var(--grey-mid);">This booking is in a final state (${statusLabel(status)}) - no further actions required.</p>`;
   }
 
   // Wire cancel/submit in panels
@@ -771,7 +771,7 @@ async function submitAction(actionKey, btn) {
   const b = currentData.booking;
   const plToken = currentData.place?.partner_access_token;
 
-  if (!plToken) { toast('No partner token found — contact Troddr support.', 'error'); return; }
+  if (!plToken) { toast('No partner token found - contact Troddr support.', 'error'); return; }
 
   const data = {};
   const FIELD_MAP = {
@@ -827,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const b   = currentData.booking;
     const pl  = currentData.place || {};
     const tok = pl.partner_access_token;
-    if (!tok) { toast('No partner token — contact Troddr.', 'error'); return; }
+    if (!tok) { toast('No partner token - contact Troddr.', 'error'); return; }
 
     const btn = $('btn-save-ops');
     btn.disabled = true; btn.textContent = 'Saving…';

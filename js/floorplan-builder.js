@@ -1,5 +1,5 @@
 /* ============================================================
-   TRODDR Floor Plan Builder — shared engine
+   TRODDR Floor Plan Builder - shared engine
    Powers partner-event-floorplan.html (organizer) and m.html
    (designer invite). Host pages mount it with:
 
@@ -14,7 +14,7 @@
        actions: [{label, icon, onClick, primary}],// extra toolbar buttons
      });
 
-   Storage model (events.floor_plan_markers jsonb array) — one array,
+   Storage model (events.floor_plan_markers jsonb array) - one array,
    discriminated by `type`; legacy entries with no type are pins:
      pin   {id, type?:'pin', x, y, label, icon, color, vendor_id, booth, size, description}
      booth {id, type:'booth', x, y, w, h, number, label, icon, color, vendor_id, size, description}
@@ -24,7 +24,7 @@
    x/y are CENTER fractions (0-1) of the canvas; w/h are fractions of
    canvas width/height; fontSize is a fraction of canvas width. Legacy
    pin renderers that ignore type will show shapes as pins at their
-   centers — degraded but not broken.
+   centers - degraded but not broken.
    ============================================================ */
 (function () {
   'use strict';
@@ -440,7 +440,7 @@
       </div>
       <div class="fpb-empty" data-ref="empty" hidden>
         <h3>Build your event floor plan</h3>
-        <p>Lay out numbered booths, stages, bars and tables on a to-scale canvas — or start from a template and rearrange it. You can add a venue photo behind it any time.</p>
+        <p>Lay out numbered booths, stages, bars and tables on a to-scale canvas - or start from a template and rearrange it. You can add a venue photo behind it any time.</p>
         <div class="fpb-sitedims">
           <label>Site size</label>
           <input data-ref="siteW" type="number" min="10" max="5000" value="${DEFAULT_SITE_FT.w}" /><span>×</span><input data-ref="siteH" type="number" min="10" max="5000" value="${DEFAULT_SITE_FT.h}" /><span>ft</span>
@@ -564,9 +564,9 @@
       $.viewport.className = 'fpb-viewport tool-' + tool;
       if (this.panzoom) this.panzoom.setOptions({ disablePan: tool !== 'select' });
       const hints = {
-        booth: 'Click to stamp a booth, or drag to draw one. Set its real size (ft) on the right — the box scales to match.',
+        booth: 'Click to stamp a booth, or drag to draw one. Set its real size (ft) on the right - the box scales to match.',
         object: 'Pick an object on the right (table, chair, bar, barrier, ticket booth…), then click or drag to place it. Connectable pieces snap into runs.',
-        zone: this.zoneMode === 'freeform' ? 'Click each corner of the zone. Double-click the final point—or press Enter—to finish. Escape cancels.' : 'Drag to draw a rectangular zone. Choose Polygon on the right for irregular areas.',
+        zone: this.zoneMode === 'freeform' ? 'Click each corner of the zone. Double-click the final point, or press Enter, to finish. Escape cancels.' : 'Drag to draw a rectangular zone. Choose Polygon on the right for irregular areas.',
         text: 'Click anywhere to add a text label.',
         pin: 'Pick a category on the right, then click the map to drop a pin.',
         measure: 'Drag to measure a distance in feet. Nothing is placed.',
@@ -607,7 +607,7 @@
         img.src = url;
         img.onload = () => {
           this.world = { w: img.naturalWidth || WORLD_DEFAULT.w, h: img.naturalHeight || WORLD_DEFAULT.h };
-          // A fresh image has no real scale yet — guess one so booths aren't
+          // A fresh image has no real scale yet - guess one so booths aren't
           // absurd, and flag it so we can nudge the organizer to calibrate.
           if (!this.calibrated) this.ppf = Math.max(4, Math.round(this.world.w / 240));
           this.sizeCanvas();
@@ -743,8 +743,8 @@
       wrap.innerHTML = `<div class="fpb-modal-card">
         <h3>Canvas &amp; scale</h3>
         ${isImg
-          ? `<p>At the current scale this image is about <strong>${Math.round(this.world.w / this.ppf)} × ${Math.round(this.world.h / this.ppf)} ft</strong>${this.calibrated ? '' : ' — <strong>not calibrated yet.</strong>'}</p>
-             <p class="fpb-helper">Calibrate against a distance you know — a building edge, road width, or a marked dimension on the plan.</p>
+          ? `<p>At the current scale this image is about <strong>${Math.round(this.world.w / this.ppf)} × ${Math.round(this.world.h / this.ppf)} ft</strong>${this.calibrated ? '' : ' - <strong>not calibrated yet.</strong>'}</p>
+             <p class="fpb-helper">Calibrate against a distance you know - a building edge, road width, or a marked dimension on the plan.</p>
              ${colorBlock}
              <div class="fpb-modal-actions"><button type="button" data-x="cal" class="fpb-btn primary"><svg><use href="#fpb-ruler"/></svg>Draw calibration line</button><button type="button" data-x="cancel" class="fpb-btn">Done</button></div>`
           : `<div class="fpb-field-row"><label class="fpb-field"><span>Site width (ft)</span><input data-x="w" type="number" min="10" max="5000" value="${Math.round(this.siteFt.w)}"></label><label class="fpb-field"><span>Site depth (ft)</span><input data-x="h" type="number" min="10" max="5000" value="${Math.round(this.siteFt.h)}"></label></div>
@@ -791,7 +791,7 @@
           this.updateGridVisibility();
           this.renderAll();
           this.setDirty(true);
-          this.status(`Scale set — 1 ft = ${this.fmtFt(this.ppf)} px.`, 'success');
+          this.status(`Scale set - 1 ft = ${this.fmtFt(this.ppf)} px.`, 'success');
         }
       };
       const cleanup = () => {
@@ -857,7 +857,7 @@
       this.status('Trace image hidden. Click Save so guests see the simplified map.', 'success');
     }
 
-    // Reorient the whole layout 90° clockwise (blank canvas only — an image
+    // Reorient the whole layout 90° clockwise (blank canvas only - an image
     // carries its own orientation). Rotates every element and swaps the site.
     rotateCanvas() {
       if (this.bgUrl) { this.status('Canvas rotation isn’t available with a background image.', 'error'); return; }
@@ -1154,7 +1154,7 @@
       if (!vp.clientWidth || !vp.clientHeight) return;
       const s = Math.min(vp.clientWidth / this.world.w, vp.clientHeight / this.world.h) * 0.96;
       // Panzoom resets pan to startX/Y in a deferred setTimeout after
-      // construction, which clobbers any synchronous pan() — so recreate the
+      // construction, which clobbers any synchronous pan() - so recreate the
       // instance and let that deferral do the centring. Its transform-origin
       // is 50% 50% (assumed by its wheel-zoom focal math), hence this formula.
       this.initPanzoom({
@@ -1313,7 +1313,7 @@
       this.renderElements();
     }
 
-    // Move (drag) the grabbed element — and any multi-selection / connected run with it.
+    // Move (drag) the grabbed element - and any multi-selection / connected run with it.
     startMove(e, grabbedId) {
       const el = this.byId(grabbedId || this.selectedId);
       if (!el) return;
@@ -1331,7 +1331,7 @@
       const group = [...followerSet].map(id => this.byId(id)).filter(Boolean).map(o => ({ o, dx: o.x - el.x, dy: o.y - el.y }));
       let moved = false, pushed = false;
       const onMove = (ev) => {
-        if (this._lpFired) return;            // a touch long-press opened the menu — don't drag
+        if (this._lpFired) return;            // a touch long-press opened the menu - don't drag
         const s = this.scale();
         const dx = (ev.clientX - start.cx) / s / this.world.w;
         const dy = (ev.clientY - start.cy) / s / this.world.h;
@@ -1733,7 +1733,7 @@
       }
     }
 
-    // ── Measure tool — drag to read a distance in feet (places nothing) ──
+    // ── Measure tool - drag to read a distance in feet (places nothing) ──
     startMeasure(e) {
       e.preventDefault(); e.stopPropagation();
       const cal = this.$.callipers;
@@ -2214,12 +2214,12 @@
     editFormHtml(el) {
       const f = (label, inner) => `<div class="fpb-field"><label>${label}</label>${inner}</div>`;
       const catOptions = CATEGORIES.map(c => `<option value="${c.id}"${el.icon === c.id ? ' selected' : ''}>${esc(c.label)}</option>`).join('');
-      const vendorOptions = '<option value="">— None —</option>' + this.vendors.map(v => {
+      const vendorOptions = '<option value="">- None -</option>' + this.vendors.map(v => {
         const id = v.event_vendor_id || v.vendor_id || '';
         const assignedTo = this.elements.find(o => o.id !== el.id && o.vendor_id && String(o.vendor_id) === String(id));
         return `<option value="${esc(id)}"${String(el.vendor_id) === String(id) ? ' selected' : ''}>${esc(v.vendor_name || v.name || 'Vendor')}${assignedTo ? ' · placed' : ''}</option>`;
       }).join('');
-      // Live "W × D ft" footprint control — drives the box geometry directly.
+      // Live "W × D ft" footprint control - drives the box geometry directly.
       const sizeControl = (labelTxt, presets) => {
         const sv = el.size || '';
         const parts = sv.includes('x') ? sv.split('x') : ['', ''];
@@ -2229,7 +2229,7 @@
           <div class="fpb-size-chips">${chips}</div></div>`;
       };
       const sizeFields = sizeControl('Booth size', PRESET_FT);
-      // Rotation control — numeric degrees + quick steps.
+      // Rotation control - numeric degrees + quick steps.
       const rotControl = () => `<div class="fpb-field"><label>Rotation</label>
         <div class="fpb-field-row fpb-rot-row">
           <button type="button" class="fpb-btn icon-only" data-f="rotCCW" title="Rotate -15°"><svg style="transform:scaleX(-1)"><use href="#fpb-rotate"/></svg></button>
@@ -2305,14 +2305,14 @@
           ${rotControl()}
           ${colorRow(palette, o.color)}
           ${o.connect ? (groupCount > 1
-            ? `<div class="fpb-helper">Joined into a run of ${groupCount} — they move together. Naming any one names them all.</div>`
+            ? `<div class="fpb-helper">Joined into a run of ${groupCount} - they move together. Naming any one names them all.</div>`
             : `<div class="fpb-helper">Place another ${esc(o.label.toLowerCase())} flush against an end to build an L- or U-shape.</div>`) : ''}
           ${actions(groupCount > 1 ? `<button type="button" class="fpb-btn" data-f="ungroup" title="Detach from the run">Ungroup</button>` : '')}`;
       }
       if (el.type === 'text') {
         const cur = TEXT_SIZES.reduce((best, s) => Math.abs(s.v - (el.fontSize || 0.016)) < Math.abs(best.v - (el.fontSize || 0.016)) ? s : best, TEXT_SIZES[1]);
         return `<h3>Text label</h3>
-          <div class="fpb-helper">Drag a corner handle to resize. Use the round handle above the label—or the controls below—to rotate it.</div>
+          <div class="fpb-helper">Drag a corner handle to resize. Use the round handle above the label, or the controls below, to rotate it.</div>
           ${f('Text', `<input data-f="label" type="text" maxlength="120" placeholder="e.g. SECURITY" value="${esc(el.label || '')}"/>`)}
           <div class="fpb-field-row">
             ${f('Size', `<select data-f="tsize">${TEXT_SIZES.map(s => `<option value="${s.v}"${s.id === cur.id ? ' selected' : ''}>${s.label}</option>`).join('')}</select>`)}
