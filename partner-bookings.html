@@ -386,6 +386,35 @@ body {
 .ins-redeem.done { background: var(--green-light); border-color: #c0e8d0; color: var(--green); cursor: default; }
 .ins-redeem:disabled { cursor: default; opacity: 0.9; }
 
+/* Guest profile cards */
+.guest-profile-panels {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+  align-items: start;
+}
+.guest-profile-panels > .ins-panel:only-child { grid-column: 1 / -1; }
+.exp-panel { border-color: #d8e7f2; }
+.exp-head { background: var(--blue-light); }
+.exp-title { font-size: 12px; font-weight: 800; color: var(--black); }
+.exp-body { display: flex; flex-direction: column; gap: 10px; }
+.exp-row { font-size: 12px; line-height: 1.4; color: var(--grey-dark); }
+.exp-row strong { color: var(--black); }
+.exp-occasion {
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  background: var(--amber-light); color: var(--black); font-size: 13px;
+}
+.exp-allergy {
+  padding: 9px 10px; border: 1px solid #f1d5a7; border-radius: var(--radius-sm);
+  background: #fffaf0;
+}
+.exp-confirm { display: block; margin-top: 3px; font-size: 10px; color: var(--grey-mid); }
+.exp-note {
+  padding-top: 9px; border-top: 1px solid var(--border-soft);
+  font-size: 9px; line-height: 1.4; color: var(--grey-light);
+}
+@media (max-width: 620px) {
+  .guest-profile-panels { grid-template-columns: 1fr; }
+}
+
 /* Drawer editable fields */
 .dfield { margin-bottom: 10px; }
 .dfield label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey-mid); margin-bottom: 4px; }
@@ -1240,16 +1269,18 @@ async function loadGuestProfile(b) {
   if (!row) { sec.style.display = 'none'; return; }
 
   if (!row.shared) {
-    // Never leak un-shared data — show only that nothing was shared.
-    sec.style.display = '';
-    $('d-insider-body').innerHTML =
-      `<p class="ins-empty">Guest didn't share a TRODDR Insider profile for this booking.</p>`;
+    // Never leak un-shared data or reveal an empty profile area.
+    sec.style.display = 'none';
     return;
   }
 
   sec.style.display = '';
   const snap = row.snapshot || {};
-  $('d-insider-body').innerHTML = renderInsiderPanel(snap, b);
+  $('d-insider-body').innerHTML = `
+    <div class="guest-profile-panels">
+      ${renderInsiderPanel(snap, b)}
+      ${renderExperiencePanel(snap.experience)}
+    </div>`;
 
   // "For this visit": render the special request now, fill occasion async.
   renderVisitBlock(b, b.occasion || null);
@@ -1344,6 +1375,57 @@ function renderInsiderPanel(s, b) {
       ${noteHtml}
       ${visitHtml}
       <div id="ins-perks"></div>
+    </div>
+  </div>`;
+}
+
+function renderExperiencePanel(experience) {
+  if (!experience || typeof experience !== 'object') return '';
+
+  const cleanValue = item => {
+    if (!item || typeof item.value !== 'string') return '';
+    return item.value.trim();
+  };
+  const valuesFrom = (items, source) => Array.isArray(items)
+    ? items.filter(item => item && item.source === source).map(cleanValue).filter(Boolean)
+    : [];
+
+  const occasion = experience.occasion && experience.occasion.source === 'told-us'
+    ? cleanValue(experience.occasion) : '';
+  const dietary = experience.dietary && typeof experience.dietary === 'object'
+    ? experience.dietary : {};
+  const allergies = valuesFrom(dietary.allergies, 'declared');
+  const preferences = valuesFrom(dietary.preferences, 'declared');
+  const tastes = Array.isArray(experience.tastes)
+    ? experience.tastes
+      .filter(item => item && item.source === 'derived' && typeof item.label === 'string' && item.label.trim())
+      .slice()
+      .sort((a, b) => (Number(b.confidence) || 0) - (Number(a.confidence) || 0))
+      .map(item => item.label.trim())
+    : [];
+  const anticipation = experience.anticipation && typeof experience.anticipation === 'object'
+    ? experience.anticipation : {};
+  const savedItems = Array.isArray(anticipation.saved_items)
+    ? anticipation.saved_items.filter(item => typeof item === 'string' && item.trim()).map(item => item.trim())
+    : [];
+  const hasAnticipation = anticipation.saved_here === true || savedItems.length > 0;
+
+  const rows = [
+    occasion ? `<div class="exp-row exp-occasion"><strong>Celebrating:</strong> ${esc(occasion)}</div>` : '',
+    allergies.length ? `<div class="exp-row exp-allergy"><strong>Allergies (guest-declared, please confirm):</strong> ${allergies.map(esc).join(', ')}<span class="exp-confirm">Confirm allergy details directly with the guest.</span></div>` : '',
+    preferences.length ? `<div class="exp-row"><strong>Diet:</strong> ${preferences.map(esc).join(', ')}</div>` : '',
+    tastes.length ? `<div class="exp-row"><strong>Usually drawn to:</strong> ${tastes.map(esc).join(', ')}</div>` : '',
+    hasAnticipation ? `<div class="exp-row"><strong>${savedItems.length ? 'Already saved here:' : 'Has saved this place'}</strong>${savedItems.length ? ` ${savedItems.map(esc).join(', ')}` : ''}</div>` : '',
+  ].filter(Boolean);
+
+  if (!rows.length) return '';
+
+  return `
+  <div class="ins-panel exp-panel">
+    <div class="ins-head exp-head"><span class="exp-title">How to make this visit great</span></div>
+    <div class="ins-body exp-body">
+      ${rows.join('')}
+      <div class="exp-note">Shared as a guest aid. TRODDR does not guarantee accuracy or that the venue will act on these details.</div>
     </div>
   </div>`;
 }
