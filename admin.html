@@ -206,6 +206,28 @@
   .analytics-insight { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:9px; background:var(--red-light); color:var(--red); font-size:12px; }
   .analytics-insight strong { flex:none; }
 
+  /* ── Shell-native bookings ───────────────────────────── */
+  .native-bookings { height: 100%; overflow-y: auto; padding: 24px; }
+  .bookings-inner { max-width: 1280px; margin: 0 auto; padding-bottom: 48px; }
+  .bookings-table-wrap { overflow-x: auto; }
+  .bookings-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .bookings-table th {
+    padding: 10px 12px; color: var(--grey-light); text-align: left;
+    font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .bookings-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  .bookings-table tbody tr:last-child td { border-bottom: 0; }
+  .bookings-table tbody tr.needs-attention { background: var(--red-light); }
+  .booking-place { min-width: 160px; font-weight: 700; }
+  .booking-place small, .booking-guest small { display: block; color: var(--grey-light); font-weight: 500; }
+  .booking-status { display: inline-block; padding: 4px 8px; border-radius: 99px; background: var(--bg-soft); color: var(--grey-mid); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+  .booking-status.won { background: #e7f5f3; color: #168a83; }
+  .booking-status.open { background: #fff5df; color: #9a620d; }
+  .booking-status.lost { background: var(--red-light); color: var(--red); }
+  #bk-chart { position: relative; min-height: 180px; }
+  #bk-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+
   /* ── Auth gate ────────────────────────────────────────── */
   #gate { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
   .gate-card {
@@ -260,6 +282,7 @@
     .refresh-label { display: none; }
     .native-overview { padding: 18px 14px; }
     .native-analytics { padding: 18px 14px; }
+    .native-bookings { padding: 18px 14px; }
     .overview-counts { grid-template-columns: repeat(2, 1fr); }
     .overview-two-col { grid-template-columns: 1fr; }
   }
@@ -309,7 +332,8 @@
       <button class="section-tab" data-section="engagement" title="Engagement"><span class="nav-icon" aria-hidden="true">♧</span><span class="nav-label">Engagement</span></button>
       <button class="section-tab" data-section="review" title="Review"><span class="nav-icon" aria-hidden="true">✓</span><span class="nav-label">Review</span></button>
       <button class="section-tab" data-section="billing" title="Billing"><span class="nav-icon" aria-hidden="true">$</span><span class="nav-label">Billing</span></button>
-      <button class="section-tab" data-section="bookings" title="Bookings"><span class="nav-icon" aria-hidden="true">▦</span><span class="nav-label">Bookings</span></button>
+      <button class="section-tab" data-section="booking-metrics" title="Bookings"><span class="nav-icon" aria-hidden="true">▦</span><span class="nav-label">Bookings</span></button>
+      <button class="section-tab" data-section="bookings" title="Booking Setup"><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-label">Booking Setup</span></button>
     </nav>
     <div class="sidebar-footer"><button class="collapse-btn" id="collapse-sidebar" aria-controls="sidebar" aria-expanded="true"><span class="collapse-icon" id="collapse-icon" aria-hidden="true">‹</span><span class="footer-label">Collapse sidebar</span></button><button class="signout-btn" id="signout"><span class="footer-label">Sign out</span></button></div>
   </aside>
@@ -477,6 +501,28 @@
     <div class="section" id="sec-bookings">
       <iframe data-src="/admin-booking-setup.html" title="Booking setup"></iframe>
     </div>
+    <div class="section" id="sec-booking-metrics">
+      <div class="native-bookings" id="bookings-view">
+        <div class="overview-state" id="bookings-loading"><div><div class="spinner"></div><p>Loading bookings…</p></div></div>
+        <div class="overview-state hidden" id="bookings-error"><div class="overview-error"><strong>Bookings could not be loaded</strong><p id="bookings-error-message">Check your connection and try again.</p><button class="icon-btn" id="bookings-retry">Try again</button></div></div>
+        <div class="bookings-inner hidden" id="bookings-content">
+          <div class="analytics-toolbar" aria-label="Bookings date range">
+            <button class="range-btn" data-bookings-days="7">7 days</button><button class="range-btn active" data-bookings-days="30">30 days</button><button class="range-btn" data-bookings-days="90">90 days</button>
+            <span class="analytics-updated" id="bk-updated"></span>
+          </div>
+          <div class="overview-counts">
+            <div class="overview-card overview-count"><div class="num" id="bk-total">–</div><div class="label">Bookings</div><div class="sub" id="bk-total-sub">In this window</div></div>
+            <div class="overview-card overview-count"><div class="num" id="bk-clicks">–</div><div class="label">Reserve clicks</div><div class="sub" id="bk-clicks-sub">Booking intent</div></div>
+            <div class="overview-card overview-count"><div class="num" id="bk-conversion">–</div><div class="label">Intent conversion</div><div class="sub">Bookings divided by Reserve clicks</div></div>
+            <div class="overview-card overview-count"><div class="num" id="bk-attention">–</div><div class="label">Needs attention</div><div class="sub">Bookings flagged for TRODDR</div></div>
+          </div>
+          <div class="overview-label">Bookings and intent</div>
+          <div class="overview-card"><div class="overview-chart-legend"><span><i style="background:#bcd9f0"></i>Reserve clicks</span><span><i style="background:#0077CC"></i>Bookings</span></div><div id="bk-chart"></div></div>
+          <div class="overview-label">Recent bookings</div>
+          <div class="overview-card bookings-table-wrap" id="bk-recent"></div>
+        </div>
+      </div>
+    </div>
       </div>
     </main>
   </div>
@@ -520,13 +566,16 @@
     engagement:{ title: 'Engagement',description: 'Loyalty participation and Insider progression' },
     review:    { title: 'Review',    description: 'Submissions and requests awaiting action' },
     billing:   { title: 'Billing',   description: 'Companies, invoices, payments and renewals' },
-    bookings:  { title: 'Bookings',  description: 'Property booking configuration and availability' },
+    'booking-metrics': { title: 'Bookings', description: 'Booking intent, conversion and recent requests' },
+    bookings:  { title: 'Booking Setup', description: 'Property booking configuration and availability' },
   };
   const SECTIONS = Object.keys(SECTION_META);
   let currentSection = 'overview';
   let overviewLoaded = false;
   let analyticsLoaded = false;
   let analyticsDays = 30;
+  let bookingsLoaded = false;
+  let bookingsDays = 30;
   let eventsInitialized = false;
   let eventRouteId = '';
   let feedbackInitialized = false;
@@ -572,6 +621,12 @@
   }
 
   function analyticsDaysFromRoute() {
+    const query = location.hash.split('?')[1] || '';
+    const days = Number(new URLSearchParams(query).get('days'));
+    return [7, 30, 90].includes(days) ? days : 30;
+  }
+
+  function bookingsDaysFromRoute() {
     const query = location.hash.split('?')[1] || '';
     const days = Number(new URLSearchParams(query).get('days'));
     return [7, 30, 90].includes(days) ? days : 30;
@@ -652,6 +707,14 @@
       if (!analyticsLoaded) loadAnalytics(analyticsDays);
       return;
     }
+    if (key === 'booking-metrics') {
+      const routedDays = bookingsDaysFromRoute();
+      if (routedDays !== bookingsDays) bookingsLoaded = false;
+      bookingsDays = routedDays;
+      updateBookingsRangeControls();
+      if (!bookingsLoaded) loadBookings(bookingsDays);
+      return;
+    }
     if (key === 'performance') {
       switchPerformanceTab(performanceTab, false);
       updatePerformanceRangeControls();
@@ -713,6 +776,7 @@
   function showSection(key, options = {}) {
     if (!SECTIONS.includes(key)) key = 'overview';
     if (key === 'analytics' && options.fromRoute) analyticsDays = analyticsDaysFromRoute();
+    if (key === 'booking-metrics' && options.fromRoute) bookingsDays = bookingsDaysFromRoute();
     if (key === 'events' && options.fromRoute) eventRouteId = eventIdFromRoute();
     if (key === 'feedback') feedbackTab = options.tab || (options.fromRoute ? feedbackTabFromRoute() : feedbackTab);
     if (key === 'review') reviewTab = options.tab || (options.fromRoute ? (reviewTabFromRoute() || 'specials') : reviewTab);
@@ -737,6 +801,7 @@
     $('section-description').textContent = SECTION_META[key].description;
     document.title = `TRODDR Admin · ${SECTION_META[key].title}`;
     const route = key === 'analytics' ? `#/analytics?days=${analyticsDays}`
+      : key === 'booking-metrics' ? `#/booking-metrics?days=${bookingsDays}`
       : key === 'events' && eventRouteId ? `#/events/${encodeURIComponent(eventRouteId)}`
       : key === 'review' && (options.tab || (options.fromRoute && reviewTabFromRoute())) ? `#/review/${options.tab || reviewTabFromRoute()}`
       : key === 'feedback' ? `#/feedback/${feedbackTab}`
@@ -769,6 +834,10 @@
     }
     if (currentSection === 'analytics') {
       loadAnalytics(analyticsDays);
+      return;
+    }
+    if (currentSection === 'booking-metrics') {
+      loadBookings(bookingsDays);
       return;
     }
     if (currentSection === 'performance') {
