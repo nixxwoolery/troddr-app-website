@@ -109,6 +109,22 @@
   const MIN_FT = 1;                  // minimum shape size (feet)
   const GRID_MAJOR_FT = 10;          // bold grid line every N feet
 
+  // One event-level theme travels inside the existing map meta record. This
+  // keeps old maps compatible while giving every renderer the same palette,
+  // vocabulary and voice without a second fetch or schema dependency.
+  const THEME_PRESETS = {
+    classic: { name: 'Classic', accent: '#0a7aff', ink: '#111827', surface: '#ffffff', canvas: '#fcfdfe', mapStyle: 'clean', menuTone: 'clear', vocabulary: { booth: 'Booth', vendor: 'Vendor', legend: 'Map key', explore: 'Explore the map' } },
+    festival: { name: 'Festival', accent: '#ec4899', ink: '#24102f', surface: '#fff7ed', canvas: '#fffaf2', mapStyle: 'vibrant', menuTone: 'lively', vocabulary: { booth: 'Spot', vendor: 'Maker', legend: 'What’s where', explore: 'Find your next stop' } },
+    refined: { name: 'Refined', accent: '#9a7b4f', ink: '#292524', surface: '#f7f5f2', canvas: '#fbfaf8', mapStyle: 'editorial', menuTone: 'polished', vocabulary: { booth: 'Suite', vendor: 'Host', legend: 'Directory', explore: 'Discover the venue' } },
+    nightlife: { name: 'Nightlife', accent: '#a3ff12', ink: '#f8fafc', surface: '#111318', canvas: '#191c23', mapStyle: 'night', menuTone: 'electric', vocabulary: { booth: 'Spot', vendor: 'Crew', legend: 'The lineup', explore: 'See what’s live' } },
+  };
+  function normalizeTheme(value) {
+    const source = value && typeof value === 'object' ? value : {};
+    const presetId = THEME_PRESETS[source.preset] ? source.preset : 'classic';
+    const preset = THEME_PRESETS[presetId];
+    return Object.assign({}, preset, source, { preset: presetId, vocabulary: Object.assign({}, preset.vocabulary, source.vocabulary || {}) });
+  }
+
   // ── Icon sprite (lucide outlines), injected once per page ──
   const SYMBOLS = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>'
     + '<symbol id="fpb-utensils" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>'
@@ -272,6 +288,7 @@
       // Pull the scale meta entry (if any) out of the markers array.
       const metaIdx = raw.findIndex(m => m && m.type === 'meta');
       const meta = metaIdx >= 0 ? raw.splice(metaIdx, 1)[0] : null;
+      this.theme = normalizeTheme((meta && meta.theme) || opts.theme);
       this.elements = raw.filter(m => m && m.type !== 'meta').map(normalizeElement);
       const initialBg = this.recoveredDraft ? draft.backgroundUrl : opts.backgroundUrl;
       this.bgUrl = (initialBg && !isBlankUri(initialBg)) ? initialBg : null;
@@ -316,6 +333,7 @@
         document.body.appendChild(holder.firstChild);
       }
       this.container.innerHTML = this.template();
+      this.applyTheme();
       this.refs();
       if (!this.readOnly) {
         this.wireToolbar();
@@ -397,6 +415,7 @@
     <button type="button" class="fpb-btn icon-only" data-ref="undoBtn" title="Undo (Ctrl+Z)" disabled><svg><use href="#fpb-undo"/></svg></button>
     <button type="button" class="fpb-btn icon-only" data-ref="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled><svg><use href="#fpb-redo"/></svg></button>
     ${uploadBtn}
+    ${o.allowTheme ? '<button type="button" class="fpb-btn" data-ref="themeBtn" title="Set the guest-facing palette, vocabulary and tone"><svg><use href="#fpb-palette"/></svg>Theme</button>' : ''}
     ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="rotateMapBtn" title="Rotate the saved floor plan 90 degrees clockwise"><svg><use href="#fpb-rotate"/></svg>Rotate</button>' : ''}
     ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="cropMapBtn" title="Crop the uploaded floor plan image"><svg><use href="#fpb-crop"/></svg>Crop</button>' : ''}
     ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="traceOnlyBtn" title="Hide the uploaded image from the saved guest map while keeping your traced layout"><svg><use href="#fpb-grid-ic"/></svg>Trace only</button>' : ''}
@@ -483,6 +502,7 @@
       if ($.cropBox) $.cropBox.addEventListener('pointerdown', (e) => this.startCropDrag(e));
       if ($.traceOnlyBtn) $.traceOnlyBtn.addEventListener('click', () => this.useBackgroundAsTraceOnly());
       if ($.historyBtn) $.historyBtn.addEventListener('click', () => this.openVersionHistory());
+      if ($.themeBtn) $.themeBtn.addEventListener('click', () => this.openTheme());
       $.saveBtn.addEventListener('click', () => this.save());
       $.zoomIn.addEventListener('click', () => this.panzoom && this.panzoom.zoomIn());
       $.zoomOut.addEventListener('click', () => this.panzoom && this.panzoom.zoomOut());
@@ -508,6 +528,49 @@
       (this.opts.actions || []).forEach((a, i) => {
         const btn = this.container.querySelector(`[data-action="${i}"]`);
         if (btn) btn.addEventListener('click', () => a.onClick());
+      });
+    }
+
+    applyTheme() {
+      const t = normalizeTheme(this.theme);
+      this.theme = t;
+      const root = this.container.querySelector('.fpb');
+      if (!root) return;
+      root.dataset.mapStyle = t.mapStyle || 'clean';
+      root.dataset.menuTone = t.menuTone || 'clear';
+      root.style.setProperty('--fpb-theme-accent', t.accent);
+      root.style.setProperty('--fpb-theme-ink', t.ink);
+      root.style.setProperty('--fpb-theme-surface', t.surface);
+      root.style.setProperty('--fpb-theme-canvas', t.canvas);
+      if (this.opts.onThemeChange) this.opts.onThemeChange(t);
+    }
+
+    openTheme() {
+      const wrap = document.createElement('div');
+      wrap.className = 'fpb-modal';
+      const cards = Object.entries(THEME_PRESETS).map(([id, t]) => `<button type="button" class="fpb-theme-card${this.theme.preset === id ? ' active' : ''}" data-preset="${id}" style="--theme-accent:${t.accent};--theme-surface:${t.surface};--theme-ink:${t.ink}"><span class="fpb-theme-preview"><i></i><b>Aa</b></span><strong>${esc(t.name)}</strong><small>${esc(t.vocabulary.explore)}</small></button>`).join('');
+      wrap.innerHTML = `<div class="fpb-modal-card fpb-theme-modal"><h3>Guest experience theme</h3><p>One choice cascades to the attendee map, its vocabulary and menu voice.</p><div class="fpb-theme-grid">${cards}</div><div class="fpb-theme-fields"><label>Map key title<input data-theme-field="legend" maxlength="28" value="${esc(this.theme.vocabulary.legend)}"></label><label>Vendor word<input data-theme-field="vendor" maxlength="20" value="${esc(this.theme.vocabulary.vendor)}"></label><label>Booth word<input data-theme-field="booth" maxlength="20" value="${esc(this.theme.vocabulary.booth)}"></label><label>Welcome line<input data-theme-field="explore" maxlength="48" value="${esc(this.theme.vocabulary.explore)}"></label></div><div class="fpb-modal-actions"><button type="button" class="fpb-btn" data-close>Cancel</button><button type="button" class="fpb-btn primary" data-apply>Apply theme</button></div></div>`;
+      document.body.appendChild(wrap);
+      let selected = this.theme.preset || 'classic';
+      const select = (id) => {
+        selected = id;
+        wrap.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('active', b.dataset.preset === id));
+        const preset = THEME_PRESETS[id];
+        wrap.querySelectorAll('[data-theme-field]').forEach(input => { input.value = preset.vocabulary[input.dataset.themeField] || ''; });
+      };
+      wrap.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => select(b.dataset.preset)));
+      wrap.querySelector('[data-close]').addEventListener('click', () => wrap.remove());
+      wrap.addEventListener('click', e => { if (e.target === wrap) wrap.remove(); });
+      wrap.querySelector('[data-apply]').addEventListener('click', () => {
+        const vocabulary = {};
+        wrap.querySelectorAll('[data-theme-field]').forEach(input => { vocabulary[input.dataset.themeField] = input.value.trim() || THEME_PRESETS[selected].vocabulary[input.dataset.themeField]; });
+        this.theme = normalizeTheme(Object.assign({}, THEME_PRESETS[selected], { preset: selected, vocabulary }));
+        this.bg = this.theme.canvas;
+        this.applyTheme();
+        this.setDirty(true);
+        this.renderAll();
+        wrap.remove();
+        this.status(`${this.theme.name} theme applied. Save to publish it to guests.`, 'success');
       });
     }
 
@@ -1281,14 +1344,14 @@
       const vendor = this.vendorName(el.vendor_id);
       const title = el.label || vendor || (el.type === 'zone' ? 'Zone' : obj ? obj.label : (cat ? cat.label : 'Location'));
       const rows = [];
-      if (el.type === 'booth' && el.number != null && el.number !== '') rows.push(`Booth ${esc(el.number)}`);
+      if (el.type === 'booth' && el.number != null && el.number !== '') rows.push(`${esc(this.theme.vocabulary.booth)} ${esc(el.number)}`);
       if (obj) rows.push(esc(obj.label));
       if (el.type !== 'zone' && el.type !== 'shape' && cat) rows.push(esc(cat.label));
       if (el.size) rows.push(esc(String(el.size).replace('x', ' × ')) + ' ft');
       this.$.pop.innerHTML = `
         <div class="pop-title"><span class="pop-dot" style="background:${esc(el.color || (cat && cat.color) || '#0a7aff')}"></span>${esc(title)}</div>
         ${rows.length ? `<div class="pop-meta">${rows.join(' · ')}</div>` : ''}
-        ${vendor && el.label && vendor !== el.label ? `<div class="pop-meta">${esc(vendor)}</div>` : ''}
+        ${vendor && el.label && vendor !== el.label ? `<div class="pop-meta">${esc(this.theme.vocabulary.vendor)} · ${esc(vendor)}</div>` : ''}
         ${el.description ? `<div class="pop-desc">${esc(el.description)}</div>` : ''}`;
       // Position near the element, clamped inside the viewport.
       const elDiv = this.$.els.querySelector(`.fpb-el[data-id="${el.id}"]`);
@@ -2438,7 +2501,8 @@
         if (el.type === 'booth') entry.square = true;   // square swatch when the category is used for booths
         used.set(cat.id, entry);
       });
-      this.$.legend.innerHTML = [...used.values()].map(({ cat: c, square }) => `
+      const title = used.size ? `<strong class="fpb-legend-title">${esc(this.theme.vocabulary.legend)}</strong>` : '';
+      this.$.legend.innerHTML = title + [...used.values()].map(({ cat: c, square }) => `
         <span class="fpb-legend-item"><span class="swatch ${square ? 'sq' : ''}" style="background:${c.color}"><svg><use href="#${c.icon}"/></svg></span>${esc(c.label)}</span>`).join('');
     }
 
@@ -2498,6 +2562,7 @@
         ppf: this.ppf, worldW: this.world.w, worldH: this.world.h,
         siteFtW: this.siteFt.w, siteFtH: this.siteFt.h, calibrated: !!this.calibrated,
         bg: this.bg || DEFAULT_BG,
+        theme: this.theme,
       };
     }
     serialize() {

@@ -4,12 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TRODDR · Event Map</title>
-<link rel="stylesheet" href="/css/floorplan-builder.css?v=18">
+<link rel="stylesheet" href="/css/floorplan-builder.css?v=19">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 <script src="/js/troddr-config.js"></script>
-<script src="/js/floorplan-builder.js?v=18"></script>
+<script src="/js/floorplan-builder.js?v=19"></script>
 
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
@@ -39,6 +39,10 @@
     display: flex; align-items: center; gap: 12px;
     flex-shrink: 0;
   }
+  body.themed, body.themed header { background: var(--guest-surface, #fff); color: var(--guest-ink, #111); }
+  body.themed header { border-color: color-mix(in srgb, var(--guest-ink) 14%, transparent); }
+  body.themed header .logo { color: var(--guest-accent, var(--blue)); }
+  .experience-line { font-size: 11px; color: var(--grey-mid); display: block; font-weight: 500; }
   header .logo {
     font-size: 22px; font-weight: 700;
     color: var(--blue); text-decoration: none;
@@ -70,7 +74,7 @@
 <body>
 <header>
   <a class="logo" href="https://www.troddr.com">troddr</a>
-  <span class="title" id="event-title"></span>
+  <span class="title"><span id="event-title"></span><span class="experience-line" id="experience-line"></span></span>
 </header>
 
 <main>
@@ -160,6 +164,15 @@
       elements,
       backgroundUrl: ev.floor_plan_url || null,
       vendors: Array.isArray(data.vendors) ? data.vendors : [],
+      onThemeChange: (theme) => {
+        document.body.classList.add('themed');
+        document.body.dataset.menuTone = theme.menuTone;
+        document.documentElement.style.setProperty('--guest-accent', theme.accent);
+        document.documentElement.style.setProperty('--guest-ink', theme.ink);
+        document.documentElement.style.setProperty('--guest-surface', theme.surface);
+        document.getElementById('experience-line').textContent = theme.vocabulary.explore;
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.surface);
+      },
     });
     trackMapTab(ev.id);
   }
