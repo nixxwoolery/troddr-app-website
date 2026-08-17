@@ -718,6 +718,11 @@
     width: 180px;
     height: 102px;
   }
+  .announcement-image-upload .image-preview {
+    width: 102px;
+    height: 180px;
+    background-size: contain;
+  }
   .image-status.error { color: var(--red); }
   .image-status.success { color: var(--green); }
   .multi-image-upload {
@@ -793,6 +798,7 @@
     .multi-image-add-url { grid-template-columns: 1fr; }
     .main-event-image-upload { grid-template-columns: minmax(0, 1fr); }
     .main-event-image-upload .image-preview { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+    .announcement-image-upload .image-preview { width: min(100%, 180px); aspect-ratio: 9 / 16; }
   }
   .upload-progress {
     display: none;
@@ -7610,6 +7616,26 @@
           </div>
         </div>
         <div class="edit-field full">
+          <label>Announcement image</label>
+          <div class="image-upload main-event-image-upload announcement-image-upload">
+            <div class="image-preview" id="ed-announcement-image-preview" ${e.announcement_image_url ? `style="background-image:url('${escapeHtml(e.announcement_image_url)}'); color:transparent;"` : ''}>
+              ${e.announcement_image_url ? '' : 'No image'}
+            </div>
+            <div class="image-upload-body">
+              <div class="image-upload-actions">
+                <label class="image-pick-btn">
+                  Upload announcement image
+                  <input id="ed-announcement-image-file" type="file" accept="image/*" />
+                </label>
+                <button type="button" class="image-pick-btn" id="ed-announcement-image-clear" style="border-color:var(--border); color:var(--grey-dark);">Remove</button>
+              </div>
+              <p class="image-guidance">Shown full-screen and contain-fit when guests open the event. For a clean full-bleed look, use a tall portrait image around 1080 × 2160 px (9:19). Any ratio is safe, but non-portrait images will letterbox. Maximum 10MB.</p>
+              <input id="ed-announcement-image" class="image-url-input" type="url" value="${escapeHtml(e.announcement_image_url || '')}" placeholder="Or paste a direct image URL" />
+              <div class="image-status" id="ed-announcement-image-status" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+        <div class="edit-field full">
           <label for="ed-title">Title</label>
           <input id="ed-title" type="text" maxlength="200" value="${escapeHtml(e.title || '')}" />
         </div>
@@ -8070,6 +8096,85 @@
       }
     });
 
+    // ── Announcement image upload (partner-intake-assets bucket) ──
+    const announcementFile = $('ed-announcement-image-file');
+    const announcementUrlIn = $('ed-announcement-image');
+    const announcementPreview = $('ed-announcement-image-preview');
+    const announcementStatus = $('ed-announcement-image-status');
+    let announcementImageUploading = false;
+
+    function setAnnouncementPreview(url) {
+      if (url) {
+        announcementPreview.style.backgroundImage = `url('${url}')`;
+        announcementPreview.style.color = 'transparent';
+        announcementPreview.textContent = '';
+      } else {
+        announcementPreview.style.backgroundImage = '';
+        announcementPreview.style.color = '';
+        announcementPreview.textContent = 'No image';
+      }
+    }
+
+    const setAnnouncementImageBusy = (busy) => {
+      announcementImageUploading = !!busy;
+      announcementFile.disabled = announcementImageUploading;
+      $('ed-announcement-image-clear').disabled = announcementImageUploading;
+      const picker = announcementFile.closest('.image-pick-btn');
+      if (picker) picker.classList.toggle('is-disabled', announcementImageUploading);
+    };
+
+    announcementUrlIn.addEventListener('input', () => setAnnouncementPreview(announcementUrlIn.value.trim()));
+
+    $('ed-announcement-image-clear').addEventListener('click', () => {
+      announcementUrlIn.value = '';
+      setAnnouncementPreview('');
+      announcementFile.value = '';
+      announcementStatus.textContent = 'Announcement image removed. Click “Save changes” to apply.';
+      announcementStatus.className = 'image-status success';
+    });
+
+    announcementFile.addEventListener('change', async () => {
+      const file = announcementFile.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        announcementStatus.textContent = 'Please choose an image file.';
+        announcementStatus.className = 'image-status error';
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        announcementStatus.textContent = 'Image too large (10MB max).';
+        announcementStatus.className = 'image-status error';
+        return;
+      }
+      const slug = safeStorageName((event && event.slug) || 'event');
+      const safeName = safeStorageName(file.name || 'announcement-image');
+      const path = `announcement-images/${slug}/${Date.now()}-${safeName}`;
+      setAnnouncementImageBusy(true);
+      announcementStatus.textContent = 'Uploading announcement image...';
+      announcementStatus.className = 'image-status';
+      try {
+        const { data, error } = await db.storage
+          .from('partner-intake-assets')
+          .upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+        if (error) throw error;
+        const pub = db.storage.from('partner-intake-assets').getPublicUrl(data.path);
+        const url = pub && pub.data && pub.data.publicUrl;
+        if (!url) throw new Error('No public URL returned');
+        announcementUrlIn.value = url;
+        setAnnouncementPreview(url);
+        announcementStatus.textContent = 'Announcement image uploaded. Click “Save changes” to publish it.';
+        announcementStatus.className = 'image-status success';
+      } catch (err) {
+        console.error('announcement image upload failed', err);
+        announcementStatus.textContent = (window.friendlyError || (() => ''))(err,
+          "Upload didn't go through. Try a smaller image, or paste a URL instead.");
+        announcementStatus.className = 'image-status error';
+      } finally {
+        setAnnouncementImageBusy(false);
+        announcementFile.value = '';
+      }
+    });
+
     // ── Parking image uploads ────────────────────────────────
     const parkingImageMax = 5;
     const parkingImageList = $('ed-parking-image-list');
@@ -8343,6 +8448,10 @@
         showStatus('Please wait for the main event image to finish uploading.', 'error');
         return;
       }
+      if (announcementImageUploading) {
+        showStatus('Please wait for the announcement image to finish uploading.', 'error');
+        return;
+      }
       const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
       if (!token) { showStatus("We couldn't find your account from this link. Open the dashboard from your bookmarked URL.", 'error'); return; }
       if (mediaUploading) {
@@ -8493,8 +8602,19 @@
           showStatus(saveErrorMessage(error || (data && data.error) || data,
             "We couldn't save those changes. Please try again, or send us a message."), 'error');
         } else {
-          showStatus('Saved. Refreshing dashboard...', 'success');
-          setTimeout(() => location.reload(), 1200);
+          const announcementResult = await db.rpc('update_partner_event_announcement_image', {
+            p_token: token,
+            p_announcement_image_url: val('ed-announcement-image').trim(),
+          });
+          const announcementData = announcementResult.data;
+          const announcementError = announcementResult.error;
+          if (announcementError || !announcementData || !announcementData.ok) {
+            showStatus(saveErrorMessage(announcementError || (announcementData && announcementData.error) || announcementData,
+              "The event was saved, but we couldn't save the announcement image. Please try again."), 'error');
+          } else {
+            showStatus('Saved. Refreshing dashboard...', 'success');
+            setTimeout(() => location.reload(), 1200);
+          }
         }
       } catch (err) {
         showStatus(saveErrorMessage(err, "Couldn't reach our servers. Check your connection and try again."), 'error');
