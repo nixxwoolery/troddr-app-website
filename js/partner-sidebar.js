@@ -144,8 +144,7 @@
       { label: 'Edit Event Details', section: 'edit' },
     ] },
     { group: 'Event Insights', icon: 'ic-chart', page: '/partner/event', section: 'engagement', children: [
-      { label: 'Demand & Audience',   section: '', page: '/partner/demand' },
-      { label: 'Guest Engagement',   section: 'engagement' },
+      { label: 'Demand & Audience',   section: 'engagement' },
       { label: 'Ticket Performance', section: 'ticket-performance' },
       { label: 'Vendor Insights',    section: 'vendors' },
     ] },

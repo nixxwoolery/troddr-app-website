@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#071b22">
   <title>TRODDR · Demand & Audience</title>
+  <script>
+    // This URL previously hosted a static organizer-studio prototype with
+    // fictional event data. Keep old bookmarks working, but send partners to
+    // the active event's token-scoped analytics instead.
+    (function () {
+      const source = new URLSearchParams(window.location.search);
+      const target = new URL('/partner/event', window.location.origin);
+      target.searchParams.set('view', 'analytics');
+      ['token', 'access_token'].forEach((name) => {
+        const value = source.get(name);
+        if (value) target.searchParams.set(name, value);
+      });
+      window.location.replace(target.toString());
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
