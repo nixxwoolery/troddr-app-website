@@ -420,18 +420,13 @@
         `<button type="button" class="fpb-btn ${a.primary ? 'primary' : ''}" data-action="${i}">${a.icon ? `<svg><use href="#${a.icon}"/></svg>` : ''}${esc(a.label)}</button>`).join('');
 
       const uploadBtn = o.onUploadBackground
-        ? `<button type="button" class="fpb-btn" data-ref="backgroundBtn" title="Choose a background colour, gradient or image"><svg><use href="#fpb-upload"/></svg>Background</button><input type="file" data-ref="bgInput" accept="image/png,image/jpeg" hidden />`
+        ? `<button type="button" class="fpb-btn" data-ref="backgroundBtn" title="Choose a canvas colour, gradient or image"><svg><use href="#fpb-palette2"/></svg>Canvas background</button><input type="file" data-ref="bgInput" accept="image/png,image/jpeg" hidden />`
         : '';
 
       return `
 <div class="fpb">
   <div class="fpb-toolbar">
-    <div class="fpb-toolbar-row fpb-toolbar-build">
-      <div class="fpb-tools" data-ref="tools">${tools}</div>
-      <label class="fpb-toggle" title="Snap to grid and to other booths"><input type="checkbox" data-ref="snapToggle" checked />Snap</label>
-      <button type="button" class="fpb-btn" data-ref="gridBtn" title="Set grid spacing"><svg><use href="#fpb-grid-ic"/></svg>Grid</button>
-    </div>
-    <div class="fpb-toolbar-row">
+    <div class="fpb-toolbar-row fpb-toolbar-canvas">
       <div class="fpb-toolbar-group"><span class="fpb-toolbar-label">Canvas</span>
         <button type="button" class="fpb-btn" data-ref="scaleBtn" title="Set the canvas scale (feet)"><svg><use href="#fpb-ruler"/></svg><span data-ref="scaleLabel">Scale</span></button>
         <button type="button" class="fpb-btn" data-ref="templateBtn" title="Save or reuse a layout"><svg><use href="#fpb-copy"/></svg>Templates</button>
@@ -442,6 +437,14 @@
         ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="cropMapBtn" title="Crop the uploaded floor plan image"><svg><use href="#fpb-crop"/></svg>Crop</button>' : ''}
         ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="traceOnlyBtn" title="Hide the uploaded image from the saved guest map while keeping your traced layout"><svg><use href="#fpb-grid-ic"/></svg>Trace only</button>' : ''}
       </div>
+    </div>
+    <div class="fpb-toolbar-row fpb-toolbar-build">
+      <span class="fpb-toolbar-label">Place</span>
+      <div class="fpb-tools" data-ref="tools">${tools}</div>
+      <label class="fpb-toggle" title="Snap to grid and to other booths"><input type="checkbox" data-ref="snapToggle" checked />Snap</label>
+      <button type="button" class="fpb-btn" data-ref="gridBtn" title="Set grid spacing"><svg><use href="#fpb-grid-ic"/></svg>Grid</button>
+    </div>
+    <div class="fpb-toolbar-row fpb-toolbar-edit">
       <div class="fpb-toolbar-group"><span class="fpb-toolbar-label">Edit</span>
         <button type="button" class="fpb-btn icon-only" data-ref="undoBtn" title="Undo (Ctrl+Z)" disabled><svg><use href="#fpb-undo"/></svg></button>
         <button type="button" class="fpb-btn icon-only" data-ref="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled><svg><use href="#fpb-redo"/></svg></button>
@@ -618,11 +621,13 @@
       const wrap = document.createElement('div');
       wrap.className = 'fpb-modal';
       const option = (value, label) => `<button type="button" class="fpb-bg-choice${this.bg === value ? ' active' : ''}" data-bg-value="${esc(value)}"><span style="background:${esc(value)}"></span><small>${esc(label)}</small></button>`;
+      const solidNames = ['White', 'Warm neutral', 'Cool grey', 'Soft sage', 'Charcoal', 'Forest'];
+      const gradientNames = ['Sky', 'Sand', 'Garden', 'Night'];
       wrap.innerHTML = `<div class="fpb-modal-card fpb-background-card">
         <h3>Map background</h3><p>Choose a canvas colour or gradient, or upload a venue map or aerial image.</p>
-        <div class="fpb-field"><span>Solid colours</span><div class="fpb-background-grid">${BACKGROUND_SOLIDS.map((v, i) => option(v, i === 0 ? 'White' : 'Colour')).join('')}</div></div>
-        <div class="fpb-field"><span>Gradients</span><div class="fpb-background-grid">${BACKGROUND_GRADIENTS.map((v) => option(v, 'Gradient')).join('')}</div></div>
-        <div class="fpb-field"><span>Custom colour</span><input type="color" data-bg-custom value="${esc(/^#[0-9a-f]{6}$/i.test(this.bg || '') ? this.bg : DEFAULT_BG)}"></div>
+        <div class="fpb-field"><span>Canvas colours</span><div class="fpb-background-grid">${BACKGROUND_SOLIDS.map((v, i) => option(v, solidNames[i])).join('')}</div></div>
+        <div class="fpb-field fpb-custom-colour"><span>Custom canvas colour</span><label><input type="color" data-bg-custom value="${esc(/^#[0-9a-f]{6}$/i.test(this.bg || '') ? this.bg : DEFAULT_BG)}"><b data-bg-hex>${esc(/^#[0-9a-f]{6}$/i.test(this.bg || '') ? this.bg.toUpperCase() : DEFAULT_BG.toUpperCase())}</b><small>Choose any colour</small></label></div>
+        <div class="fpb-field"><span>Canvas gradients</span><div class="fpb-background-grid">${BACKGROUND_GRADIENTS.map((v, i) => option(v, gradientNames[i])).join('')}</div></div>
         ${this.opts.onUploadBackground ? `<div class="fpb-background-upload"><button type="button" class="fpb-btn" data-upload><svg><use href="#fpb-upload"/></svg>${this.bgUrl ? 'Replace background image' : 'Upload background image'}</button>${this.bgUrl ? '<button type="button" class="fpb-btn danger" data-remove-image>Remove image</button>' : ''}</div>` : ''}
         <div class="fpb-modal-actions"><button type="button" class="fpb-btn primary" data-close>Done</button></div>
       </div>`;
@@ -633,7 +638,7 @@
         wrap.querySelectorAll('[data-bg-value]').forEach(b => b.classList.toggle('active', b.dataset.bgValue === value));
       };
       wrap.querySelectorAll('[data-bg-value]').forEach(b => b.addEventListener('click', () => setBg(b.dataset.bgValue)));
-      wrap.querySelector('[data-bg-custom]').addEventListener('input', e => setBg(e.target.value));
+      wrap.querySelector('[data-bg-custom]').addEventListener('input', e => { setBg(e.target.value); wrap.querySelector('[data-bg-hex]').textContent = e.target.value.toUpperCase(); });
       const upload = wrap.querySelector('[data-upload]');
       if (upload) upload.addEventListener('click', () => { close(); this.$.bgInput.click(); });
       const remove = wrap.querySelector('[data-remove-image]');

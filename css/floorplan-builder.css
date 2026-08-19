@@ -35,6 +35,7 @@
 }
 .fpb-toolbar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; }
 .fpb-toolbar-build { padding-bottom: 8px; border-bottom: 1px solid var(--fpb-border); }
+.fpb-toolbar-canvas { padding-bottom: 8px; border-bottom: 1px solid var(--fpb-border); }
 .fpb-toolbar-group {
   display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
   padding-right: 10px; border-right: 1px solid var(--fpb-border);
@@ -765,6 +766,10 @@
 .fpb-bg-choice small { display: block; margin-top: 4px; color: var(--fpb-grey-mid); }
 .fpb-bg-choice.active { border-color: var(--fpb-black); box-shadow: 0 0 0 1px var(--fpb-black); }
 .fpb-background-upload { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 4px; }
+.fpb-custom-colour label { display: grid; grid-template-columns: 64px auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; width: fit-content; cursor: pointer; }
+.fpb-custom-colour input[type="color"] { grid-row: 1 / 3; width: 64px !important; height: 48px !important; padding: 3px !important; border: 1px solid var(--fpb-border) !important; border-radius: 8px !important; background: #fff; cursor: pointer; }
+.fpb-custom-colour b { font-size: 12px; color: var(--fpb-black); }
+.fpb-custom-colour small { color: var(--fpb-grey-mid); font-size: 10px; }
 @media (max-width: 540px) { .fpb-background-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .fpb-actions { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
