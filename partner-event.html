@@ -3816,6 +3816,40 @@
   }
   function pluralize(n, s, p) { return n === 1 ? s : (p || s + 's'); }
 
+  // Compare date-only event fields against the organizer's local calendar day.
+  // Using elapsed hours here can turn "tomorrow" into "0 days" late in the day.
+  function localCalendarDate(timeZone) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone || 'America/Jamaica', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(new Date());
+      const value = Object.fromEntries(parts.map(p => [p.type, p.value]));
+      return Date.UTC(Number(value.year), Number(value.month) - 1, Number(value.day));
+    } catch (_) {
+      const now = new Date();
+      return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+  }
+  function calendarDayDifference(dateValue, timeZone) {
+    const match = String(dateValue || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return null;
+    const eventDay = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    return Math.round((eventDay - localCalendarDate(timeZone)) / 86400000);
+  }
+  function normalizeEventTiming(data) {
+    if (!data || !data.event) return;
+    const event = data.event;
+    const timeZone = event.timezone || 'America/Jamaica';
+    const startDiff = calendarDayDifference(event.start_date, timeZone);
+    const endDiff = calendarDayDifference(event.end_date || event.start_date, timeZone);
+    if (startDiff === null || endDiff === null) return;
+    data.stats = Object.assign({}, data.stats || {}, {
+      days_until_event: startDiff >= 0 ? startDiff : null,
+      is_today: startDiff <= 0 && endDiff >= 0,
+      is_past: endDiff < 0,
+    });
+  }
+
   // ── Event Status (Draft / Upcoming / Today / Completed) ──
   function computeStatus(event, stats) {
     const raw = (event.status || '').toLowerCase();
@@ -3931,9 +3965,14 @@
             ? fmtMoney(event.ticket_price_min, event.currency)
             : 'See tickets');
 
-    const tabChips = (tabs || []).map(t => {
+    const visibleTabs = Array.isArray(tabs) ? tabs.slice() : [];
+    if (!visibleTabs.some(t => t && t.key === 'whos_in')) {
+      const homeIndex = visibleTabs.findIndex(t => t && t.key === 'home');
+      visibleTabs.splice(homeIndex >= 0 ? homeIndex + 1 : 0, 0, { key: 'whos_in', label: "Who's Going" });
+    }
+    const tabChips = visibleTabs.map(t => {
       const label = t.label || t.key;
-      const isLive = ['home', 'tickets'].includes(t.key);
+      const isLive = ['home', 'whos_in', 'tickets'].includes(t.key);
       return `<span class="tab-chip ${isLive ? 'live' : ''}">${escapeHtml(label)}</span>`;
     }).join('');
 
@@ -8985,6 +9024,7 @@
       try { fn(); }
       catch (e) { console.error('[partner-event] ' + name + ' failed:', e); }
     };
+    normalizeEventTiming(data);
     const isCarnival = String((data.event && data.event.event_type) || '').toLowerCase() === 'carnival';
 
     safe('renderHero',        () => renderHero(data.event, data.stats));

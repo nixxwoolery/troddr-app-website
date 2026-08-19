@@ -234,7 +234,16 @@
   // ── Guided starter ────────────────────────────────────────
   // Builds a deterministic portrait-friendly layout from the event's actual
   // vendor roster. It never invents extra booths, stages, bars, or facilities.
-  function guidedVendorTemplate(vendors, siteFt) {
+  function perimeterTrees(siteFt) {
+    const W = Math.max(40, num(siteFt && siteFt.w, DEFAULT_SITE_FT.w));
+    const H = Math.max(60, num(siteFt && siteFt.h, DEFAULT_SITE_FT.h));
+    return [0.12, 0.88].map((x) => normalizeElement({
+      id: uid(), type: 'shape', kind: 'tree', shape: 'round',
+      x, y: 0.055, w: 10 / W, h: 10 / H,
+      color: '#2f7d4f', label: '',
+    }));
+  }
+  function guidedVendorTemplate(vendors, siteFt, isOutdoor) {
     const els = [];
     const list = Array.isArray(vendors) ? vendors.filter(Boolean) : [];
     const W = Math.max(40, num(siteFt && siteFt.w, DEFAULT_SITE_FT.w));
@@ -270,6 +279,7 @@
         size: `${boothFt}x${boothFt}`,
       }));
     });
+    if (isOutdoor) els.push(...perimeterTrees(siteFt));
     return els;
   }
 
@@ -413,24 +423,34 @@
       return `
 <div class="fpb">
   <div class="fpb-toolbar">
-    <div class="fpb-tools" data-ref="tools">${tools}</div>
-    <span class="fpb-tb-sep"></span>
-    <label class="fpb-toggle" title="Snap to grid and to other booths"><input type="checkbox" data-ref="snapToggle" checked />Snap</label>
-    <button type="button" class="fpb-btn" data-ref="scaleBtn" title="Set the canvas scale (feet)"><svg><use href="#fpb-ruler"/></svg><span data-ref="scaleLabel">Scale</span></button>
-    <span class="fpb-opacity" data-ref="opacityWrap" hidden>Image <input type="range" min="10" max="100" value="100" data-ref="opacityRange" /></span>
-    <span class="fpb-tb-spacer"></span>
-    <span class="fpb-dirty clean" data-ref="dirtyLabel">No unsaved changes</span>
-    <button type="button" class="fpb-btn icon-only" data-ref="undoBtn" title="Undo (Ctrl+Z)" disabled><svg><use href="#fpb-undo"/></svg></button>
-    <button type="button" class="fpb-btn icon-only" data-ref="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled><svg><use href="#fpb-redo"/></svg></button>
-    ${uploadBtn}
-    ${o.allowTheme ? '<button type="button" class="fpb-btn" data-ref="themeBtn" title="Set the guest-facing palette, vocabulary and tone"><svg><use href="#fpb-palette"/></svg>Theme</button>' : ''}
-    ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="rotateMapBtn" title="Rotate the saved floor plan 90 degrees clockwise"><svg><use href="#fpb-rotate"/></svg>Rotate</button>' : ''}
-    ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="cropMapBtn" title="Crop the uploaded floor plan image"><svg><use href="#fpb-crop"/></svg>Crop</button>' : ''}
-    ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="traceOnlyBtn" title="Hide the uploaded image from the saved guest map while keeping your traced layout"><svg><use href="#fpb-grid-ic"/></svg>Trace only</button>' : ''}
-    <button type="button" class="fpb-btn" data-ref="exportBtn" title="Download the floor plan as a PNG image"><svg><use href="#fpb-download"/></svg>Export</button>
-    ${extra}
-    ${o.onListVersions ? '<button type="button" class="fpb-btn" data-ref="historyBtn"><svg><use href="#fpb-undo"/></svg>Version history</button>' : ''}
-    <button type="button" class="fpb-btn primary" data-ref="saveBtn"><svg><use href="#fpb-save"/></svg>${esc(o.saveLabel || 'Save')}</button>
+    <div class="fpb-toolbar-row fpb-toolbar-build">
+      <div class="fpb-tools" data-ref="tools">${tools}</div>
+      <label class="fpb-toggle" title="Snap to grid and to other booths"><input type="checkbox" data-ref="snapToggle" checked />Snap</label>
+    </div>
+    <div class="fpb-toolbar-row">
+      <div class="fpb-toolbar-group"><span class="fpb-toolbar-label">Canvas</span>
+        <button type="button" class="fpb-btn" data-ref="scaleBtn" title="Set the canvas scale (feet)"><svg><use href="#fpb-ruler"/></svg><span data-ref="scaleLabel">Scale</span></button>
+        <span class="fpb-opacity" data-ref="opacityWrap" hidden>Image <input type="range" min="10" max="100" value="100" data-ref="opacityRange" /></span>
+        ${uploadBtn}
+        ${o.allowTheme ? '<button type="button" class="fpb-btn" data-ref="themeBtn" title="Set the guest-facing palette, vocabulary and tone"><svg><use href="#fpb-palette"/></svg>Theme</button>' : ''}
+        ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="rotateMapBtn" title="Rotate the saved floor plan 90 degrees clockwise"><svg><use href="#fpb-rotate"/></svg>Rotate</button>' : ''}
+        ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="cropMapBtn" title="Crop the uploaded floor plan image"><svg><use href="#fpb-crop"/></svg>Crop</button>' : ''}
+        ${o.onUploadBackground ? '<button type="button" class="fpb-btn" data-ref="traceOnlyBtn" title="Hide the uploaded image from the saved guest map while keeping your traced layout"><svg><use href="#fpb-grid-ic"/></svg>Trace only</button>' : ''}
+      </div>
+      <div class="fpb-toolbar-group"><span class="fpb-toolbar-label">Edit</span>
+        <button type="button" class="fpb-btn icon-only" data-ref="undoBtn" title="Undo (Ctrl+Z)" disabled><svg><use href="#fpb-undo"/></svg></button>
+        <button type="button" class="fpb-btn icon-only" data-ref="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled><svg><use href="#fpb-redo"/></svg></button>
+        <button type="button" class="fpb-btn danger" data-ref="resetBtn" title="Clear the current map and start over">Reset map</button>
+        ${o.onListVersions ? '<button type="button" class="fpb-btn" data-ref="historyBtn"><svg><use href="#fpb-undo"/></svg>Version history</button>' : ''}
+      </div>
+      <div class="fpb-toolbar-group"><span class="fpb-toolbar-label">Share</span>
+        <button type="button" class="fpb-btn" data-ref="exportBtn" title="Download the floor plan as a PNG image"><svg><use href="#fpb-download"/></svg>Export</button>
+        ${extra}
+      </div>
+      <span class="fpb-tb-spacer"></span>
+      <span class="fpb-dirty clean" data-ref="dirtyLabel">No unsaved changes</span>
+      <button type="button" class="fpb-btn primary" data-ref="saveBtn"><svg><use href="#fpb-save"/></svg>${esc(o.saveLabel || 'Save')}</button>
+    </div>
   </div>
 
   <div class="fpb-body">
@@ -472,6 +492,7 @@
           <label>Site size</label>
           <input data-ref="siteW" type="number" min="10" max="5000" value="${DEFAULT_SITE_FT.w}" /><span>×</span><input data-ref="siteH" type="number" min="10" max="5000" value="${DEFAULT_SITE_FT.h}" /><span>ft</span>
         </div>
+        <label class="fpb-toggle"><input type="checkbox" data-ref="outdoorStarter" />Outdoor site — add two perimeter trees</label>
         <div class="choices">
           <button type="button" class="choice" data-ref="startBlank"><svg><use href="#fpb-grid-ic"/></svg>Blank canvas<small>Drawn to your site size</small></button>
           <button type="button" class="choice" data-ref="startTemplate"><svg><use href="#fpb-sparkle"/></svg>Guided vendor layout<small>Uses this event's vendor list and booth numbers</small></button>
@@ -502,6 +523,7 @@
       if ($.scaleBtn) $.scaleBtn.addEventListener('click', () => this.openScale());
       $.undoBtn.addEventListener('click', () => this.undo());
       $.redoBtn.addEventListener('click', () => this.redo());
+      $.resetBtn.addEventListener('click', () => this.resetMap());
       $.exportBtn.addEventListener('click', () => this.exportPng());
       if ($.rotateMapBtn) $.rotateMapBtn.addEventListener('click', () => this.rotateMapClockwise());
       if ($.cropMapBtn) $.cropMapBtn.addEventListener('click', () => this.startCrop());
@@ -520,6 +542,12 @@
       if ($.emptyUpload) $.emptyUpload.addEventListener('change', (e) => this.uploadBackground(e.target.files[0], this.$.emptyStatus));
       if ($.startBlank) $.startBlank.addEventListener('click', () => {
         if ($.siteW && $.siteH) this.setSiteFt($.siteW.value, $.siteH.value);
+        if ($.outdoorStarter && $.outdoorStarter.checked) {
+          this.pushUndo();
+          this.elements = perimeterTrees(this.siteFt);
+          this.setDirty(true);
+          this.renderAll();
+        }
         this.showEmpty(false);
       });
       if ($.startTemplate) $.startTemplate.addEventListener('click', () => {
@@ -535,7 +563,7 @@
           };
         }
         this.world = { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
-        this.elements = guidedVendorTemplate(this.vendors, this.siteFt);
+        this.elements = guidedVendorTemplate(this.vendors, this.siteFt, !!($.outdoorStarter && $.outdoorStarter.checked));
         this.sizeCanvas();
         this.updateGridVisibility();
         this.showEmpty(false);
@@ -546,6 +574,24 @@
         const btn = this.container.querySelector(`[data-action="${i}"]`);
         if (btn) btn.addEventListener('click', () => a.onClick());
       });
+    }
+
+    resetMap() {
+      if (!window.confirm('Reset this map? This removes the background and every placed item. Version history remains available until you save.')) return;
+      this.pushUndo();
+      this.elements = [];
+      this._sel = [];
+      this.siteFt = Object.assign({}, DEFAULT_SITE_FT);
+      this.calibrated = false;
+      this.ppf = DEFAULT_PPF;
+      this.bg = DEFAULT_BG;
+      if (this.$.siteW) this.$.siteW.value = this.siteFt.w;
+      if (this.$.siteH) this.$.siteH.value = this.siteFt.h;
+      this.setBackground(null, { silent: true });
+      this.showEmpty(true);
+      this.setDirty(true);
+      this.renderAll();
+      this.status('Map cleared. Choose a starting option, then save when ready.');
     }
 
     applyTheme() {
