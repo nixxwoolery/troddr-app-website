@@ -103,7 +103,7 @@
   // ── Real-world scale ──────────────────────────────────────
   // Everything is to-scale: world px = feet × ppf (pixels-per-foot).
   const DEFAULT_PPF = 12;            // px per foot for a fresh blank canvas
-  const DEFAULT_SITE_FT = { w: 200, h: 120 }; // default blank-canvas site size
+  const DEFAULT_SITE_FT = { w: 120, h: 200 }; // portrait by default for mobile-first event maps
   const DEFAULT_BG = '#ffffff';      // canvas paper colour
   const SNAP_FT = 1;                 // snap increment (feet)
   const MIN_FT = 1;                  // minimum shape size (feet)
@@ -231,37 +231,45 @@
     return el;
   }
 
-  // ── Starter template (a to-scale 220 × 140 ft festival site) ──
-  const TEMPLATE_SITE_FT = { w: 220, h: 140 };
-  function festivalTemplate() {
+  // ── Guided starter ────────────────────────────────────────
+  // Builds a deterministic portrait-friendly layout from the event's actual
+  // vendor roster. It never invents extra booths, stages, bars, or facilities.
+  function guidedVendorTemplate(vendors, siteFt) {
     const els = [];
-    const W = TEMPLATE_SITE_FT.w, H = TEMPLATE_SITE_FT.h;   // feet
-    // Everything below is in real feet; fractions are ft / site-ft.
-    const boothFt = 10, bw = boothFt / W, bh = boothFt / H, gapFt = 2;
-    let n = 1;
-    const booth = (cxFt, cyFt, cat) => els.push(normalizeElement({
-      id: uid(), type: 'booth', x: cxFt / W, y: cyFt / H, w: bw, h: bh,
-      number: n++, label: '', icon: cat, color: CAT_BY_ID[cat].color, size: `${boothFt}x${boothFt}`,
-    }));
-    // Vendor rows along the top and bottom edges (10 ft booths, 2 ft aisles).
-    for (let i = 0; i < 12; i++) booth(20 + i * (boothFt + gapFt), 125, i < 2 ? 'drink' : 'food');
-    for (let i = 0; i < 12; i++) booth(20 + i * (boothFt + gapFt), 18, i % 5 === 0 ? 'merch' : 'food');
-    // Big zones (feet)
-    els.push(normalizeElement({ id: uid(), type: 'zone', x: 105 / W, y: 32 / H, w: 30 / W, h: 20 / H, label: 'Stage', color: '#1f2937' }));
-    els.push(normalizeElement({ id: uid(), type: 'zone', x: 60 / W, y: 34 / H, w: 34 / W, h: 20 / H, label: 'VIP Lounge', color: '#b45309' }));
-    // A bar built from three connected 16 ft counters (one group).
-    const barGid = 'bar_' + uid();
-    [150, 166, 182].forEach((cx) => els.push(normalizeElement({
-      id: uid(), type: 'counter', x: cx / W, y: 34 / H, w: 16 / W, h: 2 / H,
-      label: 'Bar', color: COUNTER_COLOR, groupId: barGid, size: '16x2',
-    })));
-    // Scattered cocktail tables (5 ft round) in the middle field
-    [[60, 78], [80, 90], [100, 75], [122, 86], [145, 75], [168, 86], [88, 64], [134, 64], [176, 70], [44, 90]]
-      .forEach(([x, y]) => els.push(normalizeElement({ id: uid(), type: 'table', x: x / W, y: y / H, w: 5 / W, h: 5 / H, shape: 'round', color: TABLE_COLOR })));
-    // Pins
-    els.push(normalizeElement({ id: uid(), type: 'pin', x: 110 / W, y: 134 / H, label: 'Entrance', icon: 'entrance' }));
-    els.push(normalizeElement({ id: uid(), type: 'pin', x: 205 / W, y: 45 / H, label: 'Restrooms', icon: 'restroom' }));
-    els.push(normalizeElement({ id: uid(), type: 'pin', x: 16 / W, y: 45 / H, label: 'First Aid', icon: 'medic' }));
+    const list = Array.isArray(vendors) ? vendors.filter(Boolean) : [];
+    const W = Math.max(40, num(siteFt && siteFt.w, DEFAULT_SITE_FT.w));
+    const H = Math.max(60, num(siteFt && siteFt.h, DEFAULT_SITE_FT.h));
+    const boothFt = Math.min(10, Math.max(6, Math.floor((W - 24) / 4)));
+    const rows = Math.max(1, Math.ceil(list.length / 2));
+    const top = Math.max(16, boothFt);
+    const bottom = H - top;
+    const yForRow = (row) => rows === 1 ? H / 2 : top + ((bottom - top) * row / (rows - 1));
+    const categoryFor = (vendor) => {
+      const raw = [vendor.vendor_type, vendor.category, vendor.vendor_tags, vendor.tags]
+        .flat().filter(Boolean).join(' ').toLowerCase();
+      if (/bar|drink|coffee|juice|beverage|cocktail/.test(raw)) return 'drink';
+      if (/merch|retail|artisan/.test(raw)) return 'merch';
+      return 'food';
+    };
+
+    list.forEach((vendor, index) => {
+      const single = list.length === 1;
+      const column = index % 2;
+      const row = Math.floor(index / 2);
+      const cat = categoryFor(vendor);
+      const vendorId = vendor.event_vendor_id || vendor.vendor_id || null;
+      els.push(normalizeElement({
+        id: uid(), type: 'booth',
+        x: single ? 0.5 : (column === 0 ? Math.max(0.14, (boothFt / 2 + 8) / W) : Math.min(0.86, 1 - (boothFt / 2 + 8) / W)),
+        y: yForRow(row) / H,
+        w: boothFt / W, h: boothFt / H,
+        number: vendor.booth_number || index + 1,
+        label: vendor.vendor_name || vendor.name || `Vendor ${index + 1}`,
+        icon: cat, color: CAT_BY_ID[cat].color,
+        vendor_id: vendorId,
+        size: `${boothFt}x${boothFt}`,
+      }));
+    });
     return els;
   }
 
@@ -466,7 +474,7 @@
         </div>
         <div class="choices">
           <button type="button" class="choice" data-ref="startBlank"><svg><use href="#fpb-grid-ic"/></svg>Blank canvas<small>Drawn to your site size</small></button>
-          <button type="button" class="choice" data-ref="startTemplate"><svg><use href="#fpb-sparkle"/></svg>Festival starter<small>Booth rows, stage, bar &amp; tables to rearrange</small></button>
+          <button type="button" class="choice" data-ref="startTemplate"><svg><use href="#fpb-sparkle"/></svg>Guided vendor layout<small>Uses this event's vendor list and booth numbers</small></button>
           ${o.onUploadBackground ? `<label class="choice"><svg><use href="#fpb-upload"/></svg>Venue image<small>Upload a map or aerial photo to build on</small><input type="file" data-ref="emptyUpload" accept="image/png,image/jpeg" /></label>` : ''}
         </div>
         <div class="fpb-status" data-ref="emptyStatus"></div>
@@ -515,10 +523,19 @@
         this.showEmpty(false);
       });
       if ($.startTemplate) $.startTemplate.addEventListener('click', () => {
+        if (!this.vendors.length) {
+          if ($.emptyStatus) $.emptyStatus.textContent = 'Add vendors to the event first, then the guided layout will place them for you.';
+          return;
+        }
         this.pushUndo();
-        this.siteFt = Object.assign({}, TEMPLATE_SITE_FT);
+        if ($.siteW && $.siteH) {
+          this.siteFt = {
+            w: clamp(num($.siteW.value, DEFAULT_SITE_FT.w), 10, 5000),
+            h: clamp(num($.siteH.value, DEFAULT_SITE_FT.h), 10, 5000),
+          };
+        }
         this.world = { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
-        this.elements = festivalTemplate();
+        this.elements = guidedVendorTemplate(this.vendors, this.siteFt);
         this.sizeCanvas();
         this.updateGridVisibility();
         this.showEmpty(false);
