@@ -1387,6 +1387,9 @@
       vendors: collectRepeater('vendors-list',[
         {field:'name',        sel:'.vend-name'},
         {field:'booth',       sel:'.vend-booth'},
+        {field:'schedule_note',sel:'.vend-schedule-note'},
+        {field:'latitude',    sel:'.vend-latitude'},
+        {field:'longitude',   sel:'.vend-longitude'},
         {field:'category',    sel:'.vend-cat'},
         {field:'price_range', sel:'.vend-price'},
         {field:'items',       sel:'.vend-items'},
@@ -1449,6 +1452,18 @@
   async function submitForm() {
     if (!document.getElementById('confirm-check').checked) {
       showToast('Please tick the confirmation checkbox.','error'); return;
+    }
+    const invalidVendorLocation = Array.from(document.querySelectorAll('#vendors-list .repeater-item')).find(item => {
+      const latRaw = item.querySelector('.vend-latitude')?.value.trim() || '';
+      const lngRaw = item.querySelector('.vend-longitude')?.value.trim() || '';
+      if ((latRaw === '') !== (lngRaw === '')) return true;
+      if (!latRaw) return false;
+      const lat = Number(latRaw), lng = Number(lngRaw);
+      return !Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180;
+    });
+    if (invalidVendorLocation) {
+      showToast('Enter both vendor coordinates using a valid latitude and longitude, or leave both blank.','error');
+      return;
     }
     const btn = document.getElementById('submit-btn');
     btn.disabled = true; btn.textContent = 'Saving…';
@@ -1548,6 +1563,22 @@
         <div class="field-group">
           <label>Booth / Stall Number</label>
           <input type="text" class="vend-booth" placeholder="e.g. A-01, Booth 12" value="${d.booth||''}" />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Availability note <span class="hint">Optional</span></label>
+        <input type="text" class="vend-schedule-note" maxlength="120" placeholder="e.g. Aug 20 only, Lunch service only" value="${d.schedule_note||''}" />
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Latitude <span class="hint">Optional</span></label>
+          <input type="number" class="vend-latitude" min="-90" max="90" step="any" placeholder="e.g. 18.0179" value="${d.latitude||''}" />
+        </div>
+        <div class="field-group">
+          <label>Longitude <span class="hint">Optional — enter both coordinates</span></label>
+          <input type="number" class="vend-longitude" min="-180" max="180" step="any" placeholder="e.g. -76.8099" value="${d.longitude||''}" />
         </div>
       </div>
 

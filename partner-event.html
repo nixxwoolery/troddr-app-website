@@ -3384,6 +3384,8 @@
             <input id="ve-booth" type="text" maxlength="40" placeholder="e.g. A-12" /></div>
           <div class="ve-field"><label for="ve-zone">Zone / section</label>
             <input id="ve-zone" type="text" maxlength="80" placeholder="e.g. Food Truck Row" /></div>
+          <div class="ve-field"><label for="ve-schedule-note">Availability note</label>
+            <input id="ve-schedule-note" type="text" maxlength="120" placeholder="e.g. Aug 20 only, Lunch service only" /></div>
           <details class="ve-advanced" id="ve-coordinates">
             <summary>Precise GPS location (optional)</summary>
             <div class="ve-coordinate-grid">
@@ -4530,6 +4532,7 @@
     setVendorLogoStatus('', '');
     $('ve-booth').value    = v.booth_number || '';
     $('ve-zone').value     = v.zone || '';
+    $('ve-schedule-note').value = v.schedule_note || '';
     $('ve-latitude').value = v.latitude != null ? v.latitude : '';
     $('ve-longitude').value = v.longitude != null ? v.longitude : '';
     $('ve-coordinate-status').className = 've-coordinate-status';
@@ -4563,6 +4566,10 @@
     setTimeout(() => $('ve-name').focus(), 30);
     if (v.event_vendor_id) {
       const editingId = v.event_vendor_id;
+      db.rpc('get_event_vendor_schedule_note', { p_token: _getToken(), p_event_vendor_id: editingId }).then(({ data, error }) => {
+        if (error || !_editingVendor || _editingVendor.event_vendor_id !== editingId || !data || !data.ok) return;
+        $('ve-schedule-note').value = data.schedule_note || '';
+      }).catch(() => {});
       db.rpc('get_event_vendor_coordinates', { p_token: _getToken(), p_event_vendor_id: editingId }).then(({ data, error }) => {
         if (error || !_editingVendor || _editingVendor.event_vendor_id !== editingId || !data || !data.ok) return;
         $('ve-latitude').value = data.latitude != null ? data.latitude : '';
@@ -4721,6 +4728,19 @@
       }
       const savedEventVendorId = data.event_vendor_id || payload.p_event_vendor_id;
       if (savedEventVendorId) {
+        const scheduleRes = await db.rpc('set_event_vendor_schedule_note', {
+          p_token: token,
+          p_event_vendor_id: savedEventVendorId,
+          p_schedule_note: $('ve-schedule-note').value.trim() || null,
+        });
+        if (scheduleRes.error || !scheduleRes.data || scheduleRes.data.ok === false) {
+          status.className = 've-status error';
+          status.textContent = (scheduleRes.error && (scheduleRes.error.message || scheduleRes.error.code))
+            || (scheduleRes.data && scheduleRes.data.error)
+            || 'Vendor saved, but the availability note could not be saved. Press Save to retry.';
+          _editingVendor.event_vendor_id = savedEventVendorId;
+          return;
+        }
         const coordinateRes = await db.rpc('set_event_vendor_coordinates', {
           p_token: token,
           p_event_vendor_id: savedEventVendorId,
