@@ -87,6 +87,8 @@
 .fpb-btn.icon-only { padding: 8px; }
 .fpb-btn.danger { color: var(--fpb-red); border-color: #f5c2bd; }
 .fpb-btn.danger:hover { background: #fdecea; }
+.fpb-review-count { display: inline-flex; min-width: 18px; height: 18px; padding: 0 5px; align-items: center; justify-content: center; border-radius: 9px; background: var(--fpb-bg-soft); font-size: 10px; }
+.fpb-review-count.has-errors { background: #fdecea; color: var(--fpb-red); }
 
 .fpb-dirty { font-size: 12px; font-weight: 600; color: var(--fpb-amber); }
 .fpb-dirty.clean { color: var(--fpb-grey-mid); font-weight: 400; }
@@ -416,6 +418,19 @@
 .fpb-template-row { display: flex; align-items: center; gap: 6px; padding: 8px; border: 1px solid var(--fpb-border); border-radius: 8px; }
 .fpb-template-row > div { flex: 1; min-width: 0; }
 .fpb-template-row strong, .fpb-template-row small { display: block; }
+.fpb-review-card { width: min(680px, calc(100vw - 32px)); }
+.fpb-review-list { max-height: 58vh; overflow: auto; display: grid; gap: 7px; }
+.fpb-review-row { display: grid; grid-template-columns: 28px minmax(0,1fr) auto; gap: 9px; align-items: center; padding: 10px; border: 1px solid var(--fpb-border); border-radius: 9px; }
+.fpb-review-row.error { border-color: #f5c2bd; background: #fff8f7; }
+.fpb-review-row.warning { border-color: #f2d39a; background: #fffbf2; }
+.fpb-review-icon { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--fpb-bg-soft); font-weight: 800; }
+.fpb-review-row.error .fpb-review-icon { background: #fdecea; color: var(--fpb-red); }
+.fpb-review-row.warning .fpb-review-icon { background: #fff1d6; color: #9a5b00; }
+.fpb-review-row strong, .fpb-review-row small { display: block; }
+.fpb-review-row strong { font-size: 12px; }
+.fpb-review-row small { margin-top: 2px; color: var(--fpb-grey-mid); font-size: 10px; line-height: 1.35; }
+.fpb-review-clear { padding: 28px; text-align: center; border: 1px solid #bce4ca; background: #f4fbf6; border-radius: 10px; }
+.fpb-review-clear strong, .fpb-review-clear span { display: block; }
 .fpb-layer-actions { display: inline-flex; gap: 2px; opacity: 0; transition: opacity .12s; }
 .fpb-list .item:hover .fpb-layer-actions, .fpb-list .item.active .fpb-layer-actions { opacity: 1; }
 .fpb-layer-actions button { width: 22px; height: 22px; border: 0; border-radius: 5px; background: transparent; cursor: pointer; color: var(--fpb-grey-mid); font-size: 11px; padding: 0; }

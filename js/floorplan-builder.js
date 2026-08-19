@@ -362,6 +362,7 @@
       this.renderSide();
       this.renderLegend();
       this.renderMinimap();
+      if (!this.readOnly) this.updateValidationBadge();
       this.setBackground(this.bgUrl, { silent: true });
       if (!this.readOnly) {
         this.setTool('select');
@@ -448,6 +449,7 @@
         ${o.onListVersions ? '<button type="button" class="fpb-btn" data-ref="historyBtn"><svg><use href="#fpb-undo"/></svg>Version history</button>' : ''}
       </div>
       <div class="fpb-toolbar-group"><span class="fpb-toolbar-label">Share</span>
+        <button type="button" class="fpb-btn" data-ref="validateBtn" title="Review the map for layout issues"><svg><use href="#fpb-info"/></svg>Review <span class="fpb-review-count" data-ref="reviewCount">0</span></button>
         <button type="button" class="fpb-btn" data-ref="exportBtn" title="Download the floor plan as a PNG image"><svg><use href="#fpb-download"/></svg>Export</button>
         ${extra}
       </div>
@@ -534,6 +536,7 @@
       $.redoBtn.addEventListener('click', () => this.redo());
       $.resetBtn.addEventListener('click', () => this.resetMap());
       $.exportBtn.addEventListener('click', () => this.exportPng());
+      $.validateBtn.addEventListener('click', () => this.openValidation());
       if ($.rotateMapBtn) $.rotateMapBtn.addEventListener('click', () => this.rotateMapClockwise());
       if ($.cropMapBtn) $.cropMapBtn.addEventListener('click', () => this.startCrop());
       if ($.cropCancelBtn) $.cropCancelBtn.addEventListener('click', () => this.cancelCrop());
@@ -670,6 +673,57 @@
         this.setBackground(null, { silent: true }); this.setDirty(true); this.showEmpty(false); this.renderAll(); close(); this.status('Template applied. Add this event\'s vendors and save when ready.', 'success');
       }));
       wrap.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => { saved.splice(Number(btn.dataset.delete), 1); localStorage.setItem(key, JSON.stringify(saved)); close(); this.openTemplates(); }));
+      wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+    }
+
+    validationIssues() {
+      const issues = [];
+      const visible = this.elements.filter(el => !el.hidden);
+      const title = (el) => el.label || (el.type === 'booth' && el.number ? `Booth ${el.number}` : (OBJ_BY_KIND[el.kind] || {}).label) || el.type;
+      const add = (severity, code, message, ids, suggestion) => issues.push({ severity, code, message, ids: (ids || []).filter(Boolean), suggestion });
+      const bounds = (el) => ({ left: el.x - num(el.w) / 2, right: el.x + num(el.w) / 2, top: el.y - num(el.h) / 2, bottom: el.y + num(el.h) / 2 });
+      const overlaps = (a, b) => { const A = bounds(a), B = bounds(b); return A.left < B.right && A.right > B.left && A.top < B.bottom && A.bottom > B.top; };
+
+      visible.forEach(el => {
+        if (el.w != null && el.h != null) {
+          const b = bounds(el);
+          if (b.left < 0 || b.right > 1 || b.top < 0 || b.bottom > 1) add('error', 'outside', `${title(el)} extends beyond the site boundary.`, [el.id], 'Move or resize it so the full item sits inside the canvas.');
+        }
+        if (el.type === 'booth' && !String(el.label || '').trim() && !el.vendor_id) add('warning', 'unlabelled', `${title(el)} has no vendor or label.`, [el.id], 'Assign a vendor or add a clear public label.');
+        if (el.type === 'shape' && el.kind === 'road' && this.elHeightFt(el) < 10) add('warning', 'narrow-road', `${title(el)} is under 10 ft wide.`, [el.id], 'Confirm that service and emergency vehicles have enough clearance.');
+      });
+
+      const booths = visible.filter(el => el.type === 'booth');
+      for (let i = 0; i < booths.length; i++) for (let j = i + 1; j < booths.length; j++) {
+        if (overlaps(booths[i], booths[j])) add('error', 'booth-overlap', `${title(booths[i])} may overlap ${title(booths[j])}.`, [booths[i].id, booths[j].id], 'Move the booths apart or confirm the intended shared footprint.');
+      }
+      const roads = visible.filter(el => el.type === 'shape' && el.kind === 'road');
+      booths.forEach(booth => roads.forEach(road => { if (overlaps(booth, road)) add('error', 'blocked-road', `${title(booth)} may block a road.`, [booth.id, road.id], 'Keep vehicle and emergency routes clear.'); }));
+
+      const byNumber = new Map();
+      booths.forEach(booth => { const number = String(booth.number == null ? '' : booth.number).trim().toLowerCase(); if (!number) return; if (byNumber.has(number)) add('error', 'duplicate-number', `Booth number ${booth.number} is used more than once.`, [byNumber.get(number).id, booth.id], 'Give every booth a unique number.'); else byNumber.set(number, booth); });
+
+      const hasEntrance = visible.some(el => (el.type === 'pin' || el.type === 'booth') && el.icon === 'entrance');
+      const hasExit = visible.some(el => (el.type === 'pin' || el.type === 'booth') && el.icon === 'exit');
+      if (!hasEntrance) add('warning', 'entrance', 'No entrance is marked on the attendee map.', [], 'Add at least one entrance pin.');
+      if (!hasExit) add('warning', 'exit', 'No exit is marked on the attendee map.', [], 'Add the public and emergency exits.');
+      if (this.bgUrl && !this.calibrated) add('warning', 'scale', 'The uploaded background has not been calibrated.', [], 'Set a known distance so measurements and object sizes are accurate.');
+
+      const placed = new Set(this.elements.filter(el => el.vendor_id && !el.hidden).map(el => String(el.vendor_id)));
+      const hiddenPlaced = new Set(this.elements.filter(el => el.vendor_id && el.hidden).map(el => String(el.vendor_id)));
+      this.vendors.forEach(vendor => { const id = String(vendor.event_vendor_id || vendor.vendor_id || ''); const name = vendor.vendor_name || vendor.name || 'Vendor'; if (hiddenPlaced.has(id)) add('warning', 'hidden-vendor', `${name} is assigned to a hidden layer.`, [this.elements.find(el => String(el.vendor_id) === id)?.id], 'Show the layer or move the vendor to a visible booth.'); else if (id && !placed.has(id)) add('warning', 'unplaced-vendor', `${name} has not been placed on the map.`, [], 'Place the vendor or confirm that they should not appear.'); });
+      return issues;
+    }
+
+    openValidation() {
+      const issues = this.validationIssues();
+      const counts = { error: 0, warning: 0, info: 0 }; issues.forEach(i => counts[i.severity]++);
+      const wrap = document.createElement('div'); wrap.className = 'fpb-modal';
+      const rows = issues.length ? issues.map((issue, index) => `<div class="fpb-review-row ${issue.severity}"><span class="fpb-review-icon">${issue.severity === 'error' ? '!' : issue.severity === 'warning' ? '△' : 'i'}</span><div><strong>${esc(issue.message)}</strong><small>${esc(issue.suggestion || '')}</small></div>${issue.ids[0] ? `<button type="button" class="fpb-btn" data-jump="${index}">Show</button>` : ''}</div>`).join('') : '<div class="fpb-review-clear"><strong>No layout issues found</strong><span>The current map passed all available checks.</span></div>';
+      wrap.innerHTML = `<div class="fpb-modal-card fpb-review-card"><h3>Layout review</h3><p>${counts.error} errors, ${counts.warning} warnings. These checks guide the organizer and do not prevent saving a draft.</p><div class="fpb-review-list">${rows}</div><div class="fpb-modal-actions"><button type="button" class="fpb-btn primary" data-close>Done</button></div></div>`;
+      document.body.appendChild(wrap); const close = () => wrap.remove();
+      wrap.querySelector('[data-close]').addEventListener('click', close);
+      wrap.querySelectorAll('[data-jump]').forEach(btn => btn.addEventListener('click', () => { const issue = issues[Number(btn.dataset.jump)]; close(); if (issue && issue.ids.length) { this._sel = issue.ids; this.renderAll(); const first = this.$.els.querySelector(`[data-id="${issue.ids[0]}"]`); if (first) first.scrollIntoView({ block: 'center', inline: 'center' }); } }));
       wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
     }
 
@@ -2116,6 +2170,16 @@
       this.renderSide();
       this.renderLegend();
       this.updateUndoButtons();
+      this.updateValidationBadge();
+    }
+
+    updateValidationBadge() {
+      if (!this.$.reviewCount) return;
+      const issues = this.validationIssues();
+      const errors = issues.filter(issue => issue.severity === 'error').length;
+      this.$.reviewCount.textContent = issues.length;
+      this.$.reviewCount.classList.toggle('has-errors', errors > 0);
+      this.$.reviewCount.closest('button')?.classList.toggle('attn', issues.length > 0);
     }
 
     renderMinimap() {
@@ -2807,8 +2871,9 @@
     async save() {
       if (!this.opts.onSave) return;
       const btn = this.$.saveBtn;
+      const reviewIssues = this.validationIssues();
       btn.disabled = true;
-      this.status('Saving…');
+      this.status(reviewIssues.length ? `Saving draft with ${reviewIssues.length} review item${reviewIssues.length === 1 ? '' : 's'}...` : 'Saving...');
       try {
         const res = await this.opts.onSave({
           backgroundUrl: this.bgUrl || blankCanvasUri(this.world.w, this.world.h),
@@ -2817,7 +2882,7 @@
         if (res && res.ok === false) { this.status(res.error || 'Save failed.', 'error'); return; }
         this.clearDraft();
         this.setDirty(false);
-        this.status('Saved.', 'success');
+        this.status(reviewIssues.length ? `Saved. ${reviewIssues.length} review item${reviewIssues.length === 1 ? '' : 's'} remain.` : 'Saved.', 'success');
       } catch (err) {
         this.status((err && err.message) || 'Network error.', 'error');
       } finally {
