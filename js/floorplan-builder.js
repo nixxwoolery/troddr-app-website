@@ -84,10 +84,10 @@
     { kind: 'ticket',      cat: 'Access & safety',label: 'Ticket booth',  icon: 'fpb-info',    shape: 'rect',  ftW: 8,  ftH: 8,   color: '#d4a017', text: true, ic: true },
     { kind: 'barrier',     cat: 'Access & safety',label: 'Crowd barrier', icon: 'fpb-counter', shape: 'rect',  ftW: 8,  ftH: 0.7, color: '#475569', connect: true },
     { kind: 'generator',   cat: 'Access & safety',label: 'Generator',     icon: 'fpb-square',  shape: 'rect',  ftW: 8,  ftH: 4,   color: '#334155', text: true, ic: true },
-    { kind: 'tree',        cat: 'Decor & site',   label: 'Tree',          icon: 'fpb-tree',    shape: 'round', ftW: 16, ftH: 16,  color: '#2f7d4f', deco: 'tree' },
-    { kind: 'planter',     cat: 'Decor & site',   label: 'Planter / shrub',icon: 'fpb-tree',   shape: 'round', ftW: 4,  ftH: 4,   color: '#3f9d63', deco: 'tree' },
     { kind: 'lights',      cat: 'Decor & site',   label: 'String lights', icon: 'fpb-lights',  shape: 'rect',  ftW: 24, ftH: 0.6, color: '#f5b301', connect: true, deco: 'lights' },
     { kind: 'fence',       cat: 'Decor & site',   label: 'Fencing',       icon: 'fpb-fence',   shape: 'rect',  ftW: 10, ftH: 0.5, color: '#6b7280', connect: true, deco: 'fence' },
+    { kind: 'road',        cat: 'Decor & site',   label: 'Road',          icon: 'fpb-road',    shape: 'rect',  ftW: 40, ftH: 12,  color: '#4b5563', connect: true, deco: 'road' },
+    { kind: 'path',        cat: 'Decor & site',   label: 'Path',          icon: 'fpb-road',    shape: 'rect',  ftW: 20, ftH: 5,   color: '#c9b48a', connect: true, deco: 'path' },
     { kind: 'rect',        cat: 'Basic',          label: 'Rectangle',     icon: 'fpb-square',  shape: 'rect',  ftW: 6,  ftH: 6,   color: '#64748b', text: true },
     { kind: 'circle',      cat: 'Basic',          label: 'Circle',        icon: 'fpb-circle',  shape: 'round', ftW: 6,  ftH: 6,   color: '#64748b', text: true },
   ];
@@ -105,6 +105,13 @@
   const DEFAULT_PPF = 12;            // px per foot for a fresh blank canvas
   const DEFAULT_SITE_FT = { w: 120, h: 200 }; // portrait by default for mobile-first event maps
   const DEFAULT_BG = '#ffffff';      // canvas paper colour
+  const BACKGROUND_SOLIDS = ['#ffffff', '#f4f1ea', '#eef2f6', '#dfe9d8', '#1f2937', '#14321f'];
+  const BACKGROUND_GRADIENTS = [
+    'linear-gradient(180deg, #f8fbff 0%, #dceaf5 100%)',
+    'linear-gradient(180deg, #f5f1e8 0%, #d9c9aa 100%)',
+    'linear-gradient(180deg, #e8f3e5 0%, #b8d4ad 100%)',
+    'linear-gradient(135deg, #173b2b 0%, #0b1f18 100%)',
+  ];
   const SNAP_FT = 1;                 // snap increment (feet)
   const MIN_FT = 1;                  // minimum shape size (feet)
   const GRID_MAJOR_FT = 10;          // bold grid line every N feet
@@ -172,6 +179,7 @@
     + '<symbol id="fpb-layer-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 16 9 5 9-5"/></symbol>'
     + '<symbol id="fpb-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></symbol>'
     + '<symbol id="fpb-palette2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1 0 1.6-.8 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1a1.6 1.6 0 0 1 1.6-1.6H16c3 0 5.5-2.5 5.5-5.5C21.5 6.2 17.2 2 12 2z"/></symbol>'
+    + '<symbol id="fpb-road" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M7 21 10 3M17 21 14 3M12 6v3m0 3v3m0 3v2"/></symbol>'
     + '</defs></svg>';
 
   // ── Small helpers ─────────────────────────────────────────
@@ -197,6 +205,8 @@
     el.id = el.id || uid();
     el.type = el.type || 'pin';
     el.x = num(el.x); el.y = num(el.y);
+    el.locked = el.locked === true;
+    el.hidden = el.hidden === true;
     // Legacy types fold into the unified `shape` object model.
     if (el.type === 'table') { el.type = 'shape'; el.kind = el.shape === 'rect' ? 'table-rect' : 'table-round'; }
     else if (el.type === 'counter') { el.type = 'shape'; el.kind = 'counter'; }
@@ -234,16 +244,7 @@
   // ── Guided starter ────────────────────────────────────────
   // Builds a deterministic portrait-friendly layout from the event's actual
   // vendor roster. It never invents extra booths, stages, bars, or facilities.
-  function perimeterTrees(siteFt) {
-    const W = Math.max(40, num(siteFt && siteFt.w, DEFAULT_SITE_FT.w));
-    const H = Math.max(60, num(siteFt && siteFt.h, DEFAULT_SITE_FT.h));
-    return [0.12, 0.88].map((x) => normalizeElement({
-      id: uid(), type: 'shape', kind: 'tree', shape: 'round',
-      x, y: 0.055, w: 10 / W, h: 10 / H,
-      color: '#2f7d4f', label: '',
-    }));
-  }
-  function guidedVendorTemplate(vendors, siteFt, isOutdoor) {
+  function guidedVendorTemplate(vendors, siteFt) {
     const els = [];
     const list = Array.isArray(vendors) ? vendors.filter(Boolean) : [];
     const W = Math.max(40, num(siteFt && siteFt.w, DEFAULT_SITE_FT.w));
@@ -279,7 +280,6 @@
         size: `${boothFt}x${boothFt}`,
       }));
     });
-    if (isOutdoor) els.push(...perimeterTrees(siteFt));
     return els;
   }
 
@@ -318,6 +318,7 @@
         ? { w: num(meta.siteFtW, DEFAULT_SITE_FT.w), h: num(meta.siteFtH, DEFAULT_SITE_FT.h) }
         : Object.assign({}, DEFAULT_SITE_FT);
       this.calibrated = !!(meta && meta.calibrated);
+      this.gridFt = clamp(num(meta && meta.gridFt, 1), 0.5, 20);
       this.bg = (meta && meta.bg) || DEFAULT_BG;     // canvas paper colour
       this.world = this.bgUrl
         ? Object.assign({}, WORLD_DEFAULT)                       // replaced on image load
@@ -360,6 +361,7 @@
       this.wireCanvas();
       this.renderSide();
       this.renderLegend();
+      this.renderMinimap();
       this.setBackground(this.bgUrl, { silent: true });
       if (!this.readOnly) {
         this.setTool('select');
@@ -417,7 +419,7 @@
         `<button type="button" class="fpb-btn ${a.primary ? 'primary' : ''}" data-action="${i}">${a.icon ? `<svg><use href="#${a.icon}"/></svg>` : ''}${esc(a.label)}</button>`).join('');
 
       const uploadBtn = o.onUploadBackground
-        ? `<label class="fpb-btn" title="Upload a venue image to trace or display behind your layout"><svg><use href="#fpb-upload"/></svg>Background<input type="file" data-ref="bgInput" accept="image/png,image/jpeg" hidden /></label>`
+        ? `<button type="button" class="fpb-btn" data-ref="backgroundBtn" title="Choose a background colour, gradient or image"><svg><use href="#fpb-upload"/></svg>Background</button><input type="file" data-ref="bgInput" accept="image/png,image/jpeg" hidden />`
         : '';
 
       return `
@@ -426,10 +428,12 @@
     <div class="fpb-toolbar-row fpb-toolbar-build">
       <div class="fpb-tools" data-ref="tools">${tools}</div>
       <label class="fpb-toggle" title="Snap to grid and to other booths"><input type="checkbox" data-ref="snapToggle" checked />Snap</label>
+      <button type="button" class="fpb-btn" data-ref="gridBtn" title="Set grid spacing"><svg><use href="#fpb-grid-ic"/></svg>Grid</button>
     </div>
     <div class="fpb-toolbar-row">
       <div class="fpb-toolbar-group"><span class="fpb-toolbar-label">Canvas</span>
         <button type="button" class="fpb-btn" data-ref="scaleBtn" title="Set the canvas scale (feet)"><svg><use href="#fpb-ruler"/></svg><span data-ref="scaleLabel">Scale</span></button>
+        <button type="button" class="fpb-btn" data-ref="templateBtn" title="Save or reuse a layout"><svg><use href="#fpb-copy"/></svg>Templates</button>
         <span class="fpb-opacity" data-ref="opacityWrap" hidden>Image <input type="range" min="10" max="100" value="100" data-ref="opacityRange" /></span>
         ${uploadBtn}
         ${o.allowTheme ? '<button type="button" class="fpb-btn" data-ref="themeBtn" title="Set the guest-facing palette, vocabulary and tone"><svg><use href="#fpb-palette"/></svg>Theme</button>' : ''}
@@ -484,7 +488,9 @@
         <button type="button" data-ref="zoomIn" title="Zoom in">＋</button>
         <button type="button" data-ref="zoomFit" title="Fit to screen">⊙</button>
         <button type="button" data-ref="zoomOut" title="Zoom out">−</button>
+        <span data-ref="zoomLabel">100%</span>
       </div>
+      <button type="button" class="fpb-minimap" data-ref="minimap" title="Map overview. Click to fit the whole layout."></button>
       <div class="fpb-empty" data-ref="empty" hidden>
         <h3>Build your event floor plan</h3>
         <p>Lay out numbered booths, stages, bars and tables on a to-scale canvas - or start from a template and rearrange it. You can add a venue photo behind it any time.</p>
@@ -492,7 +498,6 @@
           <label>Site size</label>
           <input data-ref="siteW" type="number" min="10" max="5000" value="${DEFAULT_SITE_FT.w}" /><span>×</span><input data-ref="siteH" type="number" min="10" max="5000" value="${DEFAULT_SITE_FT.h}" /><span>ft</span>
         </div>
-        <label class="fpb-toggle"><input type="checkbox" data-ref="outdoorStarter" />Outdoor site — add two perimeter trees</label>
         <div class="choices">
           <button type="button" class="choice" data-ref="startBlank"><svg><use href="#fpb-grid-ic"/></svg>Blank canvas<small>Drawn to your site size</small></button>
           <button type="button" class="choice" data-ref="startTemplate"><svg><use href="#fpb-sparkle"/></svg>Guided vendor layout<small>Uses this event's vendor list and booth numbers</small></button>
@@ -520,7 +525,11 @@
       const $ = this.$;
       $.tools.querySelectorAll('[data-tool]').forEach(b => b.addEventListener('click', () => this.setTool(b.dataset.tool)));
       $.snapToggle.addEventListener('change', () => { this.snap = $.snapToggle.checked; this.updateGridVisibility(); });
+      $.gridBtn.addEventListener('click', () => this.openGridSettings());
       if ($.scaleBtn) $.scaleBtn.addEventListener('click', () => this.openScale());
+      if ($.backgroundBtn) $.backgroundBtn.addEventListener('click', () => this.openBackground());
+      $.templateBtn.addEventListener('click', () => this.openTemplates());
+      $.minimap.addEventListener('click', () => this.fit());
       $.undoBtn.addEventListener('click', () => this.undo());
       $.redoBtn.addEventListener('click', () => this.redo());
       $.resetBtn.addEventListener('click', () => this.resetMap());
@@ -542,12 +551,6 @@
       if ($.emptyUpload) $.emptyUpload.addEventListener('change', (e) => this.uploadBackground(e.target.files[0], this.$.emptyStatus));
       if ($.startBlank) $.startBlank.addEventListener('click', () => {
         if ($.siteW && $.siteH) this.setSiteFt($.siteW.value, $.siteH.value);
-        if ($.outdoorStarter && $.outdoorStarter.checked) {
-          this.pushUndo();
-          this.elements = perimeterTrees(this.siteFt);
-          this.setDirty(true);
-          this.renderAll();
-        }
         this.showEmpty(false);
       });
       if ($.startTemplate) $.startTemplate.addEventListener('click', () => {
@@ -563,7 +566,7 @@
           };
         }
         this.world = { w: this.siteFt.w * this.ppf, h: this.siteFt.h * this.ppf };
-        this.elements = guidedVendorTemplate(this.vendors, this.siteFt, !!($.outdoorStarter && $.outdoorStarter.checked));
+        this.elements = guidedVendorTemplate(this.vendors, this.siteFt);
         this.sizeCanvas();
         this.updateGridVisibility();
         this.showEmpty(false);
@@ -606,6 +609,68 @@
       root.style.setProperty('--fpb-theme-surface', t.surface);
       root.style.setProperty('--fpb-theme-canvas', t.canvas);
       if (this.opts.onThemeChange) this.opts.onThemeChange(t);
+    }
+
+    openBackground() {
+      const wrap = document.createElement('div');
+      wrap.className = 'fpb-modal';
+      const option = (value, label) => `<button type="button" class="fpb-bg-choice${this.bg === value ? ' active' : ''}" data-bg-value="${esc(value)}"><span style="background:${esc(value)}"></span><small>${esc(label)}</small></button>`;
+      wrap.innerHTML = `<div class="fpb-modal-card fpb-background-card">
+        <h3>Map background</h3><p>Choose a canvas colour or gradient, or upload a venue map or aerial image.</p>
+        <div class="fpb-field"><span>Solid colours</span><div class="fpb-background-grid">${BACKGROUND_SOLIDS.map((v, i) => option(v, i === 0 ? 'White' : 'Colour')).join('')}</div></div>
+        <div class="fpb-field"><span>Gradients</span><div class="fpb-background-grid">${BACKGROUND_GRADIENTS.map((v) => option(v, 'Gradient')).join('')}</div></div>
+        <div class="fpb-field"><span>Custom colour</span><input type="color" data-bg-custom value="${esc(/^#[0-9a-f]{6}$/i.test(this.bg || '') ? this.bg : DEFAULT_BG)}"></div>
+        ${this.opts.onUploadBackground ? `<div class="fpb-background-upload"><button type="button" class="fpb-btn" data-upload><svg><use href="#fpb-upload"/></svg>${this.bgUrl ? 'Replace background image' : 'Upload background image'}</button>${this.bgUrl ? '<button type="button" class="fpb-btn danger" data-remove-image>Remove image</button>' : ''}</div>` : ''}
+        <div class="fpb-modal-actions"><button type="button" class="fpb-btn primary" data-close>Done</button></div>
+      </div>`;
+      document.body.appendChild(wrap);
+      const close = () => wrap.remove();
+      const setBg = (value) => {
+        this.bg = value; this.applyBg(); this.setDirty(true);
+        wrap.querySelectorAll('[data-bg-value]').forEach(b => b.classList.toggle('active', b.dataset.bgValue === value));
+      };
+      wrap.querySelectorAll('[data-bg-value]').forEach(b => b.addEventListener('click', () => setBg(b.dataset.bgValue)));
+      wrap.querySelector('[data-bg-custom]').addEventListener('input', e => setBg(e.target.value));
+      const upload = wrap.querySelector('[data-upload]');
+      if (upload) upload.addEventListener('click', () => { close(); this.$.bgInput.click(); });
+      const remove = wrap.querySelector('[data-remove-image]');
+      if (remove) remove.addEventListener('click', () => { this.setBackground(null); close(); this.status('Background image removed.'); });
+      wrap.querySelector('[data-close]').addEventListener('click', close);
+      wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+    }
+
+    openGridSettings() {
+      const wrap = document.createElement('div');
+      wrap.className = 'fpb-modal';
+      wrap.innerHTML = `<div class="fpb-modal-card"><h3>Grid settings</h3><p>Choose the precision used for snapping and keyboard placement.</p><div class="fpb-field"><label>Grid spacing (ft)</label><select data-grid>${[0.5, 1, 2, 5, 10].map(v => `<option value="${v}"${this.gridFt === v ? ' selected' : ''}>${v} ft</option>`).join('')}</select></div><div class="fpb-modal-actions"><button type="button" class="fpb-btn" data-close>Cancel</button><button type="button" class="fpb-btn primary" data-apply>Apply</button></div></div>`;
+      document.body.appendChild(wrap);
+      const close = () => wrap.remove();
+      wrap.querySelector('[data-close]').addEventListener('click', close);
+      wrap.querySelector('[data-apply]').addEventListener('click', () => { this.gridFt = Number(wrap.querySelector('[data-grid]').value) || 1; this.updateGridVisibility(); this.setDirty(true); close(); });
+      wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+    }
+
+    openTemplates() {
+      const key = 'troddr:floorplan:templates:v1';
+      let saved = []; try { saved = JSON.parse(localStorage.getItem(key) || '[]'); } catch (_) {}
+      const wrap = document.createElement('div'); wrap.className = 'fpb-modal';
+      const rows = saved.length ? saved.map((t, i) => `<div class="fpb-template-row"><div><strong>${esc(t.name)}</strong><small>${esc(t.elements.length)} items</small></div><button type="button" class="fpb-btn" data-use="${i}">Use</button><button type="button" class="fpb-btn danger" data-delete="${i}">Delete</button></div>`).join('') : '<div class="fpb-helper">No saved templates yet.</div>';
+      wrap.innerHTML = `<div class="fpb-modal-card"><h3>Layout templates</h3><p>Reuse a layout structure for another event. Vendor assignments are removed when a template is applied.</p><div class="fpb-template-list">${rows}</div><div class="fpb-field-row"><label class="fpb-field"><span>Template name</span><input data-name maxlength="50" placeholder="e.g. Outdoor food village"></label><button type="button" class="fpb-btn" data-save>Save current layout</button></div><div class="fpb-modal-actions"><button type="button" class="fpb-btn primary" data-close>Done</button></div></div>`;
+      document.body.appendChild(wrap); const close = () => wrap.remove();
+      wrap.querySelector('[data-close]').addEventListener('click', close);
+      wrap.querySelector('[data-save]').addEventListener('click', () => {
+        const name = wrap.querySelector('[data-name]').value.trim(); if (!name) return;
+        saved.push({ name, siteFt: this.siteFt, bg: this.bg, elements: this.elements.map(el => Object.assign({}, el, { vendor_id: null })) });
+        localStorage.setItem(key, JSON.stringify(saved.slice(-20))); close(); this.status('Layout template saved.', 'success');
+      });
+      wrap.querySelectorAll('[data-use]').forEach(btn => btn.addEventListener('click', () => {
+        const t = saved[Number(btn.dataset.use)]; if (!t) return;
+        this.pushUndo(); this.siteFt = Object.assign({}, t.siteFt || DEFAULT_SITE_FT); this.bg = t.bg || DEFAULT_BG;
+        this.elements = (t.elements || []).map(el => normalizeElement(Object.assign({}, el, { id: uid(), vendor_id: null, locked: false })));
+        this.setBackground(null, { silent: true }); this.setDirty(true); this.showEmpty(false); this.renderAll(); close(); this.status('Template applied. Add this event\'s vendors and save when ready.', 'success');
+      }));
+      wrap.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => { saved.splice(Number(btn.dataset.delete), 1); localStorage.setItem(key, JSON.stringify(saved)); close(); this.openTemplates(); }));
+      wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
     }
 
     openTheme() {
@@ -943,7 +1008,7 @@
     // Recompute the foot grid backing image from the current scale.
     updateGrid() {
       if (!this.$.grid) return;
-      const minor = this.ppf, major = this.ppf * GRID_MAJOR_FT;
+      const minor = this.ppf * this.gridFt, major = this.ppf * Math.max(GRID_MAJOR_FT, this.gridFt * 5);
       this.$.grid.style.backgroundImage =
         'linear-gradient(to right, rgba(14,80,140,0.18) 1px, transparent 1px),' +
         'linear-gradient(to bottom, rgba(14,80,140,0.18) 1px, transparent 1px),' +
@@ -1269,6 +1334,11 @@
         startX: start ? start.x : 0,
         startY: start ? start.y : 0,
       });
+      const updateZoom = () => { if (this.$.zoomLabel) this.$.zoomLabel.textContent = `${Math.round(this.scale() * 100)}%`; };
+      if (this._zoomUpdate) this.$.canvas.removeEventListener('panzoomchange', this._zoomUpdate);
+      this._zoomUpdate = updateZoom;
+      this.$.canvas.addEventListener('panzoomchange', this._zoomUpdate);
+      requestAnimationFrame(updateZoom);
       if (!this._wheel) {
         this._wheel = (e) => this.panzoom && this.panzoom.zoomWithWheel(e);
         this.$.viewport.addEventListener('wheel', this._wheel);
@@ -1301,7 +1371,7 @@
     scale() { return this.panzoom ? this.panzoom.getScale() : 1; }
 
     // ── Feet ⇄ canvas conversions (ppf = px per foot) ───────
-    snapWorld(px) { return Math.round(px / this.ppf) * this.ppf; }   // snap world px to 1 ft
+    snapWorld(px) { const step = this.ppf * this.gridFt; return Math.round(px / step) * step; }
     ftToFracW(ft) { return (ft * this.ppf) / this.world.w; }
     ftToFracH(ft) { return (ft * this.ppf) / this.world.h; }
     elWidthFt(el) { return el.w * this.world.w / this.ppf; }
@@ -1442,7 +1512,7 @@
     // Move (drag) the grabbed element - and any multi-selection / connected run with it.
     startMove(e, grabbedId) {
       const el = this.byId(grabbedId || this.selectedId);
-      if (!el) return;
+      if (!el || el.locked) return;
       e.preventDefault();
       this.panzoom.setOptions({ disablePan: true });
       const start = { cx: e.clientX, cy: e.clientY, x: el.x, y: el.y };
@@ -1450,8 +1520,8 @@
       // A zone is a visual boundary, never a parent container: moving or
       // reshaping it must not move booths, labels, or objects inside it.
       const followerSet = new Set(this._sel.filter(id => id !== el.id));
-      if (el.type === 'shape' && el.groupId) {
-        this.elements.forEach(o => { if (o.type === 'shape' && o.groupId === el.groupId && o !== el) followerSet.add(o.id); });
+      if (el.groupId) {
+        this.elements.forEach(o => { if (o.groupId === el.groupId && o !== el) followerSet.add(o.id); });
       }
       const single = followerSet.size === 0;
       const group = [...followerSet].map(id => this.byId(id)).filter(Boolean).map(o => ({ o, dx: o.x - el.x, dy: o.y - el.y }));
@@ -1494,7 +1564,7 @@
     // Move a zone's title chip independently of its boundary and contents.
     startZoneLabelMove(e, zoneId) {
       const el = this.byId(zoneId);
-      if (!el || el.type !== 'zone') return;
+      if (!el || el.type !== 'zone' || el.locked) return;
       e.preventDefault(); e.stopPropagation();
       this.panzoom.setOptions({ disablePan: true });
       const start = { cx: e.clientX, cy: e.clientY, x: num(el.labelX, 0.5), y: num(el.labelY, 0.12) };
@@ -1548,7 +1618,7 @@
     isConnect(el) { return el && el.type === 'shape' && OBJ_BY_KIND[el.kind] && OBJ_BY_KIND[el.kind].connect; }
     startRotate(e) {
       const el = this.byId(this.selectedId);
-      if (!this.isRotatable(el)) return;
+      if (!this.isRotatable(el) || el.locked) return;
       e.preventDefault(); e.stopPropagation();
       this.panzoom.setOptions({ disablePan: true });
       this.pushUndo();
@@ -1621,7 +1691,7 @@
     // Resize via handles.
     startResize(e, dir) {
       const el = this.byId(this.selectedId);
-      if (!el || el.type === 'pin') return;
+      if (!el || el.type === 'pin' || el.locked) return;
       if (el.type === 'text') { this.startTextResize(e); return; }
       e.preventDefault(); e.stopPropagation();
       this.panzoom.setOptions({ disablePan: true });
@@ -1962,9 +2032,10 @@
         if (!meta && toolKeys[e.key.toLowerCase()]) { this.setTool(toolKeys[e.key.toLowerCase()]); return; }
         if (e.key.startsWith('Arrow') && this._sel.length) {
           e.preventDefault();
-          const step = (e.shiftKey ? this.ppf : 2);   // Shift = 1 ft nudge
+          const step = e.shiftKey ? this.ppf * 0.1 : this.ppf * this.gridFt;
           this.pushUndo(true);
           this.selectedEls().forEach(el => {
+            if (el.locked) return;
             if (e.key === 'ArrowLeft') el.x -= step / this.world.w;
             if (e.key === 'ArrowRight') el.x += step / this.world.w;
             if (e.key === 'ArrowUp') el.y -= step / this.world.h;
@@ -2041,9 +2112,18 @@
 
     renderAll() {
       this.renderElements();
+      this.renderMinimap();
       this.renderSide();
       this.renderLegend();
       this.updateUndoButtons();
+    }
+
+    renderMinimap() {
+      if (!this.$.minimap) return;
+      this.$.minimap.innerHTML = this.elements.filter(el => !el.hidden).map(el => {
+        const w = Math.max(2, (el.w || 0.012) * 100), h = Math.max(2, (el.h || 0.012) * 100);
+        return `<i style="left:${el.x * 100}%;top:${el.y * 100}%;width:${w}%;height:${h}%;background:${esc(el.color || '#64748b')}"></i>`;
+      }).join('');
     }
 
     positionElementDiv(el) {
@@ -2068,12 +2148,12 @@
       // Box rotation + counter-rotation that keeps labels upright.
       const tf = (el) => el.rot ? `transform:rotate(${el.rot}deg);` : '';
       const up = (el) => el.rot ? `transform:rotate(${-el.rot}deg);` : '';
-      const handles = (el, corners) => (this.readOnly || !single || el.id !== this.selectedId) ? '' :
+      const handles = (el, corners) => (this.readOnly || el.locked || !single || el.id !== this.selectedId) ? '' :
         (corners ? ['nw', 'ne', 'se', 'sw'] : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'])
           .map(h => `<i class="fpb-h" data-h="${h}"></i>`).join('')
         + (this.isRotatable(el) ? '<i class="fpb-rot-h" title="Rotate"></i>' : '');
 
-      this.$.els.innerHTML = this.elements.map(el => {
+      this.$.els.innerHTML = this.elements.filter(el => !el.hidden).map(el => {
         const sel = this.isSelected(el.id) ? ' selected' : '';
         if (el.type === 'booth') {
           const wpx = el.w * W, hpx = el.h * H;
@@ -2173,6 +2253,19 @@
       }
       side.innerHTML = `${this.unplacedVendorsHtml()}<h3>Layout</h3>${this.listHtml()}`;
       side.querySelectorAll('li[data-id]').forEach(li => li.addEventListener('click', () => this.select(li.dataset.id)));
+      side.querySelectorAll('[data-layer-action]').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const el = this.byId(btn.closest('[data-id]').dataset.id); if (!el) return;
+        const action = btn.dataset.layerAction;
+        this.pushUndo();
+        if (action === 'hide') el.hidden = !el.hidden;
+        if (action === 'lock') el.locked = !el.locked;
+        if (action === 'up' || action === 'down') {
+          const i = this.elements.indexOf(el), next = clamp(i + (action === 'up' ? 1 : -1), 0, this.elements.length - 1);
+          this.elements.splice(i, 1); this.elements.splice(next, 0, el);
+        }
+        this.setDirty(true); this.renderAll();
+      }));
       side.querySelectorAll('[data-vendor]').forEach(btn => btn.addEventListener('click', () => {
         const v = this.vendors.find(v => String(v.event_vendor_id || v.vendor_id) === btn.dataset.vendor);
         if (v) this.placeVendorBooth(v);
@@ -2201,6 +2294,9 @@
           <button type="button" class="fpb-btn" data-dist="v">Vertically</button>
         </div></div>
         <div class="fpb-actions">
+          <button type="button" class="fpb-btn" data-m="group">Group</button>
+          <button type="button" class="fpb-btn" data-m="ungroup">Ungroup</button>
+          <button type="button" class="fpb-btn" data-m="repeat">Repeat</button>
           <button type="button" class="fpb-btn" data-m="rot">Rotate 90°</button>
           <button type="button" class="fpb-btn" data-m="dup"><svg><use href="#fpb-copy"/></svg>Duplicate</button>
           <button type="button" class="fpb-btn danger" data-m="del"><svg><use href="#fpb-trash"/></svg>Delete</button>
@@ -2211,6 +2307,9 @@
       side.querySelectorAll('[data-al]').forEach(b => b.addEventListener('click', () => this.alignSelection(b.dataset.al)));
       side.querySelectorAll('[data-dist]').forEach(b => b.addEventListener('click', () => this.distributeSelection(b.dataset.dist)));
       side.querySelector('[data-m="rot"]').addEventListener('click', () => { this.pushUndo(); this.selectedEls().forEach(el => { if (el.rot != null) el.rot = (((el.rot + 90) % 360) + 360) % 360; }); this.setDirty(true); this.renderElements(); });
+      side.querySelector('[data-m="group"]').addEventListener('click', () => this.groupSelection());
+      side.querySelector('[data-m="ungroup"]').addEventListener('click', () => this.ungroupSelection());
+      side.querySelector('[data-m="repeat"]').addEventListener('click', () => this.openRepeat());
       side.querySelector('[data-m="dup"]').addEventListener('click', () => this.duplicateSelection());
       side.querySelector('[data-m="del"]').addEventListener('click', () => { this.pushUndo(); const ids = new Set(this._sel); this.elements = this.elements.filter(e => !ids.has(e.id)); this._sel = []; this.setDirty(true); this.renderAll(); });
     }
@@ -2251,6 +2350,39 @@
       this.elements.push(...copies);
       this._sel = copies.map(c => c.id);
       this.setDirty(true); this.renderAll();
+    }
+
+    groupSelection() {
+      const els = this.selectedEls(); if (els.length < 2) return;
+      this.pushUndo(); const groupId = `manual_${uid()}`;
+      els.forEach(el => { el.groupId = groupId; });
+      this.setDirty(true); this.renderAll();
+    }
+
+    ungroupSelection() {
+      const els = this.selectedEls(); if (!els.length) return;
+      this.pushUndo(); els.forEach(el => { el.groupId = null; });
+      this.setDirty(true); this.renderAll();
+    }
+
+    openRepeat() {
+      const selected = this.selectedEls(); if (!selected.length) return;
+      const wrap = document.createElement('div'); wrap.className = 'fpb-modal';
+      wrap.innerHTML = `<div class="fpb-modal-card"><h3>Repeat selection</h3><p>Create evenly spaced copies of the selected item or group.</p><div class="fpb-field-row"><label class="fpb-field"><span>Copies</span><input data-repeat="count" type="number" min="1" max="50" value="3"></label><label class="fpb-field"><span>Horizontal step (ft)</span><input data-repeat="x" type="number" step="0.5" value="12"></label><label class="fpb-field"><span>Vertical step (ft)</span><input data-repeat="y" type="number" step="0.5" value="0"></label></div><div class="fpb-modal-actions"><button type="button" class="fpb-btn" data-close>Cancel</button><button type="button" class="fpb-btn primary" data-apply>Create copies</button></div></div>`;
+      document.body.appendChild(wrap); const close = () => wrap.remove();
+      wrap.querySelector('[data-close]').addEventListener('click', close);
+      wrap.querySelector('[data-apply]').addEventListener('click', () => {
+        const count = clamp(num(wrap.querySelector('[data-repeat="count"]').value, 1), 1, 50);
+        const dx = num(wrap.querySelector('[data-repeat="x"]').value) * this.ppf / this.world.w;
+        const dy = num(wrap.querySelector('[data-repeat="y"]').value) * this.ppf / this.world.h;
+        this.pushUndo(); const copies = []; let nextBooth = this.nextBoothNumber();
+        for (let i = 1; i <= count; i++) {
+          const groupId = selected.length > 1 ? `manual_${uid()}` : null;
+          selected.forEach(source => { const copy = JSON.parse(JSON.stringify(source)); copy.id = uid(); copy.x = clamp(source.x + dx * i, 0, 1); copy.y = clamp(source.y + dy * i, 0, 1); copy.groupId = groupId; copy.locked = false; if (copy.type === 'booth') { copy.number = nextBooth++; copy.vendor_id = null; } copies.push(copy); });
+        }
+        this.elements.push(...copies); this._sel = copies.map(c => c.id); this.setDirty(true); this.renderAll(); close();
+      });
+      wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
     }
 
     // Checklist of vendors that don't have an element on the map yet.
@@ -2328,9 +2460,10 @@
           } else if (el.type === 'zone') { name = esc(el.label || 'Zone'); }
           else if (el.type === 'text') { name = esc(el.label || '(empty text)'); dotCls += ' round'; color = '#ddd'; }
           else { name = esc(el.label || (cat ? cat.label : 'Pin')); meta = cat ? cat.label : ''; dotCls += ' round'; }
-          return `<li class="item${active}" data-id="${el.id}">
+          return `<li class="item${active}${el.hidden ? ' layer-hidden' : ''}" data-id="${el.id}">
             <span class="${dotCls}" style="background:${esc(color)}"></span>
             <div style="flex:1;min-width:0;"><div class="name">${name}</div>${meta ? `<div class="meta">${esc(meta)}</div>` : ''}</div>
+            <span class="fpb-layer-actions"><button type="button" data-layer-action="hide" title="${el.hidden ? 'Show' : 'Hide'}">${el.hidden ? '◌' : '●'}</button><button type="button" data-layer-action="lock" title="${el.locked ? 'Unlock' : 'Lock'}">${el.locked ? '🔒' : '○'}</button><button type="button" data-layer-action="down" title="Send backward">↓</button><button type="button" data-layer-action="up" title="Bring forward">↑</button></span>
           </li>`;
         }).join('');
       });
@@ -2369,10 +2502,12 @@
         </div></div>`;
       const actions = (extra) => `<div class="fpb-actions">
           <button type="button" class="fpb-btn" data-f="done">Done</button>
+          <button type="button" class="fpb-btn${el.locked ? ' active' : ''}" data-f="lock" title="${el.locked ? 'Unlock this item' : 'Lock this item in place'}">${el.locked ? 'Unlock' : 'Lock'}</button>
           ${extra || ''}
           <button type="button" class="fpb-btn" data-f="dup" title="Duplicate (Ctrl+D)"><svg><use href="#fpb-copy"/></svg></button>
           <button type="button" class="fpb-btn danger" data-f="del" title="Delete"><svg><use href="#fpb-trash"/></svg></button>
         </div>`;
+      const positionFields = `<div class="fpb-field"><label>Position from top left (ft)</label><div class="fpb-field-row fpb-position-row"><input data-f="posX" type="number" min="0" max="${Math.round(this.world.w / this.ppf)}" step="0.5" value="${Math.round(el.x * this.world.w / this.ppf * 10) / 10}" aria-label="X position"/><span class="fpb-x">X</span><input data-f="posY" type="number" min="0" max="${Math.round(this.world.h / this.ppf)}" step="0.5" value="${Math.round(el.y * this.world.h / this.ppf * 10) / 10}" aria-label="Y position"/><span class="fpb-x">Y</span></div></div>`;
 
       if (el.type === 'booth') {
         return `<h3>Booth</h3>
@@ -2391,6 +2526,7 @@
             ${f('Label rotation (°)', `<input data-f="labelRot" type="number" min="-180" max="180" step="1" value="${num(el.labelRot)}"/>`)}
           </div>
           ${sizeFields}
+          ${positionFields}
           ${rotControl()}
           ${f('Notes (optional)', `<textarea data-f="desc" rows="2" maxlength="240">${esc(el.description || '')}</textarea>`)}
           ${actions()}`;
@@ -2409,6 +2545,7 @@
             ${f('Label rotation (°)', `<input data-f="labelRot" type="number" min="-180" max="180" step="1" value="${num(el.labelRot)}"/>`)}
           </div>
           ${colorRow(ZONE_COLORS, '#b03a2e')}
+          ${positionFields}
           ${rotControl()}
           ${f('Notes (optional)', `<textarea data-f="desc" rows="2" maxlength="240">${esc(el.description || '')}</textarea>`)}
           ${actions()}`;
@@ -2428,6 +2565,7 @@
             ${f('Show label', `<select data-f="showLabel"><option value="yes"${el.showLabel !== false ? ' selected' : ''}>Show</option><option value="no"${el.showLabel === false ? ' selected' : ''}>Hide</option></select>`)}
           </div>
           ${sizeControl(o.connect ? 'Length × depth' : 'Size', presets)}
+          ${positionFields}
           ${rotControl()}
           ${colorRow(palette, o.color)}
           ${o.connect ? (groupCount > 1
@@ -2444,6 +2582,7 @@
             ${f('Size', `<select data-f="tsize">${TEXT_SIZES.map(s => `<option value="${s.v}"${s.id === cur.id ? ' selected' : ''}>${s.label}</option>`).join('')}</select>`)}
             ${f('Colour', `<input data-f="colorPick" type="color" value="${esc(/^#[0-9a-f]{6}$/i.test(el.color || '') ? el.color : '#111111')}"/>`)}
           </div>
+          ${positionFields}
           ${rotControl()}
           ${actions()}`;
       }
@@ -2453,6 +2592,7 @@
         ${f('Category', `<select data-f="cat">${catOptions}</select>`)}
         ${this.vendors.length ? f('Vendor (optional)', `<select data-f="vendor">${vendorOptions}</select>`) : ''}
         ${f('Booth number (optional)', `<input data-f="booth" type="text" maxlength="20" value="${esc(el.booth || '')}"/>`)}
+        ${positionFields}
         ${f('Description (optional)', `<textarea data-f="desc" rows="2" maxlength="240">${esc(el.description || '')}</textarea>`)}
         ${actions()}`;
     }
@@ -2460,6 +2600,11 @@
     wireEditForm(el) {
       const side = this.$.side;
       const q = (f) => side.querySelector(`[data-f="${f}"]`);
+      if (el.locked) {
+        side.querySelectorAll('input, select, textarea, button[data-size], button[data-zc], button[data-f]').forEach(node => {
+          if (!['lock', 'done', 'del'].includes(node.dataset.f || '')) node.disabled = true;
+        });
+      }
       const apply = () => {
         this.pushUndo(true);
         if (q('label')) el.label = q('label').value.trim();
@@ -2482,6 +2627,8 @@
         if (q('desc')) el.description = q('desc').value.trim();
         if (q('tsize')) el.fontSize = Number(q('tsize').value) || 0.016;
         if (q('rot')) { const r = parseInt(q('rot').value, 10); if (Number.isFinite(r)) el.rot = ((r % 360) + 360) % 360; }
+        if (q('posX')) el.x = clamp(num(q('posX').value) * this.ppf / this.world.w, 0, 1);
+        if (q('posY')) el.y = clamp(num(q('posY').value) * this.ppf / this.world.h, 0, 1);
         if (q('colorPick') && el.type !== 'zone') el.color = q('colorPick').value;
         if (q('sizeW') || q('sizeD')) {
           const w = parseFloat(q('sizeW').value), d = parseFloat(q('sizeD').value);
@@ -2548,6 +2695,9 @@
         this.pushUndo();
         el.groupId = null;
         this.setDirty(true); this.renderAll();
+      });
+      if (q('lock')) q('lock').addEventListener('click', () => {
+        this.pushUndo(); el.locked = !el.locked; this.setDirty(true); this.renderAll();
       });
       q('done').addEventListener('click', () => { this.selectedId = null; this.renderAll(); });
       q('dup').addEventListener('click', () => this.duplicateSelected());
@@ -2624,13 +2774,14 @@
         id: 'meta', type: 'meta',
         ppf: this.ppf, worldW: this.world.w, worldH: this.world.h,
         siteFtW: this.siteFt.w, siteFtH: this.siteFt.h, calibrated: !!this.calibrated,
+        gridFt: this.gridFt,
         bg: this.bg || DEFAULT_BG,
         theme: this.theme,
       };
     }
     serialize() {
       const els = this.elements.map(el => {
-        const base = { id: el.id, type: el.type, x: el.x, y: el.y };
+        const base = { id: el.id, type: el.type, x: el.x, y: el.y, locked: !!el.locked, hidden: !!el.hidden, groupId: el.groupId || null };
         if (el.type === 'pin') return Object.assign(base, {
           label: el.label || '', icon: el.icon || DEFAULT_CAT, color: el.color || CAT_BY_ID[DEFAULT_CAT].color,
           vendor_id: el.vendor_id || null, booth: el.booth || '', size: el.size || '', description: el.description || '',
@@ -2680,7 +2831,14 @@
       const cv = document.createElement('canvas');
       cv.width = W; cv.height = H;
       const ctx = cv.getContext('2d');
-      ctx.fillStyle = this.bg || '#ffffff';
+      const bg = this.bg || '#ffffff';
+      const gradient = bg.match(/^linear-gradient\((\d+)deg,\s*(#[0-9a-f]{6})(?:\s+\d+%)?,\s*(#[0-9a-f]{6})(?:\s+\d+%)?\)$/i);
+      if (gradient) {
+        const angle = Number(gradient[1]) * Math.PI / 180;
+        const dx = Math.sin(angle), dy = -Math.cos(angle);
+        const g = ctx.createLinearGradient(W / 2 - dx * W / 2, H / 2 - dy * H / 2, W / 2 + dx * W / 2, H / 2 + dy * H / 2);
+        g.addColorStop(0, gradient[2]); g.addColorStop(1, gradient[3]); ctx.fillStyle = g;
+      } else ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
 
       if (this.bgUrl) {
