@@ -135,10 +135,12 @@
         return;
       }
       if (!data) {
-        // No row matched the token : it's either expired, revoked, or never existed.
-        showError(new Error('No capabilities returned for this token'),
-          "We couldn't sign you in",
-          "Your access token may have expired or been revoked. Reply to any TRODDR email and we'll send a fresh link.");
+        // A stale token in local/session storage used to strand visitors on a
+        // technical error screen. Remove it (and an invalid query token, if
+        // present), then reload so PartnerAuth shows the access-code form.
+        window.PartnerAuth?.clearToken();
+        window.PartnerAuth?.cleanPartnerTokenFromUrl();
+        window.location.reload();
         return;
       }
 
