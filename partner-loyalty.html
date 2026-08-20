@@ -614,6 +614,16 @@
     border-radius: var(--radius-lg);
     overflow: hidden;
   }
+  .redemption-verify { background: linear-gradient(135deg, #071f24, #0b3035); color: #fff; border-radius: var(--radius-lg); padding: 18px; margin-bottom: 12px; }
+  .redemption-verify h3 { margin: 0 0 4px; font-size: 17px; }
+  .redemption-verify p { margin: 0 0 13px; color: rgba(255,255,255,.7); font-size: 12px; }
+  .redemption-verify-form { display: grid; grid-template-columns: minmax(150px, 220px) minmax(160px, 1fr) auto; gap: 9px; }
+  .redemption-verify input { min-height: 42px; border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm); background: rgba(255,255,255,.1); color: #fff; padding: 9px 11px; font: inherit; }
+  .redemption-verify input::placeholder { color: rgba(255,255,255,.48); }
+  #redemption-code { text-transform: uppercase; letter-spacing: .18em; font-weight: 800; }
+  .redemption-verify-status { display: block; min-height: 18px; margin-top: 9px; font-size: 12px; color: rgba(255,255,255,.78); }
+  .redemption-verify-status.error { color: #ffb4ab; }
+  .redemption-verify-status.ok { color: #86efac; }
   .report-toolbar {
     background: #fff;
     border: 1px solid var(--border);
@@ -709,6 +719,7 @@
   }
   @media (max-width: 780px) {
     .redemption-row { grid-template-columns: 1fr; gap: 8px; }
+    .redemption-verify-form { grid-template-columns: 1fr; }
   }
 
   /* ── FUNNEL ─────────────────────────────────────────────── */
@@ -2159,6 +2170,7 @@
     const host = $('redemptions-card');
     if (!host) return;
 
+    const verifier = `<div class="redemption-verify"><h3>Confirm a customer reward</h3><p>Enter the live six-character code shown in the customer’s TRODDR app.</p><div class="redemption-verify-form"><input id="redemption-code" maxlength="6" autocomplete="off" placeholder="CODE" aria-label="Redemption code"><input id="redemption-staff" maxlength="80" autocomplete="name" placeholder="Staff name (optional)" aria-label="Staff name"><button class="report-btn primary" id="btn-confirm-redemption" type="button">Confirm redemption</button></div><span class="redemption-verify-status" id="redemption-verify-status" aria-live="polite"></span></div>`;
     const toolbar = `
       <div class="report-toolbar">
         <div class="report-field">
@@ -2173,6 +2185,7 @@
 
     if (!redemptions.length) {
       host.innerHTML = `
+        ${verifier}
         ${toolbar}
         <div class="state" style="text-align:left;">
           <div class="state-title">No recorded redemptions yet</div>
@@ -2181,11 +2194,11 @@
             Existing completed-cycle totals are still shown on member cards, but historical dates only appear once redemptions are recorded in the ledger.
           </p>
         </div>`;
-      bindReportActions();
+      bindRedemptionActions();
       return;
     }
 
-    host.innerHTML = `${toolbar}<div class="redemption-list">
+    host.innerHTML = `${verifier}${toolbar}<div class="redemption-list">
       ${redemptions.map(r => `
         <div class="redemption-row">
           <div>
@@ -2203,7 +2216,27 @@
           </div>
         </div>`).join('')}
     </div>`;
+    bindRedemptionActions();
+  }
+
+  function bindRedemptionActions() {
     bindReportActions();
+    const button = $('btn-confirm-redemption');
+    const codeInput = $('redemption-code');
+    const staffInput = $('redemption-staff');
+    const status = $('redemption-verify-status');
+    if (!button || !codeInput || !status) return;
+    const confirm = async () => {
+      const code = codeInput.value.trim().toUpperCase();
+      if (!/^[A-F0-9]{6}$/.test(code)) { status.textContent = 'Enter the complete six-character code.'; status.className = 'redemption-verify-status error'; return; }
+      button.disabled = true; status.textContent = 'Checking code...'; status.className = 'redemption-verify-status';
+      const { data, error } = await db.rpc('confirm_loyalty_redemption_by_code', { p_token: partnerToken, p_code: code, p_redeemed_by: staffInput.value.trim() || null });
+      if (error || !data?.ok) { status.textContent = (error && error.message) || data?.error || 'Could not confirm this reward.'; status.className = 'redemption-verify-status error'; button.disabled = false; return; }
+      status.textContent = `${data.reward || 'Reward'} confirmed. Card ${data.cycle_number || ''} is complete.`; status.className = 'redemption-verify-status ok';
+      setTimeout(async () => { try { await refreshDashboardAfterSave(); } catch (_) {} }, 900);
+    };
+    button.addEventListener('click', confirm);
+    codeInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirm(); });
   }
 
   function bindReportActions() {
@@ -2269,6 +2302,9 @@
     w.document.open();
     w.document.write(doc);
     w.document.close();
+    w.addEventListener('load', () => {
+      w.setTimeout(() => w.print(), 250);
+    }, { once: true });
   }
 
   function reportHead(payload, title) {
@@ -2344,7 +2380,6 @@
         ${redemptionsTable(rows)}
         <div class="sign"><div class="line">Staff sign-off</div><div class="line">Manager sign-off</div></div>
         <div class="foot">TRODDR · Redemption report · troddr.com</div>
-        <script>window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 250); });<\/script>
       </body></html>`;
       reportWindow(doc);
       setReportStatus('Report opened', '');
@@ -2370,7 +2405,6 @@
         <h2>Cards Not Yet Redeemed</h2>
         ${openCardsTable(cards, payload.program)}
         <div class="foot">TRODDR · Open card export · troddr.com</div>
-        <script>window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 250); });<\/script>
       </body></html>`;
       reportWindow(doc);
       setReportStatus('Open cards report opened', '');

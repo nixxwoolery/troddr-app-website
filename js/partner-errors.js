@@ -75,6 +75,21 @@
       test: (s) => /function .* does not exist/.test(s),
       msg:  "We're updating this feature. Please try again in a minute, or send us a message.",
     },
+    // PostgREST can't find the function in its schema cache (PGRST202) — usually
+    // a just-deployed RPC the cache hasn't picked up yet.
+    {
+      test: (s) => /could not find the function/.test(s)
+                || /schema cache/.test(s)
+                || /pgrst202/.test(s),
+      msg:  "We're finishing an update to this feature. Please try again in a minute, or send us a message and we'll take a look.",
+    },
+    // Duplicate/overloaded RPC — PostgREST can't pick one (PGRST203).
+    {
+      test: (s) => /best candidate function/.test(s)
+                || /could not choose/.test(s)
+                || /pgrst203/.test(s),
+      msg:  "We couldn't save that just now while we finish an update. Please try again shortly, or send us a message.",
+    },
     {
       test: (s) => /invalid input syntax/.test(s) || /syntax error/.test(s) || /malformed/.test(s),
       msg:  "One of the inputs couldn't be processed. Refresh and try again, or send us a message.",

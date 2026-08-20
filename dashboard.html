@@ -153,10 +153,14 @@
           return;
         }
 
-        // Single-entity partner : route straight to that entity's dashboard.
-        const target = data.type === 'event'
-          ? '/partner/event'
-          : '/partner/listing';
+        // Single-entity partner: open the most relevant section in the shared
+        // dashboard. Loyalty-only partners should not be forced into Listing.
+        const capabilities = data.capabilities || {};
+        let target = '/partner/listing';
+        if (data.type === 'event') target = '/partner/event';
+        else if (!capabilities.listing && capabilities.loyalty) target = '/partner/loyalty';
+        else if (!capabilities.listing && capabilities.feedback) target = '/partner/feedback';
+        else if (!capabilities.listing && capabilities.bookings) target = '/partner/bookings';
         window.PartnerAuth?.navigate(target, token);
       } catch (e) {
         console.error('[dashboard] navigate failed:', e);

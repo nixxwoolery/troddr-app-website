@@ -8,7 +8,7 @@
  * structure is identical on every page. There are two trees:
  *
  *   • NAV_INDIVIDUAL - shown on every single-location page
- *     (Listing, Insights & Feedback, Booking, Promote,
+ *     (Listing, Insights & Feedback, Booking, Loyalty & Rewards,
  *      Specials & Promotions, Account, Event)
  *
  *   • NAV_GROUP - shown on the group landing (/partner/group)
@@ -86,7 +86,13 @@
     { group: 'Booking', icon: 'ic-calendar', page: '/partner/bookings', cap: 'bookings', children: [
       { label: 'Booking Requests', section: 'view-main' },
     ] },
-    { group: 'Promote', icon: 'ic-megaphone', page: '/partner/loyalty', cap: 'loyalty' },
+    { group: 'Loyalty & Rewards', icon: 'ic-star', page: '/partner/loyalty', cap: 'loyalty', children: [
+      { label: 'Program Settings', section: 'settings' },
+      { label: 'Member Insights',  section: 'health' },
+      { label: 'Members',          section: 'members' },
+      { label: 'Redemptions',      section: 'redemptions' },
+      { label: 'Estimated Impact', section: 'revenue' },
+    ] },
     { group: 'Insider Perks', icon: 'ic-ticket', page: '/partner/perks', cap: 'loyalty' },
     { group: 'Specials & Promotions', icon: 'ic-tag', page: '/partner/specials', cap: 'specials', children: [
       { label: 'Specials Summary',     section: 'summary' },

@@ -4760,9 +4760,9 @@
       // and update, including the zone field.
       const { data, error } = await db.rpc('upsert_event_vendor', payload);
       if (error || !data || !data.ok) {
-        const msg = (error && (error.message || error.code)) || (data && data.error) || 'Could not save changes.';
         status.className = 've-status error';
-        status.textContent = msg;
+        status.textContent = (window.friendlyError || ((e, fb) => fb || 'Could not save changes.'))(
+          error || (data && data.error), 'Could not save changes.');
         return;
       }
       const savedEventVendorId = data.event_vendor_id || payload.p_event_vendor_id;
@@ -4774,9 +4774,9 @@
         });
         if (scheduleRes.error || !scheduleRes.data || scheduleRes.data.ok === false) {
           status.className = 've-status error';
-          status.textContent = (scheduleRes.error && (scheduleRes.error.message || scheduleRes.error.code))
-            || (scheduleRes.data && scheduleRes.data.error)
-            || 'Vendor saved, but the availability note could not be saved. Press Save to retry.';
+          status.textContent = (window.friendlyError || ((e, fb) => fb))(
+            scheduleRes.error || (scheduleRes.data && scheduleRes.data.error),
+            'Vendor saved, but the availability note could not be saved. Press Save to retry.');
           _editingVendor.event_vendor_id = savedEventVendorId;
           return;
         }
@@ -4788,9 +4788,9 @@
         });
         if (coordinateRes.error || !coordinateRes.data || coordinateRes.data.ok === false) {
           status.className = 've-status error';
-          status.textContent = (coordinateRes.error && (coordinateRes.error.message || coordinateRes.error.code))
-            || (coordinateRes.data && coordinateRes.data.error)
-            || 'Vendor saved, but the precise location could not be saved. Press Save to retry.';
+          status.textContent = (window.friendlyError || ((e, fb) => fb))(
+            coordinateRes.error || (coordinateRes.data && coordinateRes.data.error),
+            'Vendor saved, but the precise location could not be saved. Press Save to retry.');
           _editingVendor.event_vendor_id = savedEventVendorId;
           return;
         }
@@ -4802,9 +4802,9 @@
         const menuData = Array.isArray(menuRes.data) ? menuRes.data[0] : menuRes.data;
         if (menuRes.error || !menuData || menuData.ok === false) {
           status.className = 've-status error';
-          status.textContent = (menuRes.error && (menuRes.error.message || menuRes.error.code))
-            || (menuData && menuData.error)
-            || 'Vendor saved, but menu items could not be saved. Press Save to retry.';
+          status.textContent = (window.friendlyError || ((e, fb) => fb))(
+            menuRes.error || (menuData && menuData.error),
+            'Vendor saved, but menu items could not be saved. Press Save to retry.');
           _editingVendor.event_vendor_id = savedEventVendorId;
           return;
         }
