@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Partner Login</title>
+<!--
+  Phase 3 front door (staged with Phase 2). Real email/password login against
+  the accounts system (company_users → Supabase auth). On success, redirect to
+  ?next= or the dashboard; the destination page calls PartnerAuth.resolve(db),
+  which turns the session into the place token via get_my_partner_context().
+
+  Held: nothing links here yet, and redirectToLogin() only fires once a page is
+  wired to resolve() with require:true. Reachable at /partner/login for testing.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+<style>
+  :root{ --blue:#0077CC; --black:#111; --grey:#666; --border:#e8e8e8; --bg:#f8f9fa; --red:#c0392b; --green:#1a7f4e; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--black);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.06);width:100%;max-width:400px;padding:32px;}
+  .logo{font-weight:800;font-size:20px;color:var(--blue);letter-spacing:-.5px;}
+  h1{font-size:20px;margin:18px 0 4px;}
+  .sub{font-size:13px;color:var(--grey);margin-bottom:22px;}
+  label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);font-weight:600;margin:14px 0 6px;}
+  input{width:100%;font-family:inherit;font-size:14px;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;}
+  button{width:100%;margin-top:20px;font-family:inherit;font-size:14px;font-weight:600;padding:12px;border:none;border-radius:8px;background:var(--blue);color:#fff;cursor:pointer;}
+  button:disabled{opacity:.6;cursor:default;}
+  .row-between{display:flex;justify-content:space-between;align-items:baseline;}
+  .link{font-size:12px;color:var(--blue);cursor:pointer;text-decoration:none;background:none;border:none;padding:0;width:auto;margin:0;font-weight:600;}
+  .msg{font-size:13px;margin-top:14px;padding:10px 12px;border-radius:8px;display:none;}
+  .msg.err{display:block;background:#fdecea;color:var(--red);}
+  .msg.ok{display:block;background:#e6f5ec;color:var(--green);}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">troddr</div>
+  <h1>Partner sign in</h1>
+  <p class="sub">Manage your listing, bookings, and guests.</p>
+
+  <label>Email</label>
+  <input id="email" type="email" autocomplete="username" placeholder="you@yourvenue.com" />
+  <div class="row-between">
+    <label>Password</label>
+    <button class="link" id="forgot" type="button" style="margin-top:14px;">Forgot?</button>
+  </div>
+  <input id="password" type="password" autocomplete="current-password" placeholder="Your password" />
+  <button id="submit">Sign in</button>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+const $ = (id) => document.getElementById(id);
+const nextPath = new URLSearchParams(location.search).get('next') || '/partner/opportunities';
+function msg(kind, text){ const m = $('msg'); m.className = 'msg ' + kind; m.textContent = text; }
+
+// Already signed in? Skip straight through.
+(async () => {
+  try {
+    const { data } = await db.auth.getSession();
+    if (data && data.session) location.replace(nextPath);
+  } catch (e) {}
+})();
+
+$('submit').addEventListener('click', async () => {
+  const email = ($('email').value || '').trim();
+  const password = $('password').value || '';
+  if (!email || !password) { msg('err', 'Enter your email and password.'); return; }
+  const btn = $('submit'); btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    if (error) { msg('err', error.message || 'Could not sign in.'); btn.disabled = false; btn.textContent = 'Sign in'; return; }
+    msg('ok', 'Welcome back. Loading your dashboard…');
+    location.replace(nextPath);
+  } catch (e) {
+    msg('err', 'Something went wrong. Please try again.'); btn.disabled = false; btn.textContent = 'Sign in';
+  }
+});
+
+$('forgot').addEventListener('click', async () => {
+  const email = ($('email').value || '').trim();
+  if (!email) { msg('err', 'Enter your email first, then tap Forgot.'); return; }
+  try {
+    await db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/partner/login' });
+    msg('ok', 'If that email has an account, a reset link is on its way.');
+  } catch (e) { msg('err', 'Could not send a reset link right now.'); }
+});
+
+$('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('submit').click(); });
+</script>
+</body>
+</html>

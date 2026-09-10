@@ -9,6 +9,8 @@
 
   const PARTNER_TOKEN_KEY = 'troddr_partner_access_token';
   const ADMIN_TOKEN_KEY = 'troddr_admin_token';
+  const ACTIVE_PLACE_KEY = 'troddr_active_place';
+  const ACTIVE_EVENT_KEY = 'troddr_active_event';
   const loggedAccessKeys = new Set();
 
   function storage() {
@@ -299,16 +301,136 @@
     document.head.appendChild(style);
   }
 
-  function mountSessionControl(kind) {
+  function mountSessionControl(kind, opts) {
     if (!document.body || document.getElementById('partner-session-control')) return;
     const nav = document.querySelector('.navbar');
     if (!nav) return;
+    const o = opts || {};
     const control = document.createElement('div');
     control.id = 'partner-session-control';
     control.className = 'partner-session-control';
-    control.innerHTML = `<button type="button" class="partner-session-btn">Sign out</button>`;
-    control.querySelector('button').addEventListener('click', () => signOut(kind));
+    const who = o.label ? `<span class="partner-session-who">${o.label}</span>` : '';
+    control.innerHTML = `${who}<button type="button" class="partner-session-btn">Sign out</button>`;
+    control.querySelector('button').addEventListener('click', () => {
+      // Account mode signs out of Supabase auth; token mode clears the token.
+      if (o.mode === 'account' && o.db) accountSignOut(o.db);
+      else signOut(kind);
+    });
     nav.appendChild(control);
+  }
+
+  /* ---- Phase 2: dual-mode auth (session -> account, else legacy token) ----
+   * Additive. Pages that never call resolve() keep using the synchronous token
+   * path unchanged. resolve() needs the page's own supabase client (`db`) so
+   * login and dashboard share ONE session store. Its job is to end up with a
+   * place token in PARTNER_TOKEN_KEY, after which every existing token RPC and
+   * all the nav/link plumbing work exactly as before.
+   */
+  function getActivePlace() { return readStored(ACTIVE_PLACE_KEY); }
+  function setActivePlace(id) { if (id) writeStored(ACTIVE_PLACE_KEY, String(id)); }
+
+  function pickActiveLocation(locations) {
+    const list = Array.isArray(locations) ? locations : [];
+    if (!list.length) return null;
+    const wanted = getActivePlace();
+    if (wanted) {
+      const found = list.find((l) => String(l.place_id) === String(wanted));
+      if (found) return found;
+    }
+    return list[0];
+  }
+
+  function getActiveEvent() { return readStored(ACTIVE_EVENT_KEY); }
+  function setActiveEvent(id) { if (id) writeStored(ACTIVE_EVENT_KEY, String(id)); }
+
+  function pickActiveEvent(events) {
+    const list = Array.isArray(events) ? events : [];
+    if (!list.length) return null;
+    const wanted = getActiveEvent();
+    if (wanted) {
+      const found = list.find((e) => String(e.event_id) === String(wanted));
+      if (found) return found;
+    }
+    return list[0];
+  }
+
+  // Pick the entity whose token THIS page should use. `prefer` decides which
+  // collection wins when the account has both places and events; the other is a
+  // fallback so a page never resolves to an empty token when some entity is
+  // attached (an event-only account still resolves on a place page, and the
+  // capabilities RPC then routes it to /partner/event).
+  function pickEntity(ctx, prefer) {
+    const locs = (ctx && ctx.locations) || [];
+    const evts = (ctx && ctx.events) || [];
+    if (prefer === 'event') return pickActiveEvent(evts) || pickActiveLocation(locs) || null;
+    return pickActiveLocation(locs) || pickActiveEvent(evts) || null;
+  }
+
+  function loginUrl(next) {
+    const url = new URL('/partner/login', window.location.origin);
+    if (next) url.searchParams.set('next', next);
+    return url.toString();
+  }
+
+  function redirectToLogin(next) {
+    window.location.href = loginUrl(next || (window.location.pathname + window.location.search));
+  }
+
+  async function accountSignOut(db) {
+    try { if (db && db.auth) await db.auth.signOut(); } catch (e) {}
+    clearStored(PARTNER_TOKEN_KEY);
+    clearStored(ACTIVE_PLACE_KEY);
+    clearStored(ACTIVE_EVENT_KEY);
+    window.location.href = loginUrl();
+  }
+
+  async function resolve(db, options) {
+    const opts = options || {};
+
+    // 1. Explicit token in the URL always wins (legacy / bootstrap / support).
+    const urlToken = params().get('token') || params().get('access_token');
+    if (urlToken) {
+      setToken(urlToken);
+      trackDashboardAccess(urlToken);
+      if (opts.cleanUrl === true) cleanTokenFromUrl(['token', 'access_token']);
+      return { mode: 'token', token: urlToken };
+    }
+
+    // 2. Real login → resolve the session to a place token via the bridge RPC.
+    if (db && db.auth && typeof db.auth.getSession === 'function') {
+      let session = null;
+      try { const r = await db.auth.getSession(); session = r && r.data && r.data.session; } catch (e) {}
+      if (session) {
+        let ctx = null;
+        try { const r = await db.rpc('get_my_partner_context'); ctx = r && r.data; } catch (e) {}
+        if (ctx && ctx.ok) {
+          window.__PARTNER_CONTEXT__ = ctx;
+          // Pick the token matching THIS page: event pages pass {prefer:'event'},
+          // place pages default to a place token; each falls back to the other.
+          const chosen = pickEntity(ctx, opts.prefer === 'event' ? 'event' : 'place');
+          if (chosen && chosen.partner_access_token) {
+            setToken(chosen.partner_access_token);      // the bridge: account -> token (place OR event)
+            if (chosen.place_id) setActivePlace(chosen.place_id);
+            if (chosen.event_id) setActiveEvent(chosen.event_id);
+            trackDashboardAccess(chosen.partner_access_token);
+            return { mode: 'account', token: chosen.partner_access_token,
+                     kind: chosen.event_id ? 'event' : 'place', context: ctx, entity: chosen };
+          }
+          return { mode: 'account', token: '', context: ctx };   // logged in, nothing attached yet
+        }
+        // Signed in but no company account resolves — treat as unauthenticated.
+        if (opts.require !== false) redirectToLogin();
+        return { mode: 'none', token: '' };
+      }
+    }
+
+    // 3. Sticky legacy token stored from a previous visit.
+    const stored = readStored(PARTNER_TOKEN_KEY);
+    if (stored) return { mode: 'token', token: stored };
+
+    // 4. Nothing → the real login (paste-a-token gate is now only a fallback).
+    if (opts.require !== false) redirectToLogin();
+    return { mode: 'none', token: '' };
   }
 
   function setupPageLinks(capabilities) {
@@ -348,5 +470,17 @@
     setupPageLinks,
     cleanPartnerTokenFromUrl: () => cleanTokenFromUrl(['token', 'access_token']),
     cleanAdminTokenFromUrl: () => cleanTokenFromUrl(['token', 'admin_token']),
+    // Phase 2 dual-mode auth
+    resolve,
+    accountSignOut,
+    redirectToLogin,
+    loginUrl,
+    getActivePlace,
+    setActivePlace,
+    pickActiveLocation,
+    getActiveEvent,
+    setActiveEvent,
+    pickActiveEvent,
+    getContext: () => window.__PARTNER_CONTEXT__ || null,
   };
 })();

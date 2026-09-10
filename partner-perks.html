@@ -261,6 +261,7 @@ function toast(msg, kind){ const t=$('toast'); t.textContent=msg; t.className=(k
 
 // ── Load ──────────────────────────────────────────────────────────
 async function load() {
+  await window.PartnerAuth?.resolve(db, { require: false });   // Phase 2: session -> account, else legacy token
   partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
   const showError = (caps) => { hide('view-loading'); show('view-error'); window.PartnerAuth?.mountSessionControl('partner'); mountSidebar(caps); };
   if (!partnerToken) { showError(); return; }

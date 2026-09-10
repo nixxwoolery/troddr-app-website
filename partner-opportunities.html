@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Hospitality Opportunities</title>
+<!--
+  BUILD & HOLD: this page is intentionally NOT linked in js/partner-sidebar.js
+  yet. It ships dark until launch. It reads the get_partner_opportunities RPC
+  (migration 20260908120000_hospitality_opportunities.sql). Reachable directly
+  at /partner/opportunities?token=… for testing.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
+
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+
+<style>
+:root {
+  --blue:#0077CC; --blue-light:#e8f4ff; --green:#1a7f4e; --green-light:#e6f5ec;
+  --red:#c0392b; --red-light:#fdecea; --amber:#b86e00; --amber-light:#fff4e0;
+  --purple:#6c3fc5; --purple-light:#f0ebff; --teal:#0d7d6b; --teal-light:#e2f5f2;
+  --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+  --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#fff; --bg-soft:#f8f9fa;
+  --radius-sm:6px; --radius:10px; --radius-lg:16px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06); --shadow:0 4px 16px rgba(0,0,0,0.08);
+  --brand-primary:#0077CC; --brand-accent:#C3D600; --brand-text:#fff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:var(--black);font-size:14px;line-height:1.5;}
+.hidden{display:none!important;}
+
+/* Date control in the hero */
+.date-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;}
+.date-row input[type="date"]{font-family:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--black);}
+.date-quick{display:flex;gap:6px;}
+.date-quick button{font-family:inherit;font-size:13px;padding:7px 12px;border:1px solid var(--border);background:#fff;border-radius:var(--radius-sm);cursor:pointer;color:var(--grey-dark);}
+.date-quick button.active{background:var(--brand-primary);color:#fff;border-color:var(--brand-primary);}
+
+/* Counts strip */
+.stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:22px;}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey-mid);font-weight:600;}
+.stat-value{font-size:26px;font-weight:700;line-height:1.1;margin-top:4px;}
+.stat-sub{font-size:11px;color:var(--grey-light);}
+
+/* Opportunity cards */
+.opps{display:flex;flex-direction:column;gap:14px;}
+.opp{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;}
+.opp-hd{display:flex;justify-content:space-between;gap:16px;padding:16px 18px 12px;}
+.opp-name{font-size:16px;font-weight:700;}
+.opp-headline{font-size:13px;color:var(--brand-primary);font-weight:600;margin-top:2px;}
+.opp-meta{font-size:12px;color:var(--grey-mid);margin-top:2px;}
+.opp-flags{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;}
+.flag{font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;white-space:nowrap;}
+.flag.milestone{background:var(--amber-light);color:var(--amber);}
+.flag.occasion{background:var(--purple-light);color:var(--purple);}
+.flag.first{background:var(--teal-light);color:var(--teal);}
+.flag.returning{background:var(--blue-light);color:var(--blue);}
+.tier{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--bg-soft);color:var(--grey-mid);border:1px solid var(--border);}
+.tier.regular{background:var(--teal-light);color:var(--teal);border-color:transparent;}
+.tier.insider{background:var(--blue-light);color:var(--blue);border-color:transparent;}
+.tier.inner_circle{background:var(--amber-light);color:var(--amber);border-color:transparent;}
+
+.opp-body{padding:0 18px 14px;display:flex;flex-direction:column;gap:8px;}
+.line{display:flex;gap:8px;font-size:13px;align-items:baseline;}
+.line .lbl{color:var(--grey-mid);min-width:96px;flex-shrink:0;}
+.line .val{color:var(--grey-dark);}
+.allergy{background:var(--red-light);color:var(--red);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center;}
+.chips-inline{display:flex;gap:6px;flex-wrap:wrap;}
+.chip-soft{font-size:12px;background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:999px;padding:3px 10px;color:var(--grey-dark);}
+.note-block{background:var(--bg-soft);border-left:3px solid var(--border);padding:8px 12px;border-radius:var(--radius-sm);font-size:13px;color:var(--grey-dark);font-style:italic;}
+.gesture-prev{font-size:12px;color:var(--grey-mid);}
+
+.opp-ft{border-top:1px solid var(--border-soft);padding:10px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.btn{font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--brand-primary);background:var(--brand-primary);color:#fff;cursor:pointer;}
+.btn.ghost{background:#fff;color:var(--brand-primary);}
+.priv-hint{font-size:11px;color:var(--grey-light);}
+
+/* Gesture form */
+.gform{border-top:1px dashed var(--border);padding:14px 18px;display:none;flex-direction:column;gap:10px;background:var(--bg-soft);}
+.gform.open{display:flex;}
+.gform label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey-mid);font-weight:600;}
+.gform select,.gform textarea{font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);width:100%;background:#fff;}
+.gform textarea{min-height:60px;resize:vertical;}
+.gform .row{display:flex;gap:10px;}
+.gform .ok{font-size:12px;color:var(--green);font-weight:600;}
+
+.empty{background:#fff;border:1px dashed var(--border);border-radius:var(--radius-lg);padding:40px 24px;text-align:center;color:var(--grey-mid);}
+.empty h3{font-size:16px;color:var(--grey-dark);margin-bottom:6px;}
+.state-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px 24px;text-align:center;}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--brand-primary);border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.section-note{font-size:12px;color:var(--grey-light);margin:0 0 16px;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Partner Dashboard</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Hospitality</span>
+    <h1 id="hero-title">Loading…</h1>
+    <p id="hero-sub" class="hero-sub">People worth knowing, and the one thing to know about them.</p>
+    <div class="date-row">
+      <div class="date-quick">
+        <button id="q-today" class="active">Today</button>
+        <button id="q-tomorrow">Tomorrow</button>
+      </div>
+      <input type="date" id="date-input" />
+    </div>
+  </div>
+</section>
+
+<!-- LOADING -->
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main">
+    <div class="state-card"><div class="spinner"></div><p class="state-msg">Loading arrivals…</p></div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="layout hidden" id="view-error">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <div class="state-card">
+      <div class="state-title">Couldn't load this page</div>
+      <p class="state-msg">This link may have expired or been revoked. Try another section or email <a href="mailto:hello@troddr.com">hello@troddr.com</a>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="layout hidden" id="view-main">
+  <aside class="sidebar"></aside>
+  <main class="main">
+    <div class="stats-strip" id="counts">
+      <div class="stat-card"><div class="stat-label">Arriving</div><div class="stat-value" id="c-total">-</div><div class="stat-sub" id="c-date">today</div></div>
+      <div class="stat-card"><div class="stat-label">Returning</div><div class="stat-value" id="c-returning">-</div><div class="stat-sub">seen before</div></div>
+      <div class="stat-card"><div class="stat-label">First-timers</div><div class="stat-value" id="c-first">-</div><div class="stat-sub">first visit here</div></div>
+      <div class="stat-card"><div class="stat-label">Milestones</div><div class="stat-value" id="c-milestone">-</div><div class="stat-sub">landmark visits</div></div>
+      <div class="stat-card"><div class="stat-label">Occasions</div><div class="stat-value" id="c-occasion">-</div><div class="stat-sub">celebrating</div></div>
+    </div>
+
+    <p class="section-note">TRODDR notices. What you do with it is yours. Nothing here is sent to the guest.</p>
+
+    <div class="opps" id="opps"></div>
+  </main>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let partnerToken = '';
+let currentDate  = null;      // 'YYYY-MM-DD'
+
+const $  = (id) => document.getElementById(id);
+const show = (id) => $(id)?.classList.remove('hidden');
+const hide = (id) => $(id)?.classList.add('hidden');
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function jamaicaToday(offsetDays = 0){
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Jamaica' }));
+  now.setDate(now.getDate() + offsetDays);
+  return now.toISOString().slice(0,10);
+}
+function prettyDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+}
+function daysAgo(n){
+  if(n == null) return '';
+  if(n === 0) return 'today';
+  if(n === 1) return 'yesterday';
+  if(n < 30) return n + ' days ago';
+  if(n < 60) return 'last month';
+  return Math.round(n/30) + ' months ago';
+}
+const TIER_LABEL = { member:'Member', regular:'Regular', insider:'Insider', inner_circle:'Inner Circle' };
+
+// ── Boot ────────────────────────────────────────────────────────────────────
+async function boot(){
+  // Phase 2 dual-mode: session → account (place token via get_my_partner_context),
+  // else a legacy ?token=/stored token. require:false so testing without a
+  // session shows the error view instead of bouncing to login while this is dark.
+  const auth = window.PartnerAuth ? await window.PartnerAuth.resolve(db, { require: false }) : null;
+  partnerToken = (auth && auth.token) || window.PartnerAuth?.getToken?.({ require: false }) || new URLSearchParams(location.search).get('token') || '';
+  if(!partnerToken){ hide('view-loading'); show('view-error'); return; }
+
+  let caps;
+  try {
+    const capsRes = await db.rpc('get_partner_capabilities_by_token', { p_token: partnerToken });
+    caps = capsRes && capsRes.data;
+    if(!caps || (capsRes && capsRes.error)){ hide('view-loading'); show('view-error'); return; }
+  } catch(e){ hide('view-loading'); show('view-error'); return; }
+
+  hide('view-loading'); show('view-main');
+  const acct = auth && auth.mode === 'account';
+  window.PartnerAuth?.mountSessionControl('partner', acct ? { mode:'account', db, label: (auth.context?.user?.name || auth.context?.user?.email || '') } : undefined);
+  window.PartnerSidebar?.mount({ active:'/partner/opportunities', capabilities: caps.capabilities, partner: caps.partner });
+
+  // Brand colours
+  const prog = caps.program;
+  if(prog){
+    const r = document.documentElement.style;
+    if(prog.primary_color) r.setProperty('--brand-primary', prog.primary_color);
+    if(prog.accent_color)  r.setProperty('--brand-accent',  prog.accent_color);
+    if(prog.text_color)    r.setProperty('--brand-text',    prog.text_color);
+  }
+  $('hero-title').textContent = (caps.place && caps.place.name) || 'Hospitality';
+
+  // Date controls
+  currentDate = jamaicaToday(0);
+  $('date-input').value = currentDate;
+  $('q-today').onclick    = () => setDate(jamaicaToday(0), 'q-today');
+  $('q-tomorrow').onclick = () => setDate(jamaicaToday(1), 'q-tomorrow');
+  $('date-input').onchange = (e) => setDate(e.target.value, null);
+
+  loadDay();
+}
+
+function setDate(iso, quickId){
+  currentDate = iso;
+  $('date-input').value = iso;
+  ['q-today','q-tomorrow'].forEach(id => $(id).classList.toggle('active', id === quickId));
+  loadDay();
+}
+
+// ── Load a day's opportunities ───────────────────────────────────────────────
+async function loadDay(){
+  $('opps').innerHTML = '<div class="state-card"><div class="spinner"></div><p class="state-msg">Reading arrivals…</p></div>';
+  let res;
+  try {
+    res = await db.rpc('get_partner_opportunities', { p_token: partnerToken, p_date: currentDate });
+  } catch(e){
+    $('opps').innerHTML = '<div class="empty"><h3>Couldn\'t load arrivals</h3><p>Try again shortly.</p></div>';
+    return;
+  }
+  const data = res && res.data;
+  if(!data || data.ok !== true){
+    $('opps').innerHTML = '<div class="empty"><h3>Couldn\'t load arrivals</h3><p>This may be an expired link.</p></div>';
+    return;
+  }
+
+  const counts = data.counts || {};
+  $('c-total').textContent     = counts.total     ?? 0;
+  $('c-returning').textContent = counts.returning  ?? 0;
+  $('c-first').textContent     = counts.first_time ?? 0;
+  $('c-milestone').textContent = counts.milestone  ?? 0;
+  $('c-occasion').textContent  = counts.occasion   ?? 0;
+  $('c-date').textContent      = prettyDate(currentDate);
+
+  const list = data.opportunities || [];
+  if(!list.length){
+    $('opps').innerHTML = `<div class="empty"><h3>A quiet ${prettyDate(currentDate)}</h3><p>No confirmed arrivals to prepare for. Check another day, or come back once bookings land.</p></div>`;
+    return;
+  }
+  $('opps').innerHTML = list.map(renderOpp).join('');
+  list.forEach(o => wireGesture(o));
+}
+
+function renderOpp(o){
+  const v = o.venue || {};
+  const p = o.profile;           // null unless the guest shared
+  const flags = o.flags || [];
+
+  const flagChips = flags.map(f => {
+    if(f === 'first_time')     return '<span class="flag first">First visit</span>';
+    if(f === 'returning')      return '<span class="flag returning">Returning</span>';
+    if(f === 'occasion')       return '<span class="flag occasion">Occasion</span>';
+    if(String(f).startsWith('milestone:')) return `<span class="flag milestone">Milestone · ${esc(String(f).split(':')[1])}</span>`;
+    return '';
+  }).join('');
+
+  const tierChip = (p && p.tier && p.tier !== 'member')
+    ? `<span class="tier ${esc(p.tier)}">${esc(TIER_LABEL[p.tier] || p.tier)}</span>` : '';
+
+  const lines = [];
+
+  // 95% discipline first: allergies, hard flag (only present when shared).
+  if(p && Array.isArray(p.allergies) && p.allergies.length){
+    lines.push(`<div class="allergy">⚠ Allergy: ${p.allergies.map(esc).join(', ')}</div>`);
+  }
+
+  if(!v.first_time && v.last_visit_here){
+    lines.push(`<div class="line"><span class="lbl">Last visit</span><span class="val">${esc(prettyDate(v.last_visit_here))} · ${esc(daysAgo(v.days_since_last))}</span></div>`);
+  }
+  if(o.occasion){
+    lines.push(`<div class="line"><span class="lbl">Occasion</span><span class="val">${esc(o.occasion)}</span></div>`);
+  }
+  if(p && Array.isArray(p.loved_here) && p.loved_here.length){
+    lines.push(`<div class="line"><span class="lbl">Loved here</span><span class="val chips-inline">${p.loved_here.map(x=>`<span class="chip-soft">${esc(x)}</span>`).join('')}</span></div>`);
+  }
+  if(p && Array.isArray(p.tastes) && p.tastes.length){
+    lines.push(`<div class="line"><span class="lbl">Likely likes</span><span class="val chips-inline">${p.tastes.map(x=>`<span class="chip-soft">${esc(x)}</span>`).join('')}</span></div>`);
+  }
+  if(v.note){
+    lines.push(`<div class="note-block">“${esc(v.note)}”</div>`);
+  }
+  if(o.last_gesture){
+    const g = o.last_gesture;
+    lines.push(`<div class="gesture-prev">Last time you: <strong>${esc(g.kind)}</strong>${g.note ? ' — ' + esc(g.note) : ''}</div>`);
+  }
+
+  const party = o.party_size ? `Party of ${esc(o.party_size)}` : '';
+  const consent = (o.is_troddr_user && !o.shared)
+    ? '<span class="priv-hint">Guest hasn\'t shared their profile · showing visit history only</span>'
+    : (!o.is_troddr_user ? '<span class="priv-hint">Not a TRODDR guest · booking details only</span>' : '');
+
+  return `
+  <div class="opp" data-id="${esc(o.booking_id)}">
+    <div class="opp-hd">
+      <div>
+        <div class="opp-name">${esc(o.guest_name || 'Guest')} ${tierChip}</div>
+        <div class="opp-headline">${esc(o.headline || '')}</div>
+        <div class="opp-meta">${party}</div>
+      </div>
+      <div class="opp-flags">${flagChips}</div>
+    </div>
+    <div class="opp-body">${lines.join('')}</div>
+    <div class="opp-ft">
+      ${consent}
+      <button class="btn ghost" data-act="toggle" data-id="${esc(o.booking_id)}">Log a gesture</button>
+    </div>
+    <div class="gform" id="gform-${esc(o.booking_id)}">
+      <div class="row">
+        <div style="flex:0 0 160px">
+          <label>What</label>
+          <select id="gk-${esc(o.booking_id)}">
+            <option value="remembered">Remembered them</option>
+            <option value="surprise">Surprised them</option>
+            <option value="comp">Comped something</option>
+            <option value="recovery">Made something right</option>
+            <option value="note">Just a note</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label>Note (stays private to your team)</label>
+          <textarea id="gn-${esc(o.booking_id)}" placeholder="e.g. Comped the anniversary dessert, wrote their names on the plate."></textarea>
+        </div>
+      </div>
+      <div class="row" style="align-items:center;justify-content:flex-end;gap:12px">
+        <span class="ok hidden" id="gok-${esc(o.booking_id)}">Saved to their memory ✓</span>
+        <button class="btn" data-act="save" data-id="${esc(o.booking_id)}" data-user="${esc(o.user_id || '')}">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireGesture(o){
+  const id = o.booking_id;
+  const card = document.querySelector(`.opp[data-id="${CSS.escape(String(id))}"]`);
+  if(!card) return;
+  card.querySelector('[data-act="toggle"]')?.addEventListener('click', () => {
+    $('gform-' + id)?.classList.toggle('open');
+  });
+  card.querySelector('[data-act="save"]')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const kind = $('gk-' + id).value;
+    const note = $('gn-' + id).value;
+    const userId = btn.getAttribute('data-user') || null;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const r = await db.rpc('log_guest_gesture', {
+        p_token: partnerToken,
+        p_booking_id: id,
+        p_user_id: userId || null,
+        p_kind: kind,
+        p_note: note
+      });
+      if(r && r.data && r.data.ok){
+        $('gok-' + id).classList.remove('hidden');
+        btn.textContent = 'Saved';
+        setTimeout(() => { $('gform-' + id)?.classList.remove('open'); btn.disabled=false; btn.textContent='Save'; $('gok-'+id).classList.add('hidden'); $('gn-'+id).value=''; }, 1400);
+      } else {
+        btn.disabled=false; btn.textContent='Save'; alert('Could not save. Please try again.');
+      }
+    } catch(err){
+      btn.disabled=false; btn.textContent='Save'; alert('Could not save. Please try again.');
+    }
+  });
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -740,6 +740,7 @@ const FILTERS = [
 // ── Load ─────────────────────────────────────────────────────────
 
 async function load() {
+  await window.PartnerAuth?.resolve(db, { require: false });   // Phase 2: session -> account, else legacy token
   partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
   if (!partnerToken) { showError('auth'); return; }
 

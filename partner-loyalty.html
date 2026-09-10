@@ -2571,6 +2571,7 @@
 
   // ── Load ────────────────────────────────────────────────
   async function load() {
+    await window.PartnerAuth?.resolve(db, { require: false });   // Phase 2: session -> account, else legacy token
     const token = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
     partnerToken = token;
     const showError = (caps) => {

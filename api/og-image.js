@@ -2,8 +2,8 @@
 //
 // Server-rendered 1200×630 branded fallback card, used as og:image whenever a
 // shared entity has no photo of its own. Solid TRODDR blue (#0077cc), white
-// "troddr" wordmark, dynamic title + subtitle, "troddr.com" footer - mirrors
-// the in-app share cards.
+// "troddr" wordmark, dynamic title + subtitle, "Discover on troddr" footer -
+// mirrors the in-app share cards.
 //
 //   /api/og-image?title=...&subtitle=...
 //
@@ -114,7 +114,7 @@ export default function handler(request) {
           opacity: 0.95,
         },
       },
-      'troddr.com'
+      'Discover on troddr'
     )
   );
 

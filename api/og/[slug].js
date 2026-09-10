@@ -5,7 +5,7 @@
 
 import {
   BASE_URL, isBot, isUuid, lastPathSegment, sbSelect,
-  firstImage, renderOgPage, serveHumanPage,
+  renderOgPage, serveHumanPage,
 } from './_lib/og.js';
 
 export const config = { runtime: 'edge' };
@@ -37,7 +37,10 @@ export default async function handler(request) {
   const description = place?.description
     ? place.description.slice(0, 200)
     : `Check out ${name}${location ? ` in ${location}` : ''} on TRODDR.`;
-  const imageUrl = firstImage(place?.image);
+  // og:image is a server-rendered branded card (place photo + name + meta +
+  // "Try the {dish}" + "Discover on troddr"), so the link unfurls into the same
+  // card the app renders — one clickable thing, not a bare photo.
+  const imageUrl = `${BASE_URL}/api/og/listing-image?slug=${encodeURIComponent(place?.slug || slug)}`;
   // Canonical always points at the slug form when we have it.
   const canonicalUrl = `${BASE_URL}/listings/${encodeURIComponent(place?.slug || slug)}`;
 

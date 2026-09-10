@@ -8934,6 +8934,7 @@
   }
 
   async function load() {
+    await window.PartnerAuth?.resolve(db, { require: false, prefer: 'event' });   // Phase 2: session -> event token, else legacy
     const urlParams = new URLSearchParams(location.search);
     const hasUrlToken = urlParams.has('token') || urlParams.has('access_token');
     const token = window.PartnerAuth?.getToken({ require: false }) || urlParams.get('token') || '';

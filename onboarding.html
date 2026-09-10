@@ -160,8 +160,10 @@
     <div class="actions">
       <button class="btn btn-ghost" data-back>← Back</button>
       <div class="spacer"></div>
+      <button class="btn btn-ghost" id="confirm-skip">Skip for now</button>
       <button class="btn btn-primary" id="confirm-next">Yes, these are mine →</button>
     </div>
+    <p class="muted" style="margin-top:10px; font-size:12px;">You can set up billing anytime. Skipping takes you straight to your dashboard.</p>
   </div>
 
   <!-- STEP: Profile activity -->
@@ -582,7 +584,12 @@
     }
   });
 
-  $('done-go').addEventListener('click', () => { location.href = '/company/billing'; });
+  // The partner is a linked company_user from the account step, so the dashboard
+  // resolves their session via get_my_partner_context. Land them there (bookings
+  // self-routes to /partner/event or /partner/group by capabilities), not billing.
+  function goToDashboard() { location.href = '/partner/bookings'; }
+  $('done-go').addEventListener('click', goToDashboard);
+  $('confirm-skip').addEventListener('click', goToDashboard);
 
   /* ---------- Boot ---------- */
   async function boot() {
