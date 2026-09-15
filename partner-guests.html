@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Guests</title>
+<!--
+  BUILD & HOLD — Guest Reach Step 1 (the Guest Book). NOT linked in
+  js/partner-sidebar.js yet. Reads get_partner_guests (migration
+  20260910120000_partner_guest_book.sql — STAGED, needs branch validation).
+  The selection + "Invite to an experience" bar is scaffolding for Step 3
+  (partner-originated invites); the send is not built yet.
+  Reachable at /partner/guests?token=… for testing.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+<style>
+:root{
+  --blue:#0077CC; --blue-light:#e8f4ff; --green:#1a7f4e; --green-light:#e6f5ec;
+  --red:#c0392b; --amber:#b86e00; --amber-light:#fff4e0; --teal:#0d7d6b; --teal-light:#e2f5f2;
+  --black:#111; --grey-dark:#333; --grey-mid:#666; --grey-light:#999;
+  --border:#e8e8e8; --border-soft:#f0f0f0; --bg:#fff; --bg-soft:#f8f9fa;
+  --radius-sm:6px; --radius:10px; --radius-lg:16px; --shadow-sm:0 1px 3px rgba(0,0,0,0.06);
+  --brand-primary:#0077CC;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:var(--black);font-size:14px;line-height:1.5;}
+.hidden{display:none!important;}
+
+.seg-row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px;}
+.seg{font-family:inherit;font-size:13px;padding:7px 14px;border:1px solid var(--border);background:#fff;border-radius:999px;cursor:pointer;color:var(--grey-dark);}
+.seg.active{background:var(--brand-primary);color:#fff;border-color:var(--brand-primary);}
+.seg .n{opacity:.7;margin-left:5px;font-size:12px;}
+
+.stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin:18px 0 20px;}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow-sm);}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey-mid);font-weight:600;}
+.stat-value{font-size:24px;font-weight:700;line-height:1.1;margin-top:3px;}
+
+.guests{display:flex;flex-direction:column;gap:8px;padding-bottom:80px;}
+.guest{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow-sm);}
+.guest input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:var(--brand-primary);cursor:pointer;}
+.g-main{flex:1;min-width:0;}
+.g-name{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.g-sub{font-size:12px;color:var(--grey-mid);margin-top:2px;}
+.g-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bg-soft);border:1px solid var(--border-soft);color:var(--grey-dark);}
+.tier{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--bg-soft);color:var(--grey-mid);}
+.tier.regular{background:var(--teal-light);color:var(--teal);}
+.tier.insider{background:var(--blue-light);color:var(--blue);}
+.tier.inner_circle{background:var(--amber-light);color:var(--amber);}
+.loy{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--green-light);color:var(--green);}
+.g-visits{text-align:right;flex-shrink:0;}
+.g-visits .num{font-size:18px;font-weight:700;}
+.g-visits .lbl{font-size:11px;color:var(--grey-light);}
+
+.selbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);box-shadow:0 -4px 16px rgba(0,0,0,.06);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;transform:translateY(120%);transition:transform .2s;}
+.selbar.show{transform:none;}
+.selbar .count{font-weight:600;}
+.btn{font-family:inherit;font-size:14px;font-weight:600;padding:10px 18px;border-radius:var(--radius-sm);border:1px solid var(--brand-primary);background:var(--brand-primary);color:#fff;cursor:pointer;}
+.btn:disabled{opacity:.55;cursor:default;}
+.soon{font-size:11px;color:var(--grey-light);margin-left:8px;}
+
+.empty{background:#fff;border:1px dashed var(--border);border-radius:var(--radius-lg);padding:40px 24px;text-align:center;color:var(--grey-mid);}
+.empty h3{font-size:16px;color:var(--grey-dark);margin-bottom:6px;}
+.state-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px 24px;text-align:center;}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--brand-primary);border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.note{font-size:12px;color:var(--grey-light);margin:2px 0 0;}
+.btn.ghost{background:#fff;color:var(--brand-primary);}
+.modal-back{position:fixed;inset:0;background:rgba(17,17,17,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+.modal{background:#fff;border-radius:var(--radius-lg);max-width:440px;width:100%;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.2);max-height:90vh;overflow:auto;}
+.modal h3{font-size:18px;margin-bottom:14px;}
+.modal label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey-mid);font-weight:600;margin:14px 0 6px;}
+.modal input,.modal textarea{width:100%;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;}
+.modal textarea{min-height:64px;resize:vertical;}
+.kind-row{display:flex;gap:8px;}
+.kbtn{flex:1;font-family:inherit;font-size:13px;padding:10px;border:1px solid var(--border);background:#fff;border-radius:var(--radius-sm);cursor:pointer;color:var(--grey-dark);}
+.kbtn.active{background:var(--brand-primary);color:#fff;border-color:var(--brand-primary);}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+.cmsg{font-size:13px;margin-top:12px;padding:0;}
+.cmsg.err{color:var(--red);}
+.cmsg.ok{color:var(--green);}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Partner Dashboard</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Guests</span>
+    <h1 id="hero-title">Loading…</h1>
+    <p id="hero-sub" class="hero-sub">The people who've been in. Yours to recognise and, soon, to invite.</p>
+  </div>
+</section>
+
+<div class="layout" id="view-loading">
+  <div></div>
+  <div class="main"><div class="state-card"><div class="spinner"></div><p>Loading your guests…</p></div></div>
+</div>
+
+<div class="layout hidden" id="view-error">
+  <aside class="sidebar"></aside>
+  <div class="main"><div class="state-card"><div class="state-title">Couldn't load this page</div><p>This link may have expired. Email <a href="mailto:hello@troddr.com">hello@troddr.com</a>.</p></div></div>
+</div>
+
+<div class="layout hidden" id="view-main">
+  <aside class="sidebar"></aside>
+  <main class="main">
+    <div class="seg-row" id="seg-row">
+      <button class="seg active" data-seg="all">Everyone</button>
+      <button class="seg" data-seg="regulars">Regulars</button>
+      <button class="seg" data-seg="lapsed">Haven't returned</button>
+      <button class="seg" data-seg="first_time">First-timers</button>
+      <button class="seg" data-seg="loyalty">Loyalty members</button>
+    </div>
+    <p class="note">Only guests who've been in appear here. TRODDR never shares their contact details — any invite is delivered inside the app.</p>
+
+    <div class="stats-strip" id="counts">
+      <div class="stat-card"><div class="stat-label">Guests</div><div class="stat-value" id="c-total">-</div></div>
+      <div class="stat-card"><div class="stat-label">Regulars</div><div class="stat-value" id="c-regulars">-</div></div>
+      <div class="stat-card"><div class="stat-label">Haven't returned</div><div class="stat-value" id="c-lapsed">-</div></div>
+      <div class="stat-card"><div class="stat-label">First-timers</div><div class="stat-value" id="c-first">-</div></div>
+      <div class="stat-card"><div class="stat-label">Loyalty</div><div class="stat-value" id="c-loyalty">-</div></div>
+    </div>
+
+    <div class="guests" id="guests"></div>
+  </main>
+</div>
+
+<div class="selbar" id="selbar">
+  <span class="count"><span id="sel-count">0</span> selected</span>
+  <button class="btn" id="invite-btn">Invite / remind →</button>
+</div>
+
+<div class="modal-back" id="compose-back" hidden>
+  <div class="modal">
+    <h3>Reach <span id="compose-n">0</span> guests</h3>
+    <label>What is this?</label>
+    <div class="kind-row">
+      <button type="button" class="kbtn active" data-kind="experience">Invite to an experience</button>
+      <button type="button" class="kbtn" data-kind="reminder">Remind about a special</button>
+    </div>
+    <label>Title</label>
+    <input id="c-occasion" placeholder="e.g. New Menu Tasting  ·  or  ·  Happy Hour" />
+    <label>When (optional)</label>
+    <input id="c-when" placeholder="e.g. Fri, Nov 8 · 7pm" />
+    <label>Message (optional)</label>
+    <textarea id="c-note" placeholder="A line or two your guests will see."></textarea>
+    <div id="c-msg" class="cmsg"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="c-cancel">Cancel</button>
+      <button type="button" class="btn" id="c-send">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+let partnerToken = '';
+let segment = 'all';
+const selected = new Set();
+
+const $ = (id) => document.getElementById(id);
+const show = (id) => $(id)?.classList.remove('hidden');
+const hide = (id) => $(id)?.classList.add('hidden');
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const TIER_LABEL = { member:'Member', regular:'Regular', insider:'Insider', inner_circle:'Inner Circle' };
+
+function prettyDate(iso){ if(!iso) return ''; return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function ago(n){ if(n==null) return ''; if(n===0) return 'today'; if(n===1) return 'yesterday'; if(n<30) return n+'d ago'; if(n<60) return 'last month'; return Math.round(n/30)+'mo ago'; }
+
+async function boot(){
+  const auth = window.PartnerAuth ? await window.PartnerAuth.resolve(db, { require:false }) : null;
+  partnerToken = (auth && auth.token) || window.PartnerAuth?.getToken?.({ require:false }) || new URLSearchParams(location.search).get('token') || '';
+  if(!partnerToken){ hide('view-loading'); show('view-error'); return; }
+
+  let caps;
+  try {
+    const r = await db.rpc('get_partner_capabilities_by_token', { p_token: partnerToken });
+    caps = r && r.data;
+    if(!caps || (r && r.error)){ hide('view-loading'); show('view-error'); return; }
+  } catch(e){ hide('view-loading'); show('view-error'); return; }
+
+  hide('view-loading'); show('view-main');
+  const acct = auth && auth.mode === 'account';
+  window.PartnerAuth?.mountSessionControl('partner', acct ? { mode:'account', db, label:(auth.context?.user?.name || auth.context?.user?.email || '') } : undefined);
+  window.PartnerSidebar?.mount({ active:'/partner/guests', capabilities: caps.capabilities, partner: caps.partner });
+
+  const prog = caps.program;
+  if(prog){ const r=document.documentElement.style; if(prog.primary_color) r.setProperty('--brand-primary', prog.primary_color); }
+  $('hero-title').textContent = (caps.place && caps.place.name) || 'Guests';
+
+  document.querySelectorAll('.seg').forEach(b => b.addEventListener('click', () => {
+    segment = b.dataset.seg;
+    document.querySelectorAll('.seg').forEach(x => x.classList.toggle('active', x === b));
+    load();
+  }));
+  load();
+}
+
+async function load(){
+  $('guests').innerHTML = '<div class="state-card"><div class="spinner"></div><p>Loading…</p></div>';
+  let res;
+  try { res = await db.rpc('get_partner_guests', { p_token: partnerToken, p_segment: segment }); }
+  catch(e){ $('guests').innerHTML = '<div class="empty"><h3>Couldn\'t load guests</h3></div>'; return; }
+  const data = res && res.data;
+  if(!data || data.ok !== true){ $('guests').innerHTML = '<div class="empty"><h3>Couldn\'t load guests</h3></div>'; return; }
+
+  const s = data.summary || {};
+  $('c-total').textContent = s.total ?? 0;
+  $('c-regulars').textContent = s.regulars ?? 0;
+  $('c-lapsed').textContent = s.lapsed ?? 0;
+  $('c-first').textContent = s.first_time ?? 0;
+  $('c-loyalty').textContent = s.loyalty ?? 0;
+
+  const list = data.guests || [];
+  if(!list.length){
+    $('guests').innerHTML = `<div class="empty"><h3>No guests here yet</h3><p>Once people book, visit, or join your loyalty program, they'll show up so you can recognise and invite them.</p></div>`;
+    return;
+  }
+  $('guests').innerHTML = list.map(renderGuest).join('');
+  document.querySelectorAll('.guest input[type=checkbox]').forEach(cb => cb.addEventListener('change', onSelect));
+  updateSelBar();
+}
+
+function renderGuest(g){
+  const tier = (g.tier && g.tier !== 'member') ? `<span class="tier ${esc(g.tier)}">${esc(TIER_LABEL[g.tier]||g.tier)}</span>` : '';
+  const loy  = g.is_loyalty ? '<span class="loy">Loyalty</span>' : '';
+  const loved = (g.loved_here||[]).slice(0,3).map(x=>`<span class="tag">${esc(x)}</span>`).join('');
+  const occ   = (g.occasions||[]).slice(0,2).map(x=>`<span class="tag">${esc(x)}</span>`).join('');
+  const last  = g.last_visit_here ? `Last in ${esc(prettyDate(g.last_visit_here))} · ${esc(ago(g.days_since_last))}` : 'No recorded visit yet';
+  const checked = selected.has(g.user_id) ? 'checked' : '';
+  return `
+  <div class="guest">
+    <input type="checkbox" data-uid="${esc(g.user_id)}" ${checked} />
+    <div class="g-main">
+      <div class="g-name">${esc(g.name || 'Guest')} ${tier} ${loy}</div>
+      <div class="g-sub">${last}</div>
+      ${(loved||occ) ? `<div class="g-tags">${occ}${loved}</div>` : ''}
+    </div>
+    <div class="g-visits"><div class="num">${esc(g.visits_here ?? 0)}</div><div class="lbl">visit${(g.visits_here===1)?'':'s'}</div></div>
+  </div>`;
+}
+
+function onSelect(e){
+  const uid = e.currentTarget.getAttribute('data-uid');
+  if(e.currentTarget.checked) selected.add(uid); else selected.delete(uid);
+  updateSelBar();
+}
+function updateSelBar(){
+  $('sel-count').textContent = selected.size;
+  $('selbar').classList.toggle('show', selected.size > 0);
+  $('invite-btn').disabled = selected.size === 0;
+}
+
+// ── Compose + send (create_partner_invite) ──────────────────────────────────
+let composeKind = 'experience';
+function openCompose(){
+  if(!selected.size) return;
+  $('compose-n').textContent = selected.size;
+  $('c-msg').className = 'cmsg'; $('c-msg').textContent = '';
+  $('compose-back').hidden = false;
+}
+function closeCompose(){ $('compose-back').hidden = true; }
+function cmsg(kind, text){ const m = $('c-msg'); m.className = 'cmsg ' + kind; m.textContent = text; }
+
+$('invite-btn').addEventListener('click', openCompose);
+$('c-cancel').addEventListener('click', closeCompose);
+document.querySelectorAll('.kbtn').forEach(b => b.addEventListener('click', () => {
+  composeKind = b.dataset.kind;
+  document.querySelectorAll('.kbtn').forEach(x => x.classList.toggle('active', x === b));
+  $('c-occasion').placeholder = composeKind === 'reminder'
+    ? 'e.g. Happy Hour · 2-for-1 cocktails' : 'e.g. New Menu Tasting';
+}));
+
+$('c-send').addEventListener('click', async () => {
+  const occasion = ($('c-occasion').value || '').trim();
+  if(!occasion){ cmsg('err', 'Give it a title so guests know what it is.'); return; }
+  const ids = Array.from(selected);
+  const btn = $('c-send'); btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const r = await db.rpc('create_partner_invite', {
+      p_token: partnerToken,
+      p_kind: composeKind,
+      p_occasion: occasion,
+      p_when_label: ($('c-when').value || '').trim(),
+      p_scheduled_date: null,
+      p_note: ($('c-note').value || '').trim() || null,
+      p_recipient_ids: ids,
+    });
+    const d = r && r.data;
+    if(d && d.ok){
+      cmsg('ok', `Sent to ${d.recipients} guest${d.recipients===1?'':'s'} in the app${d.skipped ? ` · ${d.skipped} skipped (not your guests)` : ''}.`);
+      btn.textContent = 'Sent';
+      selected.clear();
+      setTimeout(() => { closeCompose(); btn.disabled=false; btn.textContent='Send'; $('c-occasion').value=''; $('c-when').value=''; $('c-note').value=''; load(); }, 1600);
+    } else {
+      const err = (d && d.error) || 'unknown';
+      cmsg('err', err === 'not_enabled'
+        ? 'Guest Reach isn’t enabled for your venue yet. Contact TRODDR to turn it on.'
+        : err === 'no_valid_recipients' ? 'None of the selected guests can be reached.'
+        : 'Could not send. Please try again.');
+      btn.disabled=false; btn.textContent='Send';
+    }
+  } catch(e){ cmsg('err', 'Could not send. Please try again.'); btn.disabled=false; btn.textContent='Send'; }
+});
+
+boot();
+</script>
+</body>
+</html>

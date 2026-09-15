@@ -194,3 +194,24 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
   .header { background: #fff; border-bottom: 2px solid var(--ink); }
   .solution-card,.feature-card,.contact-form,.faq-item { border-color: var(--ink); }
 }
+
+/* Selected editorial accents, with the original hero copy and palette. */
+.hero-kicker { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; backdrop-filter: none; color: #356581; font-size: 11px; letter-spacing: 2px; }
+.local-note { position: absolute; z-index: 4; display: flex; align-items: center; gap: 12px; padding: 15px 18px; background: #263d4bf5; border: 1px solid #ffffff26; border-radius: 13px; box-shadow: 0 18px 40px #10203320; color: #edf5f8; font-size: 12px; backdrop-filter: blur(14px); pointer-events: none; }
+.local-note small { display: block; margin-top: 5px; color: #bdd3df; font-size: 10px; }
+.note-one { top: 55px; left: 0; }
+.note-two { bottom: 90px; right: 0; }
+.note-two > span { color: #bce8fb; font-size: 28px; }
+.note-dot { width: 10px; height: 10px; flex-shrink: 0; border-radius: 50%; background: #a3e4cf; box-shadow: 0 0 0 6px #a3e4cf13; }
+@media(max-width:900px) {
+ .phone-stage { width: min(520px,100%); margin: auto; }
+ .note-one { top: 85px; }
+ .note-two { bottom: 115px; }
+}
+@media(max-width:620px) {
+ .local-note { padding: 11px; font-size: 11px; gap: 10px; }
+ .local-note small { font-size: 9px; }
+ .note-one { left: 0; }
+ .note-two { right: 0; bottom: 150px; }
+}
+@media(prefers-reduced-transparency:reduce) { .local-note { background: #263d4b; backdrop-filter: none; } }

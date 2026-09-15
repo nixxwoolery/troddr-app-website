@@ -85,6 +85,7 @@
       { "source": "/booking", "destination": "/booking.html" },
       { "source": "/partner/bookings", "destination": "/partner-bookings.html" },
       { "source": "/partner/opportunities", "destination": "/partner-opportunities.html" },
+      { "source": "/partner/guests", "destination": "/partner-guests.html" },
       { "source": "/partner/login", "destination": "/partner-login.html" },
       { "source": "/partner/listing",  "destination": "/partner-listing.html" },
       { "source": "/partner/loyalty",  "destination": "/partner-loyalty.html" },
