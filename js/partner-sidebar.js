@@ -101,6 +101,7 @@
     ] },
     { group: 'Event', icon: 'ic-calendar', page: '/partner/event', cap: 'event', children: [
       { label: 'Event Dashboard', section: '' },
+      { label: 'Order Queue',     section: '', page: '/partner/event-orders' },
       { label: 'Floor Plan',      section: '', page: '/partner/event-floorplan' },
       { label: 'Parking',         section: '', page: '/partner/event-parking' },
     ] },

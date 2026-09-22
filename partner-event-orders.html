@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Order Queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+<style>
+:root{
+  --blue:#0077CC; --blue-light:#e8f4ff; --green:#1a7f4e; --green-light:#e6f5ec;
+  --red:#c0392b; --red-light:#fdecea; --amber:#b86e00; --amber-light:#fff4e0;
+  --grey-mid:#666; --grey-light:#999; --border:#e8e8e8; --bg-soft:#f8f9fa; --radius:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-size:14px;line-height:1.5;}
+.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 80px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+.topbar h1{font-size:20px;font-weight:800;}
+.topbar .sub{color:var(--grey-mid);font-size:12px;}
+.controls{display:flex;align-items:center;gap:10px;}
+.btn{border:1px solid var(--border);background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-weight:600;cursor:pointer;}
+.btn:active{transform:translateY(1px);}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.btn.green{background:var(--green);color:#fff;border-color:var(--green);}
+.btn.ghost{background:#fff;}
+.btn.small{padding:5px 9px;font-size:12px;border-radius:8px;}
+.btn.danger{color:var(--red);border-color:#f0c6c1;}
+
+/* reconciliation strip */
+.recon{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.stat{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 14px;min-width:84px;}
+.stat b{display:block;font-size:20px;font-weight:800;line-height:1.1;}
+.stat span{font-size:11px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.4px;}
+.stat.new b{color:var(--blue);} .stat.prep b{color:var(--amber);}
+.stat.ready b{color:var(--green);} .stat.open b{color:var(--red);}
+
+/* connection banner */
+.banner{display:none;background:var(--amber-light);color:var(--amber);border:1px solid #f0d9a8;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-weight:600;}
+.banner.show{display:block;}
+
+/* lanes */
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:860px){.lanes{grid-template-columns:1fr;}}
+.lane{background:transparent;}
+.lane h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.lane .count{background:#fff;border:1px solid var(--border);border-radius:999px;padding:1px 9px;font-size:12px;}
+.lane.new h2{color:var(--blue);} .lane.prep h2{color:var(--amber);} .lane.ready h2{color:var(--green);}
+.lane-empty{color:var(--grey-light);font-size:13px;padding:14px;text-align:center;border:1px dashed var(--border);border-radius:12px;}
+
+/* card */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.card.overdue{border-color:var(--red);box-shadow:0 0 0 2px var(--red-light);}
+.card.isnew{animation:pop .5s ease;}
+@keyframes pop{0%{box-shadow:0 0 0 4px var(--blue-light);}100%{box-shadow:0 1px 3px rgba(0,0,0,.05);}}
+.card .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.code{font-size:24px;font-weight:800;letter-spacing:2px;}
+.when{text-align:right;font-size:12px;color:var(--grey-mid);}
+.when .od{color:var(--red);font-weight:700;}
+.who{margin:6px 0 8px;font-size:13px;}
+.who a{color:var(--blue);text-decoration:none;font-weight:600;}
+.note{background:var(--amber-light);color:#7a5200;border-radius:8px;padding:6px 10px;font-size:12px;margin:8px 0;}
+.attn{background:#fff4e0;border:1px solid var(--amber);color:#7a5200;border-radius:8px;padding:6px 10px;font-size:12px;margin:8px 0;font-weight:600;}
+.items{margin:8px 0;border-top:1px solid var(--border);padding-top:8px;}
+.irow{display:flex;align-items:center;gap:8px;padding:4px 0;}
+.irow .q{font-weight:700;color:var(--blue);min-width:26px;}
+.irow .nm{flex:1;}
+.opts{font-size:12px;color:var(--grey-mid);margin-top:2px;}
+.irow.gone .nm{text-decoration:line-through;color:var(--grey-light);}
+.irow .so{font-size:11px;border:1px solid #f0c6c1;color:var(--red);border-radius:6px;padding:2px 6px;cursor:pointer;background:#fff;}
+.irow .pr{color:var(--grey-mid);font-size:12px;}
+.total{display:flex;justify-content:space-between;font-weight:800;border-top:1px solid var(--border);padding-top:8px;margin-top:6px;}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+.modal.show{display:flex;}
+.sheet{background:#fff;width:100%;max-width:560px;border-radius:16px 16px 0 0;max-height:80vh;overflow:auto;padding:16px;}
+.sheet h3{margin-bottom:6px;}
+.mvendor{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-mid);margin:14px 0 6px;}
+.mitem{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.mitem .mn{flex:1;}
+.mitem.sold .mn{color:var(--grey-light);text-decoration:line-through;}
+#gate{display:none;text-align:center;padding:60px 20px;color:var(--grey-mid);}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" style="display:none">
+  <div class="topbar">
+    <div>
+      <h1 id="evTitle">Order Queue</h1>
+      <div class="sub" id="evSub">Live orders · pickup at the counter</div>
+    </div>
+    <div class="controls">
+      <span id="ordState" class="sub"></span>
+      <button class="btn small" id="pauseBtn" style="display:none"></button>
+      <button class="btn small ghost" id="enableBtn"></button>
+      <button class="btn ghost small" id="soundBtn" title="Toggle new-order sound">🔔 Sound: On</button>
+      <span class="sub" id="lastSync"></span>
+    </div>
+  </div>
+
+  <div class="banner" id="banner">Reconnecting… showing last known orders.</div>
+
+  <div class="recon" id="recon"></div>
+
+  <div class="lanes">
+    <div class="lane new"><h2>New <span class="count" id="c-new">0</span></h2><div id="lane-new"></div></div>
+    <div class="lane prep"><h2>Preparing <span class="count" id="c-prep">0</span></h2><div id="lane-prep"></div></div>
+    <div class="lane ready"><h2>Ready for pickup <span class="count" id="c-ready">0</span></h2><div id="lane-ready"></div></div>
+  </div>
+
+  <div style="margin-top:22px">
+    <button class="btn ghost small" id="histToggle">Show history (collected / cancelled) ▾</button>
+    <div id="history" style="display:none;margin-top:12px"></div>
+  </div>
+</div>
+
+<div id="gate">Loading order queue…</div>
+
+<!-- add-item / menu modal -->
+<div class="modal" id="menuModal">
+  <div class="sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 id="menuTitle">Add an item</h3>
+      <button class="btn small ghost" onclick="closeMenu()">Close</button>
+    </div>
+    <div class="sub" id="menuHint">Pick a replacement to add to this order.</div>
+    <div id="menuList"></div>
+  </div>
+</div>
+
+<script>
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+let partnerToken = '';
+let cfgState = { enabled: false, paused: false };
+let menuCache = null;
+let knownIds = new Set();
+let firstLoad = true;
+let soundOn = (localStorage.getItem('troddr_order_sound') ?? '1') === '1';
+let addTargetOrder = null;
+let pollTimer = null;
+
+const $ = (id) => document.getElementById(id);
+const jaTime = (iso) => new Date(iso).toLocaleTimeString('en-US',{timeZone:'America/Jamaica',hour:'numeric',minute:'2-digit'});
+const money = (n,c) => n==null ? null : ((c==='JMD'||c==='USD'?'$':'')+Math.round(n).toLocaleString());
+const minsBetween = (a,b) => Math.round((a-b)/60000);
+function esc(s){return (s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+function beep(){
+  if(!soundOn) return;
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='sine'; o.frequency.value=880; g.gain.value=0.08;
+    o.start(); o.frequency.setValueAtTime(660,ctx.currentTime+0.12);
+    o.stop(ctx.currentTime+0.28);
+  }catch(e){}
+}
+
+async function init(){
+  await window.PartnerAuth?.resolve(db, { require:false });
+  partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+  if(!partnerToken){ $('gate').style.display='block'; $('gate').textContent='This page needs a partner link. Please open it from your dashboard.'; return; }
+  window.PartnerAuth?.mountSessionControl?.('partner');
+
+  $('soundBtn').onclick = ()=>{ soundOn=!soundOn; localStorage.setItem('troddr_order_sound',soundOn?'1':'0'); $('soundBtn').textContent='🔔 Sound: '+(soundOn?'On':'Off'); };
+  $('soundBtn').textContent='🔔 Sound: '+(soundOn?'On':'Off');
+  $('histToggle').onclick = ()=>{ const h=$('history'); const open=h.style.display!=='none'; h.style.display=open?'none':'block'; $('histToggle').textContent=(open?'Show':'Hide')+' history (collected / cancelled) '+(open?'▾':'▴'); };
+
+  $('pauseBtn').onclick = ()=>setOrderingState({ p_paused: !cfgState.paused });
+  $('enableBtn').onclick = ()=>{
+    if (cfgState.enabled && !confirm('Close ordering completely? Customers won’t be able to place new orders until you re-open.')) return;
+    setOrderingState({ p_enabled: !cfgState.enabled });
+  };
+
+  await loadQueue();
+  pollTimer = setInterval(loadQueue, 5000);
+}
+
+async function loadQueue(){
+  let data, error;
+  try{
+    ({data,error} = await db.rpc('get_order_queue_by_token',{ p_token: partnerToken }));
+  }catch(e){ error = e; }
+  if(error || !data){
+    $('banner').classList.add('show');       // keep last render, flag the gap
+    return;
+  }
+  $('banner').classList.remove('show');
+  render(data);
+  $('lastSync').textContent = 'Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+}
+
+function render(data){
+  $('gate').style.display='none'; $('app').style.display='block';
+  $('evTitle').textContent = (data.event?.title||'Order Queue');
+  const counter = data.config?.pickup_counter_name || 'the pickup counter';
+  $('evSub').textContent = 'Live orders · pickup at '+counter;
+
+  // Ordering state controls
+  cfgState = { enabled: !!(data.config && data.config.enabled), paused: !!(data.config && data.config.paused) };
+  $('ordState').innerHTML = !cfgState.enabled
+    ? '<b style="color:var(--grey-mid)">Ordering closed</b>'
+    : (cfgState.paused ? '<b style="color:var(--amber)">New orders paused</b>' : '<b style="color:var(--green)">Ordering open</b>');
+  $('pauseBtn').style.display = cfgState.enabled ? '' : 'none';
+  $('pauseBtn').textContent = cfgState.paused ? '▶ Resume orders' : '⏸ Pause new orders';
+  $('pauseBtn').className = 'btn small ' + (cfgState.paused ? 'green' : '');
+  $('enableBtn').textContent = cfgState.enabled ? 'Close ordering' : 'Open ordering';
+
+  const orders = data.orders||[];
+  const now = Date.now();
+
+  // detect brand-new active orders → chime (skip the very first load)
+  const activeNow = orders.filter(o=>['received','preparing','ready'].includes(o.status));
+  if(!firstLoad){
+    for(const o of activeNow){ if(!knownIds.has(o.id) && o.status==='received'){ beep(); break; } }
+  }
+  const buckets = { received:[], preparing:[], ready:[], collected:[], cancelled:[] };
+  for(const o of orders){ (buckets[o.status]||[]).push(o); }
+
+  const overdueOpen = activeNow.filter(o=>o.status!=='ready' && new Date(o.pickup_time).getTime()<now).length;
+
+  // reconciliation strip
+  $('recon').innerHTML = [
+    stat('Active', activeNow.length,''),
+    stat('New', buckets.received.length,'new'),
+    stat('Preparing', buckets.preparing.length,'prep'),
+    stat('Ready', buckets.ready.length,'ready'),
+    stat('Overdue', overdueOpen,'open'),
+    stat('Collected', buckets.collected.length,''),
+    stat('Cancelled', buckets.cancelled.length,''),
+  ].join('');
+
+  $('lane-new').innerHTML  = buckets.received.length ? buckets.received.map(card).join('') : empty('No new orders');
+  $('lane-prep').innerHTML = buckets.preparing.length ? buckets.preparing.map(card).join('') : empty('Nothing being prepared');
+  $('lane-ready').innerHTML= buckets.ready.length ? buckets.ready.map(card).join('') : empty('Nothing waiting for pickup');
+  $('c-new').textContent=buckets.received.length; $('c-prep').textContent=buckets.preparing.length; $('c-ready').textContent=buckets.ready.length;
+
+  const hist=[...buckets.collected,...buckets.cancelled];
+  $('history').innerHTML = hist.length ? hist.map(o=>card(o,true)).join('') : empty('No completed orders yet');
+
+  knownIds = new Set(activeNow.map(o=>o.id));
+  firstLoad=false;
+}
+
+function stat(label,val,cls){ return `<div class="stat ${cls}"><b>${val}</b><span>${label}</span></div>`; }
+function empty(t){ return `<div class="lane-empty">${t}</div>`; }
+
+function card(o, hist=false){
+  const now=Date.now();
+  const pickup=new Date(o.pickup_time).getTime();
+  const toPickup=minsBetween(pickup,now);
+  const age=minsBetween(now,new Date(o.created_at).getTime());
+  const overdue = !hist && o.status!=='ready' && pickup<now;
+  const isNew = !hist && o.status==='received' && !knownIds.has(o.id);
+
+  const items = (o.items||[]).map(it=>{
+    const opts = Array.isArray(it.options) && it.options.length ? it.options.map(x=>esc(x.option)).join(' · ') : '';
+    return `
+    <div class="irow ${it.is_unavailable?'gone':''}">
+      <span class="q">${it.quantity}×</span>
+      <span class="nm">${esc(it.item_name)}<span class="pr"> · ${esc(it.vendor_name)}</span>
+        ${opts?`<div class="opts">${opts}</div>`:''}
+        ${it.note?`<div class="opts">“${esc(it.note)}”</div>`:''}
+      </span>
+      ${(!hist && !it.is_unavailable && ['received','preparing'].includes(o.status)) ? `<button class="so" onclick="soldOut('${o.id}','${it.id}','${esc(it.item_name)}')">Sold out</button>`:''}
+      ${it.is_unavailable?'<span class="pr">removed</span>':`<span class="pr">${money(it.unit_price*it.quantity,o.currency)||''}</span>`}
+    </div>`;
+  }).join('');
+
+  const whenHtml = hist
+    ? `<div class="when">${o.status==='collected'?'Collected':'Cancelled'}</div>`
+    : `<div class="when">Pickup ${jaTime(o.pickup_time)}<br>
+        ${overdue?`<span class="od">${Math.abs(toPickup)} min overdue</span>`:(o.status==='ready'?'ready now':`in ${toPickup} min`)}
+        <br><span style="color:var(--grey-light)">placed ${age}m ago</span></div>`;
+
+  let actions='';
+  if(!hist){
+    if(o.status==='received') actions=`<button class="btn primary small" onclick="advance('${o.id}','preparing')">Start preparing</button>`;
+    if(o.status==='preparing') actions=`<button class="btn green small" onclick="advance('${o.id}','ready')">Mark ready</button>`;
+    if(o.status==='ready') actions=`<button class="btn green small" onclick="advance('${o.id}','collected')">Mark collected</button>`;
+    const editable=['received','preparing'].includes(o.status);
+    actions+=`<a class="btn small ghost" href="tel:${esc(o.customer_phone)}">Call</a>`;
+    if(editable) actions+=`<button class="btn small ghost" onclick="openMenu('${o.id}')">Add item</button>`;
+    if(o.status!=='ready') actions+=`<button class="btn small danger" onclick="cancelOrder('${o.id}','${o.code}')">Cancel</button>`;
+  }
+
+  return `<div class="card ${overdue?'overdue':''} ${isNew?'isnew':''}">
+    <div class="chead"><div class="code">${o.code}</div>${whenHtml}</div>
+    <div class="who">${esc(o.customer_name)} · <a href="tel:${esc(o.customer_phone)}">${esc(o.customer_phone)}</a></div>
+    ${o.note?`<div class="note">📝 ${esc(o.note)}</div>`:''}
+    ${o.attention_reason?`<div class="attn">⚠ ${esc(o.attention_reason)}</div>`:''}
+    <div class="items">${items}</div>
+    <div class="total"><span>Total (pay at pickup)</span><span>${o.subtotal!=null?money(o.subtotal,o.currency):'At counter'}</span></div>
+    ${actions?`<div class="actions">${actions}</div>`:''}
+  </div>`;
+}
+
+async function setOrderingState(patch){
+  const { error } = await db.rpc('partner_set_ordering_state', Object.assign({ p_token: partnerToken }, patch));
+  if (error){ alert('Could not update ordering: '+error.message); return; }
+  await loadQueue();
+}
+async function advance(id,status){
+  if(status==='collected' && !confirm('Mark this order as collected (handed to the customer)?')) return;
+  const { error } = await db.rpc('partner_advance_order',{ p_token:partnerToken, p_order_id:id, p_status:status });
+  if(error) alert('Could not update: '+error.message); await loadQueue();
+}
+async function cancelOrder(id,code){
+  const reason=prompt('Cancel order '+code+'? Optional reason shown to the customer:','');
+  if(reason===null) return;
+  const { error } = await db.rpc('partner_advance_order',{ p_token:partnerToken, p_order_id:id, p_status:'cancelled', p_reason: reason||null });
+  if(error) alert('Could not cancel: '+error.message); await loadQueue();
+}
+async function soldOut(orderId,itemId,name){
+  if(!confirm('Mark "'+name+'" unavailable and remove it from this order? Call the customer to offer a swap.')) return;
+  const { error } = await db.rpc('partner_mark_item_unavailable',{ p_token:partnerToken, p_order_id:orderId, p_item_id:itemId, p_reason: name+' was unavailable and removed' });
+  if(error) alert('Could not update: '+error.message); await loadQueue();
+}
+
+async function openMenu(orderId){
+  addTargetOrder = orderId;
+  $('menuModal').classList.add('show');
+  if(!menuCache){
+    const { data } = await db.rpc('get_event_menu_by_token',{ p_token:partnerToken });
+    menuCache = data||[];
+  }
+  renderMenu();
+}
+function closeMenu(){ $('menuModal').classList.remove('show'); addTargetOrder=null; }
+function renderMenu(){
+  $('menuList').innerHTML = (menuCache||[]).map(v=>`
+    <div class="mvendor">${esc(v.vendor)}</div>
+    ${(v.items||[]).map(it=>`
+      <div class="mitem ${it.is_sold_out?'sold':''}">
+        <span class="mn">${esc(it.name)} ${it.price!=null?('· '+money(it.price,'JMD')):(it.price_label?('· '+esc(it.price_label)):'')}</span>
+        <button class="btn small ghost" onclick="toggleSold('${it.id}',${it.is_sold_out?'false':'true'})">${it.is_sold_out?'Un-sold-out':'Sold out'}</button>
+        <button class="btn small primary" ${it.is_sold_out?'disabled':''} onclick="addItem('${it.id}')">Add</button>
+      </div>`).join('')}
+  `).join('');
+}
+async function addItem(menuItemId){
+  if(!addTargetOrder) return;
+  const { error } = await db.rpc('partner_add_order_item',{ p_token:partnerToken, p_order_id:addTargetOrder, p_menu_item_id:menuItemId, p_quantity:1 });
+  if(error){ alert('Could not add: '+error.message); return; }
+  closeMenu(); await loadQueue();
+}
+async function toggleSold(menuItemId, sold){
+  const { error } = await db.rpc('partner_set_menu_item_sold_out',{ p_token:partnerToken, p_menu_item_id:menuItemId, p_sold_out: sold });
+  if(error){ alert('Could not update: '+error.message); return; }
+  menuCache=null; await openMenu(addTargetOrder);   // refresh menu state
+}
+
+init();
+</script>
+</body>
+</html>

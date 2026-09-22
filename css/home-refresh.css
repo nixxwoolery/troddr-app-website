@@ -215,3 +215,145 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
  .note-two { right: 0; bottom: 150px; }
 }
 @media(prefers-reduced-transparency:reduce) { .local-note { background: #263d4b; backdrop-filter: none; } }
+
+/* Useful, lightweight discovery on the homepage. */
+.browse-first { display: inline-flex; gap: 16px; align-items: center; margin: 0 0 22px; color: var(--blue-dark); font-size: 14px; font-weight: 650; text-underline-offset: 5px; }
+.preview-controls { position: absolute; bottom: -35px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.preview-controls p { margin: 0 5px 0 0; font-size: 11px; }
+.preview-controls button { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--ink); cursor: pointer; }
+.day-finder { padding: 80px 0; background: #f8fafb; scroll-margin-top: 90px; }
+.day-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.day-heading h2 { margin: 0 0 14px; font-size: clamp(30px,3.5vw,44px); line-height: 1.12; letter-spacing: -1.5px; color: var(--ink); }
+.day-heading p { color: var(--muted); }
+.day-heading .hero-kicker { margin-bottom: 14px; }
+.saved-jump { color: var(--blue-dark); white-space: nowrap; font-size: 14px; text-underline-offset: 4px; }
+#saved-count { display: inline-grid; place-items: center; background: #e3eef5; border-radius: 50%; width: 27px; height: 27px; margin-left: 5px; }
+.mood-options { display: flex; flex-wrap: wrap; gap: 10px; margin: 30px 0 16px; }
+.mood-options button { border: 1px solid #cbd7df; background: white; color: #354c5c; padding: 12px 18px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 14px; transition: background .18s,color .18s; }
+.mood-options button:hover { background: #edf5fa; }
+.mood-options button[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: white; }
+.idea-count { color: var(--muted); font-size: 12px; margin: 0 0 18px; }
+.day-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.day-card { display: flex; flex-direction: column; align-items: flex-start; padding: 26px; background: white; border: 1px solid #dde6eb; border-radius: 18px; }
+.day-card[hidden] { display: none; }
+.day-category { color: #3c7084; font-size: 11px; font-weight: 650; letter-spacing: .8px; text-transform: uppercase; }
+.day-card h3 { color: var(--ink); font-size: 23px; letter-spacing: -.6px; line-height: 1.2; margin: 20px 0 12px; }
+.day-card p { color: var(--muted); font-size: 14px; line-height: 1.65; margin: 0 0 24px; }
+.save-idea { margin-top: auto; background: #edf5fa; border: 1px solid #d9e7ef; color: var(--blue-dark); border-radius: 9px; padding: 11px 14px; cursor: pointer; font: inherit; font-size: 13px; }
+.save-idea[aria-pressed="true"] { color: #19634e; background: #e2f4ec; border-color: #c2e5d7; }
+.saved-ideas { scroll-margin-top: 100px; display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 28px; margin-top: 25px; background: #edf4f7; border-radius: 18px; }
+.saved-ideas h3 { font-size: 21px; color: var(--ink); margin: 0 0 10px; }
+.saved-ideas p { color: var(--muted); font-size: 14px; }
+.saved-ideas .save-note { font-size: 11px; margin-bottom: 0; }
+#saved-list { padding: 0; list-style: none; margin: 12px 0; }
+#saved-list li { display: flex; align-items: center; gap: 16px; justify-content: space-between; font-size: 14px; }
+#saved-list button { border: 0; background: none; padding: 12px 0; color: var(--blue-dark); text-decoration: underline; cursor: pointer; }
+#copy-ideas { border: 0; background: var(--blue); color: white; padding: 14px 20px; border-radius: 10px; white-space: nowrap; cursor: pointer; font: inherit; font-size: 14px; }
+#copy-ideas:disabled { background: #d5e0e7; color: #576c7b; cursor: default; }
+.save-status { min-height: 20px; margin-top: 12px; color: #24624e; font-size: 13px; }
+@media(max-width:900px) { .day-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:620px) {
+ .day-finder { padding: 55px 0; }
+ .day-heading,.saved-ideas { flex-direction: column; align-items: flex-start; gap: 15px; }
+ .day-grid { grid-template-columns: 1fr; }
+ .mood-options { gap: 8px; }
+ .mood-options button { font-size: 12px; padding: 12px; }
+ .saved-ideas { padding: 22px; }
+ .preview-controls { bottom: 0; }
+}
+
+.shortlist-actions { display: flex; flex-direction: column; align-items: center; gap: 14px; flex-shrink: 0; }
+.shortlist-actions a { color: var(--blue-dark); font-size: 13px; text-underline-offset: 4px; }
+
+/* Give the contact form a comfortable, contained layout. */
+.contact-section { padding: 72px 0 88px; scroll-margin-top: 90px; }
+.contact-section .section-subtitle { max-width: 650px; margin-bottom: 32px; }
+.contact-form { padding: 32px; background: #fff; border: 1px solid #e1e7ec; border-radius: 20px; box-shadow: 0 12px 36px rgba(16,32,51,.05); }
+.contact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.contact-field { min-width: 0; margin-bottom: 20px; gap: 8px; }
+.contact-field input,.contact-field textarea { width: 100%; box-sizing: border-box; font-family: inherit; background: #f8fafb; }
+.contact-field textarea { min-height: 150px; resize: vertical; }
+.contact-field input::placeholder,.contact-field textarea::placeholder { color: #6b7884; opacity: 1; }
+.contact-field .error-message:empty { display: none; }
+.contact-form .contact-submit { min-height: 48px; border-radius: 12px; box-shadow: none; }
+.contact-form .contact-submit:hover { transform: none; box-shadow: none; }
+.contact-email-note { margin: 16px 0 0; color: var(--muted); font-size: 12px; line-height: 1.65; text-align: center; }
+.contact-email-note a { color: var(--blue-dark); text-underline-offset: 3px; }
+@media(max-width:620px) {
+ .contact-section { padding: 52px 0; }
+ .contact-form { padding: 22px 18px; border-radius: 16px; }
+ .contact-grid { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* Published guide previews replace the disconnected idea shortlist. */
+.mood-options[hidden],.guide-preview-card[hidden] { display: none; }
+.guide-preview-card { min-width: 0; overflow: hidden; display: flex; flex-direction: column; border: 1px solid #dde6eb; border-radius: 18px; background: #fff; }
+.guide-cover-link { display: block; aspect-ratio: 8 / 5; overflow: hidden; background: #e3eef0; }
+.guide-cover-link img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .3s ease; }
+.guide-cover-link img[hidden] { display: none; }
+.guide-preview-card:hover .guide-cover-link img { transform: scale(1.035); }
+.guide-preview-body { display: flex; flex-direction: column; flex: 1; padding: 25px; align-items: flex-start; }
+.guide-preview-body h3 { font-size: 24px; line-height: 1.2; letter-spacing: -.5px; margin: 16px 0 12px; }
+.guide-preview-body h3 a { color: var(--ink); text-decoration: none; }
+.guide-preview-body h3 a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.guide-preview-body p { color: var(--muted); font-size: 14px; line-height: 1.7; margin: 0 0 25px; }
+.read-guide { display: inline-flex; gap: 20px; align-items: center; margin-top: auto; min-height: 44px; color: var(--blue-dark); font-weight: 600; font-size: 14px; text-underline-offset: 4px; }
+.cover-unavailable::after { content: 'TRODDR · LOCAL GUIDES'; display: grid; place-items: center; height: 100%; color: #356581; font-size: 14px; letter-spacing: 2px; }
+@media(prefers-reduced-motion: reduce) { .guide-preview-card:hover .guide-cover-link img { transform: none; } }
+
+.parish-explorer { padding: 80px 0; background: #fff; scroll-margin-top: 95px; }
+.parish-explorer h2 { color: var(--ink); font-size: clamp(30px,3.5vw,44px); line-height: 1.15; letter-spacing: -1.4px; margin: 0 0 15px; }
+.parish-intro { max-width: 670px; color: var(--muted); line-height: 1.65; margin-bottom: 28px; }
+.parish-explorer label { display: block; color: var(--ink); font-size: 13px; font-weight: 650; margin-bottom: 8px; }
+#parish-select { width: min(100%,340px); min-height: 48px; border: 1px solid #bdcdd8; border-radius: 10px; background: #f8fafb; color: var(--ink); padding: 12px 16px; font: inherit; }
+#parish-status { font-size: 13px; color: var(--muted); margin: 18px 0; }
+.parish-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.parish-card { border: 1px solid #dfe7ec; border-radius: 16px; overflow: hidden; background: white; }
+.parish-card a { display: flex; flex-direction: column; height: 100%; text-decoration: none; color: var(--ink); }
+.parish-card img { width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; }
+.parish-card-body { padding: 22px; display: flex; flex: 1; flex-direction: column; }
+.parish-card h3 { font-size: 22px; line-height: 1.2; margin: 0 0 10px; }
+.parish-card p { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+.parish-view { color: var(--blue-dark); font-size: 14px; font-weight: 600; margin-top: auto; }
+.parish-card a:hover .parish-view { text-decoration: underline; text-underline-offset: 4px; }
+.parish-card:focus-within { outline: 3px solid var(--blue); outline-offset: 3px; }
+.parish-download { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px; border-radius: 16px; background: #edf6fa; margin-top: 24px; }
+.parish-download h3 { color: var(--ink); font-size: 23px; margin: 0 0 8px; }
+.parish-download p { color: var(--muted); margin: 0; font-size: 14px; }
+.parish-app-link { padding: 14px 20px; border-radius: 10px; background: var(--blue); color: white; text-decoration: none; white-space: nowrap; font-size: 14px; }
+#parish-retry { padding: 12px 20px; border-radius: 10px; border: 1px solid #bdcdd8; background: #fff; cursor: pointer; }
+@media(max-width:900px) { .parish-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:620px) { .parish-explorer { padding: 55px 0; } .parish-grid { grid-template-columns: 1fr; } .parish-download { flex-direction: column; align-items: flex-start; padding: 22px; } }
+
+/* Compact parish discovery: one row of three on desktop. */
+.parish-explorer .section-container { max-width: 1120px; }
+.parish-picker { display: inline-flex; align-items: center; gap: 22px; padding: 10px 12px 10px 18px; background: #f4f7f9; border: 1px solid #dde5eb; border-radius: 16px; }
+.parish-picker label { display: flex; align-items: center; gap: 9px; margin: 0; white-space: nowrap; color: #516777; font-size: 13px; }
+.parish-picker label svg { width: 20px; height: 20px; color: var(--blue); }
+.parish-picker #parish-select { width: 220px; border: 1px solid #dae3e9; border-radius: 10px; background-color: white; font-size: 15px; font-weight: 600; min-height: 46px; }
+.parish-grid { gap: 18px; }
+.parish-card { transition: box-shadow .2s ease, border-color .2s ease; }
+.parish-card:hover { border-color: #b7cbd8; box-shadow: 0 8px 24px #1020330c; }
+.parish-card img { aspect-ratio: 16/10; }
+.parish-card-body { padding: 18px; }
+.parish-card h3 { font-size: 20px; margin-bottom: 8px; }
+.parish-card p { margin-bottom: 16px; }
+.parish-view { font-size: 13px; }
+.parish-download { padding: 22px 24px; }
+.parish-download h3 { font-size: 21px; }
+@media(min-width:621px) { .parish-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(max-width:620px) {
+ .parish-picker { display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 14px; }
+ .parish-picker #parish-select { width: 100%; }
+ .parish-grid { gap: 12px; }
+ .parish-card a { flex-direction: row; }
+ .parish-card img { width: 112px; min-height: 148px; align-self: stretch; aspect-ratio: auto; object-fit: cover; flex-shrink: 0; }
+ .parish-card-body { padding: 15px; }
+ .parish-card h3 { font-size: 18px; }
+ .parish-card p { font-size: 12px; }
+}
+
+/* Matches the app's TroddrRewardsBadge light pill and Ionicons ribbon. */
+@font-face { font-family: 'TroddrRewardsIcons'; src: url('../images/fonts/Ionicons.ttf') format('truetype'); font-display: block; }
+.troddr-rewards-badge { display: inline-flex; align-items: center; align-self: flex-start; gap: 4px; padding: 3px 8px; border-radius: 20px; background: #E4F0FA; color: #0077cc; font-size: 11px; font-weight: 700; letter-spacing: .2px; line-height: 16px; margin: -6px 0 14px; }
+.rewards-ribbon { font-family: 'TroddrRewardsIcons'; font-size: 12px; font-weight: normal; line-height: 1; }

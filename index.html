@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/home-refresh.css?v=10">
+    <link rel="stylesheet" href="css/home-refresh.css?v=18">
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-N0L5H68MFR"></script>
@@ -148,12 +148,11 @@
             </button>
             <div class="nav-links" id="primary-navigation" role="navigation" aria-label="Primary navigation">
                 <button class="nav-close-btn" aria-controls="primary-navigation" aria-label="Close menu">×</button>
-                <a href="about.html" class="nav-item">About</a>
-                <!-- <a href="/business" class="nav-item">For Business</a> -->
-                <a href="/guides" class="nav-item">Guides</a>
-                <a href="#features" class="nav-item">Features</a>
-                <a href="#faq" class="nav-item">FAQ</a>
-                <a href="contact.html" class="nav-item">Contact</a>
+                    <a href="about.html" class="nav-item">About</a>
+                    <a href="/guides" class="nav-item">Guides</a>
+                    <a href="#features" class="nav-item">Features</a>
+                    <a href="#faq" class="nav-item">FAQ</a>
+                    <a href="contact.html" class="nav-item">Contact</a>
                 <a href="#demo" class="nav-cta">Download the App</a>
             </div>
         </div>
@@ -176,6 +175,7 @@
                             <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" />
                         </a>
                     </div>
+                    <a class="browse-first" href="#parish-explorer">Explore places by parish <span aria-hidden="true">↓</span></a>
                     <div class="hero-proof" aria-label="TRODDR benefits">
                         <span>Locally curated</span>
                         <span>No pay-to-play listings</span>
@@ -190,46 +190,53 @@
                         <span class="phone-preview-arrow">↓</span>
                     </div>
                     <div class="phone-device">
-                        <div class="phone-screen" tabindex="0" role="region" aria-label="Interactive preview of the TRODDR app. Scroll to explore the Discover screen.">
+                        <div class="phone-screen" tabindex="0" role="region" id="app-preview" aria-label="Scrollable screenshot of the TRODDR app. The controls inside the image are not interactive.">
                             <img src="images/troddr-app-home.webp"
                                  alt="TRODDR app Discover screen showing Kingston recommendations, events and dining picks"
                                  width="800" height="1739" fetchpriority="high">
                         </div>
                     </div>
+                    <div class="preview-controls"><p>Take a look inside · scrollable app preview</p><button type="button" data-preview="up" aria-controls="app-preview" aria-label="Scroll app preview up">↑</button><button type="button" data-preview="down" aria-controls="app-preview" aria-label="Scroll app preview down">↓</button></div>
                 </div>
             </div>
         </section>
 
-        <!-- Animated Ticker -->
-        <section class="ticker-section" aria-label="Join our community">
-            <div class="ticker-row">
-                <div class="section-container">
-                    <div class="ticker-inner">
-                        <div class="ticker-track" aria-hidden="true">
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <!-- Duplicate for smooth loop -->
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                            <span class="ticker-item">Download the App</span>
-                        </div>
-                    </div>
+        <section class="parish-explorer" id="parish-explorer" aria-labelledby="parish-title">
+            <div class="section-container">
+                <p class="hero-kicker">Your next stop</p>
+                <h2 id="parish-title">Where do you want to explore?</h2>
+                <p class="parish-intro">Pick a parish for a taste of what’s nearby. Preview up to three places, then explore more in the app.</p>
+                <div class="parish-picker"><label for="parish-select"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>Choose a parish</label>
+                <select id="parish-select">
+<option>Kingston</option><option>St. Andrew</option><option>St. Thomas</option><option>Portland</option><option>St. Mary</option><option>St. Ann</option><option>Trelawny</option><option>St. James</option><option>Hanover</option><option>Westmoreland</option><option>St. Elizabeth</option><option>Manchester</option><option>Clarendon</option><option>St. Catherine</option>
+                </select></div>
+                <p id="parish-status" role="status">Loading places…</p>
+                <div id="parish-places" class="parish-grid" aria-label="Place previews"></div>
+                <button id="parish-retry" type="button" hidden>Try again</button>
+                <div class="parish-download"><div><h3>There’s more to discover.</h3><p>Get TRODDR to explore more places and plan your next day out.</p></div><a href="#demo" class="parish-app-link">Download the free app <span aria-hidden="true">↗</span></a></div>
+                <noscript><p>Enable JavaScript to browse by parish, or download TRODDR to explore.</p></noscript>
+            </div>
+        </section>
+        <section class="day-finder" id="day-finder" aria-labelledby="day-title">
+            <div class="section-container">
+                <div class="day-heading"><div><p class="hero-kicker">The local perspective</p><h2 id="day-title">A good place to start.</h2><p>Real places. Ready-made plans. Explore Jamaica with Troddr’s local guides.</p></div></div>
+                <div class="mood-options" role="group" aria-label="Filter guides" hidden>
+                    <button type="button" data-guide-filter="all" aria-pressed="true">All guides</button>
+                    <button type="button" data-guide-filter="food" aria-pressed="false">Food &amp; drink</button>
+                    <button type="button" data-guide-filter="weekend" aria-pressed="false">Weekend escapes</button>
                 </div>
+                <p id="guide-count" class="idea-count" role="status">3 guides to explore</p>
+                <div class="day-grid guide-preview-grid">
+<article class="guide-preview-card" data-guide-category="food">
+                    <a class="guide-cover-link" href="https://www.troddr.com/guides/brunch-kingston" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&amp;w=2070&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.1.0&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" loading="lazy" width="640" height="400"></a>
+                    <div class="guide-preview-body"><span class="day-category">Food &amp; drink</span><h3><a href="https://www.troddr.com/guides/brunch-kingston">Brunching in Kingston</a></h3><p>Find your next brunch spot in Kingston, from international menus to a more casual local vibe.</p><a class="read-guide" href="https://www.troddr.com/guides/brunch-kingston" aria-label="Read Brunching in Kingston">Read guide <span aria-hidden="true">↗</span></a></div>
+                </article><article class="guide-preview-card" data-guide-category="weekend">
+                    <a class="guide-cover-link" href="https://www.troddr.com/guides/48-hours-in-negril" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&amp;w=3000&amp;auto=format&amp;fit=crop" alt="" loading="lazy" width="640" height="400"></a>
+                    <div class="guide-preview-body"><span class="day-category">Weekend escapes</span><h3><a href="https://www.troddr.com/guides/48-hours-in-negril">48 Hours in Negril</a></h3><p>A two-day Negril guide built around Skylark, with beach time, food and a slower pace on Seven Mile Beach.</p><a class="read-guide" href="https://www.troddr.com/guides/48-hours-in-negril" aria-label="Read 48 Hours in Negril">Read guide <span aria-hidden="true">↗</span></a></div>
+                </article><article class="guide-preview-card" data-guide-category="food">
+                    <a class="guide-cover-link" href="https://www.troddr.com/guides/restaurant-hopping-date-night-kingston" tabindex="-1" aria-hidden="true"><img src="https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/place%20images/IMG_0288.jpg" alt="" loading="lazy" width="640" height="400"></a>
+                    <div class="guide-preview-body"><span class="day-category">Food &amp; drink</span><h3><a href="https://www.troddr.com/guides/restaurant-hopping-date-night-kingston">Restaurant Hopping: Date Night in Kingston</a></h3><p>Three stops in Kingston: light bites and wine, a main course, then dessert and drinks.</p><a class="read-guide" href="https://www.troddr.com/guides/restaurant-hopping-date-night-kingston" aria-label="Read Restaurant Hopping: Date Night in Kingston">Read guide <span aria-hidden="true">↗</span></a></div>
+                </article></div>
             </div>
         </section>
 
@@ -468,7 +475,7 @@
                 <h2 id="contact-title" class="section-title">Get in Touch</h2>
                 <p class="section-subtitle">Questions, partnerships, press, or just want to say hi? We'd love to hear from you.</p>
 
-                <form id="contact-form" class="contact-form" novalidate aria-labelledby="contact-title">
+                <form id="contact-form" class="contact-form" novalidate aria-labelledby="contact-title" aria-describedby="contact-email-note">
                     <div class="contact-grid">
                         <div class="contact-field">
                             <label for="contact-name">Name</label>
@@ -492,8 +499,9 @@
                     </div>
 
                     <button type="submit" class="contact-submit">
-                        <span class="btn-text">Email TRODDR</span>
+                        <span class="btn-text">Open email draft</span>
                     </button>
+                    <p id="contact-email-note" class="contact-email-note">Opens your email app with your message ready to send. You can also email <a href="mailto:hello@troddr.com">hello@troddr.com</a>.</p>
                 </form>
             </div>
         </section>
@@ -796,5 +804,7 @@
             });
         })();
     </script>
+    <script src="js/home-interactions.js?v=2" defer></script>
+    <script src="js/parish-explorer.js?v=5" defer></script>
 </body>
 </html>
