@@ -82,6 +82,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .total{display:flex;justify-content:space-between;font-weight:800;border-top:1px solid var(--border);padding-top:8px;margin-top:6px;}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
 
+.vendor-progress{margin-top:10px;padding:10px;background:var(--bg-soft);border-radius:8px;}
+.vendor-progress strong{display:block;margin-bottom:6px;}
+.btn:disabled{opacity:.45;cursor:default;}
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:50;}
 .modal.show{display:flex;}
@@ -143,6 +146,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 <script>
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let partnerToken = '';
+let currentOrders = [];
 let cfgState = { enabled: false, paused: false };
 let menuCache = null;
 let knownIds = new Set();
@@ -153,7 +157,7 @@ let pollTimer = null;
 
 const $ = (id) => document.getElementById(id);
 const jaTime = (iso) => new Date(iso).toLocaleTimeString('en-US',{timeZone:'America/Jamaica',hour:'numeric',minute:'2-digit'});
-const money = (n,c) => n==null ? null : ((c==='JMD'||c==='USD'?'$':'')+Math.round(n).toLocaleString());
+const money = (n,c) => n==null ? null : ((c==='JMD'||c==='USD'?'$':'')+Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}));
 const minsBetween = (a,b) => Math.round((a-b)/60000);
 function esc(s){return (s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 
@@ -220,6 +224,7 @@ function render(data){
   $('enableBtn').textContent = cfgState.enabled ? 'Close ordering' : 'Open ordering';
 
   const orders = data.orders||[];
+  currentOrders = orders;
   const now = Date.now();
 
   // detect brand-new active orders → chime (skip the very first load)
@@ -275,8 +280,8 @@ function card(o, hist=false){
         ${opts?`<div class="opts">${opts}</div>`:''}
         ${it.note?`<div class="opts">“${esc(it.note)}”</div>`:''}
       </span>
-      ${(!hist && !it.is_unavailable && ['received','preparing'].includes(o.status)) ? `<button class="so" onclick="soldOut('${o.id}','${it.id}','${esc(it.item_name)}')">Sold out</button>`:''}
-      ${it.is_unavailable?'<span class="pr">removed</span>':`<span class="pr">${money(it.unit_price*it.quantity,o.currency)||''}</span>`}
+      ${(!hist && !it.is_unavailable && ['received','preparing'].includes(o.status)) ? `<button class="so" data-order="${esc(o.id)}" data-item="${esc(it.id)}" data-name="${esc(it.item_name)}" onclick="soldOut(this.dataset.order,this.dataset.item,this.dataset.name)">Sold out</button>`:''}
+      ${it.is_unavailable?'<span class="pr">removed</span>':`<span class="pr">${it.unit_price==null?'Price at counter':money(it.unit_price*it.quantity,o.currency)}</span>`}
     </div>`;
   }).join('');
 
@@ -286,11 +291,29 @@ function card(o, hist=false){
         ${overdue?`<span class="od">${Math.abs(toPickup)} min overdue</span>`:(o.status==='ready'?'ready now':`in ${toPickup} min`)}
         <br><span style="color:var(--grey-light)">placed ${age}m ago</span></div>`;
 
+  const groups = new Map();
+  for(const it of o.items||[]){
+    if(it.is_unavailable) continue;
+    const key=it.vendor_key||it.vendor_name;
+    if(!groups.has(key)) groups.set(key,{name:it.vendor_name,items:[]});
+    groups.get(key).items.push(it);
+  }
+  const allCollected=groups.size>0 && [...groups.values()].every(g=>g.items.every(i=>i.runner_collected_at));
+  const progress=[...groups.entries()].map(([key,g])=>{
+    const placed=g.items.every(i=>i.runner_placed_at), collected=g.items.every(i=>i.runner_collected_at);
+    const editable=!hist && ['received','preparing'].includes(o.status);
+    return `<div class="vendor-progress"><strong>${esc(g.name)}</strong>
+      <span>${collected?'Collected from vendor':placed?'Placed with vendor':'Not placed yet'}</span>
+      ${editable?`<div class="actions">
+        <button class="btn small" ${placed?'disabled':''} data-order="${esc(o.id)}" data-vendor="${esc(key)}" onclick="vendorProgress(this,'placed')">${placed?'✓ Placed':'Mark placed'}</button>
+        <button class="btn small" ${!placed||collected?'disabled':''} data-order="${esc(o.id)}" data-vendor="${esc(key)}" onclick="vendorProgress(this,'collected')">${collected?'✓ Collected':'Collected from vendor'}</button>
+      </div>`:''}</div>`;
+  }).join('');
   let actions='';
   if(!hist){
-    if(o.status==='received') actions=`<button class="btn primary small" onclick="advance('${o.id}','preparing')">Start preparing</button>`;
-    if(o.status==='preparing') actions=`<button class="btn green small" onclick="advance('${o.id}','ready')">Mark ready</button>`;
-    if(o.status==='ready') actions=`<button class="btn green small" onclick="advance('${o.id}','collected')">Mark collected</button>`;
+    
+    if(o.status==='preparing') actions=`<button class="btn green small" ${allCollected?'':'disabled'} onclick="advance('${o.id}','ready')">Mark ready</button>`;
+    if(o.status==='ready') actions=`<button class="btn green small" onclick="confirmHandover('${o.id}')">Confirm payment & handover</button>`;
     const editable=['received','preparing'].includes(o.status);
     actions+=`<a class="btn small ghost" href="tel:${esc(o.customer_phone)}">Call</a>`;
     if(editable) actions+=`<button class="btn small ghost" onclick="openMenu('${o.id}')">Add item</button>`;
@@ -302,12 +325,39 @@ function card(o, hist=false){
     <div class="who">${esc(o.customer_name)} · <a href="tel:${esc(o.customer_phone)}">${esc(o.customer_phone)}</a></div>
     ${o.note?`<div class="note">📝 ${esc(o.note)}</div>`:''}
     ${o.attention_reason?`<div class="attn">⚠ ${esc(o.attention_reason)}</div>`:''}
-    <div class="items">${items}</div>
+    <div class="items">${items}</div>${progress}
     <div class="total"><span>Total (pay at pickup)</span><span>${o.subtotal!=null?money(o.subtotal,o.currency):'At counter'}</span></div>
+    <div class="opts">${o.payment_confirmed_at?'Payment received: '+money(o.amount_paid,o.currency):(hist?'Payment not recorded':'Payment due at pickup')}</div>
     ${actions?`<div class="actions">${actions}</div>`:''}
   </div>`;
 }
 
+async function vendorProgress(button,status){
+  button.disabled=true;
+  try {
+    const {error}=await db.rpc('partner_set_vendor_progress',{p_token:partnerToken,p_order_id:button.dataset.order,p_vendor_key:button.dataset.vendor,p_status:status});
+    if(error) alert('Could not update vendor progress: '+error.message);
+    await loadQueue();
+  } catch(e){alert('Could not update. Please refresh and try again.');}
+  finally {button.disabled=false;}
+}
+async function confirmHandover(id){
+  const order=currentOrders.find(o=>o.id===id);
+  if(!order) return;
+  let amount=order.subtotal;
+  if(amount==null){
+    const entered=prompt('Enter the final amount received ('+order.currency+')');
+    if(entered===null) return;
+    if(!/^\d+(\.\d{1,2})?$/.test(entered.trim())){alert('Enter a valid amount.');return;}
+    amount=Number(entered);
+  }
+  if(!confirm('Confirm you received '+money(amount,order.currency)+' '+order.currency+' and are handing order '+order.code+' to the customer?')) return;
+  try {
+    const {error}=await db.rpc('partner_confirm_order_handover',{p_token:partnerToken,p_order_id:id,p_amount:amount});
+    if(error) alert('Could not confirm handover: '+error.message);
+    await loadQueue();
+  } catch(e){alert('Could not confirm handover. Refresh to check before trying again.');}
+}
 async function setOrderingState(patch){
   const { error } = await db.rpc('partner_set_ordering_state', Object.assign({ p_token: partnerToken }, patch));
   if (error){ alert('Could not update ordering: '+error.message); return; }
@@ -333,27 +383,43 @@ async function soldOut(orderId,itemId,name){
 async function openMenu(orderId){
   addTargetOrder = orderId;
   $('menuModal').classList.add('show');
-  if(!menuCache){
-    const { data } = await db.rpc('get_event_menu_by_token',{ p_token:partnerToken });
+  $('menuList').textContent='Loading menu…';
+  try {
+    const { data,error } = await db.rpc('get_event_menu_by_token',{ p_token:partnerToken });
+    if(error) throw error;
     menuCache = data||[];
-  }
-  renderMenu();
+    renderMenu();
+  } catch(e){ $('menuList').textContent='Could not load the menu. Close and try again.'; }
 }
 function closeMenu(){ $('menuModal').classList.remove('show'); addTargetOrder=null; }
 function renderMenu(){
   $('menuList').innerHTML = (menuCache||[]).map(v=>`
     <div class="mvendor">${esc(v.vendor)}</div>
     ${(v.items||[]).map(it=>`
-      <div class="mitem ${it.is_sold_out?'sold':''}">
+      <div class="mitem ${it.is_sold_out?'sold':''}" style="flex-wrap:wrap">
         <span class="mn">${esc(it.name)} ${it.price!=null?('· '+money(it.price,'JMD')):(it.price_label?('· '+esc(it.price_label)):'')}</span>
         <button class="btn small ghost" onclick="toggleSold('${it.id}',${it.is_sold_out?'false':'true'})">${it.is_sold_out?'Un-sold-out':'Sold out'}</button>
         <button class="btn small primary" ${it.is_sold_out?'disabled':''} onclick="addItem('${it.id}')">Add</button>
+        ${renderOptions(it)}
       </div>`).join('')}
   `).join('');
 }
+function renderOptions(item){
+  return (item.option_groups||[]).map(g=>`<fieldset style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px">
+    <legend>${esc(g.name)} · ${g.min_select?'Choose '+g.min_select+'–'+g.max_select:'Optional · up to '+g.max_select}</legend>
+    ${(g.options||[]).map(o=>`<label style="display:block;padding:5px 0"><input type="${g.max_select===1&&g.min_select>0?'radio':'checkbox'}" name="group-${g.id}" data-menu="${item.id}" data-group="${g.id}" value="${o.id}" ${o.is_sold_out?'disabled':''}> ${esc(o.name)} ${o.price_delta?'('+money(o.price_delta,item.currency||'JMD')+')':''}${o.is_sold_out?' — sold out':''}</label>`).join('')}
+  </fieldset>`).join('');
+}
 async function addItem(menuItemId){
   if(!addTargetOrder) return;
-  const { error } = await db.rpc('partner_add_order_item',{ p_token:partnerToken, p_order_id:addTargetOrder, p_menu_item_id:menuItemId, p_quantity:1 });
+  const item=(menuCache||[]).flatMap(v=>v.items||[]).find(i=>i.id===menuItemId);
+  if(!item||item.is_sold_out){alert('This item is no longer available. Reload the menu.');return;}
+  const chosen=[...document.querySelectorAll('input[data-menu="'+menuItemId+'"]:checked')];
+  for(const group of item.option_groups||[]){
+    const count=chosen.filter(i=>i.dataset.group===group.id).length;
+    if(count<group.min_select||count>group.max_select){alert('Check your choices for '+group.name+'.');return;}
+  }
+  const { error } = await db.rpc('partner_add_order_item_with_options',{ p_token:partnerToken, p_order_id:addTargetOrder, p_menu_item_id:menuItemId, p_quantity:1, p_option_ids:chosen.map(i=>i.value) });
   if(error){ alert('Could not add: '+error.message); return; }
   closeMenu(); await loadQueue();
 }
