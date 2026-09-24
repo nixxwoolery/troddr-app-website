@@ -60,13 +60,11 @@ function openContactEmail(form) {
         ? topicField.options[topicField.selectedIndex].text
         : 'Website enquiry';
     const message = String(formData.get('message') || '').trim();
-    const newsletter = formData.get('newsletter') ? 'Yes' : 'No';
     const subject = `TRODDR website: ${topic}`;
     const body = [
         `Name: ${firstName} ${lastName}`.trim(),
         `Email: ${email}`,
         company ? `Company: ${company}` : null,
-        `Newsletter updates: ${newsletter}`,
         '',
         message
     ].filter((line) => line !== null).join('\n');
