@@ -76,6 +76,17 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .banner{display:none;background:var(--amber-light);color:var(--amber);border:1px solid #f0d9a8;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-weight:600;}
 .banner.show{display:block;}
 
+/* pickup location (sits above the board - kept compact) */
+.pickup-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:16px;}
+.pickup-box summary{display:block;font-weight:700;font-size:13px;cursor:pointer;padding:4px 0;list-style:none;}
+.pickup-box summary::-webkit-details-marker{display:none;}
+.pickup-box summary::before{content:'▸ ';color:var(--grey-mid);font-size:11px;}
+.pickup-box[open] summary::before{content:'▾ ';}
+.pickup-body{padding:6px 0 4px;}
+.pickup-fields{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0;}
+.pickup-fields label{flex:1;min-width:150px;font-size:12px;color:var(--grey-mid);}
+.pickup-fields input{width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:13px;color:#111;}
+
 /* lanes */
 .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start;}
 @media(max-width:860px){.lanes{grid-template-columns:1fr;}}
@@ -164,6 +175,22 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 
   <div class="recon" id="recon"></div>
 
+  <details id="pickup" class="pickup-box">
+    <summary>Pickup location</summary>
+    <div class="pickup-body">
+      <p class="sub">Set the shared collection counter shown in checkout and order status. Use decimal coordinates from your map pin.</p>
+      <div class="pickup-fields" oninput="pickupLocationDirty=true;previewPickupLocation()">
+        <label>Counter name<br><input id="pickupName" maxlength="120" placeholder="App Order Counter"></label>
+        <label>Latitude<br><input id="pickupLat" type="number" step="any" min="-90" max="90" placeholder="e.g. 18.005"></label>
+        <label>Longitude<br><input id="pickupLng" type="number" step="any" min="-180" max="180" placeholder="e.g. -76.747"></label>
+      </div>
+      <p class="sub">Leave both coordinates blank to hide the map link. Changing this location also changes directions shown for existing orders.</p>
+      <div class="controls"><button id="savePickupLocation" class="btn small primary" disabled onclick="savePickupLocation()">Save pickup location</button>
+      <a id="pickupPreview" class="btn small ghost" target="_blank" rel="noopener noreferrer" style="display:none">Preview on map</a></div>
+      <p id="pickupLocationStatus" class="sub" role="status" aria-live="polite"></p>
+    </div>
+  </details>
+
   <div class="lanes">
     <div class="lane new"><h2>New <span class="count" id="c-new">0</span></h2><div id="lane-new"></div></div>
     <div class="lane prep" ondragover="onLaneDragOver(event)" ondragenter="onLaneDragEnter(event)" ondragleave="onLaneDragLeave(event)" ondrop="onLaneDrop(event,'preparing')"><h2>Preparing <span class="count" id="c-prep">0</span></h2><div id="lane-prep"></div></div>
@@ -175,20 +202,6 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
     <div id="history" style="display:none;margin-top:12px"></div>
   </div>
   </div>
-
-  <details id="pickup" style="margin-top:36px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
-    <summary style="font-weight:700;cursor:pointer">Pickup location</summary>
-    <p class="sub">Set the shared collection counter shown in checkout and order status. Use decimal coordinates from your map pin.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0" oninput="pickupLocationDirty=true;previewPickupLocation()">
-      <label>Counter name<br><input id="pickupName" maxlength="120" placeholder="App Order Counter" style="padding:10px"></label>
-      <label>Latitude<br><input id="pickupLat" type="number" step="any" min="-90" max="90" placeholder="e.g. 18.005" style="padding:10px"></label>
-      <label>Longitude<br><input id="pickupLng" type="number" step="any" min="-180" max="180" placeholder="e.g. -76.747" style="padding:10px"></label>
-    </div>
-    <p class="sub">Leave both coordinates blank to hide the map link. Changing this location also changes directions shown for existing orders.</p>
-    <div class="controls"><button id="savePickupLocation" class="btn small primary" disabled onclick="savePickupLocation()">Save pickup location</button>
-    <a id="pickupPreview" class="btn small ghost" target="_blank" rel="noopener noreferrer" style="display:none">Preview on map</a></div>
-    <p id="pickupLocationStatus" class="sub" role="status" aria-live="polite"></p>
-  </details>
 
   <details id="vendors" style="margin-top:18px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
     <summary style="font-weight:700;cursor:pointer">Vendors accepting app orders</summary>
