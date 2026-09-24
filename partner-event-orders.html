@@ -75,22 +75,6 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .banner{display:none;background:var(--amber-light);color:var(--amber);border:1px solid #f0d9a8;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-weight:600;}
 .banner.show{display:block;}
 
-/* analytics */
-.section-h{font-size:18px;font-weight:800;}
-.a-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
-.a-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;}
-.a-stat b{display:block;font-size:24px;font-weight:800;line-height:1.15;}
-.a-stat span{font-size:11px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.4px;}
-.a-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-@media(max-width:860px){.a-panels{grid-template-columns:1fr;}}
-.a-panel{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;}
-.a-panel h3{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-mid);margin-bottom:10px;}
-.a-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13px;}
-.a-row:first-of-type{border-top:none;}
-.a-row .n{font-weight:600;}
-.a-row .m{color:var(--grey-mid);font-size:12px;}
-.a-row .v{font-weight:700;white-space:nowrap;}
-
 /* lanes */
 .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media(max-width:860px){.lanes{grid-template-columns:1fr;}}
@@ -191,21 +175,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
   </div>
   </div>
 
-  <div id="analytics" class="section" style="margin-top:36px">
-    <h2 class="section-h">Order Analytics</h2>
-    <p class="sub" style="margin:2px 0 14px">Totals across every order placed for this event — not just what's live right now.</p>
-    <div id="analyticsBody">
-      <p class="sub">Loading analytics…</p>
-    </div>
-  </div>
-
-  <details id="vendors" style="margin-top:36px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
-    <summary style="font-weight:700;cursor:pointer">Vendors accepting app orders</summary>
-    <p class="sub" style="margin:10px 0;color:var(--grey-mid)">Choose which vendors the runner service supports. Turning a vendor off stops new orders; accepted orders remain in the queue.</p>
-    <div id="orderingVendors"></div>
-  </details>
-
-  <details id="pickup" style="margin-top:18px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
+  <details id="pickup" style="margin-top:36px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
     <summary style="font-weight:700;cursor:pointer">Pickup location</summary>
     <p class="sub">Set the shared collection counter shown in checkout and order status. Use decimal coordinates from your map pin.</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0" oninput="pickupLocationDirty=true;previewPickupLocation()">
@@ -218,6 +188,16 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
     <a id="pickupPreview" class="btn small ghost" target="_blank" rel="noopener noreferrer" style="display:none">Preview on map</a></div>
     <p id="pickupLocationStatus" class="sub" role="status" aria-live="polite"></p>
   </details>
+
+  <details id="vendors" style="margin-top:18px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
+    <summary style="font-weight:700;cursor:pointer">Vendors accepting app orders</summary>
+    <p class="sub" style="margin:10px 0;color:var(--grey-mid)">Choose which vendors the runner service supports. Turning a vendor off stops new orders; accepted orders remain in the queue.</p>
+    <div id="orderingVendors"></div>
+  </details>
+
+  <div style="margin-top:18px">
+    <a class="btn ghost small" id="analyticsLink" href="#">📊 Order Analytics →</a>
+  </div>
 </main>
 </div>
 
@@ -237,6 +217,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 
 <script>
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const BASE_TITLE = document.title;
 let partnerToken = '';
 let currentOrders = [];
 let pickupLocationDirty=false, pickupLocationSaving=false;
@@ -300,6 +281,7 @@ async function init(){
   partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
   if(!partnerToken){ $('gate').style.display='block'; $('gate').textContent='This page needs a partner link. Please open it from your dashboard.'; return; }
   window.PartnerAuth?.mountSessionControl?.('partner');
+  $('analyticsLink').href = '/partner/event-order-analytics?token='+encodeURIComponent(partnerToken);
 
   db.rpc('get_partner_capabilities_by_token',{ p_token: partnerToken }).then(({data})=>{
     window.PartnerSidebar?.mount({
@@ -323,52 +305,6 @@ async function init(){
 
   await loadQueue();
   pollTimer = setInterval(loadQueue, 5000);
-  loadAnalytics();
-  setInterval(loadAnalytics, 30000);
-}
-
-async function loadAnalytics(){
-  let data, error;
-  try{
-    ({data,error} = await db.rpc('get_order_analytics_by_token',{ p_token: partnerToken }));
-  }catch(e){ error = e; }
-  if(error || !data || data.ok===false){
-    $('analyticsBody').innerHTML = '<p class="sub">Could not load analytics right now.</p>';
-    return;
-  }
-  renderAnalytics(data);
-}
-
-function renderAnalytics(data){
-  const s = data.summary || {};
-  const cur = s.currency || 'JMD';
-  const stats = [
-    ['Total orders', s.total_orders ?? 0, ''],
-    ['Total revenue', money(s.total_revenue ?? 0, cur) ?? '—', ''],
-    ['Avg order value', money(s.avg_order_value ?? 0, cur) ?? '—', ''],
-    ['Avg fulfillment time', (s.avg_fulfillment_minutes!=null ? Math.round(s.avg_fulfillment_minutes)+' min' : '—'), ''],
-    ['Collected', s.collected_orders ?? 0, ''],
-    ['Cancelled', s.cancelled_orders ?? 0, ''],
-  ];
-  const statsHtml = stats.map(([label,val])=>`<div class="a-stat"><b>${esc(String(val))}</b><span>${esc(label)}</span></div>`).join('');
-
-  const items = Array.isArray(data.top_items) ? data.top_items : [];
-  const itemsHtml = items.length
-    ? items.map(it=>`<div class="a-row"><span class="n">${esc(it.name)}</span><span class="v">${it.quantity}× <span class="m">${money(it.revenue,cur)||''}</span></span></div>`).join('')
-    : '<p class="sub">No items sold yet.</p>';
-
-  const vendors = Array.isArray(data.vendors) ? data.vendors : [];
-  const vendorsHtml = vendors.length
-    ? vendors.map(v=>`<div class="a-row"><span class="n">${esc(v.name)}<div class="m">${v.orders} order${v.orders===1?'':'s'} · ${v.items_sold} item${v.items_sold===1?'':'s'}</div></span><span class="v">${money(v.revenue,cur)||''}</span></div>`).join('')
-    : '<p class="sub">No vendor sales yet.</p>';
-
-  $('analyticsBody').innerHTML = `
-    <div class="a-stats">${statsHtml}</div>
-    <div class="a-panels">
-      <div class="a-panel"><h3>Top items</h3>${itemsHtml}</div>
-      <div class="a-panel"><h3>By vendor</h3>${vendorsHtml}</div>
-    </div>
-  `;
 }
 
 async function loadQueue(){
@@ -455,6 +391,9 @@ function render(data){
 
   const overdueOpen = activeNow.filter(o=>o.status!=='ready' && new Date(o.pickup_time).getTime()<now).length;
 
+  // Tab title badge - so a new order isn't missed just because the tab is in the background.
+  document.title = buckets.received.length ? `(${buckets.received.length}) ${BASE_TITLE}` : BASE_TITLE;
+
   // reconciliation strip
   $('recon').innerHTML = [
     stat('Active', activeNow.length,''),
@@ -540,7 +479,7 @@ function card(o, hist=false){
   }).join('');
   let actions='';
   if(!hist){
-    
+    if(o.status==='received') actions=`<button class="btn primary small" onclick="advance('${o.id}','preparing')">Start preparing</button>`;
     if(o.status==='preparing') actions=`<button class="btn green small" ${allCollected?'':'disabled'} onclick="advance('${o.id}','ready')">Mark ready</button>`;
     if(o.status==='ready') actions=`<button class="btn green small" onclick="confirmHandover('${o.id}')">Confirm payment & handover</button>`;
     const editable=['received','preparing'].includes(o.status);

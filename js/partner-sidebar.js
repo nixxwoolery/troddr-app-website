@@ -61,11 +61,12 @@
   }
 
   // Pages that share the "event" nav tree (NAV_EVENT). Any section whose own
-  // `page` is one of these is treated as "in the event area" - see
-  // EVENT_GROUP_ACTIVE below for why that matters for the boxed/active style.
+  // `page` is one of these is treated as "in the event area" - see the
+  // `boxedGroup` param on sectionHtml() below for why that matters for the
+  // boxed/active style.
   const EVENT_PAGES = [
     '/partner/event', '/partner/demand', '/partner/event-floorplan',
-    '/partner/event-parking', '/partner/event-orders',
+    '/partner/event-parking', '/partner/event-orders', '/partner/event-order-analytics',
   ];
 
   // ── Central nav trees ──────────────────────────────────────
@@ -165,9 +166,9 @@
     ] },
     { group: 'Orders', icon: 'ic-shop', page: '/partner/event-orders', section: 'queue-top', children: [
       { label: 'Live Queue',      section: 'queue-top' },
-      { label: 'Order Analytics', section: 'analytics' },
-      { label: 'Vendor Settings', section: 'vendors' },
       { label: 'Pickup Location', section: 'pickup' },
+      { label: 'Vendor Settings', section: 'vendors' },
+      { label: 'Order Analytics', section: '', page: '/partner/event-order-analytics' },
     ] },
     { group: 'Event Planning', icon: 'ic-grid', page: '/partner/event', section: 'builder-root', children: [
       { label: 'Floor Plan', section: 'builder-root' },

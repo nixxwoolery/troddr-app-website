@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRODDR · Order Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/partner-shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/troddr-config.js"></script>
+<script src="/js/partner-auth.js"></script>
+<script src="/js/partner-sidebar.js"></script>
+<script src="/js/partner-errors.js"></script>
+<script>
+  const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
+  const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+</script>
+<style>
+:root{
+  --blue:#0077CC; --blue-light:#e8f4ff; --green:#1a7f4e; --green-light:#e6f5ec;
+  --red:#c0392b; --red-light:#fdecea; --amber:#b86e00; --amber-light:#fff4e0;
+  --grey-mid:#666; --grey-light:#999; --grey-dark:#333; --border:#e8e8e8; --bg-soft:#f8f9fa; --radius:12px; --radius-lg:16px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+  --brand-primary:#111; --brand-text:#fff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-size:14px;line-height:1.5;}
+
+/* header */
+.header{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);}
+.navbar{max-width:1280px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:24px;}
+.logo{font-size:26px;font-weight:700;color:var(--blue);text-decoration:none;letter-spacing:-1px;}
+.nav-badge{background:var(--bg-soft);color:var(--grey-dark);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:6px;border:1px solid var(--border);margin-left:auto;}
+
+/* hero */
+.page-hero{background:var(--brand-primary);color:var(--brand-text);padding:28px 24px 36px;position:relative;overflow:hidden;}
+.hero-inner{position:relative;max-width:1280px;margin:0 auto;padding:0 8px;z-index:2;}
+.hero-eyebrow{display:inline-block;background:rgba(255,255,255,.18);color:var(--brand-text);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:4px;margin-bottom:8px;border:1px solid rgba(255,255,255,.22);}
+.page-hero h1{font-size:clamp(22px,3.2vw,30px);font-weight:800;line-height:1.15;margin-bottom:6px;letter-spacing:-.6px;max-width:760px;}
+.hero-meta{color:rgba(255,255,255,.92);font-size:13px;font-weight:500;}
+
+.layout{max-width:1380px;margin:0 auto;padding:14px 18px 0;display:grid;grid-template-columns:240px 1fr;gap:16px;}
+.sidebar{position:sticky;top:76px;align-self:start;height:max-content;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px;box-shadow:var(--shadow-sm);}
+.main{min-width:0;padding-bottom:80px;}
+.hidden{display:none!important;}
+.sidebar-divider{height:1px;background:var(--border);margin:8px 8px;}
+.entity-picker{padding:6px 4px 10px;}
+.partner-tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-light);padding:0 8px 2px;}
+.partner-name{font-size:12px;font-weight:700;color:var(--grey-dark);padding:0 8px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.entity-select{width:100%;padding:8px 28px 8px 10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--brand-primary);background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:12px;}
+.entity-select:hover{border-color:var(--brand-primary);}
+.entity-select optgroup{font-weight:700;}
+
+.sub{color:var(--grey-mid);font-size:12px;}
+.btn{border:1px solid var(--border);background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;color:#111;display:inline-block;}
+.btn.ghost{background:#fff;}
+.btn.small{padding:5px 9px;font-size:12px;border-radius:8px;}
+
+#gate{display:none;text-align:center;padding:60px 20px;color:var(--grey-mid);}
+
+/* analytics */
+.section{margin-bottom:32px;}
+.section-h{font-size:18px;font-weight:800;margin-bottom:2px;}
+.a-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0 20px;}
+.a-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;}
+.a-stat b{display:block;font-size:24px;font-weight:800;line-height:1.15;}
+.a-stat span{font-size:11px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.4px;}
+.a-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:860px){.a-panels{grid-template-columns:1fr;}}
+.a-panel{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;}
+.a-panel h3{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-mid);margin-bottom:10px;}
+.a-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13px;}
+.a-row:first-of-type{border-top:none;}
+.a-row .n{font-weight:600;}
+.a-row .m{color:var(--grey-mid);font-size:12px;}
+.a-row .v{font-weight:700;white-space:nowrap;text-align:right;}
+
+/* hourly chart */
+.a-chart{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 14px 10px;}
+.a-chart-bars{display:flex;align-items:flex-end;gap:3px;height:140px;}
+.a-chart-bar{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+.a-chart-bar .fill{width:100%;background:var(--blue);border-radius:3px 3px 0 0;min-height:2px;}
+.a-chart-bar .fill:hover{background:var(--brand-primary);}
+.a-chart-labels{display:flex;gap:3px;margin-top:6px;}
+.a-chart-labels span{flex:1;text-align:center;font-size:9px;color:var(--grey-light);white-space:nowrap;overflow:hidden;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Event Partner</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Orders</span>
+    <h1 id="hero-title">Order Analytics</h1>
+    <div class="hero-meta">Totals across every order placed for this event — not just what's live right now.</div>
+  </div>
+</section>
+
+<div class="layout" id="app" style="display:none">
+<aside class="sidebar"></aside>
+<main class="main">
+  <div style="margin-bottom:14px">
+    <a class="btn ghost small" id="queueLink" href="#">← Back to Live Queue</a>
+  </div>
+
+  <div id="summary" class="section">
+    <div id="statsBody"><p class="sub">Loading analytics…</p></div>
+  </div>
+
+  <div id="hourly" class="section">
+    <h2 class="section-h">Orders by hour</h2>
+    <p class="sub" style="margin-bottom:12px">When orders came in, in local (Jamaica) time.</p>
+    <div id="hourlyBody"></div>
+  </div>
+
+  <div id="breakdown" class="section">
+    <h2 class="section-h">Top items &amp; vendors</h2>
+    <div id="breakdownBody" style="margin-top:12px"></div>
+  </div>
+</main>
+</div>
+
+<div id="gate">Loading analytics…</div>
+
+<script>
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+let partnerToken = '';
+const $ = (id) => document.getElementById(id);
+const money = (n,c) => n==null ? null : ((c==='JMD'||c==='USD'?'$':'')+Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}));
+function esc(s){return (s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function hourLabel(h){ const ap=h<12?'am':'pm'; let hr=h%12; if(hr===0) hr=12; return hr+ap; }
+
+// ── Entity picker (multi-domain partners) ──────────────────
+function renderEntityPicker(partner){
+  if(!partner || !partner.entities || partner.entities.length<2) return;
+  const picker = $('entity-picker'); if(!picker) return;
+  picker.classList.remove('hidden');
+  const div = $('entity-picker-divider'); if(div) div.style.display='';
+  $('partner-name').textContent = partner.name || 'Partner';
+
+  const select = $('entity-select');
+  const places = partner.entities.filter(e=>e.type==='place');
+  const events = partner.entities.filter(e=>e.type==='event');
+  const opt = (e)=>{
+    const sel = e.id===partner.current_id ? ' selected' : '';
+    const safe = String(e.name||'').replace(/[<>&"]/g,'');
+    return `<option value="${e.token}" data-type="${e.type}"${sel}>${safe}</option>`;
+  };
+  let html='';
+  if(places.length) html += '<optgroup label="Places">'+places.map(opt).join('')+'</optgroup>';
+  if(events.length) html += '<optgroup label="Events">'+events.map(opt).join('')+'</optgroup>';
+  select.innerHTML = html;
+  select.addEventListener('change', ()=>{
+    const o = select.options[select.selectedIndex];
+    const token = o.value;
+    const path = o.dataset.type==='event' ? '/partner/event' : '/partner/listing';
+    if(window.PartnerAuth) window.PartnerAuth.navigate(path, token);
+    else location.href = `${path}?token=${encodeURIComponent(token)}`;
+  });
+}
+
+async function init(){
+  await window.PartnerAuth?.resolve(db, { require:false });
+  partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
+  if(!partnerToken){ $('gate').style.display='block'; $('gate').textContent='This page needs a partner link. Please open it from your dashboard.'; return; }
+  window.PartnerAuth?.mountSessionControl?.('partner');
+  $('queueLink').href = '/partner/event-orders?token='+encodeURIComponent(partnerToken);
+
+  db.rpc('get_partner_capabilities_by_token',{ p_token: partnerToken }).then(({data})=>{
+    window.PartnerSidebar?.mount({
+      active: '/partner/event-order-analytics',
+      capabilities: data?.capabilities || {},
+      partner: data?.partner,
+    });
+    renderEntityPicker(data?.partner);
+  }).catch(()=>{ window.PartnerSidebar?.mount({ active: '/partner/event-order-analytics', capabilities: {} }); });
+
+  await loadAnalytics();
+}
+
+async function loadAnalytics(){
+  let data, error;
+  try{
+    ({data,error} = await db.rpc('get_order_analytics_by_token',{ p_token: partnerToken }));
+  }catch(e){ error = e; }
+  $('gate').style.display='none';
+  if(error || !data || data.ok===false){
+    $('app').style.display='grid';
+    $('statsBody').innerHTML = '<p class="sub">Could not load analytics right now. If this event was just set up, the analytics function may not be deployed yet.</p>';
+    return;
+  }
+  $('app').style.display='grid';
+  render(data);
+}
+
+function render(data){
+  const s = data.summary || {};
+  const cur = s.currency || 'JMD';
+  const stats = [
+    ['Total orders', s.total_orders ?? 0],
+    ['Total revenue', money(s.total_revenue ?? 0, cur) ?? '—'],
+    ['Avg order value', money(s.avg_order_value ?? 0, cur) ?? '—'],
+    ['Avg fulfillment time', (s.avg_fulfillment_minutes!=null ? Math.round(s.avg_fulfillment_minutes)+' min' : '—')],
+    ['Collected', s.collected_orders ?? 0],
+    ['Cancelled', s.cancelled_orders ?? 0],
+  ];
+  $('statsBody').innerHTML = `<div class="a-stats">${
+    stats.map(([label,val])=>`<div class="a-stat"><b>${esc(String(val))}</b><span>${esc(label)}</span></div>`).join('')
+  }</div>`;
+
+  const hourly = Array.isArray(data.hourly) ? data.hourly : [];
+  const byHour = new Map(hourly.map(h=>[h.hour, h.orders]));
+  const max = Math.max(1, ...hourly.map(h=>h.orders));
+  const bars = [];
+  const labels = [];
+  for(let h=0; h<24; h++){
+    const count = byHour.get(h) || 0;
+    const pct = Math.round((count/max)*100);
+    bars.push(`<div class="a-chart-bar"><div class="fill" style="height:${count?Math.max(pct,4):0}%" title="${hourLabel(h)}: ${count} order${count===1?'':'s'}"></div></div>`);
+    labels.push(`<span>${h%3===0?hourLabel(h):''}</span>`);
+  }
+  $('hourlyBody').innerHTML = hourly.length
+    ? `<div class="a-chart"><div class="a-chart-bars">${bars.join('')}</div><div class="a-chart-labels">${labels.join('')}</div></div>`
+    : '<p class="sub">No orders yet.</p>';
+
+  const items = Array.isArray(data.top_items) ? data.top_items : [];
+  const itemsHtml = items.length
+    ? items.map(it=>`<div class="a-row"><span class="n">${esc(it.name)}</span><span class="v">${it.quantity}× <span class="m">${money(it.revenue,cur)||''}</span></span></div>`).join('')
+    : '<p class="sub">No items sold yet.</p>';
+
+  const vendors = Array.isArray(data.vendors) ? data.vendors : [];
+  const vendorsHtml = vendors.length
+    ? vendors.map(v=>`<div class="a-row"><span class="n">${esc(v.name)}<div class="m">${v.orders} order${v.orders===1?'':'s'} · ${v.items_sold} item${v.items_sold===1?'':'s'}</div></span><span class="v">${money(v.revenue,cur)||''}</span></div>`).join('')
+    : '<p class="sub">No vendor sales yet.</p>';
+
+  $('breakdownBody').innerHTML = `
+    <div class="a-panels">
+      <div class="a-panel"><h3>Top items</h3>${itemsHtml}</div>
+      <div class="a-panel"><h3>By vendor</h3>${vendorsHtml}</div>
+    </div>
+  `;
+}
+
+init();
+</script>
+</body>
+</html>
