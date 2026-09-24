@@ -114,20 +114,30 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .who a{color:var(--blue);text-decoration:none;font-weight:600;}
 .note{background:var(--amber-light);color:#7a5200;border-radius:8px;padding:6px 10px;font-size:12px;margin:8px 0;}
 .attn{background:#fff4e0;border:1px solid var(--amber);color:#7a5200;border-radius:8px;padding:6px 10px;font-size:12px;margin:8px 0;font-weight:600;}
-.items{margin:8px 0;border-top:1px solid var(--border);padding-top:8px;}
 .irow{display:flex;align-items:center;gap:8px;padding:4px 0;}
 .irow .q{font-weight:700;color:var(--blue);min-width:26px;}
 .irow .nm{flex:1;}
 .opts{font-size:12px;color:var(--grey-mid);margin-top:2px;}
 .irow.gone .nm{text-decoration:line-through;color:var(--grey-light);}
-.irow .so{font-size:11px;border:1px solid #f0c6c1;color:var(--red);border-radius:6px;padding:2px 6px;cursor:pointer;background:#fff;}
+.irow .so{font-size:11px;border:1px solid var(--border);color:var(--grey-mid);border-radius:6px;padding:2px 6px;cursor:pointer;background:#fff;}
+.irow .so:hover{border-color:var(--red);color:var(--red);}
 .irow .pr{color:var(--grey-mid);font-size:12px;}
 .total{display:flex;justify-content:space-between;font-weight:800;border-top:1px solid var(--border);padding-top:8px;margin-top:6px;}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
-
-.vendor-progress{margin-top:10px;padding:10px;background:var(--bg-soft);border-radius:8px;}
-.vendor-progress strong{display:block;margin-bottom:6px;}
 .btn:disabled{opacity:.45;cursor:default;}
+
+/* collapsible order body, items grouped by vendor */
+.card-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:7px 10px;margin:8px 0;font:inherit;font-size:12px;font-weight:700;color:var(--grey-dark);cursor:pointer;}
+.card-toggle .chev{width:14px;height:14px;flex-shrink:0;transition:transform .15s;color:var(--grey-mid);}
+.card-toggle.open .chev{transform:rotate(90deg);}
+.card-body.hidden{display:none;}
+.vendor-group{border-top:1px solid var(--border);padding:8px 0;}
+.vendor-group:first-child{border-top:none;padding-top:0;}
+.vendor-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px;}
+.vendor-head strong{font-size:13px;}
+.vg-status{font-size:11px;font-weight:600;white-space:nowrap;color:var(--grey-mid);}
+.vg-status.placed{color:var(--amber);}
+.vg-status.collected{color:var(--green);}
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:50;}
 .modal.show{display:flex;}
@@ -234,6 +244,7 @@ let pickupLocationDirty=false, pickupLocationSaving=false;
 let cfgState = { enabled: false, paused: false };
 let menuCache = null;
 let knownIds = new Set();
+let expandedOrders = new Set();
 let firstLoad = true;
 let soundOn = (localStorage.getItem('troddr_order_sound') ?? '1') === '1';
 let addTargetOrder = null;
@@ -396,10 +407,14 @@ function render(data){
   renderOrderingVendors(data.ordering_vendors||[]);
   const now = Date.now();
 
-  // detect brand-new active orders → chime (skip the very first load)
+  // detect brand-new active orders → chime + auto-expand (skip the very first load)
   const activeNow = orders.filter(o=>['received','preparing','ready'].includes(o.status));
   if(!firstLoad){
-    for(const o of activeNow){ if(!knownIds.has(o.id) && o.status==='received'){ beep(); break; } }
+    let hasNewOrder = false;
+    for(const o of activeNow){
+      if(!knownIds.has(o.id) && o.status==='received'){ hasNewOrder = true; expandedOrders.add(o.id); }
+    }
+    if(hasNewOrder) beep();
   }
   const buckets = { received:[], preparing:[], ready:[], collected:[], cancelled:[] };
   for(const o of orders){ (buckets[o.status]||[]).push(o); }
@@ -446,6 +461,14 @@ function orderReadyEligible(o){
   return groups.size>0 && [...groups.values()].every(g=>g.items.every(i=>i.runner_collected_at));
 }
 
+function toggleCard(id){
+  if(expandedOrders.has(id)) expandedOrders.delete(id); else expandedOrders.add(id);
+  const body = document.querySelector(`[data-card-body="${id}"]`);
+  const btn = document.querySelector(`[data-card-toggle="${id}"]`);
+  if(body) body.classList.toggle('hidden');
+  if(btn) btn.classList.toggle('open');
+}
+
 function card(o, hist=false){
   const now=Date.now();
   const pickup=new Date(o.pickup_time).getTime();
@@ -453,18 +476,49 @@ function card(o, hist=false){
   const age=minsBetween(now,new Date(o.created_at).getTime());
   const overdue = !hist && o.status!=='ready' && pickup<now;
   const isNew = !hist && o.status==='received' && !knownIds.has(o.id);
+  const open = expandedOrders.has(o.id);
 
-  const items = (o.items||[]).map(it=>{
-    const opts = Array.isArray(it.options) && it.options.length ? it.options.map(x=>esc(x.option)).join(' · ') : '';
-    return `
-    <div class="irow ${it.is_unavailable?'gone':''}">
-      <span class="q">${it.quantity}×</span>
-      <span class="nm">${esc(it.item_name)}<span class="pr"> · ${esc(it.vendor_name)}</span>
-        ${opts?`<div class="opts">${opts}</div>`:''}
-        ${it.note?`<div class="opts">“${esc(it.note)}”</div>`:''}
-      </span>
-      ${(!hist && !it.is_unavailable && ['received','preparing'].includes(o.status)) ? `<button class="so" data-order="${esc(o.id)}" data-item="${esc(it.id)}" data-name="${esc(it.item_name)}" onclick="soldOut(this.dataset.order,this.dataset.item,this.dataset.name)">Sold out</button>`:''}
-      ${it.is_unavailable?'<span class="pr">removed</span>':`<span class="pr">${it.unit_price==null?'Price at counter':money(it.unit_price*it.quantity,o.currency)}</span>`}
+  // Group every item by vendor - so it's clear at a glance what to grab from
+  // where, with that vendor's placed/collected controls right alongside its
+  // items instead of in a separate, disconnected list further down.
+  const vendorMap = new Map();
+  for(const it of o.items||[]){
+    const key = it.vendor_key || it.vendor_name;
+    if(!vendorMap.has(key)) vendorMap.set(key, { name: it.vendor_name, items: [] });
+    vendorMap.get(key).items.push(it);
+  }
+  const allCollected=orderReadyEligible(o);
+  const editable=!hist && ['received','preparing'].includes(o.status);
+
+  const vendorBlocks = [...vendorMap.entries()].map(([key,g])=>{
+    const activeItems = g.items.filter(i=>!i.is_unavailable);
+    const placed = activeItems.length>0 && activeItems.every(i=>i.runner_placed_at);
+    const collected = activeItems.length>0 && activeItems.every(i=>i.runner_collected_at);
+
+    const itemRows = g.items.map(it=>{
+      const opts = Array.isArray(it.options) && it.options.length ? it.options.map(x=>esc(x.option)).join(' · ') : '';
+      return `
+      <div class="irow ${it.is_unavailable?'gone':''}">
+        <span class="q">${it.quantity}×</span>
+        <span class="nm">${esc(it.item_name)}
+          ${opts?`<div class="opts">${opts}</div>`:''}
+          ${it.note?`<div class="opts">“${esc(it.note)}”</div>`:''}
+        </span>
+        ${(!hist && !it.is_unavailable && ['received','preparing'].includes(o.status)) ? `<button class="so" data-order="${esc(o.id)}" data-item="${esc(it.id)}" data-name="${esc(it.item_name)}" onclick="soldOut(this.dataset.order,this.dataset.item,this.dataset.name)">Mark unavailable</button>`:''}
+        ${it.is_unavailable?'<span class="pr">removed</span>':`<span class="pr">${it.unit_price==null?'Price at counter':money(it.unit_price*it.quantity,o.currency)}</span>`}
+      </div>`;
+    }).join('');
+
+    return `<div class="vendor-group">
+      <div class="vendor-head">
+        <strong>${esc(g.name)}</strong>
+        ${activeItems.length>0?`<span class="vg-status ${collected?'collected':placed?'placed':''}">${collected?'✓ Collected from vendor':placed?'✓ Placed with vendor':'Not placed yet'}</span>`:''}
+      </div>
+      <div class="vendor-items">${itemRows}</div>
+      ${(editable && activeItems.length>0)?`<div class="actions">
+        <button class="btn small" ${placed?'disabled':''} data-order="${esc(o.id)}" data-vendor="${esc(key)}" onclick="vendorProgress(this,'placed')">${placed?'✓ Placed':'Mark placed'}</button>
+        <button class="btn small" ${!placed||collected?'disabled':''} data-order="${esc(o.id)}" data-vendor="${esc(key)}" onclick="vendorProgress(this,'collected')">${collected?'✓ Collected':'Collected from vendor'}</button>
+      </div>`:''}
     </div>`;
   }).join('');
 
@@ -474,42 +528,28 @@ function card(o, hist=false){
         ${overdue?`<span class="od">${Math.abs(toPickup)} min overdue</span>`:(o.status==='ready'?'ready now':`in ${toPickup} min`)}
         <br><span style="color:var(--grey-light)">placed ${age}m ago</span></div>`;
 
-  const groups = new Map();
-  for(const it of o.items||[]){
-    if(it.is_unavailable) continue;
-    const key=it.vendor_key||it.vendor_name;
-    if(!groups.has(key)) groups.set(key,{name:it.vendor_name,items:[]});
-    groups.get(key).items.push(it);
-  }
-  const allCollected=orderReadyEligible(o);
-  const progress=[...groups.entries()].map(([key,g])=>{
-    const placed=g.items.every(i=>i.runner_placed_at), collected=g.items.every(i=>i.runner_collected_at);
-    const editable=!hist && ['received','preparing'].includes(o.status);
-    return `<div class="vendor-progress"><strong>${esc(g.name)}</strong>
-      <span>${collected?'Collected from vendor':placed?'Placed with vendor':'Not placed yet'}</span>
-      ${editable?`<div class="actions">
-        <button class="btn small" ${placed?'disabled':''} data-order="${esc(o.id)}" data-vendor="${esc(key)}" onclick="vendorProgress(this,'placed')">${placed?'✓ Placed':'Mark placed'}</button>
-        <button class="btn small" ${!placed||collected?'disabled':''} data-order="${esc(o.id)}" data-vendor="${esc(key)}" onclick="vendorProgress(this,'collected')">${collected?'✓ Collected':'Collected from vendor'}</button>
-      </div>`:''}</div>`;
-  }).join('');
   let actions='';
   if(!hist){
     if(o.status==='received') actions=`<button class="btn primary small" onclick="advance('${o.id}','preparing')">Start preparing</button>`;
     if(o.status==='preparing') actions=`<button class="btn green small" ${allCollected?'':'disabled'} onclick="advance('${o.id}','ready')">Mark ready</button>`;
     if(o.status==='ready') actions=`<button class="btn green small" onclick="confirmHandover('${o.id}')">Confirm payment & handover</button>`;
-    const editable=['received','preparing'].includes(o.status);
     actions+=`<a class="btn small ghost" href="tel:${esc(o.customer_phone)}">Call</a>`;
     if(editable) actions+=`<button class="btn small ghost" onclick="openMenu('${o.id}')">Add item</button>`;
     if(o.status!=='ready') actions+=`<button class="btn small danger" onclick="cancelOrder('${o.id}','${o.code}')">Cancel</button>`;
   }
 
+  const itemCount = (o.items||[]).reduce((n,it)=>n+(it.is_unavailable?0:it.quantity),0);
   const dragAttrs = !hist ? `draggable="true" ondragstart="onCardDragStart(event,'${o.id}','${o.status}')" ondragend="onCardDragEnd(event)"` : '';
   return `<div class="card ${overdue?'overdue':''} ${isNew?'isnew':''}" ${dragAttrs}>
     <div class="chead"><div class="code">${o.code}</div>${whenHtml}</div>
     <div class="who">${esc(o.customer_name)} · <a href="tel:${esc(o.customer_phone)}">${esc(o.customer_phone)}</a></div>
     ${o.note?`<div class="note">📝 ${esc(o.note)}</div>`:''}
     ${o.attention_reason?`<div class="attn">⚠ ${esc(o.attention_reason)}</div>`:''}
-    <div class="items">${items}</div>${progress}
+    <button class="card-toggle ${open?'open':''}" data-card-toggle="${o.id}" onclick="toggleCard('${o.id}')">
+      <span>${itemCount} item${itemCount===1?'':'s'} · ${vendorMap.size} vendor${vendorMap.size===1?'':'s'}</span>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <div class="card-body ${open?'':'hidden'}" data-card-body="${o.id}">${vendorBlocks}</div>
     <div class="total"><span>Total (pay at pickup)</span><span>${o.subtotal!=null?money(o.subtotal,o.currency):'At counter'}</span></div>
     <div class="opts">${o.payment_confirmed_at?'Payment received: '+money(o.amount_paid,o.currency):(hist?'Payment not recorded':'Payment due at pickup')}</div>
     ${actions?`<div class="actions">${actions}</div>`:''}
