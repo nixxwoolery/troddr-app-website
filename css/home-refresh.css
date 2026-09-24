@@ -369,3 +369,26 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .parish-picker-note { color: var(--muted); font-size: 12px; margin: 12px 0 22px; }
 @media(max-width:620px) { .parish-picker { width: 100%; } }
 @media(forced-colors:active) { .parish-picker #parish-select { appearance: auto; } .parish-chevron { display: none; } }
+
+/* A welcoming contact section with a clear, contained form. */
+#contact { background: #f5f8fa; padding: 88px 0; }
+#contact .contact-layout { display: grid; grid-template-columns: .85fr 1.15fr; align-items: start; gap: 70px; max-width: 1180px; }
+.contact-intro { padding-top: 28px; }
+#contact .section-title { text-align: left; font-size: clamp(34px,3.7vw,48px); letter-spacing: -1.8px; line-height: 1.12; margin: 0 0 22px; background: none; color: var(--ink); -webkit-text-fill-color: currentColor; }
+#contact .section-subtitle { text-align: left; font-size: 16px; line-height: 1.8; margin: 0; color: #596c7c; }
+.contact-direct { display: inline-flex; align-items: center; gap: 14px; margin-top: 32px; text-decoration: none; color: var(--ink); font-size: 16px; font-weight: 600; }
+.contact-direct small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; margin-bottom: 5px; }
+.contact-mail-icon { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid #d9e5ec; border-radius: 14px; background: #fff; color: var(--blue); font-size: 24px; }
+.contact-direct:hover { color: var(--blue-dark); }
+#contact .contact-form { width: 100%; min-width: 0; max-width: none; padding: 32px; margin: 0; border: 1px solid #e2e9ee; border-radius: 22px; box-shadow: 0 12px 36px rgba(16,32,51,.035); }
+.contact-form-heading h3 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.6px; color: var(--ink); }
+.contact-form-heading p { font-size: 12px; color: var(--muted); margin: 0 0 26px; }
+#contact .contact-field label { font-size: 13px; font-weight: 600; }
+#contact .contact-field input,#contact .contact-field textarea { font-size: 16px; border: 1px solid #dce5eb; border-radius: 10px; padding: 13px 14px; background: #fbfcfd; }
+#contact .contact-field input:focus,#contact .contact-field textarea:focus { background: #fff; border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgba(8,120,201,.12); }
+#contact .contact-field textarea { min-height: 150px; }
+#contact .contact-submit { display: flex; align-items: center; justify-content: space-between; padding: 15px 18px; font-size: 14px; font-weight: 600; }
+#contact .contact-submit > span:last-child { font-size: 20px; }
+#contact .contact-email-note { font-size: 12px; line-height: 1.6; color: #627584; text-align: left; margin-top: 14px; }
+@media(max-width:900px) { #contact .contact-layout { gap: 30px; grid-template-columns: .85fr 1.15fr; } #contact .contact-grid { grid-template-columns: 1fr; gap: 0; } }
+@media(max-width:700px) { #contact { padding: 56px 0; } #contact .contact-layout { grid-template-columns: 1fr; gap: 28px; } .contact-intro { padding-top: 0; } #contact .contact-form { padding: 24px 20px; } .contact-direct { margin-top: 22px; } }

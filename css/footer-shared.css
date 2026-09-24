@@ -1,0 +1,5 @@
+/* Shared homepage and guide footer appearance. */
+.footer { background: #0b1b2a; --primary-light: #45a7e6; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+.footer .section-container { max-width: 1240px; padding-left: 28px; padding-right: 28px; margin-left: auto; margin-right: auto; }
+.footer a:focus-visible { outline: 3px solid #45a7e6; outline-offset: 4px; }
+@media(max-width:620px) { .footer .section-container { padding-left: 18px; padding-right: 18px; } }

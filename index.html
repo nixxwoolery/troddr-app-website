@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/home-refresh.css?v=20">
+    <link rel="stylesheet" href="css/home-refresh.css?v=21">
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-N0L5H68MFR"></script>
@@ -132,6 +132,7 @@
         ]
     }
     </script>
+    <link rel="stylesheet" href="/css/footer-shared.css?v=1">
 </head>
 <body>
     <!-- Skip to main content for accessibility -->
@@ -471,11 +472,16 @@
 
         <!-- Contact Section -->
         <section id="contact" class="contact-section" aria-labelledby="contact-title">
-            <div class="section-container">
-                <h2 id="contact-title" class="section-title">Get in Touch</h2>
-                <p class="section-subtitle">Questions, partnerships, press, or just want to say hi? We'd love to hear from you.</p>
+            <div class="section-container contact-layout">
+                <div class="contact-intro">
+                    <p class="hero-kicker">Let’s talk</p>
+                    <h2 id="contact-title" class="section-title">Good things start<br>with a hello.</h2>
+                    <p class="section-subtitle">A question about Troddr, an idea for a partnership, or a local spot we should know about? We’d love to hear it.</p>
+                    <a class="contact-direct" href="mailto:hello@troddr.com"><span class="contact-mail-icon" aria-hidden="true">↗</span><span><small>Drop us a line</small>hello@troddr.com</span></a>
+                </div>
 
                 <form id="contact-form" class="contact-form" novalidate aria-labelledby="contact-title" aria-describedby="contact-email-note">
+                    <div class="contact-form-heading"><h3>What’s on your mind?</h3><p>All fields are required.</p></div>
                     <div class="contact-grid">
                         <div class="contact-field">
                             <label for="contact-name">Name</label>
@@ -493,15 +499,15 @@
 
                     <div class="contact-field">
                         <label for="contact-message">Message</label>
-                        <textarea id="contact-message" name="message" rows="5" placeholder="How can we help?" required
+                        <textarea id="contact-message" name="message" rows="5" placeholder="Tell us a little about what you have in mind…" required
                                   aria-required="true"></textarea>
                         <span class="error-message" role="alert" aria-live="polite"></span>
                     </div>
 
                     <button type="submit" class="contact-submit">
-                        <span class="btn-text">Open email draft</span>
+                        <span class="btn-text">Open email draft</span><span aria-hidden="true">↗</span>
                     </button>
-                    <p id="contact-email-note" class="contact-email-note">Opens your email app with your message ready to send. You can also email <a href="mailto:hello@troddr.com">hello@troddr.com</a>.</p>
+                    <p id="contact-email-note" class="contact-email-note">We’ll open your email app with this message ready for you to review and send.</p>
                 </form>
             </div>
         </section>
@@ -551,10 +557,10 @@
                 <div class="footer-section">
                     <h3>Company</h3>
                     <nav class="footer-links" aria-label="Company links">
-                        <a href="about.html">About Us</a>
-                        <a href="#features">Features</a>
-                        <a href="contact.html">Contact</a>
-                        <a href="#demo">Download the App</a>
+                        <a href="/about.html">About Us</a>
+                        <a href="/#features">Features</a>
+                        <a href="/contact.html">Contact</a>
+                        <a href="/#demo">Download the App</a>
                     </nav>
                 </div>
                 <div class="footer-section">
@@ -579,11 +585,11 @@
                 <div class="footer-section">
                     <h3>Support</h3>
                     <nav class="footer-links" aria-label="Support links">
-                        <a href="contact.html" aria-label="Get help and support">Help Center</a>
-                        <a href="contact.html">Contact Us</a>
-                        <a href="privacy.html">Privacy Policy</a>
-                        <a href="terms_and_conditions.html">Terms of Service</a>
-                        <a href="delete-account.html">Account Deletion</a>
+                        <a href="/contact.html" aria-label="Get help and support">Help Center</a>
+                        <a href="/contact.html">Contact Us</a>
+                        <a href="/privacy.html">Privacy Policy</a>
+                        <a href="/terms_and_conditions.html">Terms of Service</a>
+                        <a href="/delete-account.html">Account Deletion</a>
                     </nav>
                 </div>
                 <div class="footer-section">
