@@ -117,6 +117,12 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 
   <div class="recon" id="recon"></div>
 
+  <details style="margin-bottom:18px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
+    <summary style="font-weight:700;cursor:pointer">Vendors accepting app orders</summary>
+    <p class="sub" style="margin:10px 0;color:var(--grey-mid)">Choose which vendors the runner service supports. Turning a vendor off stops new orders; accepted orders remain in the queue.</p>
+    <div id="orderingVendors"></div>
+  </details>
+
   <div class="lanes">
     <div class="lane new"><h2>New <span class="count" id="c-new">0</span></h2><div id="lane-new"></div></div>
     <div class="lane prep"><h2>Preparing <span class="count" id="c-prep">0</span></h2><div id="lane-prep"></div></div>
@@ -225,6 +231,7 @@ function render(data){
 
   const orders = data.orders||[];
   currentOrders = orders;
+  renderOrderingVendors(data.ordering_vendors||[]);
   const now = Date.now();
 
   // detect brand-new active orders → chime (skip the very first load)
@@ -332,6 +339,26 @@ function card(o, hist=false){
   </div>`;
 }
 
+function renderOrderingVendors(vendors){
+  $('orderingVendors').innerHTML=vendors.length?vendors.map(v=>`
+    <label style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--border)">
+      <span><strong>${esc(v.name)}</strong><br><span class="sub">${v.ordering_enabled?'Accepting app orders':'App ordering off'}${!v.menu_count?' · Add a menu before customers can order':''}</span></span>
+      <span style="display:flex;align-items:center;gap:8px;font-size:12px">Accepts in-app orders
+        <input type="checkbox" role="switch" aria-label="${esc(v.name)} accepts in-app orders" data-vendor="${esc(v.id)}" ${v.ordering_enabled?'checked':''} onchange="setVendorOrdering(this)">
+      </span>
+    </label>`).join(''):'No vendors have been added to this event.';
+}
+async function setVendorOrdering(input){
+  const enabled=input.checked;
+  input.disabled=true;
+  try {
+    const {error}=await db.rpc('partner_set_vendor_ordering',{p_token:partnerToken,p_event_vendor_id:input.dataset.vendor,p_enabled:enabled});
+    if(error) throw error;
+    menuCache=null;
+    await loadQueue();
+  } catch(e){input.checked=!enabled;alert('Could not update this vendor. Please refresh and try again.');}
+  finally {input.disabled=false;}
+}
 async function vendorProgress(button,status){
   button.disabled=true;
   try {
@@ -394,12 +421,12 @@ async function openMenu(orderId){
 function closeMenu(){ $('menuModal').classList.remove('show'); addTargetOrder=null; }
 function renderMenu(){
   $('menuList').innerHTML = (menuCache||[]).map(v=>`
-    <div class="mvendor">${esc(v.vendor)}</div>
+    <div class="mvendor">${esc(v.vendor)}${v.ordering_enabled===false?' · Not accepting new app orders':''}</div>
     ${(v.items||[]).map(it=>`
       <div class="mitem ${it.is_sold_out?'sold':''}" style="flex-wrap:wrap">
         <span class="mn">${esc(it.name)} ${it.price!=null?('· '+money(it.price,'JMD')):(it.price_label?('· '+esc(it.price_label)):'')}</span>
         <button class="btn small ghost" onclick="toggleSold('${it.id}',${it.is_sold_out?'false':'true'})">${it.is_sold_out?'Un-sold-out':'Sold out'}</button>
-        <button class="btn small primary" ${it.is_sold_out?'disabled':''} onclick="addItem('${it.id}')">Add</button>
+        <button class="btn small primary" ${it.is_sold_out||v.ordering_enabled===false?'disabled':''} onclick="addItem('${it.id}')">Add</button>
         ${renderOptions(it)}
       </div>`).join('')}
   `).join('');

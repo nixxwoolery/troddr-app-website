@@ -155,11 +155,6 @@
       "permanent": false
     },
     {
-      "source": "/checkin/:tag",
-      "destination": "/app?redirect=/checkin/:tag",
-      "permanent": false
-    },
-    {
       "source": "/listings.html",
       "destination": "/listings/:slug",
       "has": [{ "type": "query", "key": "slug" }],

@@ -357,3 +357,15 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 @font-face { font-family: 'TroddrRewardsIcons'; src: url('../images/fonts/Ionicons.ttf') format('truetype'); font-display: block; }
 .troddr-rewards-badge { display: inline-flex; align-items: center; align-self: flex-start; gap: 4px; padding: 3px 8px; border-radius: 20px; background: #E4F0FA; color: #0077cc; font-size: 11px; font-weight: 700; letter-spacing: .2px; line-height: 16px; margin: -6px 0 14px; }
 .rewards-ribbon { font-family: 'TroddrRewardsIcons'; font-size: 12px; font-weight: normal; line-height: 1; }
+
+/* One unified parish control, with native keyboard and mobile selection. */
+.parish-picker { position: relative; display: inline-flex; flex-direction: column; align-items: stretch; gap: 0; width: 330px; max-width: 100%; padding: 0; border: 1px solid #ccdbe5; border-radius: 15px; background: #fff; box-shadow: 0 4px 14px rgba(16,32,51,.045); transition: border-color .2s, box-shadow .2s; }
+.parish-picker:hover { border-color: #8aafc5; }
+.parish-picker:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(8,120,201,.14); }
+.parish-picker label { position: absolute; top: 12px; left: 18px; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .3px; pointer-events: none; }
+.parish-picker label svg { width: 15px; height: 15px; }
+.parish-picker #parish-select { appearance: none; -webkit-appearance: none; width: 100%; border: 0; border-radius: 15px; background: transparent; min-height: 78px; padding: 33px 52px 12px 18px; color: var(--ink); font-family: inherit; font-size: 19px; font-weight: 600; cursor: pointer; outline-offset: 4px; }
+.parish-chevron { position: absolute; right: 17px; top: 29px; width: 20px; height: 20px; color: #4d6d80; pointer-events: none; }
+.parish-picker-note { color: var(--muted); font-size: 12px; margin: 12px 0 22px; }
+@media(max-width:620px) { .parish-picker { width: 100%; } }
+@media(forced-colors:active) { .parish-picker #parish-select { appearance: auto; } .parish-chevron { display: none; } }

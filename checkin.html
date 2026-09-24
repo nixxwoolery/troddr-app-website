@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Check in · TRODDR</title>
+    <meta name="robots" content="noindex" />
+    <style>
+      :root { --ink:#111827; --muted:#6b7280; --accent:#0077cc; --bg:#f8fafb; }
+      * { box-sizing: border-box; }
+      html, body { margin:0; height:100%; }
+      body {
+        font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+        background:var(--bg); color:var(--ink);
+        display:flex; align-items:center; justify-content:center; padding:24px;
+      }
+      .card {
+        width:100%; max-width:420px; background:#fff; border-radius:20px;
+        box-shadow:0 10px 40px rgba(17,24,39,.08); overflow:hidden;
+      }
+      /* Place hero - the branding so the guest knows it's still their spot */
+      .hero { position:relative; height:150px; background:#e5e7eb; display:block; }
+      .hero img { width:100%; height:100%; object-fit:cover; display:block; }
+      .hero::after {
+        content:""; position:absolute; inset:0;
+        background:linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,.55) 100%);
+      }
+      .hero .brand {
+        position:absolute; left:20px; bottom:-20px; padding:8px 16px; border-radius:14px;
+        background:#fff; box-shadow:0 2px 10px rgba(17,24,39,.18);
+      }
+      .wordmark {
+        font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+        font-weight:700; font-size:26px; line-height:1; letter-spacing:-1px;
+        color:var(--accent); text-transform:lowercase;
+      }
+      .wordmark-inline {
+        font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+        font-weight:700; letter-spacing:-1px; text-transform:lowercase;
+      }
+      .body { padding:38px 28px 30px; text-align:center; }
+      .eyebrow { font-size:12px; font-weight:800; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:6px; }
+      h1 { font-size:21px; font-weight:800; letter-spacing:-.3px; margin:0 0 4px; }
+      h1:empty { display:none; }
+      .venue { color:var(--muted); font-size:14px; margin:0 0 18px; }
+      p.status { color:var(--muted); font-size:15px; line-height:1.5; margin:0 0 22px; }
+      .btn {
+        display:inline-flex; align-items:center; justify-content:center; gap:8px;
+        width:100%; padding:14px 18px; border-radius:14px; font-size:16px; font-weight:700;
+        text-decoration:none; border:0; cursor:pointer; background:var(--accent); color:#fff;
+      }
+      .stores { display:flex; gap:12px; justify-content:center; margin-top:4px; }
+      .stores a { flex:1; } .stores img { height:46px; width:auto; max-width:100%; }
+      .divider { display:flex; align-items:center; gap:12px; color:#c4c4c8; font-size:12px; margin:18px 0; }
+      .divider::before, .divider::after { content:""; flex:1; height:1px; background:#ececef; }
+      .foot { margin-top:18px; font-size:12.5px; color:var(--muted); line-height:1.5; }
+      .code { font-weight:800; letter-spacing:.5px; color:var(--ink); }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="hero" id="hero">
+        <img id="hero-img" alt="" style="display:none" />
+        <div class="brand">
+          <span class="wordmark">troddr</span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="eyebrow" id="eyebrow">Check in</div>
+        <h1 id="place-title"></h1>
+        <p class="venue" id="place-venue"></p>
+        <p class="status" id="status">Opening the app to check you in&hellip;</p>
+
+        <a class="btn" id="open-in-app" href="#">Open in the <span class="wordmark-inline">troddr</span> app</a>
+
+        <div class="divider">Don't have the app?</div>
+        <div class="stores">
+          <a id="ios-store" href="https://apps.apple.com/app/troddr/id6751852075">
+            <img alt="Download on the App Store"
+                 src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" />
+          </a>
+          <a id="android-store" href="https://play.google.com/store/apps/details?id=com.troddr.app">
+            <img alt="Get it on Google Play"
+                 src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" />
+          </a>
+        </div>
+
+        <p class="foot">
+          Once installed, open <span class="wordmark-inline">troddr</span>, tap the puck again to check in
+          - or on the <b>Check in</b> screen enter the <span class="code">venue code</span> on the talker.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var APP_STORE_URL = 'https://apps.apple.com/app/troddr/id6751852075';
+        var PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.troddr.app';
+        var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
+
+        var ua = navigator.userAgent || navigator.vendor || window.opera || '';
+        var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var isAndroid = /Android/i.test(ua);
+
+        // Tag code is the last path segment: /checkin/<tagCode>. Mirror the app's
+        // own validation (lib/nfc/validateCheckin.ts): 4-64 chars of [A-Za-z0-9_-].
+        // A bare /checkin/ (segment === "checkin") is not a real code.
+        var TAG_RE = /^[A-Za-z0-9_-]{4,64}$/;
+        var lastSeg = (window.location.pathname || '').replace(/\/+$/, '').split('/').pop() || '';
+        var tag = (lastSeg && lastSeg.toLowerCase() !== 'checkin' && TAG_RE.test(lastSeg))
+          ? lastSeg.toLowerCase() : '';
+        var deepLink = 'troddrapp:///checkin/' + encodeURIComponent(tag);
+        var storeUrl = isIOS ? APP_STORE_URL : isAndroid ? PLAY_STORE_URL : '';
+
+        if (isIOS) { document.getElementById('android-store').style.display = 'none'; }
+        else if (isAndroid) { document.getElementById('ios-store').style.display = 'none'; }
+
+        var openBtn = document.getElementById('open-in-app');
+        var appOpened = false;
+        function markAppOpened() { appOpened = true; }
+        document.addEventListener('visibilitychange', function () { if (document.hidden) markAppOpened(); });
+        window.addEventListener('pagehide', markAppOpened);
+
+        function openApp() {
+          var a = document.createElement('a');
+          a.href = deepLink; a.style.display = 'none';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        openBtn.href = deepLink;
+        openBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          appOpened = false;
+          openApp();
+          setTimeout(function () {
+            if (!appOpened) {
+              document.getElementById('status').textContent = 'If TRODDR did not open, use the store links below or try Open again.';
+            }
+          }, 1200);
+        });
+
+        // Brand the page from the tag's place, so the guest knows it's still
+        // *their* spot and not a generic app page. Best-effort: if the fetch
+        // fails we keep the neutral "Check in / TRODDR" copy.
+        function brand() {
+          if (!tag) return;
+          var base = window.location.origin + '/api/sb';
+          var q = base + '/rest/v1/nfc_tags?tag_code=eq.' + encodeURIComponent(tag) +
+                  '&select=places(name,image,slug)';
+          fetch(q, { headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON } })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (rows) {
+              var row = rows && rows[0]; if (!row) return;
+              var place = row.places || {};
+              if (place.name) {
+                document.getElementById('place-title').textContent = place.name;
+                document.getElementById('place-venue').textContent = 'Loyalty check-in';
+                document.title = place.name + ' · Check in';
+              }
+              if (place.image) {
+                var img = document.getElementById('hero-img');
+                img.onload = function () { img.style.display = 'block'; };
+                img.src = place.image;
+              }
+            })
+            .catch(function () { /* keep neutral branding */ });
+        }
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(brand, { timeout: 1200 });
+        } else {
+          setTimeout(brand, 100);
+        }
+
+        // Auto-attempt on load - a tap is explicit intent to open the app.
+        if (tag) {
+          requestAnimationFrame(openApp);
+          if (storeUrl) {
+            setTimeout(function () {
+              if (!appOpened) {
+                document.getElementById('status').textContent = 'If TRODDR did not open, use the store links below or try Open again.';
+              }
+            }, 1200);
+          }
+        } else {
+          document.getElementById('status').textContent =
+            'This check-in link looks incomplete. Please tap the puck again.';
+        }
+      })();
+    </script>
+  </body>
+</html>
