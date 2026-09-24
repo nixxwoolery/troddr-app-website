@@ -22,7 +22,7 @@ export function pageHead({ title, description, canonical, image, type = 'article
   const d = escapeHtml(description);
   const c = escapeHtml(canonical);
   const img = escapeHtml(image || `${BASE_URL}/api/og-image?title=${encodeURIComponent(title)}&subtitle=TRODDR%20Guide`);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t}</title><meta name="description" content="${d}"><link rel="canonical" href="${c}"><meta property="og:type" content="${type}"><meta property="og:site_name" content="TRODDR"><meta property="og:title" content="${t}"><meta property="og:description" content="${d}"><meta property="og:url" content="${c}"><meta property="og:image" content="${img}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${t}"><meta name="twitter:description" content="${d}"><meta name="twitter:image" content="${img}"><link rel="icon" href="/images/troddr_logo.png"><meta name="apple-itunes-app" content="app-id=6751852075"><style>${GUIDE_CSS}</style>${schema ? `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>` : ''}</head>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t}</title><meta name="description" content="${d}"><link rel="canonical" href="${c}"><meta property="og:type" content="${type}"><meta property="og:site_name" content="TRODDR"><meta property="og:title" content="${t}"><meta property="og:description" content="${d}"><meta property="og:url" content="${c}"><meta property="og:image" content="${img}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${t}"><meta name="twitter:description" content="${d}"><meta name="twitter:image" content="${img}"><link rel="icon" href="/images/troddr_logo.png"><meta name="apple-itunes-app" content="app-id=6751852075"><style>${GUIDE_CSS}</style><link rel="stylesheet" href="/css/footer-shared.css?v=2">${schema ? `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>` : ''}</head>`;
 }
 
 export function nav() {
@@ -30,7 +30,64 @@ export function nav() {
 }
 
 export function footer() {
-  return `<footer class="footer"><div class="shell">Curated in Jamaica by TRODDR · <a href="/">Home</a> · <a href="mailto:hello@troddr.com">Contact</a></div></footer></body></html>`;
+  return `<footer class="footer" role="contentinfo">
+        <div class="section-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>TRODDR</h3>
+                    <p>Jamaica's curated travel guide. Luxury retreats, local restaurants, hidden beaches, and everything worth doing across the island. Built by locals, for travellers who want the real Jamaica.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <nav class="footer-links" aria-label="Company links">
+                        <a href="/about.html">About Us</a>
+                        <a href="/#features">Features</a>
+                        <a href="/contact.html">Contact</a>
+                        <a href="/#demo">Download the App</a>
+                    </nav>
+                </div>
+                <div class="footer-section">
+                    <h3>Discover</h3>
+                    <nav class="footer-links" aria-label="Discovery links">
+                        <a href="/app" aria-label="Discover places to eat in Jamaica">Eat</a>
+                        <a href="/app" aria-label="Discover places to stay in Jamaica">Stay</a>
+                        <a href="/app" aria-label="Discover things to do in Jamaica">Play</a>
+                        <a href="/app" aria-label="Jamaica events and festivals">Events</a>
+                        <a href="/app" aria-label="Explore Jamaica destinations">Destinations</a>
+                    </nav>
+                </div>
+                <div class="footer-section">
+                    <h3>Plan</h3>
+                    <nav class="footer-links" aria-label="Planning tools">
+                        <a href="/app" aria-label="Jamaica trip planning tool">Trip Planner</a>
+                        <a href="/app" aria-label="Jamaica itinerary ideas">Itineraries</a>
+                        <a href="/guides" aria-label="Jamaica travel guides">Travel Guides</a>
+                        <a href="/app" aria-label="Local Jamaica travel tips">Local Tips</a>
+                    </nav>
+                </div>
+                <div class="footer-section">
+                    <h3>Support</h3>
+                    <nav class="footer-links" aria-label="Support links">
+                        <a href="/contact.html" aria-label="Get help and support">Help Center</a>
+                        <a href="/contact.html">Contact Us</a>
+                        <a href="/privacy.html">Privacy Policy</a>
+                        <a href="/terms_and_conditions.html">Terms of Service</a>
+                        <a href="/delete-account.html">Account Deletion</a>
+                    </nav>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <div class="footer-links">
+                        <a href="mailto:hello@troddr.com" aria-label="Email us at hello@troddr.com">hello@troddr.com</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 TRODDR.</p>
+                <p>Made with ❤️ in Jamaica. <br>Jamaica's curated travel guide, eat, stay and explore like a local.</p>
+            </div>
+        </div>
+    </footer></body></html>`;
 }
 
 export async function fetchGuides() {

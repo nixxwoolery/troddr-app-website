@@ -3,3 +3,23 @@
 .footer .section-container { max-width: 1240px; padding-left: 28px; padding-right: 28px; margin-left: auto; margin-right: auto; }
 .footer a:focus-visible { outline: 3px solid #45a7e6; outline-offset: 4px; }
 @media(max-width:620px) { .footer .section-container { padding-left: 18px; padding-right: 18px; } }
+
+/* Complete footer rules also serve the independently rendered guide routes. */
+.footer { padding: 0; color: white; font-size: 16px; line-height: 1.6; }
+.footer * { box-sizing: border-box; }
+.footer .section-container { padding-top: 64px; padding-bottom: 64px; }
+.footer .footer-content { display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 32px; margin-bottom: 32px; }
+.footer .footer-section { margin: 0; }
+.footer h3 { margin: 0 0 16px; font-size: 1.17em; font-weight: 700; color: #45a7e6; }
+.footer p { margin: 0; color: #9ca3af; line-height: 1.6; }
+.footer .footer-links { display: flex; flex-direction: column; gap: 8px; }
+.footer .footer-links a { color: #9ca3af; text-decoration: none; transition: color .3s ease; }
+.footer .footer-links a:hover { color: #45a7e6; }
+.footer .footer-bottom { border-top: 1px solid #374151; padding-top: 32px; text-align: center; }
+@media(max-width:768px) {
+  .footer .footer-content { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+  .footer .footer-section { margin-bottom: 24px; }
+  .footer h3 { font-size: 19.2px; }
+  .footer .footer-links { gap: 12px; }
+}
+@media(max-width:480px) { .footer { font-size: 14px; } }
