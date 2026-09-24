@@ -101,7 +101,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
   <div class="hero-inner">
     <span class="hero-eyebrow">Orders</span>
     <h1 id="hero-title">Order Analytics</h1>
-    <div class="hero-meta">Totals across every order placed for this event — not just what's live right now.</div>
+    <div class="hero-meta">Totals across every order placed for this event, not just what's live right now.</div>
   </div>
 </section>
 
@@ -138,6 +138,12 @@ const $ = (id) => document.getElementById(id);
 const money = (n,c) => n==null ? null : ((c==='JMD'||c==='USD'?'$':'')+Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}));
 function esc(s){return (s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 function hourLabel(h){ const ap=h<12?'am':'pm'; let hr=h%12; if(hr===0) hr=12; return hr+ap; }
+function fmtDuration(mins){
+  const m = Math.max(0, Math.round(mins));
+  if(m < 60) return m+'m';
+  const h = Math.floor(m/60), r = m%60;
+  return h+'h'+(r?' '+r+'m':'');
+}
 
 // ── Entity picker (multi-domain partners) ──────────────────
 function renderEntityPicker(partner){
@@ -215,7 +221,7 @@ function render(data){
     ['Total orders', s.total_orders ?? 0],
     ['Total revenue', money(s.total_revenue ?? 0, cur) ?? '—'],
     ['Avg order value', money(s.avg_order_value ?? 0, cur) ?? '—'],
-    ['Avg fulfillment time', (s.avg_fulfillment_minutes!=null ? Math.round(s.avg_fulfillment_minutes)+' min' : '—')],
+    ['Avg fulfillment time', (s.avg_fulfillment_minutes!=null ? fmtDuration(s.avg_fulfillment_minutes) : '—')],
     ['Collected', s.collected_orders ?? 0],
     ['Cancelled', s.cancelled_orders ?? 0],
   ];

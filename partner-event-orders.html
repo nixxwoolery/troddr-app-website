@@ -70,11 +70,19 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .stat b{display:block;font-size:20px;font-weight:800;line-height:1.1;}
 .stat span{font-size:11px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.4px;}
 .stat.new b{color:var(--blue);} .stat.prep b{color:var(--amber);}
-.stat.ready b{color:var(--green);} .stat.open b{color:var(--red);}
+.stat.ready b{color:var(--green);} .stat.open b{color:var(--red);} .stat.soon b{color:var(--amber);}
 
 /* connection banner */
 .banner{display:none;background:var(--amber-light);color:var(--amber);border:1px solid #f0d9a8;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-weight:600;}
 .banner.show{display:block;}
+
+/* bulk vendor actions - fulfilling one stall across several orders at once */
+.vb-panel{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:16px;}
+.vb-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-mid);margin-bottom:8px;}
+.vb-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border);}
+.vb-row:first-of-type{border-top:none;}
+.vb-name{font-weight:600;font-size:13px;}
+.vb-actions{display:flex;gap:8px;flex-wrap:wrap;}
 
 /* pickup location (sits above the board - kept compact) */
 .pickup-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:16px;}
@@ -104,12 +112,14 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 /* card */
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
 .card.overdue{border-color:var(--red);box-shadow:0 0 0 2px var(--red-light);}
+.card.duesoon{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-light);}
 .card.isnew{animation:pop .5s ease;}
 @keyframes pop{0%{box-shadow:0 0 0 4px var(--blue-light);}100%{box-shadow:0 1px 3px rgba(0,0,0,.05);}}
 .card .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
 .code{font-size:24px;font-weight:800;letter-spacing:2px;}
 .when{text-align:right;font-size:12px;color:var(--grey-mid);}
 .when .od{color:var(--red);font-weight:700;}
+.when .soon{color:var(--amber);font-weight:700;}
 .who{margin:6px 0 8px;font-size:13px;}
 .who a{color:var(--blue);text-decoration:none;font-weight:600;}
 .note{background:var(--amber-light);color:#7a5200;border-radius:8px;padding:6px 10px;font-size:12px;margin:8px 0;}
@@ -148,6 +158,19 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .mitem .mn{flex:1;}
 .mitem.sold .mn{color:var(--grey-light);text-decoration:line-through;}
 #gate{display:none;text-align:center;padding:60px 20px;color:var(--grey-mid);}
+
+/* print - a plain paper ticket list of the live queue, no chrome/controls */
+@media print{
+  .header,.page-hero,.sidebar,.banner,#pickup,#vendors,#vendorBulk,.topbar .controls,.card-toggle,.actions,.irow .so{display:none!important;}
+  body{background:#fff!important;}
+  .layout{display:block!important;padding:0!important;max-width:none!important;}
+  .lanes{display:block!important;}
+  .lane{background:#fff!important;padding:0!important;margin-bottom:18px;break-inside:avoid;}
+  .lane h2{justify-content:flex-start!important;border-bottom:2px solid #000;padding-bottom:4px;}
+  .card{break-inside:avoid;box-shadow:none!important;border:1px solid #999!important;margin-bottom:10px;}
+  .card-body.hidden{display:block!important;}
+  #histToggle,#history{display:none!important;}
+}
 </style>
 </head>
 <body>
@@ -177,6 +200,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
       <button class="btn small" id="pauseBtn" style="display:none"></button>
       <button class="btn small ghost" id="enableBtn"></button>
       <button class="btn ghost small" id="soundBtn" title="Toggle new-order sound">🔔 Sound: On</button>
+      <button class="btn ghost small" id="printBtn" onclick="window.print()" title="Print the current queue">🖨️ Print</button>
       <span class="sub" id="lastSync"></span>
     </div>
   </div>
@@ -184,6 +208,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
   <div class="banner" id="banner">Reconnecting… showing last known orders.</div>
 
   <div class="recon" id="recon"></div>
+
+  <div id="vendorBulk"></div>
 
   <details id="pickup" class="pickup-box">
     <summary>Pickup location</summary>
@@ -244,7 +270,14 @@ let pickupLocationDirty=false, pickupLocationSaving=false;
 let cfgState = { enabled: false, paused: false };
 let menuCache = null;
 let knownIds = new Set();
-let expandedOrders = new Set();
+function loadExpanded(){
+  try{ return new Set(JSON.parse(localStorage.getItem('troddr_order_expanded')||'[]')); }
+  catch(e){ return new Set(); }
+}
+function saveExpanded(){
+  try{ localStorage.setItem('troddr_order_expanded', JSON.stringify([...expandedOrders])); }catch(e){}
+}
+let expandedOrders = loadExpanded();
 let firstLoad = true;
 let soundOn = (localStorage.getItem('troddr_order_sound') ?? '1') === '1';
 let addTargetOrder = null;
@@ -254,6 +287,12 @@ const $ = (id) => document.getElementById(id);
 const jaTime = (iso) => new Date(iso).toLocaleTimeString('en-US',{timeZone:'America/Jamaica',hour:'numeric',minute:'2-digit'});
 const money = (n,c) => n==null ? null : ((c==='JMD'||c==='USD'?'$':'')+Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}));
 const minsBetween = (a,b) => Math.round((a-b)/60000);
+const fmtDuration = (mins) => {
+  const m = Math.max(0, Math.round(mins));
+  if(m < 60) return m+'m';
+  const h = Math.floor(m/60), r = m%60;
+  return h+'h'+(r?' '+r+'m':'');
+};
 function esc(s){return (s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 
 function beep(){
@@ -405,6 +444,7 @@ function render(data){
   const orders = data.orders||[];
   currentOrders = orders;
   renderOrderingVendors(data.ordering_vendors||[]);
+  renderVendorBulk(orders);
   const now = Date.now();
 
   // detect brand-new active orders → chime + auto-expand (skip the very first load)
@@ -414,12 +454,24 @@ function render(data){
     for(const o of activeNow){
       if(!knownIds.has(o.id) && o.status==='received'){ hasNewOrder = true; expandedOrders.add(o.id); }
     }
-    if(hasNewOrder) beep();
+    if(hasNewOrder){ beep(); saveExpanded(); }
   }
+  // Prune expanded-state memory of orders no longer in the payload (collected/cancelled
+  // orders age out of the queue RPC after a few hours), so localStorage doesn't grow forever.
+  const liveIds = new Set(orders.map(o=>o.id));
+  let prunedExpanded = false;
+  for(const id of [...expandedOrders]){ if(!liveIds.has(id)){ expandedOrders.delete(id); prunedExpanded = true; } }
+  if(prunedExpanded) saveExpanded();
+
   const buckets = { received:[], preparing:[], ready:[], collected:[], cancelled:[] };
   for(const o of orders){ (buckets[o.status]||[]).push(o); }
 
   const overdueOpen = activeNow.filter(o=>o.status!=='ready' && new Date(o.pickup_time).getTime()<now).length;
+  const dueSoonOpen = activeNow.filter(o=>{
+    if(o.status==='ready') return false;
+    const mins = (new Date(o.pickup_time).getTime()-now);
+    return mins >= 0 && mins <= 15*60000;
+  }).length;
 
   // Tab title badge - so a new order isn't missed just because the tab is in the background.
   document.title = buckets.received.length ? `(${buckets.received.length}) ${BASE_TITLE}` : BASE_TITLE;
@@ -430,14 +482,15 @@ function render(data){
     stat('New', buckets.received.length,'new'),
     stat('Preparing', buckets.preparing.length,'prep'),
     stat('Ready', buckets.ready.length,'ready'),
+    stat('Due soon', dueSoonOpen,'soon'),
     stat('Overdue', overdueOpen,'open'),
     stat('Collected', buckets.collected.length,''),
     stat('Cancelled', buckets.cancelled.length,''),
   ].join('');
 
-  $('lane-new').innerHTML  = buckets.received.length ? buckets.received.map(card).join('') : empty('No new orders');
-  $('lane-prep').innerHTML = buckets.preparing.length ? buckets.preparing.map(card).join('') : empty('Nothing being prepared');
-  $('lane-ready').innerHTML= buckets.ready.length ? buckets.ready.map(card).join('') : empty('Nothing waiting for pickup');
+  $('lane-new').innerHTML  = buckets.received.length ? buckets.received.map(o=>card(o)).join('') : empty('No new orders');
+  $('lane-prep').innerHTML = buckets.preparing.length ? buckets.preparing.map(o=>card(o)).join('') : empty('Nothing being prepared');
+  $('lane-ready').innerHTML= buckets.ready.length ? buckets.ready.map(o=>card(o)).join('') : empty('Nothing waiting for pickup');
   $('c-new').textContent=buckets.received.length; $('c-prep').textContent=buckets.preparing.length; $('c-ready').textContent=buckets.ready.length;
 
   const hist=[...buckets.collected,...buckets.cancelled];
@@ -463,6 +516,7 @@ function orderReadyEligible(o){
 
 function toggleCard(id){
   if(expandedOrders.has(id)) expandedOrders.delete(id); else expandedOrders.add(id);
+  saveExpanded();
   const body = document.querySelector(`[data-card-body="${id}"]`);
   const btn = document.querySelector(`[data-card-toggle="${id}"]`);
   if(body) body.classList.toggle('hidden');
@@ -475,6 +529,7 @@ function card(o, hist=false){
   const toPickup=minsBetween(pickup,now);
   const age=minsBetween(now,new Date(o.created_at).getTime());
   const overdue = !hist && o.status!=='ready' && pickup<now;
+  const dueSoon = !hist && !overdue && o.status!=='ready' && (pickup-now) <= 15*60000;
   const isNew = !hist && o.status==='received' && !knownIds.has(o.id);
   const open = expandedOrders.has(o.id);
 
@@ -525,8 +580,8 @@ function card(o, hist=false){
   const whenHtml = hist
     ? `<div class="when">${o.status==='collected'?'Collected':'Cancelled'}</div>`
     : `<div class="when">Pickup ${jaTime(o.pickup_time)}<br>
-        ${overdue?`<span class="od">${Math.abs(toPickup)} min overdue</span>`:(o.status==='ready'?'ready now':`in ${toPickup} min`)}
-        <br><span style="color:var(--grey-light)">placed ${age}m ago</span></div>`;
+        ${overdue?`<span class="od">${fmtDuration(Math.abs(toPickup))} overdue</span>`:(o.status==='ready'?'ready now':dueSoon?`<span class="soon">in ${fmtDuration(toPickup)}</span>`:`in ${fmtDuration(toPickup)}`)}
+        <br><span style="color:var(--grey-light)">placed ${fmtDuration(age)} ago</span></div>`;
 
   let actions='';
   if(!hist){
@@ -540,7 +595,7 @@ function card(o, hist=false){
 
   const itemCount = (o.items||[]).reduce((n,it)=>n+(it.is_unavailable?0:it.quantity),0);
   const dragAttrs = !hist ? `draggable="true" ondragstart="onCardDragStart(event,'${o.id}','${o.status}')" ondragend="onCardDragEnd(event)"` : '';
-  return `<div class="card ${overdue?'overdue':''} ${isNew?'isnew':''}" ${dragAttrs}>
+  return `<div class="card ${overdue?'overdue':dueSoon?'duesoon':''} ${isNew?'isnew':''}" ${dragAttrs}>
     <div class="chead"><div class="code">${o.code}</div>${whenHtml}</div>
     <div class="who">${esc(o.customer_name)} · <a href="tel:${esc(o.customer_phone)}">${esc(o.customer_phone)}</a></div>
     ${o.note?`<div class="note">📝 ${esc(o.note)}</div>`:''}
@@ -554,6 +609,62 @@ function card(o, hist=false){
     <div class="opts">${o.payment_confirmed_at?'Payment received: '+money(o.amount_paid,o.currency):(hist?'Payment not recorded':'Payment due at pickup')}</div>
     ${actions?`<div class="actions">${actions}</div>`:''}
   </div>`;
+}
+
+// Fulfilling one vendor's stall often means grabbing items for several
+// different orders at once - this rolls up "not placed yet" / "placed but
+// not collected" counts per vendor across every active order, so staff can
+// clear a whole stall in one tap instead of hunting through each order.
+function renderVendorBulk(orders){
+  const map = new Map();
+  for(const o of orders){
+    if(!['received','preparing'].includes(o.status)) continue;
+    const byVendor = new Map();
+    for(const it of o.items||[]){
+      if(it.is_unavailable) continue;
+      const key = it.vendor_key || it.vendor_name;
+      if(!byVendor.has(key)) byVendor.set(key, { name: it.vendor_name, items: [] });
+      byVendor.get(key).items.push(it);
+    }
+    for(const [key,g] of byVendor){
+      const placed = g.items.every(i=>i.runner_placed_at);
+      const collected = g.items.every(i=>i.runner_collected_at);
+      if(!map.has(key)) map.set(key, { name: g.name, notPlaced: [], notCollected: [] });
+      const entry = map.get(key);
+      if(!placed) entry.notPlaced.push(o.id);
+      else if(!collected) entry.notCollected.push(o.id);
+    }
+  }
+  const rows = [...map.entries()].filter(([,v])=>v.notPlaced.length>1||v.notCollected.length>1);
+  if(!rows.length){ $('vendorBulk').innerHTML=''; return; }
+  $('vendorBulk').innerHTML = `<div class="vb-panel">
+    <div class="vb-title">Clear a whole stall at once</div>
+    ${rows.map(([key,v])=>`
+      <div class="vb-row">
+        <span class="vb-name">${esc(v.name)}</span>
+        <div class="vb-actions">
+          ${v.notPlaced.length>1?`<button class="btn small" data-vendor-key="${esc(key)}" data-status="placed" data-orders="${v.notPlaced.join(',')}" onclick="bulkVendorProgress(this)">Mark ${v.notPlaced.length} placed</button>`:''}
+          ${v.notCollected.length>1?`<button class="btn small" data-vendor-key="${esc(key)}" data-status="collected" data-orders="${v.notCollected.join(',')}" onclick="bulkVendorProgress(this)">Mark ${v.notCollected.length} collected</button>`:''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+async function bulkVendorProgress(btn){
+  const key = btn.dataset.vendorKey;
+  const status = btn.dataset.status;
+  const orderIds = btn.dataset.orders.split(',').filter(Boolean);
+  if(!orderIds.length) return;
+  btn.disabled = true;
+  try{
+    const results = await Promise.all(orderIds.map(id=>
+      db.rpc('partner_set_vendor_progress',{p_token:partnerToken,p_order_id:id,p_vendor_key:key,p_status:status})
+    ));
+    const failed = results.filter(r=>r.error).length;
+    if(failed) alert(`Could not update ${failed} of ${orderIds.length} orders. Try again or update them individually.`);
+    await loadQueue();
+  } catch(e){ alert('Could not update. Please refresh and try again.'); }
+  finally{ btn.disabled = false; }
 }
 
 function renderOrderingVendors(vendors){
