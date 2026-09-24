@@ -36,7 +36,7 @@
       img.addEventListener('error', () => { if (current === generation) { card.remove(); updateCount(); } });
       const body = document.createElement('div'); body.className = 'parish-card-body';
       const title = document.createElement('h3'); title.textContent = place.name;
-      const location = document.createElement('p'); location.textContent = [place.town, parish].filter(Boolean).join(' · ');
+      const location = document.createElement('p'); location.textContent = [...new Set([place.town, place.parish || parish].filter(Boolean))].join(' · ');
       const action = document.createElement('span'); action.className = 'parish-view'; action.textContent = 'View place ↗';
       body.append(title, location);
       if (place.rewards === true) {
@@ -58,13 +58,13 @@
   async function load() {
     retry.hidden = true; select.disabled = true; status.textContent = 'Loading places…';
     try {
-      const response = await fetch('data/parish-previews.json?v=4', {signal: AbortSignal.timeout(12000)});
+      const response = await fetch('data/location-previews.json?v=1', {signal: AbortSignal.timeout(12000)});
       if (!response.ok) throw new Error('Unavailable');
       data = await response.json(); render();
     } catch { status.textContent = 'We couldn’t load the place previews. Try again or explore in the app.'; retry.hidden = false; }
     finally { select.disabled = false; }
   }
-  select.value = 'St. Andrew';
+  select.value = 'Kingston';
   select.addEventListener('change', () => { if (data) render(); });
   retry.addEventListener('click', load);
   load();

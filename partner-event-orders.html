@@ -123,6 +123,20 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
     <div id="orderingVendors"></div>
   </details>
 
+  <details style="margin-bottom:18px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
+    <summary style="font-weight:700;cursor:pointer">Pickup location</summary>
+    <p class="sub">Set the shared collection counter shown in checkout and order status. Use decimal coordinates from your map pin.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0" oninput="pickupLocationDirty=true;previewPickupLocation()">
+      <label>Counter name<br><input id="pickupName" maxlength="120" placeholder="App Order Counter" style="padding:10px"></label>
+      <label>Latitude<br><input id="pickupLat" type="number" step="any" min="-90" max="90" placeholder="e.g. 18.005" style="padding:10px"></label>
+      <label>Longitude<br><input id="pickupLng" type="number" step="any" min="-180" max="180" placeholder="e.g. -76.747" style="padding:10px"></label>
+    </div>
+    <p class="sub">Leave both coordinates blank to hide the map link. Changing this location also changes directions shown for existing orders.</p>
+    <div class="controls"><button id="savePickupLocation" class="btn small primary" disabled onclick="savePickupLocation()">Save pickup location</button>
+    <a id="pickupPreview" class="btn small ghost" target="_blank" rel="noopener noreferrer" style="display:none">Preview on map</a></div>
+    <p id="pickupLocationStatus" class="sub" role="status" aria-live="polite"></p>
+  </details>
+
   <div class="lanes">
     <div class="lane new"><h2>New <span class="count" id="c-new">0</span></h2><div id="lane-new"></div></div>
     <div class="lane prep"><h2>Preparing <span class="count" id="c-prep">0</span></h2><div id="lane-prep"></div></div>
@@ -153,6 +167,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let partnerToken = '';
 let currentOrders = [];
+let pickupLocationDirty=false, pickupLocationSaving=false;
 let cfgState = { enabled: false, paused: false };
 let menuCache = null;
 let knownIds = new Set();
@@ -210,7 +225,46 @@ async function loadQueue(){
   }
   $('banner').classList.remove('show');
   render(data);
+  void loadPickupLocation();
   $('lastSync').textContent = 'Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+}
+
+function pickupCoordinates(){
+  const latText=$('pickupLat').value.trim(),lngText=$('pickupLng').value.trim();
+  if(!latText && !lngText) return {lat:null,lng:null};
+  const lat=Number(latText),lng=Number(lngText);
+  if(!latText || !lngText || !Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) throw new Error('Enter a valid latitude (-90 to 90) and longitude (-180 to 180), or leave both blank.');
+  return {lat,lng};
+}
+function previewPickupLocation(){
+  const link=$('pickupPreview');link.style.display='none';
+  try {const {lat,lng}=pickupCoordinates();if(lat===null)return;
+    link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(lat+','+lng);link.style.display='';
+  } catch(_){}
+}
+async function loadPickupLocation(){
+  if(pickupLocationDirty || pickupLocationSaving)return;
+  try {
+    const {data,error}=await db.rpc('partner_get_pickup_location',{p_token:partnerToken});
+    if(error)throw error;
+    if(pickupLocationDirty || pickupLocationSaving)return;
+    $('pickupName').value=data?.name||'';$('pickupLat').value=data?.lat??'';$('pickupLng').value=data?.lng??'';
+    $('savePickupLocation').disabled=false;previewPickupLocation();
+  } catch(e){$('pickupLocationStatus').textContent='Could not load pickup location. Check your connection and that the pickup location migration has been applied.';}
+}
+async function savePickupLocation(){
+  if(pickupLocationSaving)return;
+  let point;try {point=pickupCoordinates();}catch(e){$('pickupLocationStatus').textContent=e.message;return;}
+  pickupLocationSaving=true;
+  ['pickupName','pickupLat','pickupLng','savePickupLocation'].forEach(id=>$(id).disabled=true);
+  try {
+    const {error}=await db.rpc('partner_set_pickup_location',{p_token:partnerToken,p_name:$('pickupName').value.trim(),p_lat:point.lat,p_lng:point.lng});
+    if(error)throw error;
+    pickupLocationDirty=false;
+    $('pickupLocationStatus').textContent=point.lat===null?'Saved. The pickup map link is hidden.':'Saved. Customers can open this pickup point from checkout and order status.';
+    previewPickupLocation();
+  } catch(e){pickupLocationDirty=true;$('pickupLocationStatus').textContent='Could not save pickup location: '+e.message;}
+  finally {pickupLocationSaving=false;['pickupName','pickupLat','pickupLng','savePickupLocation'].forEach(id=>$(id).disabled=false);}
 }
 
 function render(data){

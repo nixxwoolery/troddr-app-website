@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/home-refresh.css?v=19">
+    <link rel="stylesheet" href="css/home-refresh.css?v=20">
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-N0L5H68MFR"></script>
@@ -175,7 +175,7 @@
                             <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" />
                         </a>
                     </div>
-                    <a class="browse-first" href="#parish-explorer">Explore places by parish <span aria-hidden="true">↓</span></a>
+                    <a class="browse-first" href="#parish-explorer">Explore places by location <span aria-hidden="true">↓</span></a>
                     <div class="hero-proof" aria-label="TRODDR benefits">
                         <span>Locally curated</span>
                         <span>No pay-to-play listings</span>
@@ -205,11 +205,11 @@
             <div class="section-container">
                 <p class="hero-kicker">Your next stop</p>
                 <h2 id="parish-title">Where do you want to explore?</h2>
-                <p class="parish-intro">Pick a parish for a taste of what’s nearby. Preview up to three places, then explore more in the app.</p>
-                <div class="parish-picker"><label for="parish-select"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>Choose a parish</label>
+                <p class="parish-intro">Pick a location for a taste of what’s nearby. Preview up to three places, then explore more in the app.</p>
+                <div class="parish-picker"><label for="parish-select"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>Choose a location</label>
                 <select id="parish-select" aria-describedby="parish-picker-note">
-<option>Kingston</option><option>St. Andrew</option><option>St. Thomas</option><option>Portland</option><option>St. Mary</option><option>St. Ann</option><option>Trelawny</option><option>St. James</option><option>Hanover</option><option>Westmoreland</option><option>St. Elizabeth</option><option>Manchester</option><option>Clarendon</option><option>St. Catherine</option>
-                </select><svg class="parish-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><p id="parish-picker-note" class="parish-picker-note">A few local favourites. Fresh picks each day where there’s more to explore.</p>
+<option>Kingston</option><option>Montego Bay</option><option>Negril</option><option>Ocho Rios</option><option>Portland</option><option>Treasure Beach</option>
+</select><svg class="parish-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><p id="parish-picker-note" class="parish-picker-note">A few local favourites. Fresh picks each day where there’s more to explore.</p>
                 <p id="parish-status" role="status">Loading places…</p>
                 <div id="parish-places" class="parish-grid" aria-label="Place previews"></div>
                 <button id="parish-retry" type="button" hidden>Try again</button>
@@ -805,6 +805,6 @@
         })();
     </script>
     <script src="js/home-interactions.js?v=2" defer></script>
-    <script src="js/parish-explorer.js?v=6" defer></script>
+    <script src="js/parish-explorer.js?v=7" defer></script>
 </body>
 </html>

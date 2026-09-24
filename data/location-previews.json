@@ -1,0 +1,225 @@
+{
+  "Kingston": [
+    {
+      "name": "Devon House Bakery",
+      "town": "Kingston",
+      "slug": "devon-house-bakery",
+      "image": "https://images.squarespace-cdn.com/content/v1/5eb20bebb18cec755f217073/1594417098478-52ZRGPVHWQBY9KU0WSFF/patty.jpg",
+      "parish": "St. Andrew"
+    },
+    {
+      "name": "Cannonball Caf\u00e9",
+      "town": "Kingston",
+      "slug": "cannonball-cafe-manor-park",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/place%20images/IMG_2513.jpg",
+      "rewards": true,
+      "parish": "St. Andrew"
+    },
+    {
+      "name": "AC Hotel Lounge",
+      "town": "Kingston",
+      "slug": "ac-lounge",
+      "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2c/a6/6f/ac/ac-lounge.jpg?w=700&h=-1&s=1",
+      "parish": "St. Andrew"
+    },
+    {
+      "name": "Broken Plate",
+      "town": "Kingston",
+      "slug": "broken-plate",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/place%20images/IMG_1769.jpg",
+      "parish": "St. Andrew"
+    },
+    {
+      "name": "Chilitos Jamexican",
+      "town": "Kingston",
+      "slug": "chilitos-jamexican",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/troddr_images/IMG_0877.jpg",
+      "parish": "St. Andrew"
+    },
+    {
+      "name": "Danya's Coffee Barrel",
+      "town": "Kingston",
+      "slug": "danyas-coffee",
+      "image": "https://lh3.googleusercontent.com/p/AF1QipO-fntzPdF8BJ5O4JcsC_qfwf3ADDO6RQHFHUDS=s1360-w1360-h1020",
+      "parish": "Kingston"
+    },
+    {
+      "name": "Loose Cannon Tours",
+      "town": "Port Royal",
+      "slug": "loose-cannon-tours",
+      "image": "https://loosecannontours.com/wp-content/uploads/2018/03/Loose-Cannon-cropped.jpg",
+      "parish": "Kingston"
+    }
+  ],
+  "Montego Bay": [
+    {
+      "name": "Delmare",
+      "town": "Montego Bay",
+      "slug": "delmare-at-half-moon",
+      "image": "https://www.halfmoon.com/images/hero/partial/HM_Architecture_M.O.--9.jpg",
+      "parish": "St. James"
+    },
+    {
+      "name": "Marguerites",
+      "town": "Montego Bay",
+      "slug": "marguerites",
+      "image": "https://d3ciwvs59ifrt8.cloudfront.net/5050dd5d-8799-4a87-b0e6-ce77f90e0ed4/59bd5bec-3c9a-4beb-82a4-3afbd2e671ab.jpg",
+      "parish": "St. James"
+    },
+    {
+      "name": "Mystic Thai",
+      "town": "Montego Bay",
+      "slug": "mystic-thai-mobay",
+      "image": "https://mysticthaijamaica.com/wp-content/uploads/2025/04/Food-16-scaled-e1745982611818-2048x1154.jpg",
+      "parish": "St. James"
+    },
+    {
+      "name": "S Hotel",
+      "town": "Montego Bay",
+      "slug": "s-hotel-montego-bay",
+      "image": "https://assets.simplotel.com/simplotel/image/upload/x_0,y_421,w_4000,h_1557,r_0,c_crop,q_80,fl_progressive/w_1650,c_fit,f_auto/s-hotel-montego-bay/S_Hotel_Main_Pool_vslfd5",
+      "parish": "St. James"
+    },
+    {
+      "name": "Sugar Mill Restaurant",
+      "town": "Montego Bay",
+      "slug": "sugar-mill-restaurant",
+      "image": "https://www.halfmoon.com/images/hero/partial/13.-Award-winning-restaurant-at-Half-Moon---The-Sugar-Mill.jpg",
+      "parish": "St. James"
+    }
+  ],
+  "Negril": [
+    {
+      "name": "Sunset at the Palms",
+      "town": "Negril",
+      "slug": "sunset-at-the-palms",
+      "image": "https://thepalmsjamaica.com/wp-content/uploads/2024/04/homepage-sunset-at-the-palms-pool.webp",
+      "parish": "Hanover"
+    },
+    {
+      "name": "Best in the West",
+      "town": "Negril",
+      "slug": "best-in-the-west",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/place%20images/IMG_1349.jpg",
+      "parish": "Westmoreland"
+    },
+    {
+      "name": "Catcha Falling Star",
+      "town": "Negril",
+      "slug": "catcha-falling-star",
+      "image": "https://cf.bstatic.com/xdata/images/hotel/max1024x768/198822833.jpg?k=6380ebade336e093260ff59f0dcf1aceeb3805f6dc78af040a1b127948df9539&o=&hp=1",
+      "parish": "Westmoreland"
+    },
+    {
+      "name": "Chill Pops Gourmet Paletas",
+      "town": "Negril",
+      "slug": "chill-pops-gourmet-paletas-negril",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/place%20images/IMG_8469.JPG",
+      "parish": "Westmoreland"
+    },
+    {
+      "name": "Coletta's Restaurant",
+      "town": "Negril",
+      "slug": "colettas-restaurant",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/place%20images/IMG_1371.jpg",
+      "parish": "Westmoreland"
+    },
+    {
+      "name": "Corner Bar",
+      "town": "Negril",
+      "slug": "corner-bar-negril",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/place%20images/IMG_2208.jpg",
+      "parish": "Westmoreland"
+    }
+  ],
+  "Ocho Rios": [
+    {
+      "name": "Christophers at Hermosa Cove",
+      "town": "Ocho Rios",
+      "slug": "christophers-at-hermosa-cove",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/troddr_images/IMG_2942.jpg",
+      "parish": "St. Ann"
+    },
+    {
+      "name": "Ciao Bella Art Cafe & Restaurant",
+      "town": "Ocho Rios",
+      "slug": "ciao-bella-art-cafe",
+      "image": "https://cdn.shopify.com/s/files/1/0552/1820/8973/files/caprese_1024x1024.jpg?v=1618246178",
+      "parish": "St. Ann"
+    },
+    {
+      "name": "Dolphin Cove",
+      "town": "Ocho Rios",
+      "slug": "dolphin-cove",
+      "image": "https://www.dolphincoveja.com/Content/src/programs/or/yaaman-dolphincove-banner.jpg",
+      "parish": "St. Ann"
+    },
+    {
+      "name": "Evita's Italian Restaurant",
+      "town": "Ocho Rios",
+      "slug": "evitas-italian-restaurant",
+      "image": "https://rprpwudhplodaqmmwqkf.supabase.co/storage/v1/object/public/images/troddr_images/IMG_3990.JPG",
+      "parish": "St. Ann"
+    }
+  ],
+  "Portland": [
+    {
+      "name": "Frenchman's Cove",
+      "town": "San San",
+      "slug": "frenchmans-cove",
+      "image": "https://frenchmanscove.com/wp-content/uploads/2024/02/Image-Carousel-1-7.jpg",
+      "parish": "Portland"
+    },
+    {
+      "name": "Geejam Hotel",
+      "town": "Port Antonio",
+      "slug": "geejam-hotel",
+      "image": "https://www.geejamhotel.com/wp-content/uploads/2022/01/Geejam-Hotel-Rumba-Rooms-10-Edited-for-Website-1155x770.jpg",
+      "parish": "Portland"
+    },
+    {
+      "name": "Goblin Hill Villas",
+      "town": "Port Antonio",
+      "slug": "goblin-hill-villas",
+      "image": "https://static.wixstatic.com/media/edb822_b33cfa25b3784c98a85fcbec7c7e1233~mv2.jpeg/v1/fill/w_1530,h_720,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/edb822_b33cfa25b3784c98a85fcbec7c7e1233~mv2.jpeg",
+      "parish": "Portland"
+    },
+    {
+      "name": "King Corn Crab Shack",
+      "town": "Long Bay",
+      "slug": "king-corn-portland",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3GRiDKpmFYMtIbSEE39bwKaqdcHv5HXtxQg&s",
+      "parish": "Portland"
+    },
+    {
+      "name": "Norse Hill Estate",
+      "town": "Port Antonio",
+      "slug": "norse-hill-estate",
+      "image": "https://lh3.googleusercontent.com/p/AF1QipPZbg2A60QKoeQJCXlynKNDxhu-EQFc2i0WEl8z=s1360-w1360-h1020",
+      "parish": "Portland"
+    }
+  ],
+  "Treasure Beach": [
+    {
+      "name": "Coral Bay Chateau",
+      "town": "Treasure Beach",
+      "slug": "coral-bay-chateau",
+      "image": "https://l.icdbcdn.com/oh/2aabe16d-26cb-43a5-9aac-d56c5f858720.jpg?w=1920",
+      "parish": "St. Elizabeth"
+    },
+    {
+      "name": "Hawksbill Villa",
+      "town": "Treasure Beach",
+      "slug": "hawksbill-villa",
+      "image": "https://images.squarespace-cdn.com/content/v1/65b9c110e5452a2b57a6ec16/5a795489-a82a-43b5-a130-2c65d910c2ce/KAS08741.jpg?format=2500w",
+      "parish": "St. Elizabeth"
+    },
+    {
+      "name": "JackSprat Restaurant",
+      "town": "Treasure Beach",
+      "slug": "jacksprat-restaurant",
+      "image": "https://jakeshotel.com/wp-content/uploads/2021/10/Jacks_Jack_Sprat_Bar_2434.jpg",
+      "parish": "St. Elizabeth"
+    }
+  ]
+}
