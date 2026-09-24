@@ -20,13 +20,29 @@
 :root{
   --blue:#0077CC; --blue-light:#e8f4ff; --green:#1a7f4e; --green-light:#e6f5ec;
   --red:#c0392b; --red-light:#fdecea; --amber:#b86e00; --amber-light:#fff4e0;
-  --grey-mid:#666; --grey-light:#999; --border:#e8e8e8; --bg-soft:#f8f9fa; --radius:12px;
+  --grey-mid:#666; --grey-light:#999; --grey-dark:#333; --border:#e8e8e8; --bg-soft:#f8f9fa; --radius:12px; --radius-lg:16px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+  --brand-primary:#111; --brand-text:#fff;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-size:14px;line-height:1.5;}
-.layout{max-width:1380px;margin:0 auto;padding:20px 18px 80px;display:grid;grid-template-columns:240px 1fr;gap:16px;}
-.sidebar{position:sticky;top:16px;align-self:start;height:max-content;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
-.wrap{min-width:0;}
+
+/* header */
+.header{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);}
+.navbar{max-width:1280px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:24px;}
+.logo{font-size:26px;font-weight:700;color:var(--blue);text-decoration:none;letter-spacing:-1px;}
+.nav-badge{background:var(--bg-soft);color:var(--grey-dark);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:6px;border:1px solid var(--border);margin-left:auto;}
+
+/* hero */
+.page-hero{background:var(--brand-primary);color:var(--brand-text);padding:28px 24px 36px;position:relative;overflow:hidden;}
+.hero-inner{position:relative;max-width:1280px;margin:0 auto;padding:0 8px;z-index:2;}
+.hero-eyebrow{display:inline-block;background:rgba(255,255,255,.18);color:var(--brand-text);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:4px;margin-bottom:8px;border:1px solid rgba(255,255,255,.22);}
+.page-hero h1{font-size:clamp(22px,3.2vw,30px);font-weight:800;line-height:1.15;margin-bottom:6px;letter-spacing:-.6px;max-width:760px;}
+.hero-meta{color:rgba(255,255,255,.92);font-size:13px;font-weight:500;}
+
+.layout{max-width:1380px;margin:0 auto;padding:14px 18px 0;display:grid;grid-template-columns:240px 1fr;gap:16px;}
+.sidebar{position:sticky;top:76px;align-self:start;height:max-content;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px;box-shadow:var(--shadow-sm);}
+.main{min-width:0;padding-bottom:80px;}
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
 .topbar h1{font-size:20px;font-weight:800;}
 .topbar .sub{color:var(--grey-mid);font-size:12px;}
@@ -100,14 +116,26 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 </style>
 </head>
 <body>
+
+<header class="header">
+  <div class="navbar">
+    <a href="https://www.troddr.com" class="logo">troddr</a>
+    <span class="nav-badge">Event Partner</span>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">Orders</span>
+    <h1 id="hero-title">Loading…</h1>
+    <div class="hero-meta" id="hero-meta"></div>
+  </div>
+</section>
+
 <div class="layout" id="app" style="display:none">
 <aside class="sidebar"></aside>
-<main class="wrap">
-  <div class="topbar">
-    <div>
-      <h1 id="evTitle">Order Queue</h1>
-      <div class="sub" id="evSub">Live orders · pickup at the counter</div>
-    </div>
+<main class="main">
+  <div class="topbar" style="justify-content:flex-end">
     <div class="controls">
       <span id="ordState" class="sub"></span>
       <button class="btn small" id="pauseBtn" style="display:none"></button>
@@ -282,9 +310,9 @@ async function savePickupLocation(){
 
 function render(data){
   $('gate').style.display='none'; $('app').style.display='grid';
-  $('evTitle').textContent = (data.event?.title||'Order Queue');
+  $('hero-title').textContent = (data.event?.title||'Order Queue');
   const counter = data.config?.pickup_counter_name || 'the pickup counter';
-  $('evSub').textContent = 'Live orders · pickup at '+counter;
+  $('hero-meta').textContent = 'Live orders · pickup at '+counter;
 
   // Ordering state controls
   cfgState = { enabled: !!(data.config && data.config.enabled), paused: !!(data.config && data.config.paused) };
