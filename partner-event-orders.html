@@ -70,11 +70,16 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 /* lanes */
 .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media(max-width:860px){.lanes{grid-template-columns:1fr;}}
-.lane{background:transparent;}
+.lane{background:transparent;border-radius:14px;transition:background .15s,box-shadow .15s;}
 .lane h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .lane .count{background:#fff;border:1px solid var(--border);border-radius:999px;padding:1px 9px;font-size:12px;}
 .lane.new h2{color:var(--blue);} .lane.prep h2{color:var(--amber);} .lane.ready h2{color:var(--green);}
 .lane-empty{color:var(--grey-light);font-size:13px;padding:14px;text-align:center;border:1px dashed var(--border);border-radius:12px;}
+.lane.prep.dragover{background:var(--amber-light);box-shadow:inset 0 0 0 2px var(--amber);}
+.lane.ready.dragover{background:var(--green-light);box-shadow:inset 0 0 0 2px var(--green);}
+.card[draggable="true"]{cursor:grab;}
+.card[draggable="true"]:active{cursor:grabbing;}
+.card.dragging{opacity:.4;}
 
 /* card */
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
@@ -171,8 +176,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 
   <div class="lanes">
     <div class="lane new"><h2>New <span class="count" id="c-new">0</span></h2><div id="lane-new"></div></div>
-    <div class="lane prep"><h2>Preparing <span class="count" id="c-prep">0</span></h2><div id="lane-prep"></div></div>
-    <div class="lane ready"><h2>Ready for pickup <span class="count" id="c-ready">0</span></h2><div id="lane-ready"></div></div>
+    <div class="lane prep" ondragover="onLaneDragOver(event)" ondragenter="onLaneDragEnter(event)" ondragleave="onLaneDragLeave(event)" ondrop="onLaneDrop(event,'preparing')"><h2>Preparing <span class="count" id="c-prep">0</span></h2><div id="lane-prep"></div></div>
+    <div class="lane ready" ondragover="onLaneDragOver(event)" ondragenter="onLaneDragEnter(event)" ondragleave="onLaneDragLeave(event)" ondrop="onLaneDrop(event,'ready')"><h2>Ready for pickup <span class="count" id="c-ready">0</span></h2><div id="lane-ready"></div></div>
   </div>
 
   <div style="margin-top:22px">
@@ -365,6 +370,17 @@ function render(data){
 function stat(label,val,cls){ return `<div class="stat ${cls}"><b>${val}</b><span>${label}</span></div>`; }
 function empty(t){ return `<div class="lane-empty">${t}</div>`; }
 
+function orderReadyEligible(o){
+  const groups = new Map();
+  for(const it of o.items||[]){
+    if(it.is_unavailable) continue;
+    const key=it.vendor_key||it.vendor_name;
+    if(!groups.has(key)) groups.set(key,{items:[]});
+    groups.get(key).items.push(it);
+  }
+  return groups.size>0 && [...groups.values()].every(g=>g.items.every(i=>i.runner_collected_at));
+}
+
 function card(o, hist=false){
   const now=Date.now();
   const pickup=new Date(o.pickup_time).getTime();
@@ -400,7 +416,7 @@ function card(o, hist=false){
     if(!groups.has(key)) groups.set(key,{name:it.vendor_name,items:[]});
     groups.get(key).items.push(it);
   }
-  const allCollected=groups.size>0 && [...groups.values()].every(g=>g.items.every(i=>i.runner_collected_at));
+  const allCollected=orderReadyEligible(o);
   const progress=[...groups.entries()].map(([key,g])=>{
     const placed=g.items.every(i=>i.runner_placed_at), collected=g.items.every(i=>i.runner_collected_at);
     const editable=!hist && ['received','preparing'].includes(o.status);
@@ -422,7 +438,8 @@ function card(o, hist=false){
     if(o.status!=='ready') actions+=`<button class="btn small danger" onclick="cancelOrder('${o.id}','${o.code}')">Cancel</button>`;
   }
 
-  return `<div class="card ${overdue?'overdue':''} ${isNew?'isnew':''}">
+  const dragAttrs = !hist ? `draggable="true" ondragstart="onCardDragStart(event,'${o.id}','${o.status}')" ondragend="onCardDragEnd(event)"` : '';
+  return `<div class="card ${overdue?'overdue':''} ${isNew?'isnew':''}" ${dragAttrs}>
     <div class="chead"><div class="code">${o.code}</div>${whenHtml}</div>
     <div class="who">${esc(o.customer_name)} · <a href="tel:${esc(o.customer_phone)}">${esc(o.customer_phone)}</a></div>
     ${o.note?`<div class="note">📝 ${esc(o.note)}</div>`:''}
@@ -489,6 +506,41 @@ async function advance(id,status){
   if(status==='collected' && !confirm('Mark this order as collected (handed to the customer)?')) return;
   const { error } = await db.rpc('partner_advance_order',{ p_token:partnerToken, p_order_id:id, p_status:status });
   if(error) alert('Could not update: '+error.message); await loadQueue();
+}
+
+// ── Drag and drop between lanes ────────────────────────────
+let draggedOrderId = null, draggedFromStatus = null;
+function onCardDragStart(ev,id,status){
+  draggedOrderId = id; draggedFromStatus = status;
+  ev.dataTransfer.effectAllowed = 'move';
+  ev.dataTransfer.setData('text/plain', id);
+  ev.currentTarget.classList.add('dragging');
+}
+function onCardDragEnd(ev){
+  ev.currentTarget.classList.remove('dragging');
+  draggedOrderId = null; draggedFromStatus = null;
+  document.querySelectorAll('.lane.dragover').forEach(l=>l.classList.remove('dragover'));
+}
+function onLaneDragOver(ev){ ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; }
+function onLaneDragEnter(ev){ ev.currentTarget.classList.add('dragover'); }
+function onLaneDragLeave(ev){
+  if(!ev.currentTarget.contains(ev.relatedTarget)) ev.currentTarget.classList.remove('dragover');
+}
+async function onLaneDrop(ev,targetStatus){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('dragover');
+  const id = draggedOrderId;
+  draggedOrderId = null; draggedFromStatus = null;
+  if(!id || !targetStatus) return;
+  const order = currentOrders.find(o=>o.id===id);
+  if(!order || order.status===targetStatus) return;
+  if(targetStatus==='ready' && !orderReadyEligible(order)){
+    alert('Every vendor item needs to be collected before this order can move to Ready.');
+    return;
+  }
+  const { error } = await db.rpc('partner_advance_order',{ p_token:partnerToken, p_order_id:id, p_status:targetStatus });
+  if(error) alert('Could not move order: '+error.message);
+  await loadQueue();
 }
 async function cancelOrder(id,code){
   const reason=prompt('Cancel order '+code+'? Optional reason shown to the customer:','');
