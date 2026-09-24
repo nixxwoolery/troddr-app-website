@@ -24,7 +24,9 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-size:14px;line-height:1.5;}
-.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 80px;}
+.layout{max-width:1380px;margin:0 auto;padding:20px 18px 80px;display:grid;grid-template-columns:240px 1fr;gap:16px;}
+.sidebar{position:sticky;top:16px;align-self:start;height:max-content;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.wrap{min-width:0;}
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
 .topbar h1{font-size:20px;font-weight:800;}
 .topbar .sub{color:var(--grey-mid);font-size:12px;}
@@ -98,7 +100,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 </style>
 </head>
 <body>
-<div class="wrap" id="app" style="display:none">
+<div class="layout" id="app" style="display:none">
+<aside class="sidebar"></aside>
+<main class="wrap">
   <div class="topbar">
     <div>
       <h1 id="evTitle">Order Queue</h1>
@@ -147,6 +151,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
     <button class="btn ghost small" id="histToggle">Show history (collected / cancelled) ▾</button>
     <div id="history" style="display:none;margin-top:12px"></div>
   </div>
+</main>
 </div>
 
 <div id="gate">Loading order queue…</div>
@@ -199,6 +204,14 @@ async function init(){
   partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
   if(!partnerToken){ $('gate').style.display='block'; $('gate').textContent='This page needs a partner link. Please open it from your dashboard.'; return; }
   window.PartnerAuth?.mountSessionControl?.('partner');
+
+  db.rpc('get_partner_capabilities_by_token',{ p_token: partnerToken }).then(({data})=>{
+    window.PartnerSidebar?.mount({
+      active: '/partner/event-orders',
+      capabilities: data?.capabilities || {},
+      partner: data?.partner,
+    });
+  }).catch(()=>{ window.PartnerSidebar?.mount({ active: '/partner/event-orders', capabilities: {} }); });
 
   $('soundBtn').onclick = ()=>{ soundOn=!soundOn; localStorage.setItem('troddr_order_sound',soundOn?'1':'0'); $('soundBtn').textContent='🔔 Sound: '+(soundOn?'On':'Off'); };
   $('soundBtn').textContent='🔔 Sound: '+(soundOn?'On':'Off');
@@ -268,7 +281,7 @@ async function savePickupLocation(){
 }
 
 function render(data){
-  $('gate').style.display='none'; $('app').style.display='block';
+  $('gate').style.display='none'; $('app').style.display='grid';
   $('evTitle').textContent = (data.event?.title||'Order Queue');
   const counter = data.config?.pickup_counter_name || 'the pickup counter';
   $('evSub').textContent = 'Live orders · pickup at '+counter;

@@ -155,6 +155,7 @@
       { label: 'Ticket Performance', section: 'ticket-performance' },
       { label: 'Vendor Insights',    section: 'vendors' },
     ] },
+    { group: 'Orders', icon: 'ic-shop', page: '/partner/event-orders' },
     { group: 'Event Planning', icon: 'ic-grid', page: '/partner/event', section: 'builder-root', children: [
       { label: 'Floor Plan', section: 'builder-root' },
       { label: 'Parking Editor', section: '', page: '/partner/event-parking' },
@@ -232,7 +233,8 @@
     const isEvent = active === '/partner/event'
       || active === '/partner/demand'
       || active === '/partner/event-floorplan'
-      || active === '/partner/event-parking';
+      || active === '/partner/event-parking'
+      || active === '/partner/event-orders';
     const tree = (active === '/partner/group') ? NAV_GROUP
                : isEvent ? NAV_EVENT
                : NAV_INDIVIDUAL;
