@@ -60,6 +60,14 @@
     document.body.insertBefore(wrapper.firstChild, document.body.firstChild);
   }
 
+  // Pages that share the "event" nav tree (NAV_EVENT). Any section whose own
+  // `page` is one of these is treated as "in the event area" - see
+  // EVENT_GROUP_ACTIVE below for why that matters for the boxed/active style.
+  const EVENT_PAGES = [
+    '/partner/event', '/partner/demand', '/partner/event-floorplan',
+    '/partner/event-parking', '/partner/event-orders',
+  ];
+
   // ── Central nav trees ──────────────────────────────────────
   // section: { group, icon, page, cap, children:[ { label, section, page? } ] }
   //   cap   - capability key; omit/null to always show.
@@ -155,7 +163,12 @@
       { label: 'Ticket Performance', section: 'ticket-performance' },
       { label: 'Vendor Insights',    section: 'vendors' },
     ] },
-    { group: 'Orders', icon: 'ic-shop', page: '/partner/event-orders' },
+    { group: 'Orders', icon: 'ic-shop', page: '/partner/event-orders', section: 'queue-top', children: [
+      { label: 'Live Queue',      section: 'queue-top' },
+      { label: 'Order Analytics', section: 'analytics' },
+      { label: 'Vendor Settings', section: 'vendors' },
+      { label: 'Pickup Location', section: 'pickup' },
+    ] },
     { group: 'Event Planning', icon: 'ic-grid', page: '/partner/event', section: 'builder-root', children: [
       { label: 'Floor Plan', section: 'builder-root' },
       { label: 'Parking Editor', section: '', page: '/partner/event-parking' },
@@ -174,13 +187,19 @@
   function childTargetPage(section, child) { return child.page || section.page; }
 
   // ── Build a single section ─────────────────────────────────
-  function sectionHtml(section, active) {
+  // `boxedGroup`, when true, means every section whose own `page` is in
+  // EVENT_PAGES gets the boxed/active style together (see EVENT_PAGES above) -
+  // otherwise the event dashboard's own nav would look "fully boxed" only on
+  // /partner/event and go flat the moment you open Orders/Parking/Floor Plan,
+  // even though those are all still "the event dashboard" to a partner.
+  function sectionHtml(section, active, boxedGroup) {
     const children = section.children || [];
     const hasChildren = children.length > 0;
-    const isActive = section.page === active
+    const literalMatch = section.page === active
       || children.some((child) => childTargetPage(section, child) === active);
-    const openCls = isActive && hasChildren ? ' open' : '';
-    const activeCls = isActive ? ' active' : '';
+    const boxed = literalMatch || (boxedGroup && EVENT_PAGES.includes(section.page));
+    const openCls = literalMatch && hasChildren ? ' open' : '';
+    const activeCls = boxed ? ' active' : '';
 
     let html = `<div class="psb-group${activeCls}${openCls}">`;
 
@@ -189,7 +208,7 @@
     const chevron = hasChildren
       ? `<button type="button" class="psb-toggle" aria-label="Toggle ${escapeHtml(section.group)}"><svg class="psb-chev"><use href="#ic-chevron"/></svg></button>`
       : '';
-    const headAnchor = (isActive && section.section) ? ` data-section="${section.section}"` : '';
+    const headAnchor = (literalMatch && section.section) ? ` data-section="${section.section}"` : '';
     html += `<div class="psb-head">`
           +   `<a class="psb-grouplink" data-href="${section.page}"${headAnchor}>`
           +     `${iconSvg(section.icon)}<span class="psb-label">${escapeHtml(section.group)}</span>`
@@ -230,11 +249,7 @@
     const placeCount = partnerEntities
       ? partnerEntities.filter((e) => e && e.type === 'place').length : 0;
 
-    const isEvent = active === '/partner/event'
-      || active === '/partner/demand'
-      || active === '/partner/event-floorplan'
-      || active === '/partner/event-parking'
-      || active === '/partner/event-orders';
+    const isEvent = EVENT_PAGES.includes(active);
     const tree = (active === '/partner/group') ? NAV_GROUP
                : isEvent ? NAV_EVENT
                : NAV_INDIVIDUAL;
@@ -264,7 +279,7 @@
     tree.forEach((section) => {
       if (section.cap && !caps[section.cap]) return;
       if (section.minPlaces && placeCount < section.minPlaces) return;
-      html += sectionHtml(section, active);
+      html += sectionHtml(section, active, isEvent);
     });
     html += `</nav>`;
 

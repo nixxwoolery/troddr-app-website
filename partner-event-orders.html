@@ -43,6 +43,14 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .layout{max-width:1380px;margin:0 auto;padding:14px 18px 0;display:grid;grid-template-columns:240px 1fr;gap:16px;}
 .sidebar{position:sticky;top:76px;align-self:start;height:max-content;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px;box-shadow:var(--shadow-sm);}
 .main{min-width:0;padding-bottom:80px;}
+.hidden{display:none!important;}
+.sidebar-divider{height:1px;background:var(--border);margin:8px 8px;}
+.entity-picker{padding:6px 4px 10px;}
+.partner-tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-light);padding:0 8px 2px;}
+.partner-name{font-size:12px;font-weight:700;color:var(--grey-dark);padding:0 8px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.entity-select{width:100%;padding:8px 28px 8px 10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--brand-primary);background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:12px;}
+.entity-select:hover{border-color:var(--brand-primary);}
+.entity-select optgroup{font-weight:700;}
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
 .topbar h1{font-size:20px;font-weight:800;}
 .topbar .sub{color:var(--grey-mid);font-size:12px;}
@@ -66,6 +74,22 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 /* connection banner */
 .banner{display:none;background:var(--amber-light);color:var(--amber);border:1px solid #f0d9a8;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-weight:600;}
 .banner.show{display:block;}
+
+/* analytics */
+.section-h{font-size:18px;font-weight:800;}
+.a-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+.a-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;}
+.a-stat b{display:block;font-size:24px;font-weight:800;line-height:1.15;}
+.a-stat span{font-size:11px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.4px;}
+.a-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:860px){.a-panels{grid-template-columns:1fr;}}
+.a-panel{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;}
+.a-panel h3{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-mid);margin-bottom:10px;}
+.a-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13px;}
+.a-row:first-of-type{border-top:none;}
+.a-row .n{font-weight:600;}
+.a-row .m{color:var(--grey-mid);font-size:12px;}
+.a-row .v{font-weight:700;white-space:nowrap;}
 
 /* lanes */
 .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
@@ -140,6 +164,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 <div class="layout" id="app" style="display:none">
 <aside class="sidebar"></aside>
 <main class="main">
+  <div id="queue-top" class="section">
   <div class="topbar" style="justify-content:flex-end">
     <div class="controls">
       <span id="ordState" class="sub"></span>
@@ -154,13 +179,33 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 
   <div class="recon" id="recon"></div>
 
-  <details style="margin-bottom:18px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
+  <div class="lanes">
+    <div class="lane new"><h2>New <span class="count" id="c-new">0</span></h2><div id="lane-new"></div></div>
+    <div class="lane prep" ondragover="onLaneDragOver(event)" ondragenter="onLaneDragEnter(event)" ondragleave="onLaneDragLeave(event)" ondrop="onLaneDrop(event,'preparing')"><h2>Preparing <span class="count" id="c-prep">0</span></h2><div id="lane-prep"></div></div>
+    <div class="lane ready" ondragover="onLaneDragOver(event)" ondragenter="onLaneDragEnter(event)" ondragleave="onLaneDragLeave(event)" ondrop="onLaneDrop(event,'ready')"><h2>Ready for pickup <span class="count" id="c-ready">0</span></h2><div id="lane-ready"></div></div>
+  </div>
+
+  <div style="margin-top:22px">
+    <button class="btn ghost small" id="histToggle">Show history (collected / cancelled) ▾</button>
+    <div id="history" style="display:none;margin-top:12px"></div>
+  </div>
+  </div>
+
+  <div id="analytics" class="section" style="margin-top:36px">
+    <h2 class="section-h">Order Analytics</h2>
+    <p class="sub" style="margin:2px 0 14px">Totals across every order placed for this event — not just what's live right now.</p>
+    <div id="analyticsBody">
+      <p class="sub">Loading analytics…</p>
+    </div>
+  </div>
+
+  <details id="vendors" style="margin-top:36px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
     <summary style="font-weight:700;cursor:pointer">Vendors accepting app orders</summary>
     <p class="sub" style="margin:10px 0;color:var(--grey-mid)">Choose which vendors the runner service supports. Turning a vendor off stops new orders; accepted orders remain in the queue.</p>
     <div id="orderingVendors"></div>
   </details>
 
-  <details style="margin-bottom:18px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
+  <details id="pickup" style="margin-top:18px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px">
     <summary style="font-weight:700;cursor:pointer">Pickup location</summary>
     <p class="sub">Set the shared collection counter shown in checkout and order status. Use decimal coordinates from your map pin.</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0" oninput="pickupLocationDirty=true;previewPickupLocation()">
@@ -173,17 +218,6 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
     <a id="pickupPreview" class="btn small ghost" target="_blank" rel="noopener noreferrer" style="display:none">Preview on map</a></div>
     <p id="pickupLocationStatus" class="sub" role="status" aria-live="polite"></p>
   </details>
-
-  <div class="lanes">
-    <div class="lane new"><h2>New <span class="count" id="c-new">0</span></h2><div id="lane-new"></div></div>
-    <div class="lane prep" ondragover="onLaneDragOver(event)" ondragenter="onLaneDragEnter(event)" ondragleave="onLaneDragLeave(event)" ondrop="onLaneDrop(event,'preparing')"><h2>Preparing <span class="count" id="c-prep">0</span></h2><div id="lane-prep"></div></div>
-    <div class="lane ready" ondragover="onLaneDragOver(event)" ondragenter="onLaneDragEnter(event)" ondragleave="onLaneDragLeave(event)" ondrop="onLaneDrop(event,'ready')"><h2>Ready for pickup <span class="count" id="c-ready">0</span></h2><div id="lane-ready"></div></div>
-  </div>
-
-  <div style="margin-top:22px">
-    <button class="btn ghost small" id="histToggle">Show history (collected / cancelled) ▾</button>
-    <div id="history" style="display:none;margin-top:12px"></div>
-  </div>
 </main>
 </div>
 
@@ -232,6 +266,35 @@ function beep(){
   }catch(e){}
 }
 
+// ── Entity picker (multi-domain partners) ──────────────────
+function renderEntityPicker(partner){
+  if(!partner || !partner.entities || partner.entities.length<2) return;
+  const picker = $('entity-picker'); if(!picker) return;
+  picker.classList.remove('hidden');
+  const div = $('entity-picker-divider'); if(div) div.style.display='';
+  $('partner-name').textContent = partner.name || 'Partner';
+
+  const select = $('entity-select');
+  const places = partner.entities.filter(e=>e.type==='place');
+  const events = partner.entities.filter(e=>e.type==='event');
+  const opt = (e)=>{
+    const sel = e.id===partner.current_id ? ' selected' : '';
+    const safe = String(e.name||'').replace(/[<>&"]/g,'');
+    return `<option value="${e.token}" data-type="${e.type}"${sel}>${safe}</option>`;
+  };
+  let html='';
+  if(places.length) html += '<optgroup label="Places">'+places.map(opt).join('')+'</optgroup>';
+  if(events.length) html += '<optgroup label="Events">'+events.map(opt).join('')+'</optgroup>';
+  select.innerHTML = html;
+  select.addEventListener('change', ()=>{
+    const o = select.options[select.selectedIndex];
+    const token = o.value;
+    const path = o.dataset.type==='event' ? '/partner/event' : '/partner/listing';
+    if(window.PartnerAuth) window.PartnerAuth.navigate(path, token);
+    else location.href = `${path}?token=${encodeURIComponent(token)}`;
+  });
+}
+
 async function init(){
   await window.PartnerAuth?.resolve(db, { require:false });
   partnerToken = window.PartnerAuth?.getToken() || new URLSearchParams(location.search).get('token') || '';
@@ -244,6 +307,8 @@ async function init(){
       capabilities: data?.capabilities || {},
       partner: data?.partner,
     });
+    renderEntityPicker(data?.partner);
+    window.PartnerSidebar?.setupScrollspy();
   }).catch(()=>{ window.PartnerSidebar?.mount({ active: '/partner/event-orders', capabilities: {} }); });
 
   $('soundBtn').onclick = ()=>{ soundOn=!soundOn; localStorage.setItem('troddr_order_sound',soundOn?'1':'0'); $('soundBtn').textContent='🔔 Sound: '+(soundOn?'On':'Off'); };
@@ -258,6 +323,52 @@ async function init(){
 
   await loadQueue();
   pollTimer = setInterval(loadQueue, 5000);
+  loadAnalytics();
+  setInterval(loadAnalytics, 30000);
+}
+
+async function loadAnalytics(){
+  let data, error;
+  try{
+    ({data,error} = await db.rpc('get_order_analytics_by_token',{ p_token: partnerToken }));
+  }catch(e){ error = e; }
+  if(error || !data || data.ok===false){
+    $('analyticsBody').innerHTML = '<p class="sub">Could not load analytics right now.</p>';
+    return;
+  }
+  renderAnalytics(data);
+}
+
+function renderAnalytics(data){
+  const s = data.summary || {};
+  const cur = s.currency || 'JMD';
+  const stats = [
+    ['Total orders', s.total_orders ?? 0, ''],
+    ['Total revenue', money(s.total_revenue ?? 0, cur) ?? '—', ''],
+    ['Avg order value', money(s.avg_order_value ?? 0, cur) ?? '—', ''],
+    ['Avg fulfillment time', (s.avg_fulfillment_minutes!=null ? Math.round(s.avg_fulfillment_minutes)+' min' : '—'), ''],
+    ['Collected', s.collected_orders ?? 0, ''],
+    ['Cancelled', s.cancelled_orders ?? 0, ''],
+  ];
+  const statsHtml = stats.map(([label,val])=>`<div class="a-stat"><b>${esc(String(val))}</b><span>${esc(label)}</span></div>`).join('');
+
+  const items = Array.isArray(data.top_items) ? data.top_items : [];
+  const itemsHtml = items.length
+    ? items.map(it=>`<div class="a-row"><span class="n">${esc(it.name)}</span><span class="v">${it.quantity}× <span class="m">${money(it.revenue,cur)||''}</span></span></div>`).join('')
+    : '<p class="sub">No items sold yet.</p>';
+
+  const vendors = Array.isArray(data.vendors) ? data.vendors : [];
+  const vendorsHtml = vendors.length
+    ? vendors.map(v=>`<div class="a-row"><span class="n">${esc(v.name)}<div class="m">${v.orders} order${v.orders===1?'':'s'} · ${v.items_sold} item${v.items_sold===1?'':'s'}</div></span><span class="v">${money(v.revenue,cur)||''}</span></div>`).join('')
+    : '<p class="sub">No vendor sales yet.</p>';
+
+  $('analyticsBody').innerHTML = `
+    <div class="a-stats">${statsHtml}</div>
+    <div class="a-panels">
+      <div class="a-panel"><h3>Top items</h3>${itemsHtml}</div>
+      <div class="a-panel"><h3>By vendor</h3>${vendorsHtml}</div>
+    </div>
+  `;
 }
 
 async function loadQueue(){
