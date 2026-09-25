@@ -164,19 +164,6 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .mitem .mn{flex:1;}
 .mitem.sold .mn{color:var(--grey-light);text-decoration:line-through;}
 #gate{display:none;text-align:center;padding:60px 20px;color:var(--grey-mid);}
-
-/* print - a plain paper ticket list of the live queue, no chrome/controls */
-@media print{
-  .header,.page-hero,.sidebar,.banner,#pickup,#vendors,#vendorBulk,.topbar .controls,.card-toggle,.actions,.irow .so{display:none!important;}
-  body{background:#fff!important;}
-  .layout{display:block!important;padding:0!important;max-width:none!important;}
-  .lanes{display:block!important;}
-  .lane{background:#fff!important;padding:0!important;margin-bottom:18px;break-inside:avoid;}
-  .lane h2{justify-content:flex-start!important;border-bottom:2px solid #000;padding-bottom:4px;}
-  .card{break-inside:avoid;box-shadow:none!important;border:1px solid #999!important;margin-bottom:10px;}
-  .card-body.hidden{display:block!important;}
-  #histToggle,#history{display:none!important;}
-}
 </style>
 </head>
 <body>
@@ -206,7 +193,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
       <button class="btn small" id="pauseBtn" style="display:none"></button>
       <button class="btn small ghost" id="enableBtn"></button>
       <button class="btn ghost small" id="soundBtn" title="Toggle new-order sound">🔔 Sound: On</button>
-      <button class="btn ghost small" id="printBtn" onclick="window.print()" title="Print the current queue">🖨️ Print</button>
+      <button class="btn ghost small" onclick="openMenu(null)" title="Mark items sold out or bring them back">📋 Manage Menu</button>
       <span class="sub" id="lastSync"></span>
     </div>
   </div>
@@ -759,6 +746,10 @@ async function soldOut(orderId,itemId,name){
 async function openMenu(orderId){
   addTargetOrder = orderId;
   $('menuModal').classList.add('show');
+  $('menuTitle').textContent = orderId ? 'Add an item' : 'Manage menu';
+  $('menuHint').textContent = orderId
+    ? 'Pick a replacement to add to this order.'
+    : 'Mark items sold out or bring them back — this applies across every order, not just one.';
   $('menuList').textContent='Loading menu…';
   try {
     const { data,error } = await db.rpc('get_event_menu_by_token',{ p_token:partnerToken });
@@ -769,14 +760,15 @@ async function openMenu(orderId){
 }
 function closeMenu(){ $('menuModal').classList.remove('show'); addTargetOrder=null; }
 function renderMenu(){
+  const canAdd = !!addTargetOrder;
   $('menuList').innerHTML = (menuCache||[]).map(v=>`
     <div class="mvendor">${esc(v.vendor)}${v.ordering_enabled===false?' · Not accepting new app orders':''}</div>
     ${(v.items||[]).map(it=>`
       <div class="mitem ${it.is_sold_out?'sold':''}" style="flex-wrap:wrap">
         <span class="mn">${esc(it.name)} ${it.price!=null?('· '+money(it.price,'JMD')):(it.price_label?('· '+esc(it.price_label)):'')}</span>
         <button class="btn small ghost" onclick="toggleSold('${it.id}',${it.is_sold_out?'false':'true'})">${it.is_sold_out?'Un-sold-out':'Sold out'}</button>
-        <button class="btn small primary" ${it.is_sold_out||v.ordering_enabled===false?'disabled':''} onclick="addItem('${it.id}')">Add</button>
-        ${renderOptions(it)}
+        ${canAdd?`<button class="btn small primary" ${it.is_sold_out||v.ordering_enabled===false?'disabled':''} onclick="addItem('${it.id}')">Add</button>`:''}
+        ${canAdd?renderOptions(it):''}
       </div>`).join('')}
   `).join('');
 }
