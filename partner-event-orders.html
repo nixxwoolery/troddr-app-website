@@ -11,7 +11,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/troddr-config.js"></script>
 <script src="/js/partner-auth.js"></script>
+<script src="/js/partner-errors.js"></script>
 <script src="/js/partner-sidebar.js"></script>
+<script src="/js/order-shared.js"></script>
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
   const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
@@ -55,7 +57,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
 .topbar h1{font-size:20px;font-weight:800;}
 .topbar .sub{color:var(--grey-mid);font-size:12px;}
-.controls{display:flex;align-items:center;gap:10px;}
+.controls{display:flex;align-items:center;flex-wrap:wrap;gap:10px;}
 .btn{border:1px solid var(--border);background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-weight:600;cursor:pointer;}
 .btn:active{transform:translateY(1px);}
 .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -67,6 +69,10 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 /* reconciliation strip */
 .recon{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
 .stat{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 14px;min-width:84px;}
+@media(max-width:720px){
+  .recon{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+  .recon .stat{flex:0 0 auto;}
+}
 .stat b{display:block;font-size:20px;font-weight:800;line-height:1.1;}
 .stat span{font-size:11px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.4px;}
 .stat.new b{color:var(--blue);} .stat.prep b{color:var(--amber);}
@@ -283,17 +289,10 @@ let soundOn = (localStorage.getItem('troddr_order_sound') ?? '1') === '1';
 let addTargetOrder = null;
 let pollTimer = null;
 
+const { esc, money, fmtDuration, renderEntityPicker } = window.OrderShared;
 const $ = (id) => document.getElementById(id);
 const jaTime = (iso) => new Date(iso).toLocaleTimeString('en-US',{timeZone:'America/Jamaica',hour:'numeric',minute:'2-digit'});
-const money = (n,c) => n==null ? null : ((c==='JMD'||c==='USD'?'$':'')+Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}));
 const minsBetween = (a,b) => Math.round((a-b)/60000);
-const fmtDuration = (mins) => {
-  const m = Math.max(0, Math.round(mins));
-  if(m < 60) return m+'m';
-  const h = Math.floor(m/60), r = m%60;
-  return h+'h'+(r?' '+r+'m':'');
-};
-function esc(s){return (s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 
 function beep(){
   if(!soundOn) return;
@@ -305,35 +304,6 @@ function beep(){
     o.start(); o.frequency.setValueAtTime(660,ctx.currentTime+0.12);
     o.stop(ctx.currentTime+0.28);
   }catch(e){}
-}
-
-// ── Entity picker (multi-domain partners) ──────────────────
-function renderEntityPicker(partner){
-  if(!partner || !partner.entities || partner.entities.length<2) return;
-  const picker = $('entity-picker'); if(!picker) return;
-  picker.classList.remove('hidden');
-  const div = $('entity-picker-divider'); if(div) div.style.display='';
-  $('partner-name').textContent = partner.name || 'Partner';
-
-  const select = $('entity-select');
-  const places = partner.entities.filter(e=>e.type==='place');
-  const events = partner.entities.filter(e=>e.type==='event');
-  const opt = (e)=>{
-    const sel = e.id===partner.current_id ? ' selected' : '';
-    const safe = String(e.name||'').replace(/[<>&"]/g,'');
-    return `<option value="${e.token}" data-type="${e.type}"${sel}>${safe}</option>`;
-  };
-  let html='';
-  if(places.length) html += '<optgroup label="Places">'+places.map(opt).join('')+'</optgroup>';
-  if(events.length) html += '<optgroup label="Events">'+events.map(opt).join('')+'</optgroup>';
-  select.innerHTML = html;
-  select.addEventListener('change', ()=>{
-    const o = select.options[select.selectedIndex];
-    const token = o.value;
-    const path = o.dataset.type==='event' ? '/partner/event' : '/partner/listing';
-    if(window.PartnerAuth) window.PartnerAuth.navigate(path, token);
-    else location.href = `${path}?token=${encodeURIComponent(token)}`;
-  });
 }
 
 async function init(){
@@ -484,8 +454,8 @@ function render(data){
     stat('Ready', buckets.ready.length,'ready'),
     stat('Due soon', dueSoonOpen,'soon'),
     stat('Overdue', overdueOpen,'open'),
-    stat('Collected', buckets.collected.length,''),
-    stat('Cancelled', buckets.cancelled.length,''),
+    stat('Collected (4h)', buckets.collected.length,''),
+    stat('Cancelled (4h)', buckets.cancelled.length,''),
   ].join('');
 
   $('lane-new').innerHTML  = buckets.received.length ? buckets.received.map(o=>card(o)).join('') : empty('No new orders');
@@ -503,15 +473,30 @@ function render(data){
 function stat(label,val,cls){ return `<div class="stat ${cls}"><b>${val}</b><span>${label}</span></div>`; }
 function empty(t){ return `<div class="lane-empty">${t}</div>`; }
 
-function orderReadyEligible(o){
-  const groups = new Map();
+// Single source of truth for "which items came from which vendor" - used by
+// the ready-eligibility check, the per-order vendor blocks, and the bulk
+// vendor-action panel. Includes unavailable items (callers filter those out
+// themselves) so the same grouping serves both display and eligibility.
+function groupItemsByVendor(o){
+  const map = new Map();
   for(const it of o.items||[]){
-    if(it.is_unavailable) continue;
-    const key=it.vendor_key||it.vendor_name;
-    if(!groups.has(key)) groups.set(key,{items:[]});
-    groups.get(key).items.push(it);
+    const key = it.vendor_key || it.vendor_name;
+    if(!map.has(key)) map.set(key, { name: it.vendor_name, items: [] });
+    map.get(key).items.push(it);
   }
-  return groups.size>0 && [...groups.values()].every(g=>g.items.every(i=>i.runner_collected_at));
+  return map;
+}
+
+function orderReadyEligible(o){
+  const groups = groupItemsByVendor(o);
+  let anyActive = false;
+  for(const g of groups.values()){
+    const active = g.items.filter(i=>!i.is_unavailable);
+    if(!active.length) continue;
+    anyActive = true;
+    if(!active.every(i=>i.runner_collected_at)) return false;
+  }
+  return anyActive;
 }
 
 function toggleCard(id){
@@ -533,15 +518,10 @@ function card(o, hist=false){
   const isNew = !hist && o.status==='received' && !knownIds.has(o.id);
   const open = expandedOrders.has(o.id);
 
-  // Group every item by vendor - so it's clear at a glance what to grab from
-  // where, with that vendor's placed/collected controls right alongside its
-  // items instead of in a separate, disconnected list further down.
-  const vendorMap = new Map();
-  for(const it of o.items||[]){
-    const key = it.vendor_key || it.vendor_name;
-    if(!vendorMap.has(key)) vendorMap.set(key, { name: it.vendor_name, items: [] });
-    vendorMap.get(key).items.push(it);
-  }
+  // Grouped by vendor - so it's clear at a glance what to grab from where,
+  // with that vendor's placed/collected controls right alongside its items
+  // instead of in a separate, disconnected list further down.
+  const vendorMap = groupItemsByVendor(o);
   const allCollected=orderReadyEligible(o);
   const editable=!hist && ['received','preparing'].includes(o.status);
 
@@ -615,20 +595,22 @@ function card(o, hist=false){
 // different orders at once - this rolls up "not placed yet" / "placed but
 // not collected" counts per vendor across every active order, so staff can
 // clear a whole stall in one tap instead of hunting through each order.
+// Tracks vendor keys with a bulk placed/collected action currently in
+// flight, so a poll that lands mid-request re-renders those rows disabled
+// instead of handing back a fresh, clickable button before the first
+// request has even finished (which could otherwise fire the same batch twice).
+let bulkInFlight = new Set();
+
 function renderVendorBulk(orders){
   const map = new Map();
   for(const o of orders){
     if(!['received','preparing'].includes(o.status)) continue;
-    const byVendor = new Map();
-    for(const it of o.items||[]){
-      if(it.is_unavailable) continue;
-      const key = it.vendor_key || it.vendor_name;
-      if(!byVendor.has(key)) byVendor.set(key, { name: it.vendor_name, items: [] });
-      byVendor.get(key).items.push(it);
-    }
+    const byVendor = groupItemsByVendor(o);
     for(const [key,g] of byVendor){
-      const placed = g.items.every(i=>i.runner_placed_at);
-      const collected = g.items.every(i=>i.runner_collected_at);
+      const active = g.items.filter(i=>!i.is_unavailable);
+      if(!active.length) continue;
+      const placed = active.every(i=>i.runner_placed_at);
+      const collected = active.every(i=>i.runner_collected_at);
       if(!map.has(key)) map.set(key, { name: g.name, notPlaced: [], notCollected: [] });
       const entry = map.get(key);
       if(!placed) entry.notPlaced.push(o.id);
@@ -639,14 +621,17 @@ function renderVendorBulk(orders){
   if(!rows.length){ $('vendorBulk').innerHTML=''; return; }
   $('vendorBulk').innerHTML = `<div class="vb-panel">
     <div class="vb-title">Clear a whole stall at once</div>
-    ${rows.map(([key,v])=>`
+    ${rows.map(([key,v])=>{
+      const busy = bulkInFlight.has(key);
+      return `
       <div class="vb-row">
         <span class="vb-name">${esc(v.name)}</span>
         <div class="vb-actions">
-          ${v.notPlaced.length>1?`<button class="btn small" data-vendor-key="${esc(key)}" data-status="placed" data-orders="${v.notPlaced.join(',')}" onclick="bulkVendorProgress(this)">Mark ${v.notPlaced.length} placed</button>`:''}
-          ${v.notCollected.length>1?`<button class="btn small" data-vendor-key="${esc(key)}" data-status="collected" data-orders="${v.notCollected.join(',')}" onclick="bulkVendorProgress(this)">Mark ${v.notCollected.length} collected</button>`:''}
+          ${v.notPlaced.length>1?`<button class="btn small" ${busy?'disabled':''} data-vendor-key="${esc(key)}" data-status="placed" data-orders="${v.notPlaced.join(',')}" onclick="bulkVendorProgress(this)">${busy?'Updating…':'Mark '+v.notPlaced.length+' placed'}</button>`:''}
+          ${v.notCollected.length>1?`<button class="btn small" ${busy?'disabled':''} data-vendor-key="${esc(key)}" data-status="collected" data-orders="${v.notCollected.join(',')}" onclick="bulkVendorProgress(this)">${busy?'Updating…':'Mark '+v.notCollected.length+' collected'}</button>`:''}
         </div>
-      </div>`).join('')}
+      </div>`;
+    }).join('')}
   </div>`;
 }
 
@@ -654,7 +639,8 @@ async function bulkVendorProgress(btn){
   const key = btn.dataset.vendorKey;
   const status = btn.dataset.status;
   const orderIds = btn.dataset.orders.split(',').filter(Boolean);
-  if(!orderIds.length) return;
+  if(!orderIds.length || bulkInFlight.has(key)) return;
+  bulkInFlight.add(key);
   btn.disabled = true;
   try{
     const results = await Promise.all(orderIds.map(id=>
@@ -664,7 +650,7 @@ async function bulkVendorProgress(btn){
     if(failed) alert(`Could not update ${failed} of ${orderIds.length} orders. Try again or update them individually.`);
     await loadQueue();
   } catch(e){ alert('Could not update. Please refresh and try again.'); }
-  finally{ btn.disabled = false; }
+  finally{ bulkInFlight.delete(key); }
 }
 
 function renderOrderingVendors(vendors){

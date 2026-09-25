@@ -13,6 +13,7 @@
 <script src="/js/partner-auth.js"></script>
 <script src="/js/partner-sidebar.js"></script>
 <script src="/js/partner-errors.js"></script>
+<script src="/js/order-shared.js"></script>
 <script>
   const SUPABASE_URL  = (window.__ENV__ && window.__ENV__.SUPABASE_URL)  || (window.location.origin + '/api/sb');
   const SUPABASE_ANON = (window.__ENV__ && window.__ENV__.SUPABASE_ANON) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwcnB3dWRocGxvZGFxbW13cWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyODcyODksImV4cCI6MjA2NTg2MzI4OX0.lNL6YZQqZgbsQRJyRAXpaWMC4LxncvPPyXNP1qopTFk';
@@ -133,46 +134,10 @@ body{font-family:'Poppins',sans-serif;background:var(--bg-soft);color:#111;font-
 
 <script>
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const { esc, money, fmtDuration, renderEntityPicker } = window.OrderShared;
 let partnerToken = '';
 const $ = (id) => document.getElementById(id);
-const money = (n,c) => n==null ? null : ((c==='JMD'||c==='USD'?'$':'')+Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}));
-function esc(s){return (s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 function hourLabel(h){ const ap=h<12?'am':'pm'; let hr=h%12; if(hr===0) hr=12; return hr+ap; }
-function fmtDuration(mins){
-  const m = Math.max(0, Math.round(mins));
-  if(m < 60) return m+'m';
-  const h = Math.floor(m/60), r = m%60;
-  return h+'h'+(r?' '+r+'m':'');
-}
-
-// ── Entity picker (multi-domain partners) ──────────────────
-function renderEntityPicker(partner){
-  if(!partner || !partner.entities || partner.entities.length<2) return;
-  const picker = $('entity-picker'); if(!picker) return;
-  picker.classList.remove('hidden');
-  const div = $('entity-picker-divider'); if(div) div.style.display='';
-  $('partner-name').textContent = partner.name || 'Partner';
-
-  const select = $('entity-select');
-  const places = partner.entities.filter(e=>e.type==='place');
-  const events = partner.entities.filter(e=>e.type==='event');
-  const opt = (e)=>{
-    const sel = e.id===partner.current_id ? ' selected' : '';
-    const safe = String(e.name||'').replace(/[<>&"]/g,'');
-    return `<option value="${e.token}" data-type="${e.type}"${sel}>${safe}</option>`;
-  };
-  let html='';
-  if(places.length) html += '<optgroup label="Places">'+places.map(opt).join('')+'</optgroup>';
-  if(events.length) html += '<optgroup label="Events">'+events.map(opt).join('')+'</optgroup>';
-  select.innerHTML = html;
-  select.addEventListener('change', ()=>{
-    const o = select.options[select.selectedIndex];
-    const token = o.value;
-    const path = o.dataset.type==='event' ? '/partner/event' : '/partner/listing';
-    if(window.PartnerAuth) window.PartnerAuth.navigate(path, token);
-    else location.href = `${path}?token=${encodeURIComponent(token)}`;
-  });
-}
 
 async function init(){
   await window.PartnerAuth?.resolve(db, { require:false });
@@ -197,6 +162,7 @@ async function init(){
   }).catch(()=>{});
 
   await loadAnalytics();
+  setInterval(loadAnalytics, 60000);
 }
 
 async function loadAnalytics(){
