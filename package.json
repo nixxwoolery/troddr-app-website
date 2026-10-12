@@ -2,9 +2,18 @@
   "name": "troddr-website",
   "version": "1.0.0",
   "private": true,
-  "description": "TRODDR marketing/web app — static HTML site plus Vercel edge functions for link-unfurl (Open Graph) previews.",
+  "description": "TRODDR marketing/web app \u2014 static HTML site plus Vercel edge functions for link-unfurl (Open Graph) previews.",
   "type": "module",
   "dependencies": {
     "@vercel/og": "^0.6.5"
+  },
+  "scripts": {
+    "build:discovery": "node scripts/build-discovery-pages.js",
+    "build:agents": "node scripts/build-agent-routing.js",
+    "test": "node --test tests/*.test.js",
+    "vercel-build": "npm run build:agents"
+  },
+  "devDependencies": {
+    "@vercel/routing-utils": "^6.6.0"
   }
 }

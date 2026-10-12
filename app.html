@@ -142,6 +142,7 @@
       @media (prefers-reduced-motion: reduce) {
         .status::before { animation: none; }
       }
+      .status-static::before { display: none; }
 
       .buttons {
         display: flex;
@@ -282,16 +283,36 @@
           }
         }
 
+        var token = params.get('token');
+
         if (redirectPath) {
           try {
             localStorage.setItem('troddr_redirect', redirectPath);
-            const token = params.get('token');
+            localStorage.setItem('troddr_redirect_at', String(Date.now()));
             if (token) {
               localStorage.setItem('troddr_token', token);
+            } else {
+              localStorage.removeItem('troddr_token');
             }
           } catch (e) {
             console.warn('Could not store redirect path', e);
           }
+        }
+
+        // Back on /app with no link (e.g. after installing from an invite):
+        // offer the invite saved on the first visit instead of bouncing to the store.
+        var INVITE_RESUME_MAX_AGE = 14 * 24 * 60 * 60 * 1000;
+        var resumingInvite = false;
+        if (!redirectPath) {
+          try {
+            var storedPath = localStorage.getItem('troddr_redirect') || '';
+            var storedAt = Number(localStorage.getItem('troddr_redirect_at')) || 0;
+            if (storedPath.indexOf('/invites/') === 0 && Date.now() - storedAt < INVITE_RESUME_MAX_AGE) {
+              redirectPath = storedPath;
+              token = localStorage.getItem('troddr_token');
+              resumingInvite = true;
+            }
+          } catch (e) {}
         }
 
         var deepLink = '';
@@ -299,21 +320,28 @@
           // Strip leading slashes and any existing query string from the path
           var clean = redirectPath.replace(/^\/+/, '').split('?')[0];
 
-          var token = params.get('token');
-
           deepLink = 'troddrapp://' + clean + (token ? '?token=' + encodeURIComponent(token) : '');
         }
 
         window.__TRODDR_DEEPLINK__ = deepLink;
         window.__TRODDR_REDIRECT_PATH__ = redirectPath;
+        window.__TRODDR_RESUMING_INVITE__ = resumingInvite;
 
         window.addEventListener('DOMContentLoaded', function () {
           var statusEl = document.getElementById('redirect-status');
           var deepLink = window.__TRODDR_DEEPLINK__;
           var redirectPath = window.__TRODDR_REDIRECT_PATH__;
           var dividerEl = document.getElementById('open-divider');
+          var resumingInvite = window.__TRODDR_RESUMING_INVITE__;
+          var openBtn = document.getElementById('open-in-app');
 
-          if (redirectPath && statusEl) {
+          if (resumingInvite) {
+            if (statusEl) {
+              statusEl.textContent = 'Already installed TRODDR?';
+              statusEl.classList.add('status-static');
+            }
+            if (openBtn) openBtn.textContent = 'Open your invite';
+          } else if (redirectPath && statusEl) {
             if (redirectPath.indexOf('/invites/') === 0) {
               statusEl.textContent = 'Opening your invite in TRODDR';
             } else if (redirectPath.indexOf('/events/') === 0) {
@@ -329,7 +357,6 @@
             }
           }
 
-          var openBtn = document.getElementById('open-in-app');
           if (openBtn && deepLink) {
             openBtn.style.display = 'inline-flex';
             if (dividerEl) dividerEl.style.display = 'flex';
@@ -357,6 +384,14 @@
               document.addEventListener('visibilitychange', function () {
                 if (document.hidden) {
                   clearTimeout(fallbackTimer);
+                  // The app took the invite — don't offer it again on later visits.
+                  if (resumingInvite) {
+                    try {
+                      localStorage.removeItem('troddr_redirect');
+                      localStorage.removeItem('troddr_redirect_at');
+                      localStorage.removeItem('troddr_token');
+                    } catch (err) {}
+                  }
                 }
               }, { once: true });
             });

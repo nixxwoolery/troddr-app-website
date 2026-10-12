@@ -49,10 +49,11 @@ export function footer() {
                 <div class="footer-section">
                     <h3>Discover</h3>
                     <nav class="footer-links" aria-label="Discovery links">
-                        <a href="/app" aria-label="Discover places to eat in Jamaica">Eat</a>
+                        <a href="/where-to-eat-in-jamaica" aria-label="Discover places to eat in Jamaica">Eat</a>
                         <a href="/app" aria-label="Discover places to stay in Jamaica">Stay</a>
-                        <a href="/app" aria-label="Discover things to do in Jamaica">Play</a>
+                        <a href="/things-to-do-in-jamaica" aria-label="Discover things to do in Jamaica">Play</a>
                         <a href="/app" aria-label="Jamaica events and festivals">Events</a>
+                        <a href="/things-to-do-in-kingston">Things to do in Kingston</a>
                         <a href="/app" aria-label="Explore Jamaica destinations">Destinations</a>
                     </nav>
                 </div>

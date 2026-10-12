@@ -1,302 +1,641 @@
 {
-    "rewrites": [
-      {
-        "source": "/api/sb/:path*",
-        "destination": "https://rprpwudhplodaqmmwqkf.supabase.co/:path*"
-      },
-      {
-        "source": "/listings/:slug",
-        "has": [
-          {
-            "type": "header",
-            "key": "user-agent",
-            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
-          }
-        ],
-        "destination": "/api/og/:slug"
-      },
-      { "source": "/listings/:slug", "destination": "/listings.html" },
-  
-      { "source": "/guides", "destination": "/api/guides" },
-      { "source": "/guides/:slug", "destination": "/api/guides/:slug" },
-      {
-        "source": "/specials/:slug",
-        "has": [
-          {
-            "type": "header",
-            "key": "user-agent",
-            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
-          }
-        ],
-        "destination": "/api/og/specials/:slug"
-      },
-      { "source": "/specials/:slug", "destination": "/specials.html" },
-
-      {
-        "source": "/itinerary/:id",
-        "has": [
-          {
-            "type": "header",
-            "key": "user-agent",
-            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
-          }
-        ],
-        "destination": "/api/og/itinerary/:id"
-      },
-      {
-        "source": "/itinerary/:id",
-        "destination": "/itinerary.html"
-      },
-  
-      {
-        "source": "/events/:slug",
-        "has": [
-          {
-            "type": "header",
-            "key": "user-agent",
-            "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
-          }
-        ],
-        "destination": "/api/og/events/:slug"
-      },
-      {
-        "source": "/events/:slug",
-        "destination": "/events.html"
-      },
-      {
-        "source": "/invites/:id",
-        "destination": "/api/og/invites/:id"
-      },
-      {
-        "source": "/trips/:id",
-        "destination": "/api/og/trips/:id"
-      },
-      {
-        "source": "/checkin/:tag",
-        "destination": "/checkin.html"
-      },
-      {
-        "source": "/park/:lot",
-        "destination": "/park.html"
-      },
-      { "source": "/dashboard", "destination": "/dashboard.html" },
-      { "source": "/dashboard-prototype", "destination": "/dashboard-prototype.html" },
-      { "source": "/event-onboarding", "destination": "/event-onboarding.html" },
-      { "source": "/booking", "destination": "/booking.html" },
-      { "source": "/partner/bookings", "destination": "/partner-bookings.html" },
-      { "source": "/partner/opportunities", "destination": "/partner-opportunities.html" },
-      { "source": "/partner/guests", "destination": "/partner-guests.html" },
-      { "source": "/partner/login", "destination": "/partner-login.html" },
-      { "source": "/partner/listing",  "destination": "/partner-listing.html" },
-      { "source": "/partner/loyalty",  "destination": "/partner-loyalty.html" },
-      { "source": "/partner/perks",    "destination": "/partner-perks.html" },
-      { "source": "/partner/feedback", "destination": "/partner-feedback.html" },
-      { "source": "/partner/event",    "destination": "/partner-event.html" },
-      { "source": "/partner/demand",   "destination": "/partner-demand.html" },
-      { "source": "/partner/event-floorplan", "destination": "/partner-event-floorplan.html" },
-      { "source": "/partner/event-parking", "destination": "/partner-event-parking.html" },
-      { "source": "/partner/event-orders", "destination": "/partner-event-orders.html" },
-      { "source": "/partner/event-order-analytics", "destination": "/partner-event-order-analytics.html" },
-      { "source": "/partner/specials", "destination": "/partner-specials.html" },
-      { "source": "/partner/billing",  "destination": "/partner-billing.html" },
-      { "source": "/partner/group",    "destination": "/partner-group.html" },
-      { "source": "/m/:token",          "destination": "/m.html?token=:token" },
-      { "source": "/map/:slug",         "destination": "/map.html?e=:slug" },
-      { "source": "/onboarding",       "destination": "/onboarding.html" },
-      { "source": "/business",         "destination": "/business.html" },
-      { "source": "/business/sign-in", "destination": "/company-billing.html" },
-      { "source": "/business/dashboard", "destination": "/company-billing.html" },
-      { "source": "/company/billing",  "destination": "/company-billing.html" },
-      { "source": "/admin",            "destination": "/admin.html" },
-      { "source": "/admin/billing",    "destination": "/admin-billing.html" },
-      { "source": "/admin/review",     "destination": "/admin-review.html" },
-      { "source": "/reset-password", "destination": "/reset-password.html" },
-      { "source": "/app", "destination": "/app.html" }
-    ],
-  "redirects": [
+  "routes": [
     {
-      "source": "/events/:slug",
+      "src": "^/where-to-eat-in-jamaica\\.html$",
+      "headers": {
+        "Location": "/where-to-eat-in-jamaica"
+      },
+      "status": 308
+    },
+    {
+      "src": "^/things-to-do-in-jamaica\\.html$",
+      "headers": {
+        "Location": "/things-to-do-in-jamaica"
+      },
+      "status": 308
+    },
+    {
+      "src": "^/things-to-do-in-kingston\\.html$",
+      "headers": {
+        "Location": "/things-to-do-in-kingston"
+      },
+      "status": 308
+    },
+    {
+      "src": "^/events(?:/([^/]+?))$",
+      "headers": {
+        "Location": "/app?redirect=%2Fevents%2F$1"
+      },
+      "status": 307,
       "missing": [
         {
           "type": "header",
           "key": "user-agent",
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
         }
-      ],
-      "destination": "/app?redirect=/events/:slug",
-      "permanent": false
+      ]
     },
     {
-      "source": "/specials/:slug",
+      "src": "^/specials(?:/([^/]+?))$",
+      "headers": {
+        "Location": "/app?redirect=%2Fspecials%2F$1"
+      },
+      "status": 307,
       "missing": [
         {
           "type": "header",
           "key": "user-agent",
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
         }
-      ],
-      "destination": "/app?redirect=/specials/:slug",
-      "permanent": false
+      ]
     },
     {
-      "source": "/trip/:id",
-      "destination": "/app?redirect=/trip/:id",
-      "permanent": false
+      "src": "^/trip(?:/([^/]+?))$",
+      "headers": {
+        "Location": "/app?redirect=%2Ftrip%2F$1"
+      },
+      "status": 307
     },
     {
-      "source": "/itinerary/:id",
+      "src": "^/itinerary(?:/([^/]+?))$",
+      "headers": {
+        "Location": "/app?redirect=%2Fitinerary%2F$1"
+      },
+      "status": 307,
       "missing": [
         {
           "type": "header",
           "key": "user-agent",
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
         }
-      ],
-      "destination": "/app?redirect=/itinerary/:id",
-      "permanent": false
+      ]
     },
     {
-      "source": "/listings.html",
-      "destination": "/listings/:slug",
-      "has": [{ "type": "query", "key": "slug" }],
-      "permanent": true
+      "src": "^/listings\\.html$",
+      "headers": {
+        "Location": "/listings/$slug"
+      },
+      "status": 308,
+      "has": [
+        {
+          "type": "query",
+          "key": "slug"
+        }
+      ]
     },
     {
-      "source": "/guides.html",
-      "destination": "/guides/:slug",
-      "has": [{ "type": "query", "key": "slug" }],
-      "permanent": true
+      "src": "^/guides\\.html$",
+      "headers": {
+        "Location": "/guides/$slug"
+      },
+      "status": 308,
+      "has": [
+        {
+          "type": "query",
+          "key": "slug"
+        }
+      ]
     },
     {
-      "source": "/specials.html",
-      "destination": "/specials/:slug",
-      "has": [{ "type": "query", "key": "slug" }],
-      "permanent": true
+      "src": "^/specials\\.html$",
+      "headers": {
+        "Location": "/specials/$slug"
+      },
+      "status": 308,
+      "has": [
+        {
+          "type": "query",
+          "key": "slug"
+        }
+      ]
     },
     {
-      "source": "/event-onboarding.html",
-      "destination": "/event-onboarding",
-      "permanent": true
+      "src": "^/event-onboarding\\.html$",
+      "headers": {
+        "Location": "/event-onboarding"
+      },
+      "status": 308
     },
     {
-      "source": "/booking.html",
-      "destination": "/booking",
-      "permanent": true
+      "src": "^/booking\\.html$",
+      "headers": {
+        "Location": "/booking"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-bookings.html",
-      "destination": "/partner/bookings",
-      "permanent": true
+      "src": "^/partner-bookings\\.html$",
+      "headers": {
+        "Location": "/partner/bookings"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-analytics.html",
-      "destination": "/partner/loyalty",
-      "permanent": true
+      "src": "^/partner-analytics\\.html$",
+      "headers": {
+        "Location": "/partner/loyalty"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-loyalty.html",
-      "destination": "/partner/loyalty",
-      "permanent": true
+      "src": "^/partner-loyalty\\.html$",
+      "headers": {
+        "Location": "/partner/loyalty"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-listing.html",
-      "destination": "/partner/listing",
-      "permanent": true
+      "src": "^/partner-listing\\.html$",
+      "headers": {
+        "Location": "/partner/listing"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-feedback.html",
-      "destination": "/partner/feedback",
-      "permanent": true
+      "src": "^/partner-feedback\\.html$",
+      "headers": {
+        "Location": "/partner/feedback"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-event.html",
-      "destination": "/partner/event",
-      "permanent": true
+      "src": "^/partner-event\\.html$",
+      "headers": {
+        "Location": "/partner/event"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-demand.html",
-      "destination": "/partner/demand",
-      "permanent": true
+      "src": "^/partner-demand\\.html$",
+      "headers": {
+        "Location": "/partner/demand"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-specials.html",
-      "destination": "/partner/specials",
-      "permanent": true
+      "src": "^/partner-specials\\.html$",
+      "headers": {
+        "Location": "/partner/specials"
+      },
+      "status": 308
     },
     {
-      "source": "/partner-billing.html",
-      "destination": "/partner/billing",
-      "permanent": true
+      "src": "^/partner-billing\\.html$",
+      "headers": {
+        "Location": "/partner/billing"
+      },
+      "status": 308
+    },
+    {
+      "src": "^/admin(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/admin-(.*)$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/partner(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/partner-(.*)$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/company(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/dashboard(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/dashboard-prototype(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/onboarding(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/event-onboarding(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/booking(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/reset-password(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/m(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/map(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/park(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/checkin(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/\\.well-known/apple-app-site-association$",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/\\.well-known/assetlinks\\.json$",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/llms\\.txt$",
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Link": "</llms.txt>; rel=\"describedby\""
+      },
+      "continue": true
+    },
+    {
+      "src": "^/index\\.md$",
+      "headers": {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Link": "</llms.txt>; rel=\"describedby\""
+      },
+      "continue": true
+    },
+    {
+      "src": "^/developers\\.md$",
+      "headers": {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Link": "</llms.txt>; rel=\"describedby\""
+      },
+      "continue": true
+    },
+    {
+      "src": "^/(?:index\\.html)?$",
+      "dest": "/api/home"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "^/developers$",
+      "dest": "/developers.html",
+      "check": true
+    },
+    {
+      "src": "^/where-to-eat-in-jamaica$",
+      "dest": "/where-to-eat-in-jamaica.html",
+      "check": true
+    },
+    {
+      "src": "^/things-to-do-in-jamaica$",
+      "dest": "/things-to-do-in-jamaica.html",
+      "check": true
+    },
+    {
+      "src": "^/things-to-do-in-kingston$",
+      "dest": "/things-to-do-in-kingston.html",
+      "check": true
+    },
+    {
+      "src": "^/api/sb(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$",
+      "dest": "https://rprpwudhplodaqmmwqkf.supabase.co/$1",
+      "check": true
+    },
+    {
+      "src": "^/listings(?:/([^/]+?))$",
+      "dest": "/api/og/$1",
+      "check": true,
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
+        }
+      ]
+    },
+    {
+      "src": "^/listings(?:/([^/]+?))$",
+      "dest": "/listings.html?slug=$1",
+      "check": true
+    },
+    {
+      "src": "^/guides$",
+      "dest": "/api/guides",
+      "check": true
+    },
+    {
+      "src": "^/guides(?:/([^/]+?))$",
+      "dest": "/api/guides/$1",
+      "check": true
+    },
+    {
+      "src": "^/specials(?:/([^/]+?))$",
+      "dest": "/api/og/specials/$1",
+      "check": true,
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
+        }
+      ]
+    },
+    {
+      "src": "^/specials(?:/([^/]+?))$",
+      "dest": "/specials.html?slug=$1",
+      "check": true
+    },
+    {
+      "src": "^/itinerary(?:/([^/]+?))$",
+      "dest": "/api/og/itinerary/$1",
+      "check": true,
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
+        }
+      ]
+    },
+    {
+      "src": "^/itinerary(?:/([^/]+?))$",
+      "dest": "/itinerary.html?id=$1",
+      "check": true
+    },
+    {
+      "src": "^/events(?:/([^/]+?))$",
+      "dest": "/api/og/events/$1",
+      "check": true,
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Pinterest|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|vkShare).*"
+        }
+      ]
+    },
+    {
+      "src": "^/events(?:/([^/]+?))$",
+      "dest": "/events.html?slug=$1",
+      "check": true
+    },
+    {
+      "src": "^/invites(?:/([^/]+?))$",
+      "dest": "/api/og/invites/$1",
+      "check": true
+    },
+    {
+      "src": "^/trips(?:/([^/]+?))$",
+      "dest": "/api/og/trips/$1",
+      "check": true
+    },
+    {
+      "src": "^/checkin(?:/([^/]+?))$",
+      "dest": "/checkin.html?tag=$1",
+      "check": true
+    },
+    {
+      "src": "^/park(?:/([^/]+?))$",
+      "dest": "/park.html?lot=$1",
+      "check": true
+    },
+    {
+      "src": "^/dashboard$",
+      "dest": "/dashboard.html",
+      "check": true
+    },
+    {
+      "src": "^/dashboard-prototype$",
+      "dest": "/dashboard-prototype.html",
+      "check": true
+    },
+    {
+      "src": "^/event-onboarding$",
+      "dest": "/event-onboarding.html",
+      "check": true
+    },
+    {
+      "src": "^/booking$",
+      "dest": "/booking.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/bookings$",
+      "dest": "/partner-bookings.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/opportunities$",
+      "dest": "/partner-opportunities.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/guests$",
+      "dest": "/partner-guests.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/login$",
+      "dest": "/partner-login.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/listing$",
+      "dest": "/partner-listing.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/loyalty$",
+      "dest": "/partner-loyalty.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/perks$",
+      "dest": "/partner-perks.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/feedback$",
+      "dest": "/partner-feedback.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/event$",
+      "dest": "/partner-event.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/demand$",
+      "dest": "/partner-demand.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/event-floorplan$",
+      "dest": "/partner-event-floorplan.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/event-parking$",
+      "dest": "/partner-event-parking.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/event-orders$",
+      "dest": "/partner-event-orders.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/event-order-analytics$",
+      "dest": "/partner-event-order-analytics.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/specials$",
+      "dest": "/partner-specials.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/billing$",
+      "dest": "/partner-billing.html",
+      "check": true
+    },
+    {
+      "src": "^/partner/group$",
+      "dest": "/partner-group.html",
+      "check": true
+    },
+    {
+      "src": "^/m(?:/([^/]+?))$",
+      "dest": "/m.html?token=$1",
+      "check": true
+    },
+    {
+      "src": "^/map(?:/([^/]+?))$",
+      "dest": "/map.html?e=$1&slug=$1",
+      "check": true
+    },
+    {
+      "src": "^/onboarding$",
+      "dest": "/onboarding.html",
+      "check": true
+    },
+    {
+      "src": "^/business$",
+      "dest": "/business.html",
+      "check": true
+    },
+    {
+      "src": "^/business/sign-in$",
+      "dest": "/company-billing.html",
+      "check": true
+    },
+    {
+      "src": "^/business/dashboard$",
+      "dest": "/company-billing.html",
+      "check": true
+    },
+    {
+      "src": "^/company/billing$",
+      "dest": "/company-billing.html",
+      "check": true
+    },
+    {
+      "src": "^/admin$",
+      "dest": "/admin.html",
+      "check": true
+    },
+    {
+      "src": "^/admin/billing$",
+      "dest": "/admin-billing.html",
+      "check": true
+    },
+    {
+      "src": "^/admin/review$",
+      "dest": "/admin-review.html",
+      "check": true
+    },
+    {
+      "src": "^/reset-password$",
+      "dest": "/reset-password.html",
+      "check": true
+    },
+    {
+      "src": "^/app$",
+      "dest": "/app.html",
+      "check": true
+    },
+    {
+      "handle": "error"
+    },
+    {
+      "src": "/.*",
+      "dest": "/api/not-found",
+      "status": 404
     }
   ],
-  "headers": [
-    {
-      "source": "/admin/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/admin-:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/partner/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/partner-:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/company/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/dashboard/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/dashboard-prototype/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/onboarding/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/event-onboarding/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/booking/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/reset-password/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/m/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/map/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/park/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/checkin/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/.well-known/apple-app-site-association",
-      "headers": [{ "key": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "source": "/.well-known/assetlinks.json",
-      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+  "functions": {
+    "api/home.js": {
+      "includeFiles": "{index.html,index.md}"
     }
-  ]
+  }
 }

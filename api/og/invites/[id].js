@@ -38,6 +38,25 @@ function firstRow(data) {
   return data || null;
 }
 
+// when_label is frozen at send time ("at 5:00 PM today"), so a link re-shared
+// a week later would still say "today". Re-derive the trailing day phrase from
+// scheduled_date against today's date in Jamaica. Mirrors displayWhenLabel in
+// the app (lib/placeInvite/compose.ts); labels with no date or no day phrase
+// ("This week", getaway ranges) pass through untouched.
+const DAY_PHRASE = /(today|tonight|tomorrow|on [A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2})$/;
+
+function freshWhenLabel(label, scheduledDate, now = new Date()) {
+  if (!label || !/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate || '')) return label;
+  if (!DAY_PHRASE.test(label)) return label;
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(now); // YYYY-MM-DD
+  const diffDays = Math.round((Date.parse(`${scheduledDate}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000);
+  const phrase =
+    diffDays === 0 ? 'today'
+    : diffDays === 1 ? 'tomorrow'
+    : `on ${new Date(`${scheduledDate}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}`;
+  return label.replace(DAY_PHRASE, phrase);
+}
+
 function cap(s) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
@@ -104,7 +123,7 @@ export default async function handler(request) {
     const placeName = place.place_name || 'a spot';
     const phrase = OCCASION_PHRASE[String(place.occasion || '').toLowerCase()] || 'a meet-up';
     const where = [place.place_town, place.place_parish].filter(Boolean)[0] || '';
-    const when = (place.when_label || '').trim();
+    const when = freshWhenLabel((place.when_label || '').trim(), place.scheduled_date);
 
     const ogTitle = host
       ? `${host} invited you to ${phrase} at ${placeName}`
@@ -169,6 +188,27 @@ export default async function handler(request) {
       imageSubtitle: dateRange || 'My itinerary',
       imageWidth: 1080,
       imageHeight: 1500,
+    });
+  }
+
+  // ── Held SEAT at a seated event (TRODDR Table): "Nix saved you a seat" ────
+  // Probed last: seat tokens are new and rarer than the types above.
+  const seat = firstRow(await sbRpc('get_seat_invite_preview', { _token: token }));
+  if (seat?.event_id) {
+    const host = (seat.host_name || '').trim();
+    const title = seat.event_title || 'a TRODDR Table event';
+    const when = seat.date_tba || !seat.start_date ? 'Date coming soon' : formatTripDateRange(seat.start_date, seat.start_date) || '';
+    const where = [seat.venue_name, seat.town].filter(Boolean).join(' · ');
+    const ogTitle = host ? `${host} saved you a seat at the ${title}` : `A seat is saved for you at the ${title}`;
+    return renderOgPage({
+      title: `${title} · TRODDR`,
+      ogTitle,
+      description: [when, where, 'Accept your seat in TRODDR within 72 hours.'].filter(Boolean).join(' · '),
+      imageUrl: coerceImage(seat.event_image),
+      canonicalUrl,
+      type: 'website',
+      imageTitle: title,
+      imageSubtitle: [`Seat ${seat.seat_no}`, when].filter(Boolean).join(' · '),
     });
   }
 
