@@ -327,6 +327,7 @@
       <button class="section-tab active" data-section="overview" title="Overview"><span class="nav-icon" aria-hidden="true">◫</span><span class="nav-label">Overview</span></button>
       <button class="section-tab" data-section="analytics" title="Analytics"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-label">Analytics</span></button>
       <button class="section-tab" data-section="performance" title="Performance"><span class="nav-icon" aria-hidden="true">▥</span><span class="nav-label">Performance</span></button>
+      <button class="section-tab" data-section="content" title="Content Studio"><span class="nav-icon" aria-hidden="true">✎</span><span class="nav-label">Content Studio</span></button>
       <button class="section-tab" data-section="events" title="Events"><span class="nav-icon" aria-hidden="true">◇</span><span class="nav-label">Events</span></button>
       <button class="section-tab" data-section="feedback" title="Feedback"><span class="nav-icon" aria-hidden="true">◎</span><span class="nav-label">Feedback</span></button>
       <button class="section-tab" data-section="engagement" title="Engagement"><span class="nav-icon" aria-hidden="true">♧</span><span class="nav-label">Engagement</span></button>
@@ -495,6 +496,7 @@
     <div class="section" id="sec-review">
       <div class="native-review" id="review-view"><div class="overview-state" id="review-loading"><div><div class="spinner"></div><p>Loading review queue…</p></div></div><div class="overview-state hidden" id="review-error"><div class="overview-error"><strong>Review queue could not be loaded</strong><p id="review-error-message"></p><button class="icon-btn" id="review-retry">Try again</button></div></div><div class="review-inner hidden" id="review-content"><div class="review-tabs" role="tablist" id="review-tabs"></div><div id="review-panels"></div></div></div>
     </div>
+    <section class="section" id="sec-content"><iframe data-src="/admin-content.html" title="Content Studio"></iframe></section>
     <div class="section" id="sec-billing">
       <iframe data-src="/admin-billing.html" title="Billing console"></iframe>
     </div>
@@ -561,6 +563,7 @@
     overview:  { title: 'Overview',  description: 'Platform health and work requiring attention' },
     analytics: { title: 'Analytics', description: 'Usage, discovery and conversion performance' },
     performance:{ title: 'Performance',description: 'Performance of places, guides, events and trip additions' },
+    content: { title: 'Content Studio', description: 'Write stories, collect photos and shape your next guide' },
     events:    { title: 'Events',    description: 'Event performance, audiences and updates' },
     feedback:  { title: 'Feedback',  description: 'Customer feedback, ratings and product signals' },
     engagement:{ title: 'Engagement',description: 'Loyalty participation and Insider progression' },
